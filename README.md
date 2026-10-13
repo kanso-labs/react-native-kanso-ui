@@ -53,13 +53,28 @@ Install with the Node version in `.tool-versions`:
 mise exec node@"$(awk '/^nodejs/{print $2}' .tool-versions)" -- npm install
 ```
 
-| Task   | Command                 |
-| ------ | ----------------------- |
-| Test   | `npm test`              |
-| Lint   | `npm run lint`          |
-| Build  | `npm run build`         |
-| Verify | `npm run package:check` |
-| Tokens | `npm run tokens:build`  |
+| Task      | Command                  |
+| --------- | ------------------------ |
+| Test      | `npm test`               |
+| Stories   | `npm run test:storybook` |
+| Storybook | `npm run storybook`      |
+| Lint      | `npm run lint`           |
+| Build     | `npm run build`          |
+| Verify    | `npm run package:check`  |
+| Tokens    | `npm run tokens:build`   |
+
+`npm run storybook` serves the components through React Native Web. To see them
+drawn by iOS or Android, run the on-device Storybook in `example/`, an Expo app
+that reads the same stories. With the root installed:
+
+```bash
+cd example
+npm install
+npm start
+```
+
+Then open it in Expo Go from the QR code Expo prints. The device's light or dark
+appearance picks the scheme the stories render in.
 
 ## License
 

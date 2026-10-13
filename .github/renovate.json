@@ -26,6 +26,11 @@
       "matchPackageNames": ["typescript"]
     },
     {
+      "description": "The example app's dependencies are the versions its Expo SDK bundles, so they move together, and `npx expo install --check` in example/ says whether a bumped one is still the SDK's. An SDK upgrade is `npx expo install expo@<version> --fix` there rather than this pull request.",
+      "groupName": "example app",
+      "matchFileNames": ["example/package.json"]
+    },
+    {
       "groupName": "commitlint",
       "matchPackageNames": ["@commitlint/**"]
     },
@@ -55,6 +60,15 @@
         "react-dom",
         "react-native"
       ]
+    },
+    {
+      "description": "Every Storybook package peers the others at its own exact version, so they move as one pull request or not at all.",
+      "groupName": "storybook",
+      "matchPackageNames": ["@storybook/**", "storybook"]
+    },
+    {
+      "groupName": "vitest",
+      "matchPackageNames": ["@vitest/**", "vitest"]
     }
   ]
 }

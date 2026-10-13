@@ -13,13 +13,33 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - name: Check out repository
         uses: actions/checkout@v7.0.1
 
+      # Read with jq rather than "node -p" because Node is not set up yet, and
+      # the cache below is keyed on it.
+      - name: Resolve the Playwright version
+        id: playwright
+        run: |
+          version=$(jq -r '.packages["node_modules/playwright-core"].version' package-lock.json)
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+
+      # The key names the browser alongside the version, as kanso-ui's does,
+      # so a browser added later starts a new cache rather than restoring one
+      # that lacks it.
+      - name: Cache Playwright browsers
+        uses: actions/cache@v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key:
+            ${{ runner.os }}-playwright-chromium-${{
+            steps.playwright.outputs.version }}
+
       # Nothing the suite needs comes from a lifecycle script: Jest runs in
-      # Node, through React Native's own preset.
+      # Node, through React Native's own preset, and the browser is installed
+      # by its own step below.
       - name: Set up Node
         uses: kanso-labs/actions/setup-node@v4.2.4
         with:
@@ -27,3 +47,16 @@ jobs:
 
       - name: Run tests
         run: npm test
+
+      # Chromium alone, the one browser vitest.config.ts names. The runner
+      # image already carries its system libraries, so `--with-deps` would
+      # only apt-install those of browsers nothing runs. A hit on the cache
+      # above makes this a check that finds the browser already there.
+      - name: Install Chromium
+        run: npx playwright install chromium
+
+      # Steps of this job rather than a job of their own: a ruleset requires
+      # its checks by exact job name, and a new job would be a name nothing
+      # requires, free to fail without stopping anything.
+      - name: Run the stories in Chromium
+        run: npm run test:storybook
