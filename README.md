@@ -10,6 +10,12 @@ serves a web app and a native app alike.
 
 The package has not been released yet.
 
+## Peer dependencies
+
+Beside `react` and `react-native`, the package needs `react-native-svg`, which
+draws the icons its controls show. In an Expo app,
+`npx expo install react-native-svg` installs the version the SDK ships with.
+
 ## Development
 
 Install with the Node version in `.tool-versions`:
