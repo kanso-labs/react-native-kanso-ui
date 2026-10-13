@@ -45,6 +45,25 @@ A value React Native cannot evaluate, such as a `calc()` or a `color-mix()`,
 keeps its property at the library's default, and a development build names it in
 a warning.
 
+### Fonts
+
+Neither package ships a font. On iOS and Android a type role draws in the first
+family its token names when the app has registered that family with
+[expo-font](https://docs.expo.dev/versions/latest/sdk/font/), under that name,
+and in the system font otherwise. expo-font is an optional peer, so an app
+without it draws every role in the system font.
+
+```tsx
+import { useFonts } from 'expo-font'
+
+const [loaded] = useFonts({
+  'Roboto Flex': require('./assets/RobotoFlex.ttf'),
+  'Roboto Serif': require('./assets/RobotoSerif.ttf'),
+})
+```
+
+Under React Native Web the token's whole list goes to CSS, as it does on web.
+
 ## Development
 
 Install with the Node version in `.tool-versions`:

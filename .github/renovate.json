@@ -11,8 +11,8 @@
   "packageRules": [
     {
       "allowedVersions": "<8",
-      "description": "babel-plugin-react-compiler declares @babel/types ^7, and Babel 8 removed AssignmentPattern from the LVal alias, so under Babel 8 the compiler fails on every component with a defaulted destructured prop. kanso-ui holds the same line for the same reason. Lift this once a babel-plugin-react-compiler release declares Babel 8 support.",
-      "matchPackageNames": ["@babel/core"]
+      "description": "babel-plugin-react-compiler declares @babel/types ^7, and Babel 8 removed AssignmentPattern from the LVal alias, so under Babel 8 the compiler fails on every component with a defaulted destructured prop. kanso-ui holds the same line for the same reason, and a Babel plugin stays on the major of the core that runs it. Lift this once a babel-plugin-react-compiler release declares Babel 8 support.",
+      "matchPackageNames": ["@babel/core", "@babel/plugin-*"]
     },
     {
       "allowedVersions": "<30",

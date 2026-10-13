@@ -5,6 +5,10 @@
 // The compiler is kept to the repository's own code. Jest also transforms
 // Storybook's packages through this file, since they ship ESM alone, and the
 // compiler has no business rewriting them.
+//
+// React Native's preset leaves `import()` for Metro, which bundles it, and
+// Jest runs a module without a bundler, so the suite turns it into a
+// `require` that Jest's module registry, mocks included, can answer.
 module.exports = {
   overrides: [
     {
@@ -14,5 +18,6 @@ module.exports = {
       ],
     },
   ],
+  plugins: ['@babel/plugin-transform-dynamic-import'],
   presets: ['module:@react-native/babel-preset'],
 }
