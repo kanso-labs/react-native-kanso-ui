@@ -61,5 +61,10 @@
   "env": {
     "builtin": true
   },
-  "ignorePatterns": [".claude/worktrees", "coverage", "dist"]
+  "ignorePatterns": [
+    ".claude/worktrees",
+    "coverage",
+    "dist",
+    "src/tokens/defaults.ts"
+  ]
 }

@@ -34,6 +34,19 @@ here, and reaches this repository as the Renovate bump of `@kanso-labs/kanso-ui`
 that follows the release carrying it. `.design-sync/artifact/README.md` in
 kanso-ui describes the sync.
 
+**`src/tokens/defaults.ts` is generated and not committed.**
+`scripts/build-tokens.mjs` writes it from the pinned package's `tokens.json`
+through Style Dictionary: every `--kui-*` property at its light and its dark
+value, each exactly as kanso-ui's `tokens.css` writes it, the `KuiTheme` type,
+and the window size class breakpoints. `build`, `lint` and `test` run
+`npm run tokens:build` first, so a Renovate bump of `@kanso-labs/kanso-ui` is
+the whole of a token change: CI builds and tests the new values with nothing to
+regenerate by hand, and the bump can merge itself. A committed copy would go
+stale with every bump and fail the tests that compare it with the new
+`tokens.css`. `src/tokens/defaults.test.ts` is that comparison, and it also pins
+that the resolver reads every default and that `KuiTheme` is the web library's
+type.
+
 ## Commands
 
 | Task     | Command                 | Notes                                                          |
@@ -44,6 +57,7 @@ kanso-ui describes the sync.
 | Build    | `npm run build`         | Type-checks (`tsc -b`) then builds ESM into `dist/`            |
 | Format   | `npm run format`        | oxfmt; `npm run format:check` is the check `lint` already runs |
 | Verify   | `npm run package:check` | publint, then attw; reads `dist/`, so build first              |
+| Tokens   | `npm run tokens:build`  | Writes `src/tokens/defaults.ts`; build, lint and test run it   |
 
 **Install with the Node version in `.tool-versions`.** CI resolves it from that
 file, and an older npm rewrites `package-lock.json` in a way no check here can
@@ -136,7 +150,9 @@ Jest runs every `src/**/*.test.{ts,tsx}`, beside the module it tests, through
 `@react-native/jest-preset`, which mocks the native modules and runs a test in
 the environment React Native's own tests use. Tests import `describe`, `it` and
 `expect` from `@jest/globals` rather than reading them as globals, so a file
-says where they come from.
+says where they come from. They type-check under `tsconfig.test.json`, which
+gives them Node's types, while the library's own `tsconfig.lib.json` leaves them
+out, since Hermes has none of Node's modules.
 
 Components are tested with Testing Library for React Native. From version 14
 `render` is asynchronous, so a test awaits it before querying.
