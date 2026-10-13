@@ -1,0 +1,8 @@
+{
+  "!(*-lock).{json,md,yaml,yml}": ["oxfmt --no-error-on-unmatched-pattern"],
+  "*.{cjs,js,mjs,ts,tsx}": [
+    "oxlint --type-aware --fix",
+    "eslint --fix",
+    "oxfmt"
+  ]
+}

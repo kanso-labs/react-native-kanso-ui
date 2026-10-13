@@ -1,0 +1,39 @@
+name: Build
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7.0.1
+
+      # Skips the prepare script, which only installs husky's git hooks. A
+      # runner has no commits to hook, so it is pure install time here.
+      - name: Set up Node
+        uses: kanso-labs/actions/setup-node@v4.2.4
+        with:
+          ignore-scripts: true
+
+      - name: Run build
+        run: npm run build
+
+      # publint reads package.json and the packed file list, so it catches an
+      # exports target pointing at a file the tarball does not carry. attw
+      # resolves the declarations the way a consumer's TypeScript does.
+      #
+      # A step of this job rather than a job of its own: a required check is
+      # matched by its exact job name, and a new job would be a name nothing
+      # requires. It reads dist/, so it comes after the build.
+      - name: Verify the published package shape
+        run: npm run package:check

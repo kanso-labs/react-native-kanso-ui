@@ -1,0 +1,88 @@
+name: Release Please
+
+on:
+  push:
+    branches:
+      - main
+  # Releases are batched to one a day rather than one per merge. The push above
+  # keeps the release pull request current — its changelog and its version
+  # always reflect main — and this is the only trigger that turns merging on,
+  # through the auto-merge input below.
+  #
+  # 09:00 UTC is 06:00 America/Sao_Paulo. Every kanso-labs repository releases
+  # on this same cron, so a token change in kanso-ui and the pull request that
+  # brings it here come out in one morning rather than two.
+  #
+  # GitHub disables a scheduled workflow after 60 days without repository
+  # activity. Renovate's commits keep this one alive, but that is the shape a
+  # silent stop to releasing would take.
+  schedule:
+    - cron: '0 9 * * *'
+  # Neither trigger above can be asked to look again now: one waits for a push,
+  # the other for the clock. That matters when a release pull request has to be
+  # discarded, because release-please rewrites one only when the release it
+  # computes changes. This is that lever.
+  workflow_dispatch:
+
+# Every release merge pushes main, and every push starts a run. Overlapping runs
+# try to cut the same tags and strip the same labels, and one dies on the
+# other's half-finished work. Do not add cancel-in-progress: the last push must
+# still get a run, or the release it carries is never proposed.
+concurrency:
+  cancel-in-progress: false
+  group: release-please
+
+# The application token below does the writing, so GITHUB_TOKEN stays on read.
+permissions:
+  contents: read
+
+jobs:
+  release-please:
+    name: Propose releases
+    uses: kanso-labs/actions/.github/workflows/_release-please.yaml@v4.2.4
+    with:
+      # True only on the scheduled run, which is what batches a day of merges
+      # into one release. A push proposes without merging, and so does
+      # workflow_dispatch. To publish sooner than the next scheduled run,
+      # enable auto-merge on the pull request by hand.
+      auto-merge: ${{ github.event_name == 'schedule' }}
+    secrets:
+      client-id: ${{ secrets.RELEASE_PLEASE_CLIENT_ID }}
+      private-key: ${{ secrets.RELEASE_PLEASE_PRIVATE_KEY }}
+
+  # Trusted publishing, so there is no npm token in this repository. npm
+  # configures a trusted publisher on the package's own page, so the package
+  # has to exist before one can be registered, and its first version is
+  # published by hand. Every release after that goes through here.
+  #
+  # The shared workflow publishes the same tarball twice: to npmjs.com, then to
+  # GitHub Packages, the second only if the first succeeded.
+  publish:
+    name: Publish to npm
+    needs: release-please
+    # !cancelled() is what publishes a release cut by a run that then failed.
+    # release-please cuts releases and then updates pull requests in one step,
+    # so a failure in the second half fails Propose releases with the tag
+    # already pushed, and a failed call still hands its outputs on.
+    #
+    # Compared against the string rather than used bare: the output carries
+    # the string "false" when release-please runs and cuts nothing, and a bare
+    # truthiness test passes on that.
+    if:
+      ${{ !cancelled() && needs.release-please.outputs.release_created == 'true'
+      }}
+    # id-token is what npm exchanges for a short-lived credential and what
+    # mints the provenance attestation. GitHub Packages has no trusted
+    # publishing and takes GITHUB_TOKEN with packages: write instead. The
+    # called workflow splits the three across its two jobs, so all three are
+    # granted here.
+    permissions:
+      contents: read
+      id-token: write
+      packages: write
+    uses: kanso-labs/actions/.github/workflows/_publish-npm.yaml@v4.2.4
+    # Refuses to publish unless this run checked out the commit the release
+    # was tagged at, so a later run cutting the release cannot ship a later
+    # commit's code under the tagged version.
+    with:
+      tag-name: ${{ needs.release-please.outputs.tag_name }}
