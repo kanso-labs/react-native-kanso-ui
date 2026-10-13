@@ -17,6 +17,7 @@
     ".rnstorybook/*.ts",
     ".rnstorybook/*.tsx",
     "*.ts",
+    "../src/**/*.d.ts",
     "../src/**/*.stories.tsx"
   ]
 }

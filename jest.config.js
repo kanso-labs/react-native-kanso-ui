@@ -1,9 +1,13 @@
 /** @type {import('jest').Config} */
 export default {
+  // The library's own source. Stories, tests, the generated tokens and the
+  // Theming pages are left out: the last are Storybook material that nothing
+  // under src/index.ts reaches, as on web.
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
     '!src/**/*.stories.tsx',
     '!src/**/*.test.{ts,tsx}',
+    '!src/theming/**',
     '!src/tokens/defaults.ts',
   ],
   coverageReporters: ['text', 'cobertura'],

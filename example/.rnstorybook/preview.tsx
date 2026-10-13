@@ -4,8 +4,8 @@ import Canvas from './Canvas'
 
 const preview: Preview = {
   decorators: [
-    (Story) => (
-      <Canvas>
+    (Story, context) => (
+      <Canvas name={context.globals.theme}>
         <Story />
       </Canvas>
     ),

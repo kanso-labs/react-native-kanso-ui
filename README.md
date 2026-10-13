@@ -82,9 +82,11 @@ mise exec node@"$(awk '/^nodejs/{print $2}' .tool-versions)" -- npm install
 | Verify    | `npm run package:check`  |
 | Tokens    | `npm run tokens:build`   |
 
-`npm run storybook` serves the components through React Native Web. To see them
-drawn by iOS or Android, run the on-device Storybook in `example/`, an Expo app
-that reads the same stories. With the root installed:
+`npm run storybook` serves the components through React Native Web. Its Theme
+control offers kanso-ui's seven demo schemes beside light and dark, and the
+`Theming` section renders every component under each of them. To see the
+components drawn by iOS or Android, run the on-device Storybook in `example/`,
+an Expo app that reads the same stories. With the root installed:
 
 ```bash
 cd example
@@ -93,7 +95,8 @@ npm start
 ```
 
 Then open it in Expo Go from the QR code Expo prints. The device's light or dark
-appearance picks the scheme the stories render in.
+appearance picks the scheme the stories render in, apart from the `Theming`
+pages, which each render in their own.
 
 ## License
 

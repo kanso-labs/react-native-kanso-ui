@@ -5,6 +5,7 @@
       "tsconfigPaths": false
     },
     "name": "Kanso UI",
+    "platforms": ["android", "ios"],
     "slug": "react-native-kanso-ui-example",
     "userInterfaceStyle": "automatic",
     "version": "0.0.0"

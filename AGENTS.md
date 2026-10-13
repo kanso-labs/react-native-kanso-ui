@@ -188,25 +188,62 @@ function reads a DOM the device has none of, so behaviour belongs in a
 `*.test.tsx` instead.
 
 The web Storybook's toolbar sets the `theme` global, which the canvas in
-`.storybook/components/Canvas.tsx` hands to a `ThemeScope` as its scheme. It
-defaults to light rather than following the machine, and `&globals=theme:dark`
-on a story's URL opens it dark. The device has no toolbar, so its canvas pins
-the scheme the device's appearance asks for. Its token defaults are written by
-`@kanso-labs/unplugin-style-dictionary` when the server starts and again when
-the token source changes, so a bump of `@kanso-labs/kanso-ui` reaches a running
-Storybook without a restart.
+`.storybook/components/Canvas.tsx` hands to a `ThemeScope`: light or dark as its
+scheme, and one of the demo schemes below as its `theme`. It defaults to light
+rather than following the machine, and `&globals=theme:dark` on a story's URL
+opens it dark. The device has no toolbar, so its canvas pins the scheme the
+device's appearance asks for, unless the story pins a theme of its own. Its
+token defaults are written by `@kanso-labs/unplugin-style-dictionary` when the
+server starts and again when the token source changes, so a bump of
+`@kanso-labs/kanso-ui` reaches a running Storybook without a restart.
 
 **Every story is checked twice.** `src/stories.test.tsx` renders each one in
-`npm test`, in both schemes, through Storybook's portable stories and React
-Native's own host components, so a story that throws fails the suite; it finds
-the files on disk, so a new one needs no entry. `npm run test:storybook` runs
-each in Chromium through `@storybook/addon-vitest`, where addon-a11y's
-`test: 'error'` fails a story on a contrast or labelling violation in what React
-Native Web draws. `Test` runs both.
+`npm test`, in both schemes, or in the one it pins, through Storybook's portable
+stories and React Native's own host components, so a story that throws fails the
+suite; it finds the files on disk, so a new one needs no entry.
+`npm run test:storybook` runs each in Chromium through
+`@storybook/addon-vitest`, where addon-a11y's `test: 'error'` fails a story on a
+contrast or labelling violation in what React Native Web draws. `Test` runs
+both.
 
 Jest reaches Storybook's packages, which ship ESM alone, through
 `transformIgnorePatterns` in `jest.config.js`; take them out and the story test
 fails to parse before it runs.
+
+### The Theming pages
+
+**The toolbar offers more than light and dark.** The other entries are the seven
+demo schemes in `src/theming/themes.ts`, which the `Theming` section is built
+from and which the canvas applies to any story, so a component's own stories can
+be read in one. They are kanso-ui's seven, value for value, each written as the
+`--kui-*` map a consumer would hand either library's `ThemeScope`. kanso-ui
+publishes no copy of them, so this one is kept in step by hand. They are
+Storybook material rather than library API: nothing under `src/index.ts` reaches
+them, and coverage leaves them out.
+
+- **A scheme states every colour.** The scope fills a property a map leaves out
+  from the library's defaults in the scheme around it, so a colour left out
+  takes its light or dark value from the device. No other group differs between
+  the schemes, so a partial map over the others reads the same everywhere.
+  `src/theming/themes.test.ts` holds each scheme to that, to properties the
+  library declares, and to values the resolver can read.
+- **Every pair a component renders clears WCAG AA**, the bar the library's own
+  tokens hold to, and `npm run test:storybook` fails a scheme's page otherwise.
+  `Theming/Dark` renders the page in the library's own dark scheme for the same
+  check. It is hidden from the sidebar with `!dev`, since every other story
+  renders in the light scheme the toolbar opens on, and without it nothing
+  checks a dark pair.
+- **Each scheme is a story file of its own**, titled `Theming/<Name>`, holding
+  one story named after the entry: Storybook folds a component whose single
+  story has its name into one sidebar leaf. Each pins its scheme with `globals`,
+  which beats the toolbar, so the page renders the same whatever is asked of it.
+- **A new component goes into `src/theming/showcase.tsx`**, the page every
+  scheme renders, as a `Section` in its alphabetical place with the sentence
+  under its headline that kanso-ui's showcase gives it. That page is the only
+  one drawing the library under a scheme that is not its own, which is the only
+  place a literal colour, corner or spacing step differs from the token it
+  should have been. `src/theming/showcase.test.tsx` compares its sections with
+  the directories under `src/components` and fails on one that is missing.
 
 ### The example app
 
@@ -224,8 +261,11 @@ bundle carries one React; `tsconfig.json` maps the React and React Native types
 the same way, since two copies of a type never match. Those `paths` point at
 type declarations, so `experiments.tsconfigPaths` in `app.json` is off: Expo
 would otherwise hand them to Metro, and `react` would resolve to `@types/react`.
-`npm run export` in `example/` bundles the app without a device, which is the
-quickest check that a story still resolves under Metro.
+`npm run export` in `example/` bundles the app for iOS and Android without a
+device, which is the quickest check that a story still resolves under Metro.
+`app.json` names those two platforms: Expo would otherwise bundle for the web as
+well, which the root's Storybook does instead, and fail on the React Native Web
+the app does not install.
 
 ## Workflows and checks
 
