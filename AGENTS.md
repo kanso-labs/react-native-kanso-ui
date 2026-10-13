@@ -22,6 +22,18 @@ results under the keys the web library's StyleX tokens use, so
 cannot evaluate, such as `calc()` or `color-mix()`, keeps the property at its
 default and is listed by name among the resolver's problems rather than dropped.
 
+**No token value is written by hand here.** The
+[Kanso UI design system artifact](https://claude.ai/artifact/TJSpYMBeBEMx1agnDVuZdv)
+is the design system's source of truth, and kanso-ui's
+`src/tokens/design.tokens.json` is the copy every package builds from: a daily
+routine in kanso-ui opens a pull request carrying what was edited in the
+artifact, and kanso-ui publishes the file as `@kanso-labs/kanso-ui/tokens.json`.
+That export is the only place this repository takes a token value from. A token
+change therefore starts in the artifact or in a kanso-ui pull request, never
+here, and reaches this repository as the Renovate bump of `@kanso-labs/kanso-ui`
+that follows the release carrying it. `.design-sync/artifact/README.md` in
+kanso-ui describes the sync.
+
 ## Commands
 
 | Task     | Command                 | Notes                                                          |
