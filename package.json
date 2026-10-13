@@ -48,6 +48,7 @@
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.5",
     "@babel/core": "7.29.7",
+    "@babel/plugin-transform-dynamic-import": "7.29.7",
     "@commitlint/cli": "21.2.3",
     "@commitlint/config-conventional": "21.2.3",
     "@eslint/js": "10.0.1",
@@ -82,8 +83,14 @@
     "typescript-eslint": "8.71.2"
   },
   "peerDependencies": {
+    "expo-font": ">=57.0.0",
     "react": ">=19.2.0",
     "react-native": ">=0.86.0"
+  },
+  "peerDependenciesMeta": {
+    "expo-font": {
+      "optional": true
+    }
   },
   "overrides": {
     "eslint-plugin-oxlint": {

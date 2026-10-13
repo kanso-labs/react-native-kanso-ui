@@ -1,4 +1,14 @@
+import type { StyleProp } from 'react-native'
+
 import type { ResolvedTheme } from './scope'
+
+/**
+ * Styles in the order they apply, each over the ones before it, as React
+ * Native's array form takes them. A call site's own `style` goes last.
+ */
+function composeStyles<Style>(...styles: StyleProp<Style>[]): StyleProp<Style> {
+  return styles
+}
 
 /**
  * A stylesheet built from the theme, created once for each theme it is asked
@@ -37,4 +47,4 @@ function themedStyles<Styles>(
   }
 }
 
-export { themedStyles }
+export { composeStyles, themedStyles }
