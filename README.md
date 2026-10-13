@@ -45,6 +45,21 @@ A value React Native cannot evaluate, such as a `calc()` or a `color-mix()`,
 keeps its property at the library's default, and a development build names it in
 a warning.
 
+The outermost `ThemeScope` also hosts what the library draws above the screen,
+over everything inside it, so it belongs at the root of the app and fills it, as
+the one above does. What draws there follows the scope it was opened in rather
+than the root's.
+
+## Peer dependencies
+
+Beside `react` and `react-native`, the package needs
+`react-native-safe-area-context`, whose insets keep what the library draws above
+the screen clear of a notch, the status bar and the home indicator. In an Expo
+app, `npx expo install react-native-safe-area-context` installs the version the
+SDK ships with. The insets come from its `SafeAreaProvider`, which Expo Router
+puts around an app already; elsewhere, wrap the app in one. Without it, the
+library keeps to the window's edge.
+
 ## Development
 
 Install with the Node version in `.tool-versions`:
