@@ -1,0 +1,59 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "local>kanso-labs/.github:renovate-config is the organization's shared Renovate preset, holding the settings that have to hold in every kanso-labs repository. It is listed last because a later preset wins a conflict with an earlier one: moved ahead of config:recommended it would be overridden by the very preset it exists to correct.",
+  "extends": ["config:recommended", "local>kanso-labs/.github:renovate-config"],
+  "labels": ["area:foundations", "kind:tooling"],
+  "lockFileMaintenance": {
+    "automerge": true,
+    "enabled": true
+  },
+  "minimumReleaseAge": null,
+  "packageRules": [
+    {
+      "allowedVersions": "<8",
+      "description": "babel-plugin-react-compiler declares @babel/types ^7, and Babel 8 removed AssignmentPattern from the LVal alias, so under Babel 8 the compiler fails on every component with a defaulted destructured prop. kanso-ui holds the same line for the same reason. Lift this once a babel-plugin-react-compiler release declares Babel 8 support.",
+      "matchPackageNames": ["@babel/core"]
+    },
+    {
+      "allowedVersions": "<30",
+      "description": "@react-native/jest-preset depends on babel-jest, jest-environment-node and @jest/create-cache-key-function at ^29.7.0, through 0.87 at least, so Jest 30 would run the preset's environment and transform from the major before it. Lift this once a preset release moves to Jest 30.",
+      "groupName": "jest",
+      "matchPackageNames": ["@jest/**", "jest"]
+    },
+    {
+      "allowedVersions": "<7",
+      "description": "typescript-eslint peers on typescript >=4.8.4 <6.1.0, so Renovate's lockfile update for TypeScript 7 fails on the conflict and the pull request fails npm ci. Lift this once a released typescript-eslint admits TypeScript 7.",
+      "matchPackageNames": ["typescript"]
+    },
+    {
+      "groupName": "commitlint",
+      "matchPackageNames": ["@commitlint/**"]
+    },
+    {
+      "groupName": "eslint",
+      "matchPackageNames": [
+        "@eslint/**",
+        "eslint",
+        "eslint-config-**",
+        "eslint-plugin-**",
+        "typescript-eslint",
+        "!eslint-plugin-oxlint"
+      ]
+    },
+    {
+      "description": "eslint-plugin-oxlint peers oxlint at a tilde range on its own minor and is published after it, or not at all. The overrides entry in package.json points the plugin's peer at the root's own oxlint, so oxlint moves on its own and the plugin follows when it is published.",
+      "groupName": "oxlint",
+      "matchPackageNames": ["eslint-plugin-oxlint", "oxlint"]
+    },
+    {
+      "description": "react-native peers @react-native/jest-preset at its own exact version and react from the release it was built against, so the four move as one pull request or not at all.",
+      "groupName": "react-native",
+      "matchPackageNames": [
+        "@react-native/**",
+        "@types/react",
+        "react",
+        "react-native"
+      ]
+    }
+  ]
+}

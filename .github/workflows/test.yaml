@@ -1,0 +1,29 @@
+name: Test
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7.0.1
+
+      # Nothing the suite needs comes from a lifecycle script: Jest runs in
+      # Node, through React Native's own preset.
+      - name: Set up Node
+        uses: kanso-labs/actions/setup-node@v4.2.4
+        with:
+          ignore-scripts: true
+
+      - name: Run tests
+        run: npm test
