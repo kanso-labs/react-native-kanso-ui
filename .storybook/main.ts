@@ -1,6 +1,7 @@
 import type { StorybookConfig } from '@storybook/react-native-web-vite'
 
 import styleDictionary from '@kanso-labs/unplugin-style-dictionary/vite'
+import path from 'node:path'
 import { mergeConfig } from 'vite'
 
 import {
@@ -62,6 +63,13 @@ const config: StorybookConfig = {
           },
         }),
       ],
+      resolve: {
+        // An optional peer the root does not install; expo-clipboard.ts says
+        // why, and what stands in for it.
+        alias: {
+          'expo-clipboard': path.join(import.meta.dirname, 'expo-clipboard.ts'),
+        },
+      },
     }),
 }
 
