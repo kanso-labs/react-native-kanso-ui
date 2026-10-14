@@ -11,6 +11,8 @@ export type {
 } from './components/stack'
 export { Text } from './components/text'
 export type { TextProps } from './components/text'
+export { useIconStyle } from './glyphs/icon-style'
+export type { IconStyle } from './glyphs/icon-style'
 export { ThemeScope } from './theme-scope'
 export type { KuiTheme, ThemeScopeProps } from './theme-scope'
 export type { ResolvedTheme } from './theme/scope'
