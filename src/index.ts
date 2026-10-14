@@ -13,6 +13,13 @@ export { Card } from './components/card'
 export type { CardProps, CardVariant } from './components/card'
 export { Checkbox } from './components/checkbox'
 export type { CheckboxProps } from './components/checkbox'
+export { Chip } from './components/chip'
+export type {
+  ChipActionProps,
+  ChipFilterProps,
+  ChipProps,
+  ChipVariant,
+} from './components/chip'
 export { Currency } from './components/currency'
 export type {
   CurrencyProps,
