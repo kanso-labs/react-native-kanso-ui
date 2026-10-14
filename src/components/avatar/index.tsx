@@ -1,4 +1,4 @@
-import type { Ref } from 'react'
+import type { ComponentRef, Ref } from 'react'
 import type { StyleProp, View, ViewProps, ViewStyle } from 'react-native'
 
 import type { MarkImageProps } from '../../mark'
@@ -41,7 +41,7 @@ type AvatarProps = Omit<ViewProps, 'children' | 'style'> & {
    * names are, is one word, and takes one initial.
    */
   readonly name: string
-  readonly ref?: Ref<View>
+  readonly ref?: Ref<ComponentRef<typeof View>>
   /**
    * Whether an avatar with no initials to take, for a blank `name`, draws
    * Material Design's anonymous person. `false` leaves the tinted disc

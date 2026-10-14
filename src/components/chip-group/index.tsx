@@ -1,4 +1,4 @@
-import type { ReactElement, ReactNode, Ref } from 'react'
+import type { ComponentRef, ReactElement, ReactNode, Ref } from 'react'
 import type {
   GestureResponderEvent,
   Insets,
@@ -102,7 +102,7 @@ type ChipGroupChipProps = Omit<
    * @default false
    */
   readonly isDisabled?: boolean
-  readonly ref?: Ref<View>
+  readonly ref?: Ref<ComponentRef<typeof View>>
   readonly style?: StyleProp<ViewStyle>
   /**
    * The chip's text, which names its close target. Read off `children` when
@@ -157,7 +157,7 @@ type ChipGroupProps<T extends object = object> = Omit<
   readonly onRemove?: (keys: Set<Key>) => void
   /** Called with the selected keys whenever a press changes them. */
   readonly onSelectionChange?: (keys: Selection) => void
-  readonly ref?: Ref<View>
+  readonly ref?: Ref<ComponentRef<typeof View>>
   /**
    * What the close target on each chip is called, for a screen reader. The
    * chip's own text follows it, so this is the verb rather than the whole

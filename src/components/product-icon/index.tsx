@@ -1,4 +1,4 @@
-import type { Ref } from 'react'
+import type { ComponentRef, Ref } from 'react'
 import type { StyleProp, View, ViewProps, ViewStyle } from 'react-native'
 
 import type { MarkImageProps } from '../../mark'
@@ -39,7 +39,7 @@ type ProductIconProps = Omit<ViewProps, 'children' | 'style'> & {
    * channel's hash or a bracket.
    */
   readonly name: string
-  readonly ref?: Ref<View>
+  readonly ref?: Ref<ComponentRef<typeof View>>
   /**
    * Edge length: `sm` 36dp, `md` 40dp, `lg` 56dp. The same three Avatar
    * uses, so the two are interchangeable wherever one leads a row or a card.

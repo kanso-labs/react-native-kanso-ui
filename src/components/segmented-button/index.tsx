@@ -1,4 +1,4 @@
-import type { ReactElement, ReactNode, Ref } from 'react'
+import type { ComponentRef, ReactElement, ReactNode, Ref } from 'react'
 import type {
   GestureResponderEvent,
   LayoutChangeEvent,
@@ -161,7 +161,7 @@ type SegmentedButtonProps = LabelledBy &
     readonly isDisabled?: boolean
     /** Called with the chosen keys when the choice changes. */
     readonly onSelectionChange?: (keys: Set<Key>) => void
-    readonly ref?: Ref<View>
+    readonly ref?: Ref<ComponentRef<typeof View>>
     /** The chosen keys, when the call site holds the selection. */
     readonly selectedKeys?: Iterable<Key>
     /**
@@ -206,7 +206,7 @@ type SegmentedButtonSegmentProps = Omit<
    * @default false
    */
   readonly isDisabled?: boolean
-  readonly ref?: Ref<View>
+  readonly ref?: Ref<ComponentRef<typeof View>>
   readonly style?: StyleProp<ViewStyle>
 }
 

@@ -9,7 +9,7 @@ import { RouterProvider, useLinkPress, useOpenLink } from '.'
 const navigate = jest.fn<(href: string) => void>()
 
 async function press(href: string, wrapper?: typeof Routed) {
-  const openURL = jest.spyOn(Linking, 'openURL').mockResolvedValue(true)
+  const openURL = jest.spyOn(Linking, 'openURL').mockResolvedValue()
   const { result } = await renderHook(() => useOpenLink(), { wrapper })
   result.current(href)
   return openURL
@@ -107,7 +107,7 @@ describe('useLinkPress', () => {
 
   it('calls onPress alone without an href', async () => {
     const onPress = jest.fn()
-    const openURL = jest.spyOn(Linking, 'openURL').mockResolvedValue(true)
+    const openURL = jest.spyOn(Linking, 'openURL').mockResolvedValue()
     const { result } = await renderHook(
       () => useLinkPress(undefined, onPress),
       { wrapper: Routed },

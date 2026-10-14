@@ -301,8 +301,8 @@ function ringDrawing() {
 
 function styleOf(element: {
   props: { style?: StyleProp<TextStyle | ViewStyle> }
-}) {
-  return StyleSheet.flatten([element.props.style])
+}): TextStyle | ViewStyle {
+  return StyleSheet.flatten([element.props.style]) ?? {}
 }
 
 beforeEach(() => {

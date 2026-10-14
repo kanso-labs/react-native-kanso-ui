@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import type { Insets, PressableProps, ViewStyle } from 'react-native'
 
 import { useRef, useState } from 'react'
-import { StyleSheet, View } from 'react-native'
+import { View } from 'react-native'
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -13,6 +13,7 @@ import Animated, {
 } from 'react-native-reanimated'
 
 import { useTheme } from '../theme/scope'
+import { composeStyles } from '../theme/styles'
 import { styles, stylesOf } from './styles'
 
 /** The corners a control is drawn with, which its feedback clips to. */
@@ -317,14 +318,15 @@ function usePressFeedback({
       if (rippled && disc !== undefined) {
         ripple(disc, disc, { x: disc / 2, y: disc / 2 })
         phase.current = 'shown'
-      } else if (rippled) {
+      } else if (rippled && typeof event.currentTarget !== 'number') {
         const { pageX, pageY } = event.nativeEvent
 
         // A touch's own location is measured from whichever child it landed
         // on, so the point is taken from the page and the control measured
         // there. A press from a key carries no point, and ripples from the
         // centre. React Native Web measures a frame later, so a press can end
-        // first, and its ripple is then drawn whole.
+        // first, and its ripple is then drawn whole. React Native types the
+        // target as a bare view tag too, which has nothing to measure.
         phase.current = 'measuring'
         event.currentTarget.measure((_x, _y, width, height, left, top) => {
           ripple(width, height, {
@@ -365,8 +367,8 @@ function usePressFeedback({
         : interactive && hovered
           ? stateLayerOpacity.hover
           : 0
-  const surface = StyleSheet.compose(styles.surface, corners)
-  const state = StyleSheet.compose(styles.layer, {
+  const surface = composeStyles<ViewStyle>(styles.surface, corners)
+  const state = composeStyles<ViewStyle>(styles.layer, {
     backgroundColor: interactive && pressed ? pressedColor : color,
     opacity: layerOpacity,
   })

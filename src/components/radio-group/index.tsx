@@ -1,4 +1,4 @@
-import type { ReactNode, Ref } from 'react'
+import type { ComponentRef, ReactNode, Ref } from 'react'
 import type { StyleProp, TextStyle, ViewProps, ViewStyle } from 'react-native'
 import type { AnimatedStyle } from 'react-native-reanimated'
 import type { RadioGroupState } from 'react-stately/useRadioGroupState'
@@ -107,7 +107,7 @@ type RadioGroupProps = Omit<ViewProps, 'children' | 'style'> & {
    * @default 'vertical'
    */
   readonly orientation?: RadioGroupOrientation
-  readonly ref?: Ref<View>
+  readonly ref?: Ref<ComponentRef<typeof View>>
   readonly style?: StyleProp<ViewStyle>
   /**
    * The selected value, for a call site holding the state itself with
@@ -129,7 +129,7 @@ type RadioProps = Omit<ViewProps, 'children' | 'style'> & {
    * @default false
    */
   readonly isDisabled?: boolean
-  readonly ref?: Ref<View>
+  readonly ref?: Ref<ComponentRef<typeof View>>
   readonly style?: StyleProp<ViewStyle>
   /** The entry this button stands for, which the group reports when chosen. */
   readonly value: string

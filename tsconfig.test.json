@@ -13,6 +13,10 @@
     /* Bundler mode */
     "moduleResolution": "bundler",
     "customConditions": ["react-native"],
+    // The platform files Jest resolves, through the haste platforms of React
+    // Native's preset, iOS first. Reanimated's own testing helpers are typed in
+    // their native file, and its web stub declares them taking nothing.
+    "moduleSuffixes": [".ios", ".native", ""],
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",

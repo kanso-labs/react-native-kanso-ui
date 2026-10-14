@@ -1,4 +1,4 @@
-import type { Ref } from 'react'
+import type { ComponentRef, Ref } from 'react'
 import type { TextStyle, ViewProps, ViewStyle } from 'react-native'
 
 import { useEffect, useRef, useState } from 'react'
@@ -160,7 +160,7 @@ type CopyFieldProps = Omit<ViewProps, 'children'> & {
    * that wants to say more, in a snackbar say.
    */
   readonly onCopyFailed?: (error: unknown) => void
-  readonly ref?: Ref<View>
+  readonly ref?: Ref<ComponentRef<typeof View>>
   /** The text shown, and the text copied. */
   readonly value: string
 }

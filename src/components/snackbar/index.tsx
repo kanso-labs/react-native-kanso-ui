@@ -1,4 +1,4 @@
-import type { ReactNode, Ref } from 'react'
+import type { ComponentRef, ReactNode, Ref } from 'react'
 import type {
   LayoutChangeEvent,
   StyleProp,
@@ -274,7 +274,7 @@ type SnackbarProps = Omit<ViewProps, 'children' | 'style'> & {
   readonly closeLabel?: string
   /** The queue the snackbar shows messages from. */
   readonly queue: SnackbarQueue
-  readonly ref?: Ref<View>
+  readonly ref?: Ref<ComponentRef<typeof View>>
   readonly style?: StyleProp<ViewStyle>
 }
 

@@ -1,4 +1,4 @@
-import type { ReactNode, Ref } from 'react'
+import type { ComponentRef, ReactNode, Ref } from 'react'
 import type {
   PressableProps,
   StyleProp,
@@ -51,7 +51,7 @@ type CardBaseProps = {
    * @default 'default'
    */
   readonly padding?: 'default' | 'none'
-  readonly ref?: Ref<View>
+  readonly ref?: Ref<ComponentRef<typeof View>>
   readonly style?: StyleProp<ViewStyle>
   /**
    * How the card separates itself from the page: `elevated` casts a shadow,

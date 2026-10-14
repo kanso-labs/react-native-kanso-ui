@@ -79,7 +79,7 @@ function child(node: TestNode | undefined): TestInstance {
 }
 
 function colorOf(element: { props: { style?: StyleProp<TextStyle> } }) {
-  return StyleSheet.flatten([element.props.style]).color
+  return StyleSheet.flatten([element.props.style])?.color
 }
 
 // Lays the strip out at a single line's height, which is how far it rises.
@@ -126,8 +126,10 @@ function strip() {
   return child(region().children[0])
 }
 
-function styleOf(element: { props: { style?: StyleProp<ViewStyle> } }) {
-  return StyleSheet.flatten([element.props.style])
+function styleOf(element: {
+  props: { style?: StyleProp<ViewStyle> }
+}): ViewStyle {
+  return StyleSheet.flatten([element.props.style]) ?? {}
 }
 
 // How far below its place an animated style puts the strip.

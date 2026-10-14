@@ -144,8 +144,10 @@ function same(color: unknown) {
   return withOpacity(color, 1)
 }
 
-function styleOf(element: { props: { style?: StyleProp<TextStyle> } }) {
-  return StyleSheet.flatten([element.props.style])
+function styleOf(element: {
+  props: { style?: StyleProp<TextStyle> }
+}): TextStyle {
+  return StyleSheet.flatten([element.props.style]) ?? {}
 }
 
 beforeEach(() => {

@@ -1,5 +1,5 @@
 import type { RefObject } from 'react'
-import type { LayoutChangeEvent, NativeMethods, ViewStyle } from 'react-native'
+import type { HostInstance, LayoutChangeEvent, ViewStyle } from 'react-native'
 
 import { use, useEffect, useState } from 'react'
 import { Dimensions, I18nManager, useWindowDimensions } from 'react-native'
@@ -35,7 +35,7 @@ type AnchoredPlacementOptions = {
   /** Moves the surface along that side, in dp: right or down when positive. */
   readonly alignOffset?: number | undefined
   /** The view the surface opens beside. */
-  readonly anchor: RefObject<null | Pick<NativeMethods, 'measureInWindow'>>
+  readonly anchor: RefObject<null | Pick<HostInstance, 'measureInWindow'>>
   /**
    * Which side of the anchor the surface opens on. It flips to the opposite
    * side when there is no room.

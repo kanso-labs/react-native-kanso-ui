@@ -64,9 +64,15 @@ const config: StorybookConfig = {
         }),
       ],
       resolve: {
-        // An optional peer the root does not install; expo-clipboard.ts says
-        // why, and what stands in for it.
         alias: {
+          // React Native SVG's web renderer reads its assets through
+          // @react-native/assets-registry, which React Native stopped
+          // installing at 0.87. React Native Web keeps the registry its own
+          // Image reads, so the import is pointed at that one.
+          '@react-native/assets-registry/registry':
+            'react-native-web/dist/modules/AssetRegistry',
+          // An optional peer the root does not install; expo-clipboard.ts says
+          // why, and what stands in for it.
           'expo-clipboard': path.join(import.meta.dirname, 'expo-clipboard.ts'),
         },
       },

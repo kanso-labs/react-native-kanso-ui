@@ -51,8 +51,10 @@ const WIDER: KuiTheme = { '--kui-spacing-md': '20px' }
 // Sets what the stack sets too, so it shows which one wins.
 const CALL_SITE = { flexDirection: 'row-reverse', gap: 3, padding: 4 } as const
 
-function styleOf(element: { props: { style?: StyleProp<ViewStyle> } }) {
-  return StyleSheet.flatten([element.props.style])
+function styleOf(element: {
+  props: { style?: StyleProp<ViewStyle> }
+}): ViewStyle {
+  return StyleSheet.flatten([element.props.style]) ?? {}
 }
 
 describe('Stack', () => {
