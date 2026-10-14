@@ -161,6 +161,7 @@ type FieldInputProps = Omit<
   | 'accessibilityHint'
   | 'cursorColor'
   | 'multiline'
+  | 'placeholderTextColor'
   | 'selectionColor'
   | 'style'
   | 'underlineColorAndroid'
@@ -205,6 +206,20 @@ type FieldState = {
   readonly invalid: boolean
 }
 
+type FieldStatesProps = {
+  readonly children?: ReactNode
+  /** @default false */
+  readonly isDisabled?: boolean
+  /** @default false */
+  readonly isInvalid?: boolean
+}
+
+type FieldStrokeProps = StrokeMotion & {
+  /** Every side of the view, or the top alone. */
+  readonly sides: 'all' | 'top'
+  readonly style: StyleProp<ViewStyle>
+}
+
 /**
  * The filled box, or the outlined one: no fill, an outline that thickens and
  * takes the primary role while focused, and the label cutting it once it
@@ -222,6 +237,12 @@ type LabelPlace = {
 
 // The control's state as React Native Web hands it to a browser, which reads
 // `aria-invalid` and `aria-required` off the input. React Native has neither.
+// A rule's colour and width as they ease.
+type StrokeMotion = {
+  readonly color: DerivedValue<string>
+  readonly width: DerivedValue<number>
+}
+
 type WebState = {
   readonly 'aria-invalid'?: true
   readonly 'aria-required'?: true
@@ -370,9 +391,9 @@ function FieldBox({
               widthOf(outlineInset(spacing, leading)),
             )}
           >
-            <RuleStroke
+            <FieldStroke
               color={rule.color}
-              outlined
+              sides="all"
               style={styles.outlineStartBox}
               width={rule.width}
             />
@@ -383,9 +404,9 @@ function FieldBox({
               widthOf(floated ? notch : 0),
             )}
           >
-            <RuleStroke
+            <FieldStroke
               color={rule.color}
-              outlined
+              sides="all"
               style={styles.outlineNotchBox}
               width={rule.width}
             />
@@ -396,9 +417,9 @@ function FieldBox({
               minWidthOf(outlineInset(spacing, trailing)),
             )}
           >
-            <RuleStroke
+            <FieldStroke
               color={rule.color}
-              outlined
+              sides="all"
               style={styles.outlineEndBox}
               width={rule.width}
             />
@@ -407,9 +428,9 @@ function FieldBox({
       ) : (
         <>
           {feedback.layer}
-          <RuleStroke
+          <FieldStroke
             color={rule.color}
-            outlined={false}
+            sides="top"
             style={styles.indicator}
             width={rule.width}
           />
@@ -469,11 +490,12 @@ function FieldBox({
 }
 
 /**
- * A field's text control, in a {@link FieldBox} or on its own. In a box it
- * clears the label at the top where the box is filled, takes the error role
- * for its caret while the field has an error, and shows a prefix and a suffix
- * only while the label has floated, since at rest the label sits on their
- * line.
+ * A field's text control, in a {@link FieldBox}, or in {@link FieldStates}
+ * inside a container of a field's own. In a box it clears the label at the
+ * top where the box is filled, and shows a prefix and a suffix only while the
+ * label has floated, since at rest the label sits on their line. It takes the
+ * error role for its caret while the field has an error, and draws a
+ * placeholder in the muted role.
  *
  * It is described by its prefix and suffix, ahead of what the field hands it
  * in `described`, so a reader hears the unit the value is read against as a
@@ -499,18 +521,14 @@ function FieldInput({
     ? withOpacity(colors.onSurface, stateLayerOpacity.disabledContent)
     : colors.onSurface
   const caret = box.invalid ? colors.error : colors.primary
+  const muted = box.disabled
+    ? withOpacity(colors.onSurface, stateLayerOpacity.disabledContent)
+    : colors.onSurfaceVariant
   const affixed = prefix !== undefined || suffix !== undefined
   const clearance = box.underLabel
     ? marginTopOf(typography.bodySmallLineHeight * fontScale)
     : undefined
-  const affixStyle = composeStyles<TextStyle>(
-    role,
-    colorOf(
-      box.disabled
-        ? withOpacity(colors.onSurface, stateLayerOpacity.disabledContent)
-        : colors.onSurfaceVariant,
-    ),
-  )
+  const affixStyle = composeStyles<TextStyle>(role, colorOf(muted))
 
   const control = (
     <TextInput
@@ -524,6 +542,7 @@ function FieldInput({
       {...webStateOf(box)}
       aria-disabled={box.disabled}
       cursorColor={caret}
+      placeholderTextColor={muted}
       selectionColor={caret}
       style={composeStyles<TextStyle>(
         role,
@@ -647,6 +666,25 @@ function FieldMessage({
       ) : null}
     </View>
   )
+}
+
+/**
+ * Hands a control outside a box the states it is drawn in, for a field that
+ * draws a container of its own around the control, as SearchField's bar is.
+ * The control takes its colours and the state a screen reader reads from
+ * these, as it does from the box around it.
+ */
+function FieldStates({
+  children,
+  isDisabled = false,
+  isInvalid = false,
+}: FieldStatesProps) {
+  const states = useMemo(
+    () => ({ ...OUTSIDE_BOX, disabled: isDisabled, invalid: isInvalid }),
+    [isDisabled, isInvalid],
+  )
+
+  return <BoxContext value={states}>{children}</BoxContext>
 }
 
 /**
@@ -1012,24 +1050,15 @@ function outlineInset(spacing: ResolvedTheme['spacing'], icon: ReactNode) {
 const REQUIRED_MARK = '*'
 
 /**
- * One view drawing the box's rule in its eased colour and width: every side
- * of the outlined box, which the piece around it clips, or the top of the
- * filled box's indicator.
+ * One view drawing a field's rule in its eased colour and width, from
+ * {@link useStrokeMotion}: on every side, for the outlined box's outline,
+ * which the piece around it clips, and a bar's ring, or on the top alone,
+ * for the filled box's indicator.
  */
-function RuleStroke({
-  color,
-  outlined,
-  style,
-  width,
-}: {
-  readonly color: DerivedValue<string>
-  readonly outlined: boolean
-  readonly style: StyleProp<ViewStyle>
-  readonly width: DerivedValue<number>
-}) {
+function FieldStroke({ color, sides, style, width }: FieldStrokeProps) {
   const stroke = useAnimatedStyle(() => {
     'worklet'
-    return outlined
+    return sides === 'all'
       ? { borderColor: color.get(), borderWidth: width.get() }
       : { borderColor: color.get(), borderTopWidth: width.get() }
   })
@@ -1062,12 +1091,10 @@ function useErrorAnnouncement(error: string | undefined) {
 
 /**
  * The rule the box draws, the filled box's indicator or the outlined box's
- * outline: its colour and its width by state, eased over `durationShort2` as
- * web transitions them.
+ * outline: its colour and its width by state.
  */
 function useRuleMotion(theme: ResolvedTheme, state: FieldState) {
-  const reduceMotion = useReducedMotion()
-  const { colors, motion, stateLayerOpacity } = theme
+  const { colors, stateLayerOpacity } = theme
   const width = !state.disabled && state.focused ? 2 : 1
   const color = state.disabled
     ? withOpacity(colors.onSurface, stateLayerOpacity.disabledContainer)
@@ -1082,6 +1109,18 @@ function useRuleMotion(theme: ResolvedTheme, state: FieldState) {
         : state.invalid
           ? colors.error
           : colors.outline
+
+  return useStrokeMotion(color, width)
+}
+
+/**
+ * A rule's colour and width, eased to each new pair over `durationShort2` as
+ * web transitions them, and moved at once under reduced motion. Hand the
+ * result to {@link FieldStroke}.
+ */
+function useStrokeMotion(color: string, width: number): StrokeMotion {
+  const { motion } = useTheme()
+  const reduceMotion = useReducedMotion()
   const timing = {
     duration: motion.durationShort2,
     easing: Easing.bezier(...motion.easingStandard),
@@ -1118,11 +1157,22 @@ function widthTo(onMeasure: (width: number) => void) {
   }
 }
 
-export { describedBy, FieldBox, FieldInput, FieldMessage, useFieldFocus }
+export {
+  describedBy,
+  FieldBox,
+  FieldInput,
+  FieldMessage,
+  FieldStates,
+  FieldStroke,
+  useFieldFocus,
+  useStrokeMotion,
+}
 export type {
   FieldBoxProps,
   FieldDescriptionPart,
   FieldInputProps,
   FieldMessageProps,
+  FieldStatesProps,
+  FieldStrokeProps,
   FieldVariant,
 }

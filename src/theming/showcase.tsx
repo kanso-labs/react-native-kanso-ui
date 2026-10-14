@@ -16,6 +16,7 @@ import { IconButton } from '../components/icon-button'
 import { Link } from '../components/link'
 import { ProductIcon } from '../components/product-icon'
 import { Radio, RadioGroup } from '../components/radio-group'
+import { SearchField } from '../components/search-field'
 import { SegmentedButton } from '../components/segmented-button'
 import { Separator } from '../components/separator'
 import { Stack } from '../components/stack'
@@ -383,6 +384,20 @@ function Showcase({ name }: ShowcaseProps) {
           <Radio value="second">Second item</Radio>
           <Radio value="third">Third item</Radio>
         </RadioGroup>
+      </Section>
+
+      <Section
+        description="The field with a glyph at its leading edge, which takes the same muted role the supporting text does, and a ring in the error role once there is a message."
+        title="SearchField"
+      >
+        <Stack gap="md">
+          <SearchField label="Label" placeholder="Supporting text" />
+          <SearchField
+            error="Supporting line"
+            label="Label"
+            placeholder="Supporting text"
+          />
+        </Stack>
       </Section>
 
       <Section

@@ -47,6 +47,8 @@ export type {
   RadioGroupProps,
   RadioProps,
 } from './components/radio-group'
+export { SearchField } from './components/search-field'
+export type { SearchFieldProps } from './components/search-field'
 export {
   SegmentedButton,
   SegmentedButtonSegment,
