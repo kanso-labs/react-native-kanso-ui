@@ -2,3 +2,4 @@
 // imports is exported here by name.
 export { useIconStyle } from './glyphs/icon-style'
 export type { IconStyle } from './glyphs/icon-style'
+export type { KuiTheme } from './tokens/defaults'

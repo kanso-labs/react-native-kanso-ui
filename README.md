@@ -30,6 +30,7 @@ mise exec node@"$(awk '/^nodejs/{print $2}' .tool-versions)" -- npm install
 | Lint   | `npm run lint`          |
 | Build  | `npm run build`         |
 | Verify | `npm run package:check` |
+| Tokens | `npm run tokens:build`  |
 
 ## License
 
