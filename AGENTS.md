@@ -338,10 +338,17 @@ checks a ruleset waits on, which reads as a hang rather than a failure.
 **`Deploy Storybook` publishes the web Storybook to GitHub Pages**, on each
 published release, and by hand through `workflow_dispatch` run from the
 release's tag, since a dispatch builds the ref it is given. It posts no pull
-request check, so no ruleset names it. It needs Settings → Pages → Source set to
-"GitHub Actions", and it starts on a release only because release-please
-publishes with an application token: a release published by `GITHUB_TOKEN`
-starts no workflow at all.
+request check, so no ruleset names it. It starts on a release only because
+release-please publishes with an application token: a release published by
+`GITHUB_TOKEN` starts no workflow at all.
+
+**It needs two settings no file here holds.** Settings → Pages → Source has to
+be "GitHub Actions". And the `github-pages` environment, under Settings →
+Environments, has to admit the release tags through a `v*` tag rule: Pages
+creates that environment admitting the default branch alone, and a run a release
+starts runs on its tag. v0.1.0's deploy was refused before it started, with _Tag
+"v0.1.0" is not allowed to deploy to github-pages due to environment protection
+rules_, while the build job beside it passed.
 
 **`Test` reports the suite's coverage on the pull request**, through
 `actions/upload-code-coverage`, from the Cobertura file `npm run test:coverage`
@@ -360,9 +367,12 @@ JavaScript, which is why its status in `.github/codecov.yml` is informational.
 
 **Releases are cut by release-please**, once a day at 09:00 UTC, from
 `release-please.yaml`. It publishes through npm's trusted publishing, so this
-repository holds no npm token. A trusted publisher is registered on the
-package's npm page, which exists only once a first version has been published,
-so that version is published by hand.
+repository holds no npm token, and then publishes the same tarball to GitHub
+Packages with `GITHUB_TOKEN`, only once npm has taken it. A trusted publisher is
+registered on the package's npm page, which exists only once a first version has
+been published, so that version is published by hand: v0.1.0's run failed
+`Publish to npm` with npm's 404 for a package it had never seen, and skipped
+GitHub Packages with it.
 
 **The first release is 0.1.0, and `initial-version` is what makes it so.** With
 no release tagged yet, release-please has no version to bump, and starts at
