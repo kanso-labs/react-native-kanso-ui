@@ -210,6 +210,20 @@ describe('the state layer', () => {
     expect(layerOpacity()).toBe(0)
   })
 
+  it('draws no hover or press on a pending control, and keeps focus', async () => {
+    await render(<Control pending />)
+
+    await fireEvent(control(), 'hoverIn', {})
+    await fireEvent(control(), 'pressIn', pressAt(30, 30))
+    expect(layerOpacity()).toBe(0)
+    expect(parts().ripple).toBeUndefined()
+
+    await fireEvent(control(), 'pressOut', {})
+    await fireEvent(control(), 'focus', {})
+    expect(layerOpacity()).toBe(stateLayerOpacity.focus)
+    expect(styleOf(control()).outlineWidth).toBe(2)
+  })
+
   it('clips to the corners it is given', async () => {
     await render(<Control corners={CORNERS} />)
 
@@ -428,6 +442,13 @@ describe('the states', () => {
 
   it('report neither on a disabled control', async () => {
     await render(<Reporter disabled />)
+
+    await fireEvent(control(), 'hoverIn', {})
+    await fireEvent(control(), 'pressIn', pressAt(30, 30))
+    expect(screen.getByText('false false')).toBeTruthy()
+  })
+  it('report neither on a pending control', async () => {
+    await render(<Reporter pending />)
 
     await fireEvent(control(), 'hoverIn', {})
     await fireEvent(control(), 'pressIn', pressAt(30, 30))

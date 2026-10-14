@@ -43,14 +43,14 @@ type PressFeedback = {
   }
   /**
    * Whether a pointer is over the control, for a control that draws more
-   * than the layer while hovered. Never while disabled.
+   * than the layer while hovered. Never while disabled or pending.
    */
   readonly hovered: boolean
   /** The state layer and the ripple, to render as the `Pressable`'s first child. */
   readonly layer: ReactNode
   /**
    * Whether the control is pressed, for a control that draws more than the
-   * layer while pressed. Never while disabled.
+   * layer while pressed. Never while disabled or pending.
    */
   readonly pressed: boolean
   /** The focus ring while it shows, to compose into the control's style. */
@@ -79,6 +79,11 @@ type PressFeedbackOptions = Handlers & {
    * the press point across the control.
    */
   readonly disc?: number | undefined
+  /**
+   * Takes no press or hover while true, with no layer and no ripple for
+   * either, and keeps the focus and its ring, as a pending button does.
+   */
+  readonly pending?: boolean | undefined
   /**
    * The colour the pressed layer and the ripple are drawn in, where it
    * differs from the hover and focus layers': a checkbox's swaps between
@@ -195,6 +200,7 @@ function usePressFeedback({
   onHoverOut,
   onPressIn,
   onPressOut,
+  pending,
   pressedColor = color,
 }: PressFeedbackOptions): PressFeedback {
   const theme = useTheme()
@@ -214,7 +220,8 @@ function usePressFeedback({
 
   const { motion, spacing, stateLayerOpacity } = theme
   const active = disabled !== true
-  const rippled = active && !disableRipple && !reduceMotion
+  const interactive = active && pending !== true
+  const rippled = interactive && !disableRipple && !reduceMotion
 
   const rippleMotion = useAnimatedStyle(() => {
     'worklet'
@@ -351,22 +358,22 @@ function usePressFeedback({
 
   const layerOpacity = !active
     ? 0
-    : pressed
+    : interactive && pressed
       ? stateLayerOpacity.pressed
       : ringShown
         ? stateLayerOpacity.focus
-        : hovered
+        : interactive && hovered
           ? stateLayerOpacity.hover
           : 0
   const surface = StyleSheet.compose(styles.surface, corners)
   const state = StyleSheet.compose(styles.layer, {
-    backgroundColor: active && pressed ? pressedColor : color,
+    backgroundColor: interactive && pressed ? pressedColor : color,
     opacity: layerOpacity,
   })
 
   return {
     handlers,
-    hovered: active && hovered,
+    hovered: interactive && hovered,
     layer: (
       <View
         accessibilityElementsHidden
@@ -377,7 +384,7 @@ function usePressFeedback({
         {rippled ? <Animated.View style={rippleMotion} /> : null}
       </View>
     ),
-    pressed: active && pressed,
+    pressed: interactive && pressed,
     ring: active && ringShown ? stylesOf(theme).ring : undefined,
   }
 }

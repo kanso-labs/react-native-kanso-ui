@@ -9,9 +9,21 @@ import {
   it,
   jest,
 } from '@jest/globals'
-import { act, fireEvent, render, screen } from '@testing-library/react-native'
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  userEvent,
+} from '@testing-library/react-native'
 import { createRef } from 'react'
-import { StyleSheet, Text, View } from 'react-native'
+import {
+  AccessibilityInfo,
+  Platform,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native'
 import { getAnimatedStyle } from 'react-native-reanimated'
 
 import type { ButtonSize, ButtonVariant } from '.'
@@ -30,6 +42,36 @@ jest.mock('react-native-reanimated', () => ({
   ...jest.requireActual<object>('react-native-reanimated'),
   useReducedMotion: () => mockReducedMotion,
 }))
+
+// The locale the device reports, which a pending ring's name is written in
+// when the call site gives none.
+let mockDeviceLocale = 'en-US'
+
+jest.mock('../../number/locale', () => ({
+  localeOf: (locale: string | undefined) => locale ?? mockDeviceLocale,
+}))
+
+// A path drawn as a plain element, so the stroke the ring hands it reads as
+// written rather than as react-native-svg's processed colour. Reanimated
+// moves the ring's arc through `setNativeProps`, which has nothing to do here.
+jest.mock('react-native-svg', () => {
+  const { Component, createElement } =
+    jest.requireActual<typeof import('react')>('react')
+
+  class Path extends Component {
+    render() {
+      return createElement('Path', this.props)
+    }
+
+    setNativeProps() {}
+  }
+
+  return {
+    __esModule: true,
+    ...jest.requireActual<object>('react-native-svg'),
+    Path,
+  }
+})
 
 const { theme } = scopeFor('light', {})
 const { colors, motion, radii, shadows, sizing, spacing, stateLayerOpacity } =
@@ -239,6 +281,24 @@ function layer() {
   return view
 }
 
+// The ring a pending button draws, found as a screen reader finds it.
+function ring(name = 'Loading') {
+  return screen.getByRole('progressbar', { name })
+}
+
+// What the ring's svg is drawn at, and the colour of each of its arcs.
+function ringDrawing() {
+  const element = ring()
+  const svg = element
+    .queryAll((each) => each.type.startsWith('RNSVGSvgView'))
+    .at(0)
+  const strokes = element
+    .queryAll((each) => each.type === 'Path')
+    .map((path): unknown => path.props.stroke)
+
+  return { size: [svg?.props.bbWidth, svg?.props.bbHeight], strokes }
+}
+
 function styleOf(element: {
   props: { style?: StyleProp<TextStyle | ViewStyle> }
 }) {
@@ -250,8 +310,11 @@ beforeEach(() => {
 })
 
 afterEach(() => {
+  mockDeviceLocale = 'en-US'
   mockReducedMotion = false
   jest.useRealTimers()
+  jest.restoreAllMocks()
+  jest.clearAllMocks()
 })
 
 describe('Button', () => {
@@ -743,5 +806,262 @@ describe('the press feedback', () => {
       outlineColor: colors.primary,
       outlineWidth: 2,
     })
+  })
+})
+
+describe('the pending state', () => {
+  it('takes no press while pending', async () => {
+    const onLongPress = jest.fn()
+    const onPress = jest.fn()
+    await render(
+      <Button
+        isPending
+        onLongPress={onLongPress}
+        onPress={onPress}
+        testID="button"
+      >
+        Label
+      </Button>,
+    )
+
+    const user = userEvent.setup()
+
+    await user.press(button())
+    await user.longPress(button())
+
+    expect(onPress).not.toHaveBeenCalled()
+    expect(onLongPress).not.toHaveBeenCalled()
+  })
+
+  it('keeps a pending toggle as it was', async () => {
+    const onChange = jest.fn()
+    await render(
+      <Button
+        defaultSelected={false}
+        isPending
+        onChange={onChange}
+        testID="button"
+      >
+        Label
+      </Button>,
+    )
+
+    await userEvent.setup().press(button())
+
+    expect(onChange).not.toHaveBeenCalled()
+    expect(button().props.accessibilityState).toMatchObject({ selected: false })
+  })
+
+  it('takes presses again once it clears', async () => {
+    const onPress = jest.fn()
+    const { rerender } = await render(
+      <Button isPending onPress={onPress} testID="button">
+        Label
+      </Button>,
+    )
+
+    await rerender(
+      <Button onPress={onPress} testID="button">
+        Label
+      </Button>,
+    )
+    await userEvent.setup().press(button())
+
+    expect(onPress).toHaveBeenCalledTimes(1)
+  })
+
+  // Hidden in place rather than taken away, which is what keeps the button
+  // its width.
+  it('keeps its label and icon where they stand, undrawn and unread', async () => {
+    await render(
+      <Button icon={ICON} isPending>
+        Label
+      </Button>,
+    )
+    const hiddenLabel = screen.getByText('Label', {
+      includeHiddenElements: true,
+    })
+    const icon = screen.getByTestId('icon', { includeHiddenElements: true })
+
+    expect(screen.queryByText('Label')).toBeNull()
+    expect(screen.queryByTestId('icon')).toBeNull()
+    expect(styleOf(hiddenLabel).opacity).toBe(0)
+    expect(icon.parent && styleOf(icon.parent).opacity).toBe(0)
+  })
+
+  it('draws its label and icon again once it clears', async () => {
+    const { rerender } = await render(
+      <Button icon={ICON} isPending>
+        Label
+      </Button>,
+    )
+
+    await rerender(<Button icon={ICON}>Label</Button>)
+
+    expect(styleOf(label()).opacity).toBeUndefined()
+    expect(screen.getByTestId('icon')).toBeTruthy()
+    expect(screen.queryByRole('progressbar')).toBeNull()
+  })
+
+  it('names its ring with pendingLabel', async () => {
+    await render(
+      <Button isPending pendingLabel="Pending label">
+        Label
+      </Button>,
+    )
+
+    expect(ring('Pending label')).toBeTruthy()
+  })
+
+  it.each([
+    ['en-US', 'Loading'],
+    ['de-DE', 'Wird geladen'],
+  ])('names its ring in the device’s locale, %s', async (locale, name) => {
+    mockDeviceLocale = locale
+    await render(<Button isPending>Label</Button>)
+
+    expect(ring(name)).toBeTruthy()
+  })
+
+  it('reports itself busy, as a button still', async () => {
+    await render(
+      <Button isPending testID="button">
+        Label
+      </Button>,
+    )
+
+    expect(button().props.accessibilityState).toMatchObject({
+      busy: true,
+      disabled: false,
+    })
+    expect(screen.getByRole('button', { busy: true })).toBe(button())
+  })
+
+  it.each(VARIANTS)(
+    'draws its ring in the label colour under %s',
+    async (variant, _container, content) => {
+      await render(
+        <Button isPending variant={variant}>
+          Label
+        </Button>,
+      )
+
+      expect(ringDrawing().strokes).toEqual([content])
+    },
+  )
+
+  // The device's text size under the suite: React Native's Jest preset
+  // reports a font scale of 2.
+  it.each(SIZES)(
+    'draws its ring at the label’s type size at %s',
+    async (size, _metrics, role) => {
+      await render(
+        <Button isPending size={size}>
+          Label
+        </Button>,
+      )
+
+      expect(ringDrawing().size).toEqual([
+        typography[`${role}Size`] * 2,
+        typography[`${role}Size`] * 2,
+      ])
+    },
+  )
+
+  it('keeps its focus ring, and draws no hover or press', async () => {
+    await render(
+      <Button isPending testID="button">
+        Label
+      </Button>,
+    )
+
+    await fireEvent(button(), 'hoverIn', {})
+    await fireEvent(button(), 'pressIn', PRESS)
+
+    expect(styleOf(layer()).opacity).toBe(0)
+    expect(cornerOf(button())).toBe(radii.pill)
+
+    await fireEvent(button(), 'pressOut', PRESS)
+    await fireEvent(button(), 'focus', {})
+
+    expect(styleOf(button())).toMatchObject({
+      outlineColor: colors.primary,
+      outlineWidth: 2,
+    })
+    expect(styleOf(layer()).opacity).toBe(stateLayerOpacity.focus)
+  })
+
+  it('takes no hover shadow while pending', async () => {
+    await render(
+      <Button isPending testID="button" variant="elevated">
+        Label
+      </Button>,
+    )
+
+    await fireEvent(button(), 'hoverIn', {})
+
+    expect(styleOf(button()).boxShadow).toBe(shadows.elevation1)
+  })
+
+  describe('the announcement', () => {
+    it.each(['ios', 'android'] as const)(
+      'says the change on %s',
+      async (os) => {
+        jest.replaceProperty(Platform, 'OS', os)
+        const announce = jest.spyOn(
+          AccessibilityInfo,
+          'announceForAccessibility',
+        )
+        const { rerender } = await render(<Button>Label</Button>)
+
+        await rerender(<Button isPending>Label</Button>)
+
+        expect(announce.mock.calls).toEqual([['Loading']])
+      },
+    )
+
+    it('says the ring’s own name', async () => {
+      const announce = jest.spyOn(AccessibilityInfo, 'announceForAccessibility')
+      const { rerender } = await render(<Button>Label</Button>)
+
+      await rerender(
+        <Button isPending pendingLabel="Pending label">
+          Label
+        </Button>,
+      )
+
+      expect(announce.mock.calls).toEqual([['Pending label']])
+    })
+
+    it('says nothing for a button pending as it mounts, or as it clears', async () => {
+      const announce = jest.spyOn(AccessibilityInfo, 'announceForAccessibility')
+      const { rerender } = await render(<Button isPending>Label</Button>)
+
+      await rerender(<Button>Label</Button>)
+
+      expect(announce).not.toHaveBeenCalled()
+    })
+
+    it('says nothing under React Native Web, which has no announcer', async () => {
+      jest.replaceProperty(Platform, 'OS', 'web')
+      const announce = jest.spyOn(AccessibilityInfo, 'announceForAccessibility')
+      const { rerender } = await render(<Button>Label</Button>)
+
+      await rerender(<Button isPending>Label</Button>)
+
+      expect(announce).not.toHaveBeenCalled()
+    })
+  })
+
+  it('takes no isPending on a link', async () => {
+    await render(
+      // @ts-expect-error A link is never pending.
+      <Button href="/next" isPending>
+        Label
+      </Button>,
+    )
+
+    expect(screen.getByRole('link', { name: 'Label' })).toBeTruthy()
+    expect(screen.queryByRole('progressbar')).toBeNull()
   })
 })

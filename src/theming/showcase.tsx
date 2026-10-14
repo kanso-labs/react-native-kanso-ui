@@ -16,12 +16,15 @@ import { Currency } from '../components/currency'
 import { Form } from '../components/form'
 import { IconButton } from '../components/icon-button'
 import { Link } from '../components/link'
+import { Meter } from '../components/meter'
 import { NumberField } from '../components/number-field'
 import { ProductIcon } from '../components/product-icon'
+import { ProgressIndicator } from '../components/progress-indicator'
 import { Radio, RadioGroup } from '../components/radio-group'
 import { SearchField } from '../components/search-field'
 import { SegmentedButton } from '../components/segmented-button'
 import { Separator } from '../components/separator'
+import { Snackbar } from '../components/snackbar'
 import { Stack } from '../components/stack'
 import { Switch } from '../components/switch'
 import { Text } from '../components/text'
@@ -92,6 +95,9 @@ const SEARCH = <SearchGlyph />
 // Hoisted so the keys are not a new array on every render, which is what
 // react-perf's no-new-array-as-prop is after.
 const SEGMENT_SELECTION = ['second']
+
+// The queue the page's snackbar shows, which its button adds to.
+const SHOWCASE_MESSAGES = new Snackbar.Queue()
 
 const stylesOf = themedStyles(({ colors, radii, spacing }) =>
   StyleSheet.create({
@@ -243,6 +249,7 @@ function Showcase({ name }: ShowcaseProps) {
             Label
           </Button>
           <Button isDisabled>Label</Button>
+          <Button isPending>Label</Button>
         </View>
       </Section>
 
@@ -390,6 +397,14 @@ function Showcase({ name }: ShowcaseProps) {
       </Section>
 
       <Section
+        description="The tone recolours the active indicator and the stop indicator and leaves the track, so a column of meters still shares one track."
+        title="Meter"
+      >
+        <Meter label="Label" value={60} />
+        <Meter label="Label" tone="negative" value={94} />
+      </Section>
+
+      <Section
         description="The text field's chrome around a value the field formats itself, in the tabular figures the type scale carries. The outlined box centres the value and the side-by-side steppers on one line, which a scheme's own line heights and padding move."
         title="NumberField"
       >
@@ -411,6 +426,28 @@ function Showcase({ name }: ShowcaseProps) {
             <ProductIcon key={tone} name="Label" tone={tone} />
           ))}
           <ProductIcon name="Label" size="lg" />
+        </View>
+      </Section>
+
+      <Section
+        description="The active indicator takes primary and the track secondary container, linear and circular, flat and wavy alike."
+        title="ProgressIndicator"
+      >
+        <ProgressIndicator label="Label" showValue value={60} />
+        <ProgressIndicator aria-label="Label" shape="wavy" value={60} />
+        <View style={styles.row}>
+          <ProgressIndicator aria-label="Label" value={60} variant="circular" />
+          <ProgressIndicator
+            aria-label="Label"
+            isIndeterminate
+            variant="circular"
+          />
+          <ProgressIndicator
+            aria-label="Label"
+            shape="wavy"
+            value={60}
+            variant="circular"
+          />
         </View>
       </Section>
 
@@ -472,6 +509,18 @@ function Showcase({ name }: ShowcaseProps) {
           <Separator inset="both" />
           <Item>Fourth item</Item>
         </Card>
+      </Section>
+
+      <Section
+        description="A message on the inverse surface, which is the one place a scheme's inverse pair is drawn. It has no trigger of its own, so the page carries a button that shows one."
+        title="Snackbar"
+      >
+        <View style={styles.row}>
+          <Button onPress={showSnackbar} variant="tonal">
+            Show a snackbar
+          </Button>
+          <Snackbar queue={SHOWCASE_MESSAGES} />
+        </View>
       </Section>
 
       <Section
@@ -549,6 +598,14 @@ function Showcase({ name }: ShowcaseProps) {
       </Section>
     </View>
   )
+}
+
+// The page shows what a snackbar looks like rather than what its action does,
+// so the action does nothing.
+function showSnackbar() {
+  SHOWCASE_MESSAGES.add('First item saved', {
+    action: { label: 'Undo', onPress: removeNothing },
+  })
 }
 
 export type { ShowcaseProps }
