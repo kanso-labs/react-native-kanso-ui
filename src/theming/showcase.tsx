@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import type { ColorValue, ViewStyle } from 'react-native'
 
 import { StyleSheet, View } from 'react-native'
 
@@ -7,6 +8,7 @@ import type { DemoThemeName } from './themes'
 import { Avatar } from '../components/avatar'
 import { Button } from '../components/button'
 import { Card } from '../components/card'
+import { Chip } from '../components/chip'
 import { IconButton } from '../components/icon-button'
 import { Link } from '../components/link'
 import { ProductIcon } from '../components/product-icon'
@@ -14,6 +16,7 @@ import { Separator } from '../components/separator'
 import { Stack } from '../components/stack'
 import { Text } from '../components/text'
 import { PlusGlyph } from '../glyphs'
+import { useIconStyle } from '../glyphs/icon-style'
 import { useTheme } from '../theme/scope'
 import { themedStyles } from '../theme/styles'
 import { demoThemes } from './themes'
@@ -60,6 +63,10 @@ const LIBRARY_DARK = {
   label: 'Dark',
 }
 
+// The icon the chips hold: web's circle half the slot across, drawn as a view
+// in the colour and at the size the slot hands it.
+const DOT = <Dot />
+
 // The icon the icon buttons hold, the library's own plus, which reads its
 // colour and size from the button around it.
 const PLUS = <PlusGlyph />
@@ -99,6 +106,21 @@ const stylesOf = themedStyles(({ colors, radii, spacing }) =>
     },
   }),
 )
+
+function Dot() {
+  const { color, size } = useIconStyle()
+
+  return <View style={dotOf(color, size)} />
+}
+
+function dotOf(color: ColorValue | undefined, size: number): ViewStyle {
+  return {
+    backgroundColor: color,
+    borderRadius: size / 4,
+    height: size / 2,
+    width: size / 2,
+  }
+}
 
 function Item({ children }: PlaceholderProps) {
   const styles = stylesOf(useTheme())
@@ -222,6 +244,22 @@ function Showcase({ name }: ShowcaseProps) {
             </Stack>
           </Card>
         </Stack>
+      </Section>
+
+      <Section
+        description="A chip leans on the container roles, which is where a scheme's secondary family shows up; a selected one takes a pair of its own, an icon takes the primary role, and an elevated assist chip sits on the low container at elevation 1."
+        title="Chip"
+      >
+        <View style={styles.row}>
+          <Chip icon={DOT}>First item</Chip>
+          <Chip defaultSelected icon={DOT}>
+            Second item
+          </Chip>
+          <Chip>Third item</Chip>
+          <Chip elevated icon={DOT} variant="assist">
+            Fourth item
+          </Chip>
+        </View>
       </Section>
 
       <Section

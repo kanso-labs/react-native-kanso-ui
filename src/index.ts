@@ -11,6 +11,13 @@ export type {
 } from './components/button'
 export { Card } from './components/card'
 export type { CardProps, CardVariant } from './components/card'
+export { Chip } from './components/chip'
+export type {
+  ChipActionProps,
+  ChipFilterProps,
+  ChipProps,
+  ChipVariant,
+} from './components/chip'
 export { IconButton } from './components/icon-button'
 export type {
   IconButtonProps,

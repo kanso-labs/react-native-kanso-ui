@@ -358,5 +358,5 @@ function usePressFeedback({
   }
 }
 
-export { hitSlop, usePressFeedback }
+export { hitSlop, TARGET_SIZE, usePressFeedback }
 export type { Corners, PressFeedback, PressFeedbackOptions }
