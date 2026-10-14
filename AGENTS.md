@@ -159,6 +159,14 @@ out, since Hermes has none of Node's modules.
 Components are tested with Testing Library for React Native. From version 14
 `render` is asynchronous, so a test awaits it before querying.
 
+**Reanimated runs in the suite on its JavaScript implementation.**
+`jest.setup.ts` swaps worklets for the mock its testing guide recommends,
+`babel.config.cjs` runs the worklets plugin as an app's Babel does, and
+`jest.config.js` has Babel transform both packages, since both ship ES modules.
+Read an animated style with Reanimated's `getAnimatedStyle`, under fake timers:
+the style follows a shared value on the next frame, which
+`jest.advanceTimersByTime(0)` runs.
+
 **The suite runs what the React Compiler emits**, through `babel.config.cjs`,
 and the published package is compiled by the same plugin in `tsdown.config.ts`,
 and the web Storybook by the same plugin in `.storybook/main.ts`. The three are

@@ -64,6 +64,17 @@ const [loaded] = useFonts({
 
 Under React Native Web the token's whole list goes to CSS, as it does on web.
 
+## Peer dependencies
+
+Beside `react` and `react-native`, the package needs `react-native-reanimated`,
+which animates the ripple its controls draw when pressed, and the
+`react-native-worklets` Reanimated runs on. In an Expo app,
+`npx expo install react-native-reanimated react-native-worklets` installs the
+versions the SDK ships with, and Expo's Babel preset compiles the package's
+animations. Outside Expo, Reanimated's install guide adds
+`react-native-worklets/plugin` to the app's Babel configuration, which does the
+same.
+
 ## Development
 
 Install with the Node version in `.tool-versions`:
