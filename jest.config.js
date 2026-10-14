@@ -1,11 +1,24 @@
 /** @type {import('jest').Config} */
 export default {
+  // The library's own source. Stories, tests, the generated tokens and the
+  // Theming pages are left out: the last are Storybook material that nothing
+  // under src/index.ts reaches, as on web.
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
+    '!src/**/*.stories.tsx',
     '!src/**/*.test.{ts,tsx}',
+    '!src/theming/**',
     '!src/tokens/defaults.ts',
   ],
   coverageReporters: ['text', 'cobertura'],
   preset: '@react-native/jest-preset',
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   testMatch: ['<rootDir>/src/**/*.test.{ts,tsx}'],
+  // The preset's own pattern, with Reanimated, worklets and Storybook's
+  // packages added: all of them ship ES modules, which Jest runs only once
+  // Babel has transformed them, as Metro does in an app, and
+  // src/stories.test.tsx renders every story through Storybook's.
+  transformIgnorePatterns: [
+    'node_modules/(?!((jest-)?react-native(-reanimated|-worklets)?|@react-native(-community)?|storybook|@storybook)/)',
+  ],
 }

@@ -3,11 +3,11 @@ type Attempt = Settled | { readonly reason: string }
 /** A cubic Bézier curve's control points, as `cubic-bezier()` lists them. */
 type Easing = readonly [x1: number, y1: number, x2: number, y2: number]
 
-type Group = keyof ResolvedTheme
+type Group = keyof ResolvedGroups
 
 // The resolved theme with its groups writable, for the resolver to fill in.
 type Groups = {
-  -readonly [G in Group]: { [key: string]: ResolvedTheme[G][string] }
+  -readonly [G in Group]: { [key: string]: ResolvedGroups[G][string] }
 }
 
 type Kind =
@@ -23,9 +23,11 @@ type Kind =
 /**
  * The tokens in the values React Native styles take, grouped and keyed as the
  * web library's StyleX tokens are: `--kui-color-primary` is `colors.primary`
- * and `--kui-typography-body-large-size` is `typography.bodyLargeSize`.
+ * and `--kui-typography-body-large-size` is `typography.bodyLargeSize`. Any
+ * set of properties resolves to this shape; `ResolvedTheme` in ./scope.ts is
+ * the same groups with the keys the library's own tokens give them.
  */
-type ResolvedTheme = {
+type ResolvedGroups = {
   readonly colors: Readonly<Record<string, string>>
   readonly motion: Readonly<Record<string, Easing | number>>
   readonly radii: Readonly<Record<string, number>>
@@ -357,7 +359,7 @@ function declarations(properties: ThemeProperties): Map<string, string> {
 function resolveTheme(
   defaults: ThemeProperties,
   overrides: ThemeProperties = {},
-): { problems: readonly ThemeProblem[]; theme: ResolvedTheme } {
+): { problems: readonly ThemeProblem[]; theme: ResolvedGroups } {
   const declared = declarations(defaults)
   const replaced = declarations(overrides)
   const problems: ThemeProblem[] = []
@@ -534,5 +536,5 @@ function resolveTheme(
   return { problems, theme }
 }
 
-export type { Easing, ResolvedTheme, ThemeProblem, ThemeProperties }
+export type { Easing, ResolvedGroups, ThemeProblem, ThemeProperties }
 export { resolveTheme }

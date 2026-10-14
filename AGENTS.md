@@ -49,15 +49,17 @@ type.
 
 ## Commands
 
-| Task     | Command                 | Notes                                                          |
-| -------- | ----------------------- | -------------------------------------------------------------- |
-| Test     | `npm test`              | Jest, through React Native's own preset                        |
-| Coverage | `npm run test:coverage` | The same suite with coverage, written to `coverage/`           |
-| Lint     | `npm run lint`          | oxlint, then ESLint, then oxfmt formatting check               |
-| Build    | `npm run build`         | Type-checks (`tsc -b`) then builds ESM into `dist/`            |
-| Format   | `npm run format`        | oxfmt; `npm run format:check` is the check `lint` already runs |
-| Verify   | `npm run package:check` | publint, then attw; reads `dist/`, so build first              |
-| Tokens   | `npm run tokens:build`  | Writes `src/tokens/defaults.ts`; build, lint and test run it   |
+| Task      | Command                  | Notes                                                          |
+| --------- | ------------------------ | -------------------------------------------------------------- |
+| Test      | `npm test`               | Jest, through React Native's own preset                        |
+| Coverage  | `npm run test:coverage`  | The same suite with coverage, written to `coverage/`           |
+| Stories   | `npm run test:storybook` | Every story in Chromium through Vitest, failing on a11y        |
+| Storybook | `npm run storybook`      | The web Storybook at http://localhost:6006                     |
+| Lint      | `npm run lint`           | oxlint, then ESLint, then oxfmt formatting check               |
+| Build     | `npm run build`          | Type-checks (`tsc -b`) then builds ESM into `dist/`            |
+| Format    | `npm run format`         | oxfmt; `npm run format:check` is the check `lint` already runs |
+| Verify    | `npm run package:check`  | publint, then attw; reads `dist/`, so build first              |
+| Tokens    | `npm run tokens:build`   | Writes `src/tokens/defaults.ts`; build, lint and test run it   |
 
 **Install with the Node version in `.tool-versions`.** CI resolves it from that
 file, and an older npm rewrites `package-lock.json` in a way no check here can
@@ -157,16 +159,133 @@ out, since Hermes has none of Node's modules.
 Components are tested with Testing Library for React Native. From version 14
 `render` is asynchronous, so a test awaits it before querying.
 
+**Reanimated runs in the suite on its JavaScript implementation.**
+`jest.setup.ts` swaps worklets for the mock its testing guide recommends,
+`babel.config.cjs` runs the worklets plugin as an app's Babel does, and
+`jest.config.js` has Babel transform both packages, since both ship ES modules.
+Read an animated style with Reanimated's `getAnimatedStyle`, under fake timers:
+the style follows a shared value on the next frame, which
+`jest.advanceTimersByTime(0)` runs.
+
 **The suite runs what the React Compiler emits**, through `babel.config.cjs`,
-and the published package is compiled by the same plugin in `tsdown.config.ts`.
-The two are separate on purpose: tsdown's Babel plugin does not read Babel's
-configuration files, so a change to the compiler's options is made in both. Both
-set `panicThreshold: 'all_errors'`, because the compiler otherwise skips a
-function it cannot compile and says nothing.
+and the published package is compiled by the same plugin in `tsdown.config.ts`,
+and the web Storybook by the same plugin in `.storybook/main.ts`. The three are
+separate on purpose: neither tsdown's Babel plugin nor Vite's React plugin reads
+Babel's configuration files, so a change to the compiler's options is made in
+all three. Each sets `panicThreshold: 'all_errors'`, because the compiler
+otherwise skips a function it cannot compile and says nothing. In
+`babel.config.cjs` it sits in an override excluding `node_modules`, since Jest
+transforms Storybook's own ESM-only packages through that file too.
 
 **Prove a new assertion can fail before trusting it.** Break the code it pins,
 watch the test go red, and put the code back. `[].every()` is `true`, so a check
 built on an empty list reports a state that never happened.
+
+## Storybook
+
+**Two Storybooks read the same story files**, every `src/**/*.stories.tsx`. The
+web one, in `.storybook/`, renders them through React Native Web on Vite; it is
+the published Storybook and the one the a11y checks read. The on-device one, in
+`example/`, renders them in Expo Go on iOS and Android. The web rendering is a
+stand-in: it catches token, layout and contrast drift, and says nothing about
+how a platform draws text or shadows, which only the device Storybook shows.
+
+**A story file is bundled by Metro as well as by Vite**, so it imports React
+Native, the library and Storybook's types, and nothing else at runtime. A play
+function reads a DOM the device has none of, so behaviour belongs in a
+`*.test.tsx` instead.
+
+The web Storybook's toolbar sets the `theme` global, which the canvas in
+`.storybook/components/Canvas.tsx` hands to a `ThemeScope`: light or dark as its
+scheme, and one of the demo schemes below as its `theme`. It defaults to light
+rather than following the machine, and `&globals=theme:dark` on a story's URL
+opens it dark. The device has no toolbar, so its canvas pins the scheme the
+device's appearance asks for, unless the story pins a theme of its own. Its
+token defaults are written by `@kanso-labs/unplugin-style-dictionary` when the
+server starts and again when the token source changes, so a bump of
+`@kanso-labs/kanso-ui` reaches a running Storybook without a restart.
+
+**Every story is checked twice.** `src/stories.test.tsx` renders each one in
+`npm test`, in both schemes, or in the one it pins, through Storybook's portable
+stories and React Native's own host components, so a story that throws fails the
+suite; it finds the files on disk, so a new one needs no entry.
+`npm run test:storybook` runs each in Chromium through
+`@storybook/addon-vitest`, where addon-a11y's `test: 'error'` fails a story on a
+contrast or labelling violation in what React Native Web draws. `Test` runs
+both.
+
+**That run is in Vite's `development` mode, not Vitest's `test`**, through
+`--mode development` in the script. React Native Web's Vite plugin sets
+`__DEV__` from the mode, so under `test` every check a library makes only in
+development is off, and a story that throws on one of them in the Storybook
+passes the run. Run it through the npm script rather than a bare
+`npx vitest run`, which drops the flag.
+
+Jest reaches Storybook's packages, which ship ESM alone, through
+`transformIgnorePatterns` in `jest.config.js`; take them out and the story test
+fails to parse before it runs.
+
+### The Theming pages
+
+**The toolbar offers more than light and dark.** The other entries are the seven
+demo schemes in `src/theming/themes.ts`, which the `Theming` section is built
+from and which the canvas applies to any story, so a component's own stories can
+be read in one. They are kanso-ui's seven, value for value, each written as the
+`--kui-*` map a consumer would hand either library's `ThemeScope`. kanso-ui
+publishes no copy of them, so this one is kept in step by hand. They are
+Storybook material rather than library API: nothing under `src/index.ts` reaches
+them, and coverage leaves them out.
+
+- **A scheme states every colour.** The scope fills a property a map leaves out
+  from the library's defaults in the scheme around it, so a colour left out
+  takes its light or dark value from the device. No other group differs between
+  the schemes, so a partial map over the others reads the same everywhere.
+  `src/theming/themes.test.ts` holds each scheme to that, to properties the
+  library declares, and to values the resolver can read.
+- **Every pair a component renders clears WCAG AA**, the bar the library's own
+  tokens hold to, and `npm run test:storybook` fails a scheme's page otherwise.
+  `Theming/Dark` renders the page in the library's own dark scheme for the same
+  check. It is hidden from the sidebar with `!dev`, since every other story
+  renders in the light scheme the toolbar opens on, and without it nothing
+  checks a dark pair.
+- **Each scheme is a story file of its own**, titled `Theming/<Name>`, holding
+  one story named after the entry: Storybook folds a component whose single
+  story has its name into one sidebar leaf. Each pins its scheme with `globals`,
+  which beats the toolbar, so the page renders the same whatever is asked of it.
+- **A new component goes into `src/theming/showcase.tsx`**, the page every
+  scheme renders, as a `Section` in its alphabetical place with the sentence
+  under its headline that kanso-ui's showcase gives it. That page is the only
+  one drawing the library under a scheme that is not its own, which is the only
+  place a literal colour, corner or spacing step differs from the token it
+  should have been. `src/theming/showcase.test.tsx` compares its sections with
+  the directories under `src/components` and fails on one that is missing.
+
+### The example app
+
+`example/` is an Expo app of its own, with its own `package.json` and lockfile.
+ESLint and the format check cover its files, but nothing in the root installs
+it, and CI neither bundles it nor type-checks it; `npm run typecheck` there does
+the second. **oxlint leaves the app out**, in `.oxlintrc.json`: its type-aware
+rules read the app's `tsconfig.json`, which extends Expo's from the app's own
+`node_modules`, so without that install the tsconfig is invalid and every
+`require` in `metro.config.js` reads as `any`, which fails `Lint` on a checkout
+that never installed the app, CI's among them. Its dependencies are the versions
+its Expo SDK bundles, so `npx expo install --check` there says whether one has
+drifted, and an SDK upgrade is `npx expo install expo@<version> --fix` rather
+than a bump at a time.
+
+Install the root first: the app's scripts run the root's `tokens:build`, since
+the library's token defaults are generated rather than committed. Metro watches
+`../src` and resolves everything from the app's own `node_modules`, so the
+bundle carries one React; `tsconfig.json` maps the React and React Native types
+the same way, since two copies of a type never match. Those `paths` point at
+type declarations, so `experiments.tsconfigPaths` in `app.json` is off: Expo
+would otherwise hand them to Metro, and `react` would resolve to `@types/react`.
+`npm run export` in `example/` bundles the app for iOS and Android without a
+device, which is the quickest check that a story still resolves under Metro.
+`app.json` names those two platforms: Expo would otherwise bundle for the web as
+well, which the root's Storybook does instead, and fail on the React Native Web
+the app does not install.
 
 ## Workflows and checks
 
