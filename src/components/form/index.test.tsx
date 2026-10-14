@@ -1,4 +1,4 @@
-import type { ReactElement, ReactNode } from 'react'
+import type { ComponentRef, ReactElement, ReactNode } from 'react'
 import type { StyleProp, TextInput, ViewStyle } from 'react-native'
 
 import {
@@ -69,10 +69,12 @@ function errorOf(label: string): unknown {
   return control(label).props.accessibilityHint
 }
 
-function flatStyleOf(element: Host | undefined) {
-  return StyleSheet.flatten([
-    (element?.props as undefined | { style?: StyleProp<ViewStyle> })?.style,
-  ])
+function flatStyleOf(element: Host | undefined): ViewStyle {
+  return (
+    StyleSheet.flatten([
+      (element?.props as undefined | { style?: StyleProp<ViewStyle> })?.style,
+    ]) ?? {}
+  )
 }
 
 // The form around its fields, with a submit button after them.
@@ -642,7 +644,7 @@ describe('Form', () => {
   describe('under native', () => {
     it('holds back a required field left empty, shows its error and focuses it', async () => {
       const onSubmit = jest.fn()
-      const headline = createRef<TextInput>()
+      const headline = createRef<ComponentRef<typeof TextInput>>()
       await render(
         formOf(
           { onSubmit, validationBehavior: 'native' },
@@ -708,7 +710,7 @@ describe('Form', () => {
     })
 
     it('shows every blocking field’s error and focuses the first, as drawn', async () => {
-      const first = createRef<TextInput>()
+      const first = createRef<ComponentRef<typeof TextInput>>()
       await render(
         formOf(
           { validationBehavior: 'native' },
@@ -848,7 +850,7 @@ describe('Form', () => {
 
     it('holds back a field showing its own error, and focuses it', async () => {
       const onSubmit = jest.fn()
-      const own = createRef<TextInput>()
+      const own = createRef<ComponentRef<typeof TextInput>>()
       await render(
         formOf(
           { onSubmit, validationBehavior: 'native' },

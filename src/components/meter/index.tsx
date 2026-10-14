@@ -1,4 +1,4 @@
-import type { Ref } from 'react'
+import type { ComponentRef, Ref } from 'react'
 import type { StyleProp, ViewProps, ViewStyle } from 'react-native'
 
 import { StyleSheet, View } from 'react-native'
@@ -70,7 +70,7 @@ type MeterProps = Omit<ViewProps, 'children' | 'style'> & {
    * @default 0
    */
   readonly minValue?: number
-  readonly ref?: Ref<View>
+  readonly ref?: Ref<ComponentRef<typeof View>>
   /**
    * Whether the value is shown beside the label.
    * @default true

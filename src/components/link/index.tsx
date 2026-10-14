@@ -74,8 +74,10 @@ type LinkTone = 'inherit' | 'primary'
 type LinkUnderline = 'always' | 'hover' | 'none'
 
 // What React Native Web hands a link's span, which React Native's own Text
-// declares none of: the browser's pointer, focus and key events, each typed
-// by the fields the link reads, and whether the span takes the Tab key.
+// declares little of: the browser's pointer, focus and key events, each typed
+// by the fields the link reads, and whether the span takes the Tab key. The
+// pointer's type is read off the native event, which is where React Native's
+// own pointer events carry it.
 type WebProps = {
   readonly focusable: boolean
   readonly onBlur: () => void
@@ -87,7 +89,9 @@ type WebProps = {
     readonly key: string
     readonly repeat: boolean
   }) => void
-  readonly onPointerEnter: (event: { readonly pointerType: string }) => void
+  readonly onPointerEnter: (event: {
+    readonly nativeEvent: { readonly pointerType: string }
+  }) => void
   readonly onPointerLeave: () => void
 }
 
@@ -222,7 +226,7 @@ function webPropsOf(
       }
     },
     onPointerEnter: (event) => {
-      setHovered(event.pointerType !== 'touch')
+      setHovered(event.nativeEvent.pointerType !== 'touch')
     },
     onPointerLeave: () => {
       setHovered(false)

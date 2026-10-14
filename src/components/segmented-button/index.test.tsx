@@ -307,8 +307,8 @@ function sorted(keys: Set<Key> | undefined) {
 
 function styleOf(element: {
   props: { style?: StyleProp<TextStyle | ViewStyle> }
-}) {
-  return StyleSheet.flatten([element.props.style])
+}): TextStyle | ViewStyle {
+  return StyleSheet.flatten([element.props.style]) ?? {}
 }
 
 // What a segment's state layer and ripple are drawn in, after its fill.

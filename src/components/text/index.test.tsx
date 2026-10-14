@@ -60,8 +60,10 @@ const BETWEEN: KuiTheme = { '--kui-typography-weight-regular': '450' }
 
 const { theme } = scopeFor('light', {})
 
-function styleOf(element: { props: { style?: StyleProp<TextStyle> } }) {
-  return StyleSheet.flatten([element.props.style])
+function styleOf(element: {
+  props: { style?: StyleProp<TextStyle> }
+}): TextStyle {
+  return StyleSheet.flatten([element.props.style]) ?? {}
 }
 
 afterEach(() => {

@@ -1,4 +1,4 @@
-import type { ReactNode, Ref } from 'react'
+import type { ComponentRef, ReactNode, Ref } from 'react'
 import type { StyleProp, ViewProps, ViewStyle } from 'react-native'
 import type { AnimatedStyle } from 'react-native-reanimated'
 import type { ToggleState } from 'react-stately/useToggleState'
@@ -97,7 +97,7 @@ type CheckboxProps = Omit<ViewProps, 'children' | 'style'> & {
   readonly isSelected?: boolean
   /** Called with the new state whenever a press changes it. */
   readonly onChange?: (isSelected: boolean) => void
-  readonly ref?: Ref<View>
+  readonly ref?: Ref<ComponentRef<typeof View>>
   readonly style?: StyleProp<ViewStyle>
 }
 

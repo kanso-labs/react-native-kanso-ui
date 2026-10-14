@@ -1,4 +1,4 @@
-import type { Ref } from 'react'
+import type { ComponentRef, Ref } from 'react'
 import type {
   ImageProps,
   ImageSourcePropType,
@@ -50,7 +50,7 @@ type MarkProps = Omit<ViewProps, 'children' | 'style'> & {
   readonly kind: keyof typeof KINDS
   /** Supplies the fallback's initials, and the accessible name unless decorative. */
   readonly name: string
-  readonly ref?: Ref<View>
+  readonly ref?: Ref<ComponentRef<typeof View>>
   /**
    * Whether a person with no initials to take, a blank name, draws the
    * anonymous person, or an empty disc, as a loading skeleton wants.

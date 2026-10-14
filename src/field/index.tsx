@@ -1,4 +1,4 @@
-import type { ReactNode, Ref, RefObject } from 'react'
+import type { ComponentRef, ReactNode, Ref, RefObject } from 'react'
 import type {
   LayoutChangeEvent,
   StyleProp,
@@ -116,7 +116,7 @@ type FieldBoxProps = {
    * The control the box focuses when it is pressed anywhere, as the whole
    * of a native text field's box takes a press.
    */
-  readonly control: RefObject<null | TextInput>
+  readonly control: RefObject<ComponentRef<typeof TextInput> | null>
   /**
    * What the box holds after the label and the control's column, drawn as
    * it is rather than in an icon's slot, for a part laid out against the
@@ -183,7 +183,7 @@ type FieldInputProps = Omit<
   readonly numeric?: boolean
   /** Text before the value on its line. */
   readonly prefix?: ReactNode
-  readonly ref?: Ref<TextInput>
+  readonly ref?: Ref<ComponentRef<typeof TextInput>>
   /** Text after the value on its line. */
   readonly suffix?: ReactNode
 }
@@ -741,7 +741,7 @@ const ATOMIC = { 'aria-atomic': true } as const
 
 // What hides a part of the line under a field from VoiceOver and TalkBack,
 // where the control reads it out as its hint.
-const HIDDEN: ViewProps = { 'aria-hidden': true }
+const HIDDEN = { 'aria-hidden': true } as const
 
 // What leaves the control's writing direction to the page under React Native
 // Web, which gives a TextInput `dir="auto"` otherwise and so aligns a value by
@@ -966,7 +966,7 @@ function descriptionOf(
   return said.length === 0 ? undefined : { accessibilityHint: said.join(' ') }
 }
 
-function focusOf(control: RefObject<null | TextInput>) {
+function focusOf(control: RefObject<ComponentRef<typeof TextInput> | null>) {
   return () => {
     control.current?.focus()
   }

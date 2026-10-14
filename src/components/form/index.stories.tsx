@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react'
-import type { ComponentProps } from 'react'
+import type { ComponentProps, ComponentRef } from 'react'
 import type { TextInput } from 'react-native'
 
 import { useEffect, useRef, useState } from 'react'
@@ -103,7 +103,7 @@ const NO_ERRORS: Errors = {}
  */
 function AsyncSubmitForm(args: ComponentProps<typeof Form>) {
   const [errors, setErrors] = useState(NO_ERRORS)
-  const headline = useRef<TextInput>(null)
+  const headline = useRef<ComponentRef<typeof TextInput>>(null)
 
   // The one part of the round trip the form leaves to the call site: once
   // the errors are under their fields, focus moves to the first of them.

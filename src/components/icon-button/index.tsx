@@ -1,4 +1,4 @@
-import type { ReactNode, Ref } from 'react'
+import type { ComponentRef, ReactNode, Ref } from 'react'
 import type { PressableProps, StyleProp, View, ViewStyle } from 'react-native'
 import type { AnimatedStyle } from 'react-native-reanimated'
 
@@ -96,7 +96,7 @@ type IconButtonProps = (ButtonLinkForm | ButtonPressForm | ButtonToggleForm) &
      * @default false
      */
     readonly isDisabled?: boolean
-    readonly ref?: Ref<View>
+    readonly ref?: Ref<ComponentRef<typeof View>>
     /**
      * Control size: `xs` 32dp, `md` 40dp, `lg` 56dp, `xl` 96dp, `xxl` 136dp,
      * the icon buttons spec page's XS to XL, and the same heights `Button`

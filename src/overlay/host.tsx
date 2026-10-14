@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import type { ComponentRef, ReactNode } from 'react'
 
 import {
   createContext,
@@ -17,10 +17,10 @@ type Entry = readonly [key: string, content: ReactNode]
 /** What an overlay reaches its host through. */
 type OverlayStore = {
   /** Takes the layer the host draws its overlays in, as its ref. */
-  readonly attach: (layer: null | View) => void
+  readonly attach: (layer: ComponentRef<typeof View> | null) => void
   readonly entries: () => readonly Entry[]
   /** The layer the host draws its overlays in, for placing one in it. */
-  readonly layer: () => null | View
+  readonly layer: () => ComponentRef<typeof View> | null
   readonly remove: (key: string) => void
   readonly set: (key: string, content: ReactNode) => void
   readonly subscribe: (listener: () => void) => () => void
@@ -126,7 +126,7 @@ function storeFor(): OverlayStore {
   const content = new Map<string, ReactNode>()
   const listeners = new Set<() => void>()
   let entries: readonly Entry[] = []
-  let layer: null | View = null
+  let layer: ComponentRef<typeof View> | null = null
 
   const changed = () => {
     entries = [...content]

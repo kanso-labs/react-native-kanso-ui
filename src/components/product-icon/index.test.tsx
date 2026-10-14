@@ -109,8 +109,10 @@ async function setup(props: Partial<ProductIconProps> = {}) {
   return render(<ProductIcon name="First item" testID="icon" {...props} />)
 }
 
-function styleOf(element: { props: { style?: StyleProp<TextStyle> } }) {
-  return StyleSheet.flatten([element.props.style])
+function styleOf(element: {
+  props: { style?: StyleProp<TextStyle> }
+}): TextStyle {
+  return StyleSheet.flatten([element.props.style]) ?? {}
 }
 
 function textOf(element: Host): string {

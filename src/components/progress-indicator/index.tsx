@@ -1,4 +1,4 @@
-import type { Ref } from 'react'
+import type { ComponentRef, Ref } from 'react'
 import type {
   DimensionValue,
   StyleProp,
@@ -159,7 +159,7 @@ type ProgressIndicatorProps = Omit<ViewProps, 'children' | 'style'> & {
    * @default 0
    */
   readonly minValue?: number
-  readonly ref?: Ref<View>
+  readonly ref?: Ref<ComponentRef<typeof View>>
   /**
    * The page's two shapes. `wavy` draws the active indicator as a wave, which
    * lies flat near either end of a determinate value, and leaves the track

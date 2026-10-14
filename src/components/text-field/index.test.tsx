@@ -92,8 +92,8 @@ function eased(color: string) {
 
 function flatStyleOf(element: {
   props: { style?: StyleProp<TextStyle | ViewStyle> }
-}) {
-  return StyleSheet.flatten([element.props.style])
+}): TextStyle | ViewStyle {
+  return StyleSheet.flatten([element.props.style]) ?? {}
 }
 
 // An element's children that are elements, rather than text.
@@ -257,7 +257,7 @@ describe('TextField', () => {
   })
 
   it('hands inputRef the control, which a press anywhere on the box focuses', async () => {
-    const inputRef = createRef<TextInput>()
+    const inputRef = createRef<ComponentRef<typeof TextInput>>()
     await renderField({ inputRef })
     const control = inputRef.current ?? missing('control')
     const focus = jest.spyOn(control, 'focus')

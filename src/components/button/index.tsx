@@ -1,4 +1,4 @@
-import type { ReactNode, Ref } from 'react'
+import type { ComponentRef, ReactNode, Ref } from 'react'
 import type {
   PressableProps,
   StyleProp,
@@ -134,7 +134,7 @@ type ButtonProps = ButtonForm &
      * @default false
      */
     readonly isDisabled?: boolean
-    readonly ref?: Ref<View>
+    readonly ref?: Ref<ComponentRef<typeof View>>
     /**
      * The corner the button rests at: `round` is the pill, `square` the
      * page's rounded rectangle, 12dp up to `md`, 16dp at `lg` and 28dp above.
