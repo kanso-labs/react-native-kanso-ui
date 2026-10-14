@@ -13,6 +13,7 @@ import { Link } from '../components/link'
 import { ProductIcon } from '../components/product-icon'
 import { Separator } from '../components/separator'
 import { Stack } from '../components/stack'
+import { Switch } from '../components/switch'
 import { Text } from '../components/text'
 import { PlusGlyph } from '../glyphs'
 import { useTheme } from '../theme/scope'
@@ -306,6 +307,18 @@ function Showcase({ name }: ShowcaseProps) {
           <Placeholder>Second item</Placeholder>
           <Placeholder>Third item</Placeholder>
         </Stack>
+      </Section>
+
+      <Section
+        description="The track takes its container while off and primary once on, with the handle on the matching on-role."
+        title="Switch"
+      >
+        <View style={styles.row}>
+          <Switch>Label</Switch>
+          <Switch defaultSelected icon>
+            Label
+          </Switch>
+        </View>
       </Section>
 
       <Section

@@ -32,6 +32,8 @@ export type {
   StackJustify,
   StackProps,
 } from './components/stack'
+export { Switch } from './components/switch'
+export type { SwitchProps } from './components/switch'
 export { Text } from './components/text'
 export type { TextProps } from './components/text'
 export { useIconStyle } from './glyphs/icon-style'

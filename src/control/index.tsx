@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import type { TextStyle, ViewProps } from 'react-native'
+import type { StyleProp, TextStyle, ViewProps, ViewStyle } from 'react-native'
 
 import { Text as NativeText, Platform, View } from 'react-native'
 
@@ -25,6 +25,11 @@ type ControlMessageProps = {
   readonly error?: string | undefined
   /** The id the control names the message by under React Native Web. */
   readonly id: string
+  /**
+   * Over the line's own style, for a control wider than the 40dp layer the
+   * line is set past by default: a switch's 52dp track.
+   */
+  readonly style?: StyleProp<ViewStyle>
 }
 
 /** How the control names the line under it to a screen reader. */
@@ -72,7 +77,12 @@ function ControlLabel({ children, isDisabled = false }: ControlLabelProps) {
  * there is neither. Hand the control `describedBy(id, message)` with the same
  * `id`, so a screen reader reads the line with the control.
  */
-function ControlMessage({ description, error, id }: ControlMessageProps) {
+function ControlMessage({
+  description,
+  error,
+  id,
+  style,
+}: ControlMessageProps) {
   const theme = useTheme()
   const own = controlStylesOf(theme)
   const role = useTypeRole('bodySmall')
@@ -85,7 +95,7 @@ function ControlMessage({ description, error, id }: ControlMessageProps) {
   return (
     <View
       {...(Platform.OS === 'web' ? undefined : HIDDEN)}
-      style={own.messages}
+      style={composeStyles<ViewStyle>(own.messages, style)}
     >
       <NativeText
         id={id}
