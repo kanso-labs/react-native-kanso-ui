@@ -4,6 +4,7 @@ import { StyleSheet, View } from 'react-native'
 
 import type { DemoThemeName } from './themes'
 
+import { Stack } from '../components/stack'
 import { Text } from '../components/text'
 import { useTheme } from '../theme/scope'
 import { themedStyles } from '../theme/styles'
@@ -19,6 +20,10 @@ import { demoThemes } from './themes'
 // `Section`, which draws the rule above it along with its headline, and a new
 // component is a new `Section` in its alphabetical place, with the sentence
 // web's showcase gives it.
+
+type PlaceholderProps = {
+  readonly children: string
+}
 
 type SectionProps = {
   readonly children?: ReactNode
@@ -37,7 +42,7 @@ const LIBRARY_DARK = {
   label: 'Dark',
 }
 
-const stylesOf = themedStyles(({ colors, spacing }) =>
+const stylesOf = themedStyles(({ colors, radii, spacing }) =>
   StyleSheet.create({
     intro: {
       gap: spacing.xxs,
@@ -45,6 +50,15 @@ const stylesOf = themedStyles(({ colors, spacing }) =>
     page: {
       gap: spacing.xl,
       paddingBottom: spacing.xxxl,
+    },
+    // A dashed box for the layouts, which paint nothing of their own, so
+    // what a scheme reaches in them shows as the space between boxes.
+    placeholder: {
+      borderColor: colors.outlineVariant,
+      borderRadius: radii.md,
+      borderStyle: 'dashed',
+      borderWidth: 1,
+      padding: spacing.md,
     },
     row: {
       alignItems: 'center',
@@ -61,11 +75,20 @@ const stylesOf = themedStyles(({ colors, spacing }) =>
     section: {
       gap: spacing.lg,
     },
-    stack: {
-      gap: spacing.sm,
-    },
   }),
 )
+
+function Placeholder({ children }: PlaceholderProps) {
+  const styles = stylesOf(useTheme())
+
+  return (
+    <View style={styles.placeholder}>
+      <Text tone="muted" variant="bodyMedium">
+        {children}
+      </Text>
+    </View>
+  )
+}
 
 // One component's entry. The rule is drawn here rather than between two
 // sections at the call site, so a section is one element and the page is the
@@ -111,16 +134,27 @@ function Showcase({ name }: ShowcaseProps) {
       </View>
 
       <Section
+        description="One direction, one gap off the spacing scale, and nothing painted, so what a scheme reaches is the step between the boxes. The dashed outlines are the page's own."
+        title="Stack"
+      >
+        <Stack direction="row" gap="md" wrap>
+          <Placeholder>First item</Placeholder>
+          <Placeholder>Second item</Placeholder>
+          <Placeholder>Third item</Placeholder>
+        </Stack>
+      </Section>
+
+      <Section
         description="The scale and the tones, which is where a scheme's typeface and its semantic colour roles are read straight off."
         title="Text"
       >
-        <View style={styles.stack}>
+        <Stack gap="sm">
           <Text variant="displaySmall">Headline</Text>
           <Text variant="headlineSmall">Headline</Text>
           <Text variant="titleLarge">Headline</Text>
           <Text variant="bodyLarge">Supporting line</Text>
           <Text variant="labelSmall">Label</Text>
-        </View>
+        </Stack>
         <View style={styles.row}>
           <Text tone="primary">Primary</Text>
           <Text tone="muted">Muted</Text>
