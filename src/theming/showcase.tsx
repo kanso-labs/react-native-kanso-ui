@@ -7,6 +7,7 @@ import type { DemoThemeName } from './themes'
 import { Avatar } from '../components/avatar'
 import { Button } from '../components/button'
 import { Card } from '../components/card'
+import { Currency } from '../components/currency'
 import { IconButton } from '../components/icon-button'
 import { Link } from '../components/link'
 import { ProductIcon } from '../components/product-icon'
@@ -222,6 +223,23 @@ function Showcase({ name }: ShowcaseProps) {
             </Stack>
           </Card>
         </Stack>
+      </Section>
+
+      <Section
+        description="An amount takes the positive or negative role from its sign, and tabular figures from the type scale, so a column of them lines up."
+        title="Currency"
+      >
+        <View style={styles.row}>
+          <Text variant="bodyLarge">
+            <Currency locale="en-US" value={1240.5} />
+          </Text>
+          <Text variant="bodyLarge">
+            <Currency currency="EUR" locale="en-US" value={-42} />
+          </Text>
+          <Text variant="bodyLarge">
+            <Currency locale="en-US" value={0} />
+          </Text>
+        </View>
       </Section>
 
       <Section
