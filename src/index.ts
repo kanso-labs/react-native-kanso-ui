@@ -65,6 +65,13 @@ export type {
 } from './components/segmented-button'
 export { Separator } from './components/separator'
 export type { SeparatorInset, SeparatorProps } from './components/separator'
+export { Snackbar } from './components/snackbar'
+export type {
+  SnackbarAction,
+  SnackbarOptions,
+  SnackbarProps,
+  SnackbarQueue,
+} from './components/snackbar'
 export { Stack } from './components/stack'
 export type {
   StackAlign,
