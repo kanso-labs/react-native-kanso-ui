@@ -218,11 +218,16 @@ fails to parse before it runs.
 ### The example app
 
 `example/` is an Expo app of its own, with its own `package.json` and lockfile.
-The root's lint and format checks cover its files, but nothing in the root
-installs it, and CI neither bundles it nor type-checks it; `npm run typecheck`
-there does the second. Its dependencies are the versions its Expo SDK bundles,
-so `npx expo install --check` there says whether one has drifted, and an SDK
-upgrade is `npx expo install expo@<version> --fix` rather than a bump at a time.
+ESLint and the format check cover its files, but nothing in the root installs
+it, and CI neither bundles it nor type-checks it; `npm run typecheck` there does
+the second. **oxlint leaves the app out**, in `.oxlintrc.json`: its type-aware
+rules read the app's `tsconfig.json`, which extends Expo's from the app's own
+`node_modules`, so without that install the tsconfig is invalid and every
+`require` in `metro.config.js` reads as `any`, which fails `Lint` on a checkout
+that never installed the app, CI's among them. Its dependencies are the versions
+its Expo SDK bundles, so `npx expo install --check` there says whether one has
+drifted, and an SDK upgrade is `npx expo install expo@<version> --fix` rather
+than a bump at a time.
 
 Install the root first: the app's scripts run the root's `tokens:build`, since
 the library's token defaults are generated rather than committed. Metro watches
