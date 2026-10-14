@@ -18,6 +18,11 @@ export type {
   ChipProps,
   ChipVariant,
 } from './components/chip'
+export { ChipGroup, ChipGroupChip } from './components/chip-group'
+export type {
+  ChipGroupChipProps,
+  ChipGroupProps,
+} from './components/chip-group'
 export { IconButton } from './components/icon-button'
 export type {
   IconButtonProps,
@@ -48,3 +53,7 @@ export type { KuiTheme, ThemeScopeProps } from './theme-scope'
 export type { ResolvedTheme } from './theme/scope'
 export { useTheme } from './theme/scope'
 export type { TypeRole } from './typography/roles'
+// The keys a ChipGroup reports its chips by, and the selection it reports,
+// as web re-exports them from React Aria, so a call site types its handlers
+// from this package rather than from React Stately's.
+export type { Key, Selection } from 'react-stately'
