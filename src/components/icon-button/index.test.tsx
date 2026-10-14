@@ -9,9 +9,21 @@ import {
   it,
   jest,
 } from '@jest/globals'
-import { act, fireEvent, render, screen } from '@testing-library/react-native'
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  userEvent,
+} from '@testing-library/react-native'
 import { createRef } from 'react'
-import { StyleSheet, Text, View } from 'react-native'
+import {
+  AccessibilityInfo,
+  Platform,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native'
 import { getAnimatedStyle } from 'react-native-reanimated'
 
 import type { IconButtonSize, IconButtonVariant } from '.'
@@ -21,6 +33,36 @@ import { useIconStyle } from '../../glyphs/icon-style'
 import { RouterProvider } from '../../router'
 import { withOpacity } from '../../theme/color'
 import { scopeFor } from '../../theme/scope'
+
+// The locale the device reports, which a pending ring's name is written in
+// when the call site gives none.
+let mockDeviceLocale = 'en-US'
+
+jest.mock('../../number/locale', () => ({
+  localeOf: (locale: string | undefined) => locale ?? mockDeviceLocale,
+}))
+
+// A path drawn as a plain element, so the stroke the ring hands it reads as
+// written rather than as react-native-svg's processed colour. Reanimated
+// moves the ring's arc through `setNativeProps`, which has nothing to do here.
+jest.mock('react-native-svg', () => {
+  const { Component, createElement } =
+    jest.requireActual<typeof import('react')>('react')
+
+  class Path extends Component {
+    render() {
+      return createElement('Path', this.props)
+    }
+
+    setNativeProps() {}
+  }
+
+  return {
+    __esModule: true,
+    ...jest.requireActual<object>('react-native-svg'),
+    Path,
+  }
+})
 
 const { theme } = scopeFor('light', {})
 const { colors, motion, radii, sizing, stateLayerOpacity } = theme
@@ -158,6 +200,10 @@ function IconProbe() {
   return <Text testID="icon">{`${String(color)} ${String(size)}`}</Text>
 }
 
+// Hoisted so it is one stable element per render, which is what react-perf's
+// no-jsx-as-prop is after.
+const ICON = <IconProbe />
+
 function layer() {
   const surface = clip().children.at(0)
   if (surface === undefined || typeof surface === 'string') {
@@ -170,6 +216,24 @@ function layer() {
   return view
 }
 
+// The ring a pending button draws, found as a screen reader finds it.
+function ring(name = 'Loading') {
+  return screen.getByRole('progressbar', { name })
+}
+
+// What the ring's svg is drawn at, and the colour of each of its arcs.
+function ringDrawing() {
+  const element = ring()
+  const svg = element
+    .queryAll((each) => each.type.startsWith('RNSVGSvgView'))
+    .at(0)
+  const strokes = element
+    .queryAll((each) => each.type === 'Path')
+    .map((path): unknown => path.props.stroke)
+
+  return { size: [svg?.props.bbWidth, svg?.props.bbHeight], strokes }
+}
+
 function styleOf(element: { props: { style?: StyleProp<ViewStyle> } }) {
   return StyleSheet.flatten([element.props.style])
 }
@@ -179,7 +243,10 @@ beforeEach(() => {
 })
 
 afterEach(() => {
+  mockDeviceLocale = 'en-US'
   jest.useRealTimers()
+  jest.restoreAllMocks()
+  jest.clearAllMocks()
 })
 
 describe('IconButton', () => {
@@ -636,5 +703,192 @@ describe('the press feedback', () => {
       outlineColor: colors.primary,
       outlineWidth: 2,
     })
+  })
+})
+
+describe('the pending state', () => {
+  it('takes no press while pending', async () => {
+    const onLongPress = jest.fn()
+    const onPress = jest.fn()
+    await render(
+      <IconButton
+        aria-label="Label"
+        isPending
+        onLongPress={onLongPress}
+        onPress={onPress}
+        testID="button"
+      >
+        {ICON}
+      </IconButton>,
+    )
+    const user = userEvent.setup()
+
+    await user.press(button())
+    await user.longPress(button())
+
+    expect(onPress).not.toHaveBeenCalled()
+    expect(onLongPress).not.toHaveBeenCalled()
+  })
+
+  it('keeps a pending toggle as it was', async () => {
+    const onChange = jest.fn()
+    await render(
+      <IconButton
+        aria-label="Label"
+        defaultSelected={false}
+        isPending
+        onChange={onChange}
+        testID="button"
+      >
+        {ICON}
+      </IconButton>,
+    )
+
+    await userEvent.setup().press(button())
+
+    expect(onChange).not.toHaveBeenCalled()
+    expect(button().props.accessibilityState).toMatchObject({ selected: false })
+  })
+
+  // Hidden in place rather than taken away, which keeps the icon's state.
+  it('keeps its icon where it stands, undrawn and unread', async () => {
+    await render(
+      <IconButton aria-label="Label" isPending testID="button">
+        {ICON}
+      </IconButton>,
+    )
+    const hidden = screen.getByTestId('icon', { includeHiddenElements: true })
+
+    expect(screen.queryByTestId('icon')).toBeNull()
+    expect(hidden.parent && styleOf(hidden.parent).opacity).toBe(0)
+    expect(screen.getByRole('button', { name: 'Label' })).toBe(button())
+  })
+
+  it('draws its icon again once it clears', async () => {
+    const { rerender } = await render(
+      <IconButton aria-label="Label" isPending>
+        {ICON}
+      </IconButton>,
+    )
+
+    await rerender(<IconButton aria-label="Label">{ICON}</IconButton>)
+
+    expect(icon()).toBeTruthy()
+    expect(screen.queryByRole('progressbar')).toBeNull()
+  })
+
+  it('names its ring with pendingLabel', async () => {
+    await render(
+      <IconButton aria-label="Label" isPending pendingLabel="Pending label">
+        {ICON}
+      </IconButton>,
+    )
+
+    expect(ring('Pending label')).toBeTruthy()
+  })
+
+  it.each([
+    ['en-US', 'Loading'],
+    ['de-DE', 'Wird geladen'],
+  ])('names its ring in the device’s locale, %s', async (locale, name) => {
+    mockDeviceLocale = locale
+    await render(
+      <IconButton aria-label="Label" isPending>
+        {ICON}
+      </IconButton>,
+    )
+
+    expect(ring(name)).toBeTruthy()
+  })
+
+  it('reports itself busy, as a button still', async () => {
+    await render(
+      <IconButton aria-label="Label" isPending testID="button">
+        {ICON}
+      </IconButton>,
+    )
+
+    expect(button().props.accessibilityState).toMatchObject({
+      busy: true,
+      disabled: false,
+    })
+    expect(screen.getByRole('button', { busy: true })).toBe(button())
+  })
+
+  it.each(VARIANTS)(
+    'draws its ring in the icon colour under %s',
+    async (variant, _container, content) => {
+      await render(
+        <IconButton aria-label="Label" isPending variant={variant}>
+          {ICON}
+        </IconButton>,
+      )
+
+      expect(ringDrawing().strokes).toEqual([content])
+    },
+  )
+
+  it.each(SIZES)(
+    'draws its ring at the icon’s size at %s',
+    async (size, _edge, iconSize) => {
+      await render(
+        <IconButton aria-label="Label" isPending size={size}>
+          {ICON}
+        </IconButton>,
+      )
+
+      expect(ringDrawing().size).toEqual([iconSize, iconSize])
+    },
+  )
+
+  it('keeps its focus ring, and draws no hover or press', async () => {
+    await render(
+      <IconButton aria-label="Label" isPending testID="button">
+        {ICON}
+      </IconButton>,
+    )
+
+    await fireEvent(button(), 'hoverIn', {})
+    await fireEvent(button(), 'pressIn', PRESS)
+
+    expect(styleOf(layer()).opacity).toBe(0)
+    expect(cornerOf(button())).toBe(radii.pill)
+
+    await fireEvent(button(), 'pressOut', PRESS)
+    await fireEvent(button(), 'focus', {})
+
+    expect(styleOf(button())).toMatchObject({
+      outlineColor: colors.primary,
+      outlineWidth: 2,
+    })
+    expect(styleOf(layer()).opacity).toBe(stateLayerOpacity.focus)
+  })
+
+  it.each(['ios', 'android'] as const)('says the change on %s', async (os) => {
+    jest.replaceProperty(Platform, 'OS', os)
+    const announce = jest.spyOn(AccessibilityInfo, 'announceForAccessibility')
+    const { rerender } = await render(
+      <IconButton aria-label="Label">{ICON}</IconButton>,
+    )
+
+    await rerender(
+      <IconButton aria-label="Label" isPending>
+        {ICON}
+      </IconButton>,
+    )
+
+    expect(announce.mock.calls).toEqual([['Loading']])
+  })
+
+  it('takes no isPending on a link', async () => {
+    await render(
+      // @ts-expect-error A link is never pending.
+      <IconButton aria-label="Label" href="/next" isPending>
+        {ICON}
+      </IconButton>,
+    )
+
+    expect(screen.getByRole('link', { name: 'Label' })).toBeTruthy()
+    expect(screen.queryByRole('progressbar')).toBeNull()
   })
 })

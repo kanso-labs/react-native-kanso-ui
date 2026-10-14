@@ -63,6 +63,20 @@ const Elevated: Story = {
   args: { variant: 'elevated' },
 }
 
+// The label is kept in place while the ring shows, so the button stays the
+// width it was, and the ring takes the label's colour on each variant.
+const Pending: Story = {
+  render: () => (
+    <Stack direction="row" gap="md" wrap>
+      {VARIANTS.map((variant) => (
+        <Button isPending key={variant} variant={variant}>
+          Label
+        </Button>
+      ))}
+    </Stack>
+  ),
+}
+
 const Square: Story = {
   args: { shape: 'square' },
 }
@@ -170,6 +184,7 @@ export {
   FullWidth,
   LongLabels,
   OutlinedBesideFilled,
+  Pending,
   Square,
   Toggle,
   Variants,
