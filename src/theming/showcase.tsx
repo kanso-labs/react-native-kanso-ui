@@ -11,6 +11,7 @@ import { Card } from '../components/card'
 import { Checkbox } from '../components/checkbox'
 import { Chip } from '../components/chip'
 import { ChipGroup } from '../components/chip-group'
+import { CopyField } from '../components/copy-field'
 import { Currency } from '../components/currency'
 import { Form } from '../components/form'
 import { IconButton } from '../components/icon-button'
@@ -313,6 +314,13 @@ function Showcase({ name }: ShowcaseProps) {
           <ChipGroup.Chip id="second">Second item</ChipGroup.Chip>
           <ChipGroup.Chip id="third">Third item</ChipGroup.Chip>
         </ChipGroup>
+      </Section>
+
+      <Section
+        description="A read-only field with the value it copies, so it draws the field's own surface and the button that sits in its trailing slot."
+        title="CopyField"
+      >
+        <CopyField value="--kui-color-primary" />
       </Section>
 
       <Section

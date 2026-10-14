@@ -25,6 +25,8 @@ export type {
   ChipGroupChipProps,
   ChipGroupProps,
 } from './components/chip-group'
+export { CopyField } from './components/copy-field'
+export type { CopyFieldProps } from './components/copy-field'
 export { Currency } from './components/currency'
 export type {
   CurrencyProps,

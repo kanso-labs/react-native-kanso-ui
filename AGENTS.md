@@ -364,6 +364,12 @@ repository holds no npm token. A trusted publisher is registered on the
 package's npm page, which exists only once a first version has been published,
 so that version is published by hand.
 
+**The first release is 0.1.0, and `initial-version` is what makes it so.** With
+no release tagged yet, release-please has no version to bump, and starts at
+1.0.0 whatever `bump-minor-pre-major` says; the manifest's `0.0.0` is not read
+as a release. The key is read only while no release exists, so it changes
+nothing once 0.1.0 is tagged.
+
 **Dependencies come from Renovate**, through the org-wide runner in
 [`kanso-labs/renovate`](https://github.com/kanso-labs/renovate), and its commits
 are typed `deps:` so an upgrade cuts a release of its own. A repository is
