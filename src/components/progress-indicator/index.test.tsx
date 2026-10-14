@@ -703,7 +703,7 @@ describe('ProgressIndicator', () => {
 
       await render(
         <ProgressIndicator
-          diameter={20}
+          diameter="20px"
           label="Label"
           value={40}
           variant="circular"

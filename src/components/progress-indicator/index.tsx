@@ -47,6 +47,7 @@ import {
   THICKNESS,
 } from '../../indicator/styles'
 import { localeOf } from '../../number/locale'
+import { parseLength } from '../../theme/resolve'
 import { useTheme } from '../../theme/scope'
 import { composeStyles, themedStyles } from '../../theme/styles'
 
@@ -120,13 +121,14 @@ type ProgressIndicatorProps = Omit<ViewProps, 'children' | 'style'> & {
    */
   readonly buffer?: number
   /**
-   * How wide the ring is drawn, in dp. Everything inside scales with it, so a
-   * ring in a button can take the button's icon size. Web takes a CSS length
-   * here; React Native's lengths are numbers. Ignored by the line, which fills
+   * How wide the ring is drawn, as a CSS length read the way a theme's
+   * lengths are. Everything inside scales with it, so a ring in a button can
+   * take the button's icon size. The length is in px, since a relative unit
+   * has nothing on native to be relative to. Ignored by the line, which fills
    * the width it is given.
-   * @default 40, or 48 for the wavy ring
+   * @default '40px', or '48px' for the wavy ring
    */
-  readonly diameter?: number
+  readonly diameter?: `${number}px`
   /**
    * How the value reads.
    * @default { style: 'percent' }
@@ -887,7 +889,10 @@ function ProgressIndicator({
       {variant === 'circular' ? (
         <CircularTrack
           colors={colors}
-          diameter={diameter ?? (shape === 'wavy' ? WAVY_SIZE : CIRCULAR_SIZE)}
+          diameter={
+            (diameter === undefined ? undefined : parseLength(diameter)) ??
+            (shape === 'wavy' ? WAVY_SIZE : CIRCULAR_SIZE)
+          }
           isIndeterminate={isIndeterminate}
           percentage={reading.percentage}
           shape={shape}

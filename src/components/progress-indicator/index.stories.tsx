@@ -22,7 +22,7 @@ const stylesOf = themedStyles(({ spacing }) =>
 const WORKING = (
   <ProgressIndicator
     aria-label="Working"
-    diameter={20}
+    diameter="20px"
     isIndeterminate
     tone="inherit"
     variant="circular"
@@ -31,7 +31,7 @@ const WORKING = (
 const QUARTER = (
   <ProgressIndicator
     aria-label="Quarter"
-    diameter={20}
+    diameter="20px"
     tone="inherit"
     value={25}
     variant="circular"

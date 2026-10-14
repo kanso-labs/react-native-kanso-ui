@@ -537,4 +537,4 @@ function resolveTheme(
 }
 
 export type { Easing, ResolvedGroups, ThemeProblem, ThemeProperties }
-export { resolveTheme }
+export { parseLength, resolveTheme }
