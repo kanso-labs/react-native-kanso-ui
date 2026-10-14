@@ -7,6 +7,7 @@ import type { DemoThemeName } from './themes'
 import { Avatar } from '../components/avatar'
 import { Button } from '../components/button'
 import { Card } from '../components/card'
+import { Form } from '../components/form'
 import { IconButton } from '../components/icon-button'
 import { Link } from '../components/link'
 import { NumberField } from '../components/number-field'
@@ -229,6 +230,22 @@ function Showcase({ name }: ShowcaseProps) {
             </Stack>
           </Card>
         </Stack>
+      </Section>
+
+      <Section
+        description="A form draws nothing and lays nothing out: it hands the fields inside it their validation behaviour, and a message it reports lands in the field's own supporting text."
+        title="Form"
+      >
+        <Form>
+          <Stack gap="md">
+            <TextField defaultValue="Label" label="Label" />
+            <TextField
+              defaultValue="Label"
+              error="Supporting line"
+              label="Label"
+            />
+          </Stack>
+        </Form>
       </Section>
 
       <Section

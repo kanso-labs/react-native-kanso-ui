@@ -5,7 +5,7 @@ import type {
 } from 'react-native'
 import type { SharedValue } from 'react-native-reanimated'
 
-import { useState } from 'react'
+import { use, useState } from 'react'
 import { Platform, Pressable, StyleSheet } from 'react-native'
 import Animated, {
   Easing,
@@ -17,13 +17,15 @@ import Animated, {
 
 import type { ResolvedTheme } from '../theme/scope'
 
+import { FormContext } from '../form'
 import { useOpenLink } from '../router'
 import { useTheme } from '../theme/scope'
 
 // What every button does past its own styles, shared by Button and
 // IconButton as web's src/button is: the three forms a button takes, the
 // toggle's state and how it is announced, what a press does after the call
-// site's own `onPress`, the corner that eases between shapes, and the metrics
+// site's own `onPress`, a submit button's included, the corner that eases
+// between shapes, and the metrics
 // the two components' pages give alike, since the two share their five
 // heights so that they line up in a row.
 
@@ -43,6 +45,7 @@ type ButtonLinkForm = {
   readonly href: string
   readonly isSelected?: never
   readonly onChange?: never
+  readonly type?: never
 }
 
 type ButtonPressForm = {
@@ -50,6 +53,12 @@ type ButtonPressForm = {
   readonly href?: never
   readonly isSelected?: never
   readonly onChange?: never
+  /**
+   * What a press does past `onPress`. `submit` submits the `Form` the button
+   * is in, as a submit button does on web; `button` does nothing more.
+   * @default 'button'
+   */
+  readonly type?: 'button' | 'submit'
 }
 
 type ButtonToggleForm = {
@@ -71,6 +80,7 @@ type ButtonToggleForm = {
    * a toggle.
    */
   readonly onChange?: (isSelected: boolean) => void
+  readonly type?: never
 }
 
 /** The five control heights both pages give, by the names both props take. */
@@ -162,9 +172,11 @@ function pressThen(onPress: PressableProps['onPress'], then: () => void) {
 
 /**
  * What a press does, and whether a toggle is selected. A press calls the call
- * site's own `onPress` first, then opens the link or changes the toggle's
- * state, which is the order web reports them in. A toggle keeps its own state
- * from `defaultSelected` unless the call site holds it in `isSelected`.
+ * site's own `onPress` first, then opens the link, changes the toggle's state
+ * or submits the form the button is in, which is the order web reports them
+ * in. A toggle keeps its own state from `defaultSelected` unless the call
+ * site holds it in `isSelected`. A submit button outside a form submits
+ * nothing, as on web.
  */
 function useButtonAction({
   defaultSelected,
@@ -173,6 +185,7 @@ function useButtonAction({
   isToggle,
   onChange,
   onPress,
+  type,
 }: {
   readonly defaultSelected: boolean | undefined
   readonly href: string | undefined
@@ -180,8 +193,10 @@ function useButtonAction({
   readonly isToggle: boolean
   readonly onChange: ((isSelected: boolean) => void) | undefined
   readonly onPress: PressableProps['onPress']
+  readonly type: 'button' | 'submit' | undefined
 }) {
   const openLink = useOpenLink()
+  const form = use(FormContext)
   const [ownSelected, setOwnSelected] = useState(defaultSelected ?? false)
   const selected = isToggle && (isSelected ?? ownSelected)
 
@@ -191,6 +206,8 @@ function useButtonAction({
     } else if (isToggle) {
       setOwnSelected(!selected)
       onChange?.(!selected)
+    } else if (type === 'submit') {
+      form?.requestSubmit()
     }
   }
 

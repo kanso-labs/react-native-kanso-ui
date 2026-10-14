@@ -11,6 +11,7 @@ import type {
 import { useId, useImperativeHandle, useRef, useState } from 'react'
 import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native'
 
+import type { ValidationResult } from '../../form'
 import type { IconStyle } from '../../glyphs/icon-style'
 
 import {
@@ -22,6 +23,7 @@ import {
   useFieldFocus,
   useStrokeMotion,
 } from '../../field'
+import { useFieldValidation } from '../../form'
 import { CloseGlyph, SearchGlyph } from '../../glyphs'
 import { IconStyleContext } from '../../glyphs/icon-style'
 import { usePressFeedback } from '../../press'
@@ -72,6 +74,7 @@ type SearchBarProps = {
   readonly isDisabled: boolean
   readonly isFocused: boolean
   readonly isInvalid: boolean
+  readonly isRequired: boolean
   /** Empties the field, from the clear button. */
   readonly onClear: () => void
   /** Whether the field holds anything, which shows the clear button. */
@@ -118,7 +121,9 @@ type SearchFieldProps = Omit<
    * The problem with the current value, in words. Its presence is what puts
    * the field in its error state: the message, the ring in the error role,
    * and the invalid state a screen reader reads all follow from it. The line
-   * under the bar arrives with the message, so the field grows when this does.
+   * under the bar arrives with the message, so the field grows when this
+   * does, unless it is inside a `Form`, which keeps the line drawn. It wins
+   * over what `validate` and the form say, and holds a `native` form back.
    */
   readonly error?: string
   /**
@@ -133,10 +138,23 @@ type SearchFieldProps = Omit<
    */
   readonly isDisabled?: boolean
   /**
+   * Whether the field has to be filled in, which a screen reader reads.
+   * Inside a `native` form, an empty one holds the submission back and shows
+   * its error once a submission is tried. The bar draws no label, so there
+   * is no asterisk to show it.
+   * @default false
+   */
+  readonly isRequired?: boolean
+  /**
    * What the field searches, for a screen reader. The bar draws no label, so
    * this is read and never shown; `placeholder` is what is seen.
    */
   readonly label: string
+  /**
+   * The name the value is submitted under by the `Form` around the field,
+   * and the key its `validationErrors` reach the field by.
+   */
+  readonly name?: string
   /** Called with the new value as it is edited, and with `''` once cleared. */
   readonly onChange?: (value: string) => void
   /** Called once the field is emptied, from its clear button or Escape. */
@@ -148,6 +166,14 @@ type SearchFieldProps = Omit<
   readonly ref?: Ref<View>
   /** Positions and sizes the field as a whole. */
   readonly style?: StyleProp<ViewStyle>
+  /**
+   * Checks the value, and returns its problem in words, or several, where
+   * there is one, and `true`, `null` or `undefined` where there is none.
+   * Under the default `aria` validation the error shows as the value
+   * changes; inside a `native` form it shows once a submission is tried, or
+   * once the field loses focus after an edit, and holds the form back.
+   */
+  readonly validate?: (value: string) => ValidationResult
   /** The value, when the call site keeps it. */
   readonly value?: string
 }
@@ -199,6 +225,18 @@ const stylesOf = themedStyles(({ colors, radii, spacing, stateLayerOpacity }) =>
   }),
 )
 
+// Empties the field: the value goes, and the call site is told twice over.
+// The field's own blur handling, then the call site's.
+function blurThen(
+  onBlur: () => void,
+  then: TextInputProps['onBlur'],
+): TextInputProps['onBlur'] {
+  return (event) => {
+    onBlur()
+    then?.(event)
+  }
+}
+
 // Empties the field from its button, and hands focus back to the control, so
 // the next keyword is typed straight in.
 function clearFrom(onClear: () => void, control: RefObject<null | TextInput>) {
@@ -208,27 +246,31 @@ function clearFrom(onClear: () => void, control: RefObject<null | TextInput>) {
   }
 }
 
-// Empties the field: the value goes, and the call site is told twice over.
 function clearInto(
   setOwn: (value: string) => void,
   onChange: ((value: string) => void) | undefined,
   onClear: (() => void) | undefined,
+  onEdit: () => void,
 ) {
   return () => {
     setOwn('')
+    onEdit()
     onChange?.('')
     onClear?.()
   }
 }
 
 // Keeps an edit as the field's own value and reports it, so a field the call
-// site controls is told and one it does not still shows what was typed.
+// site controls is told and one it does not still shows what was typed, and
+// tells the field's validation it was edited.
 function editInto(
   setOwn: (value: string) => void,
   onChange: ((value: string) => void) | undefined,
+  onEdit: () => void,
 ) {
   return (text: string) => {
     setOwn(text)
+    onEdit()
     onChange?.(text)
   }
 }
@@ -274,6 +316,7 @@ function SearchBar({
   isDisabled,
   isFocused,
   isInvalid,
+  isRequired,
   onClear,
   showsClear,
 }: SearchBarProps) {
@@ -326,7 +369,11 @@ function SearchBar({
       >
         <SearchGlyph />
       </IconStyleContext>
-      <FieldStates isDisabled={isDisabled} isInvalid={isInvalid}>
+      <FieldStates
+        isDisabled={isDisabled}
+        isInvalid={isInvalid}
+        isRequired={isRequired}
+      >
         {children}
       </FieldStates>
       {showsClear ? (
@@ -366,7 +413,9 @@ function SearchField({
   error,
   inputRef,
   isDisabled = false,
+  isRequired = false,
   label,
+  name,
   onBlur,
   onChange,
   onClear,
@@ -376,15 +425,32 @@ function SearchField({
   onSubmitEditing,
   ref,
   style,
+  validate,
   value,
   ...props
 }: SearchFieldProps) {
   const id = useId()
   const control = useRef<TextInput>(null)
   const [own, setOwn] = useState(defaultValue)
-  const focus = useFieldFocus({ onBlur, onFocus })
   const current = value ?? own
-  const clear = clearInto(setOwn, onChange, onClear)
+  const validation = useFieldValidation({
+    control,
+    error,
+    isDisabled,
+    isEmpty: current === '',
+    isReadOnly: false,
+    isRequired,
+    name,
+    submitted: current,
+    validate,
+    value: current,
+  })
+  const focus = useFieldFocus({
+    onBlur: blurThen(validation.onBlur, onBlur),
+    onFocus,
+  })
+  const clear = clearInto(setOwn, onChange, onClear, validation.onEdit)
+  const shownError = validation.error
 
   useImperativeHandle<null | TextInput, null | TextInput>(
     inputRef,
@@ -399,7 +465,8 @@ function SearchField({
         control={control}
         isDisabled={isDisabled}
         isFocused={focus.focused}
-        isInvalid={error !== undefined}
+        isInvalid={shownError !== undefined}
+        isRequired={isRequired}
         onClear={clear}
         showsClear={current !== ''}
       >
@@ -407,9 +474,9 @@ function SearchField({
           {...props}
           {...focus.handlers}
           aria-label={label}
-          described={describedBy(id, { description, error })}
+          described={describedBy(id, { description, error: shownError })}
           editable={!isDisabled}
-          onChangeText={editInto(setOwn, onChange)}
+          onChangeText={editInto(setOwn, onChange, validation.onEdit)}
           onKeyPress={keyInto(
             current === '' || isDisabled ? undefined : clear,
             onKeyPress,
@@ -421,7 +488,7 @@ function SearchField({
           value={current}
         />
       </SearchBar>
-      <FieldMessage description={description} error={error} id={id} />
+      <FieldMessage description={description} error={shownError} id={id} />
     </View>
   )
 }
