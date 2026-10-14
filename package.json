@@ -61,7 +61,7 @@
     "@commitlint/config-conventional": "21.2.3",
     "@eslint/js": "10.0.1",
     "@jest/globals": "29.7.0",
-    "@kanso-labs/kanso-ui": "0.43.2",
+    "@kanso-labs/kanso-ui": "0.43.3",
     "@kanso-labs/unplugin-style-dictionary": "0.10.29",
     "@react-native/babel-preset": "0.87.1",
     "@react-native/jest-preset": "0.87.1",
