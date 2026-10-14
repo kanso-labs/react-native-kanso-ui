@@ -206,6 +206,13 @@ suite; it finds the files on disk, so a new one needs no entry.
 contrast or labelling violation in what React Native Web draws. `Test` runs
 both.
 
+**That run is in Vite's `development` mode, not Vitest's `test`**, through
+`--mode development` in the script. React Native Web's Vite plugin sets
+`__DEV__` from the mode, so under `test` every check a library makes only in
+development is off, and a story that throws on one of them in the Storybook
+passes the run. Run it through the npm script rather than a bare
+`npx vitest run`, which drops the flag.
+
 Jest reaches Storybook's packages, which ship ESM alone, through
 `transformIgnorePatterns` in `jest.config.js`; take them out and the story test
 fails to parse before it runs.
@@ -248,11 +255,16 @@ them, and coverage leaves them out.
 ### The example app
 
 `example/` is an Expo app of its own, with its own `package.json` and lockfile.
-The root's lint and format checks cover its files, but nothing in the root
-installs it, and CI neither bundles it nor type-checks it; `npm run typecheck`
-there does the second. Its dependencies are the versions its Expo SDK bundles,
-so `npx expo install --check` there says whether one has drifted, and an SDK
-upgrade is `npx expo install expo@<version> --fix` rather than a bump at a time.
+ESLint and the format check cover its files, but nothing in the root installs
+it, and CI neither bundles it nor type-checks it; `npm run typecheck` there does
+the second. **oxlint leaves the app out**, in `.oxlintrc.json`: its type-aware
+rules read the app's `tsconfig.json`, which extends Expo's from the app's own
+`node_modules`, so without that install the tsconfig is invalid and every
+`require` in `metro.config.js` reads as `any`, which fails `Lint` on a checkout
+that never installed the app, CI's among them. Its dependencies are the versions
+its Expo SDK bundles, so `npx expo install --check` there says whether one has
+drifted, and an SDK upgrade is `npx expo install expo@<version> --fix` rather
+than a bump at a time.
 
 Install the root first: the app's scripts run the root's `tokens:build`, since
 the library's token defaults are generated rather than committed. Metro watches
