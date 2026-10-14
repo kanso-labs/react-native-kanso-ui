@@ -342,6 +342,15 @@ describe('ProgressIndicator', () => {
       expect(screen.getByText('40%')).toBeTruthy()
     })
 
+    it('lets a long label break inside itself rather than widen the row', async () => {
+      await render(<ProgressIndicator label="Label" showValue value={40} />)
+
+      expect(styleOf(screen.getByText('Label'))).toMatchObject({
+        flexShrink: 1,
+        minWidth: 0,
+      })
+    })
+
     it('has no value to announce or show while indeterminate', async () => {
       await render(
         <ProgressIndicator

@@ -33,9 +33,13 @@ const styles = StyleSheet.create({
     flexShrink: 0,
     height: THICKNESS,
   },
-  // The label's own part of the row, which gives way to the value.
+  // The label's own part of the row. It gives way to the value, and breaks a
+  // word wider than the room rather than widening the row: a file name or a
+  // compound otherwise pushed the value off the end. The browser keeps a flex
+  // item as wide as its longest word unless told it may be narrower.
   label: {
     flexShrink: 1,
+    minWidth: 0,
   },
   // The three parts, with the page's 4dp between them.
   line: {
