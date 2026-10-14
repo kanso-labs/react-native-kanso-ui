@@ -19,6 +19,8 @@ export type {
 } from './components/icon-button'
 export { Link } from './components/link'
 export type { LinkProps, LinkTone, LinkUnderline } from './components/link'
+export { ProductIcon } from './components/product-icon'
+export type { ProductIconProps } from './components/product-icon'
 export { Separator } from './components/separator'
 export type { SeparatorInset, SeparatorProps } from './components/separator'
 export { Stack } from './components/stack'

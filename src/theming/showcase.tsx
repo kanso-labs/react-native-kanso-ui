@@ -9,6 +9,7 @@ import { Button } from '../components/button'
 import { Card } from '../components/card'
 import { IconButton } from '../components/icon-button'
 import { Link } from '../components/link'
+import { ProductIcon } from '../components/product-icon'
 import { Separator } from '../components/separator'
 import { Stack } from '../components/stack'
 import { Text } from '../components/text'
@@ -254,6 +255,18 @@ function Showcase({ name }: ShowcaseProps) {
         <Text variant="bodyLarge">
           <Link href="/first">Label</Link>
         </Text>
+      </Section>
+
+      <Section
+        description="A rounded square for a thing, tinted from the same container/on-container pairs the avatar takes."
+        title="ProductIcon"
+      >
+        <View style={styles.row}>
+          {AVATAR_TONES.map((tone) => (
+            <ProductIcon key={tone} name="Label" tone={tone} />
+          ))}
+          <ProductIcon name="Label" size="lg" />
+        </View>
       </Section>
 
       <Section

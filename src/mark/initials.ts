@@ -1,7 +1,7 @@
-// What an avatar shows while it has no photo: the initials of the person's
-// name. Copied from kanso-ui's `src/mark/initials.ts` rather than shared
-// through a package, so the two read a name the same way and each can be
-// read without the other.
+// What a mark shows while it has no picture: the initials of a person's
+// name, or the initial of a thing's. Copied from kanso-ui's
+// `src/mark/initials.ts` rather than shared through a package, so the two
+// read a name the same way and each can be read without the other.
 //
 // It works in graphemes, what a reader sees as one character, in the
 // device's locale. A code point drops an accent written as a combining mark,
@@ -86,6 +86,19 @@ function initialOf(word: string, locale: string | undefined) {
 }
 
 /**
+ * One letter, where a person takes two. A person has a first name and a last
+ * name to initialise; a thing usually has neither, so the same rule applied
+ * to "Second item" would produce "SI", a pair of initials for something that
+ * was never two words in that sense.
+ *
+ * `locale` is the device's when left out, which is what a product icon
+ * passes.
+ */
+function initialOfThing(name: string, locale?: string) {
+  return initialOf(name.trim(), locale)
+}
+
+/**
  * The initials of the first and the last word, which handles both "Ada" and
  * "Ada Lovelace" without a separate prop for how many to take. What a
  * display name carries around the name itself is left out first: a title
@@ -116,4 +129,4 @@ function initialsOfPerson(name: string, locale?: string) {
   return `${first}${between}${last}`
 }
 
-export { initialsOfPerson }
+export { initialOfThing, initialsOfPerson }
