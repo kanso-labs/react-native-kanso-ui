@@ -8,7 +8,11 @@ import type {
 } from 'react-native'
 import type { AnimatedStyle } from 'react-native-reanimated'
 
-import { Text as NativeText, StyleSheet } from 'react-native'
+import {
+  Text as NativeText,
+  StyleSheet,
+  useWindowDimensions,
+} from 'react-native'
 import Animated from 'react-native-reanimated'
 
 import type {
@@ -32,6 +36,14 @@ import {
   useCorner,
 } from '../../button'
 import { palettesOf } from '../../button/palettes'
+import {
+  BUSY,
+  CONCEALED,
+  PendingContent,
+  PendingRing,
+  pendingStyles,
+  usePending,
+} from '../../button/pending'
 import { IconStyleContext } from '../../glyphs/icon-style'
 import { hitSlop, usePressFeedback } from '../../press'
 import { useTheme } from '../../theme/scope'
@@ -70,6 +82,15 @@ import { useTypeRole } from '../../typography/roles'
 // low surface until it takes primary, and an outlined one swaps its rule for
 // the inverse surface pair. The page gives text no pair, so a text button
 // given those props stays a plain one.
+//
+// **A pending button keeps its place.** Given `isPending` the label and the
+// icon are hidden where they stand, so the button keeps its width, and an
+// indeterminate ring is drawn over them in the label's colour, at the label's
+// type size times the device's text size, which is what web's `1em` reads.
+// The button keeps its focus and its ring and takes no press, so a double tap
+// cannot run the action twice: neither `onPress` nor `onLongPress` is called,
+// and a toggle keeps its state until it clears. It reports itself busy, and
+// src/button's pending.tsx says the change out loud.
 //
 // **The corner is a shape the button morphs between.** `round` rests as the
 // pill and `square` at the size's square corner: 12dp up to the page's S,
@@ -337,6 +358,7 @@ function Button({
   href,
   icon,
   isDisabled = false,
+  isPending = false,
   isSelected,
   onBlur,
   onChange,
@@ -344,9 +366,11 @@ function Button({
   onHoverIn,
   onHoverOut,
   onLayout,
+  onLongPress,
   onPress,
   onPressIn,
   onPressOut,
+  pendingLabel,
   shape = 'round',
   size = 'md',
   style,
@@ -356,6 +380,10 @@ function Button({
 }: ButtonProps) {
   const theme = useTheme()
   const role = useTypeRole(ROLES[size])
+  const { fontScale } = useWindowDimensions()
+  // A link is never pending, as on web, where its props have no such state.
+  const pending = href === undefined && isPending
+  const ringLabel = usePending(pending, pendingLabel)
 
   // The three props that make this a toggle, read as web reads them. The
   // types keep them off a `text` button; the check here keeps a call site
@@ -395,6 +423,7 @@ function Button({
     onHoverOut,
     onPressIn,
     onPressOut,
+    pending,
   })
 
   const { radii } = theme
@@ -411,12 +440,14 @@ function Button({
     <AnimatedPressable
       role={href === undefined ? 'button' : 'link'}
       {...(isToggle ? toggleState(action.selected) : undefined)}
+      {...(pending ? BUSY : undefined)}
       {...props}
       {...feedback.handlers}
       disabled={isDisabled}
       hitSlop={ownHitSlop ?? hitSlop(theme.sizing[HEIGHTS[size]])}
       onLayout={shaped.onLayout}
-      onPress={action.onPress}
+      onLongPress={pending ? undefined : onLongPress}
+      onPress={pending ? undefined : action.onPress}
       style={composeStyles<AnimatedStyle<ViewStyle>>(
         styles.base,
         sizesOf(theme)[size],
@@ -437,17 +468,32 @@ function Button({
         {feedback.layer}
       </Animated.View>
       {icon === undefined ? null : (
-        <IconStyleContext value={iconStyleOf(colors.content, size)}>
-          {icon}
-        </IconStyleContext>
+        <PendingContent isPending={pending}>
+          <IconStyleContext value={iconStyleOf(colors.content, size)}>
+            {icon}
+          </IconStyleContext>
+        </PendingContent>
       )}
       {children === undefined ? null : (
         <NativeText
-          style={composeStyles<TextStyle>(role, styles.label, colors.label)}
+          {...(pending ? CONCEALED : undefined)}
+          style={composeStyles<TextStyle>(
+            role,
+            styles.label,
+            colors.label,
+            pending ? pendingStyles.hidden : undefined,
+          )}
         >
           {children}
         </NativeText>
       )}
+      {pending ? (
+        <PendingRing
+          color={colors.content}
+          diameter={theme.typography[`${ROLES[size]}Size`] * fontScale}
+          label={ringLabel}
+        />
+      ) : null}
     </AnimatedPressable>
   )
 }

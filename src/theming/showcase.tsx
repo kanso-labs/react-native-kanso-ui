@@ -249,6 +249,7 @@ function Showcase({ name }: ShowcaseProps) {
             Label
           </Button>
           <Button isDisabled>Label</Button>
+          <Button isPending>Label</Button>
         </View>
       </Section>
 
