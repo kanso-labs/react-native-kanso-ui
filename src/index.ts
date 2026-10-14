@@ -47,6 +47,13 @@ export { NumberField } from './components/number-field'
 export type { NumberFieldProps } from './components/number-field'
 export { ProductIcon } from './components/product-icon'
 export type { ProductIconProps } from './components/product-icon'
+export { ProgressIndicator } from './components/progress-indicator'
+export type {
+  ProgressIndicatorProps,
+  ProgressIndicatorShape,
+  ProgressIndicatorTone,
+  ProgressIndicatorVariant,
+} from './components/progress-indicator'
 export { Radio, RadioGroup } from './components/radio-group'
 export type {
   RadioGroupOrientation,

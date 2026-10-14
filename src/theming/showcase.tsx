@@ -18,6 +18,7 @@ import { IconButton } from '../components/icon-button'
 import { Link } from '../components/link'
 import { NumberField } from '../components/number-field'
 import { ProductIcon } from '../components/product-icon'
+import { ProgressIndicator } from '../components/progress-indicator'
 import { Radio, RadioGroup } from '../components/radio-group'
 import { SearchField } from '../components/search-field'
 import { SegmentedButton } from '../components/segmented-button'
@@ -415,6 +416,28 @@ function Showcase({ name }: ShowcaseProps) {
             <ProductIcon key={tone} name="Label" tone={tone} />
           ))}
           <ProductIcon name="Label" size="lg" />
+        </View>
+      </Section>
+
+      <Section
+        description="The active indicator takes primary and the track secondary container, linear and circular, flat and wavy alike."
+        title="ProgressIndicator"
+      >
+        <ProgressIndicator label="Label" showValue value={60} />
+        <ProgressIndicator aria-label="Label" shape="wavy" value={60} />
+        <View style={styles.row}>
+          <ProgressIndicator aria-label="Label" value={60} variant="circular" />
+          <ProgressIndicator
+            aria-label="Label"
+            isIndeterminate
+            variant="circular"
+          />
+          <ProgressIndicator
+            aria-label="Label"
+            shape="wavy"
+            value={60}
+            variant="circular"
+          />
         </View>
       </Section>
 
