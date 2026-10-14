@@ -10,6 +10,7 @@ import { Button } from '../components/button'
 import { Card } from '../components/card'
 import { Checkbox } from '../components/checkbox'
 import { Chip } from '../components/chip'
+import { ChipGroup } from '../components/chip-group'
 import { Currency } from '../components/currency'
 import { IconButton } from '../components/icon-button'
 import { Link } from '../components/link'
@@ -60,6 +61,9 @@ const AVATAR_TONES = [
 ] as const
 
 const CARD_VARIANTS = ['elevated', 'filled', 'outlined'] as const
+
+// The chip group's selection, the second of its three chips.
+const CHIP_SELECTION = ['second']
 
 const LIBRARY_DARK = {
   description:
@@ -147,6 +151,10 @@ function Placeholder({ children }: PlaceholderProps) {
     </View>
   )
 }
+
+// The chip group's close targets show what a scheme does to them, and the
+// page has nothing to remove a chip from.
+function removeNothing() {}
 
 // One component's entry. The rule is drawn here rather than between two
 // sections at the call site, so a section is one element and the page is the
@@ -276,6 +284,22 @@ function Showcase({ name }: ShowcaseProps) {
             Fourth item
           </Chip>
         </View>
+      </Section>
+
+      <Section
+        description="The same chip under a field label, selectable and removable, with the remove control taking the chip's own text role."
+        title="ChipGroup"
+      >
+        <ChipGroup
+          defaultSelectedKeys={CHIP_SELECTION}
+          label="Label"
+          onRemove={removeNothing}
+          selectionMode="multiple"
+        >
+          <ChipGroup.Chip id="first">First item</ChipGroup.Chip>
+          <ChipGroup.Chip id="second">Second item</ChipGroup.Chip>
+          <ChipGroup.Chip id="third">Third item</ChipGroup.Chip>
+        </ChipGroup>
       </Section>
 
       <Section

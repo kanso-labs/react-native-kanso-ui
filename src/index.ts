@@ -20,6 +20,11 @@ export type {
   ChipProps,
   ChipVariant,
 } from './components/chip'
+export { ChipGroup, ChipGroupChip } from './components/chip-group'
+export type {
+  ChipGroupChipProps,
+  ChipGroupProps,
+} from './components/chip-group'
 export { Currency } from './components/currency'
 export type {
   CurrencyProps,
@@ -66,3 +71,4 @@ export type { KuiTheme, ThemeScopeProps } from './theme-scope'
 export type { ResolvedTheme } from './theme/scope'
 export { useTheme } from './theme/scope'
 export type { TypeRole } from './typography/roles'
+export type { Key, Selection } from 'react-stately'
