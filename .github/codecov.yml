@@ -1,0 +1,28 @@
+# Codecov looks for this file under the name codecov.yml or .codecov.yml, in
+# the repository root, dev/ or .github/, and nowhere else. The .yaml spelling
+# every other YAML file in this repository uses is not one it recognises, so
+# this filename is a deliberate exception to that convention rather than an
+# oversight — renaming it to codecov.yaml silently restores the defaults below.
+
+# The bundle Build uploads carries the declaration files beside the JavaScript,
+# since tsdown builds them inside the same rolldown bundle the plugin reads, and
+# the plugin has no option to leave an asset out. A new component can grow it past
+# the default 5% threshold on its own, so this status is informational for the
+# same reason as the two below: the size stays reported, and a pull request
+# adding a component does not read as a failure.
+bundle_analysis:
+  status: informational
+
+# Both statuses are informational because nothing here gates on coverage.
+# Codecov's default project status fails when a pull request lowers coverage by
+# any amount at all, which would put a red cross on pull requests against a
+# threshold nobody agreed to. informational keeps the number reported and the
+# status green.
+coverage:
+  status:
+    patch:
+      default:
+        informational: true
+    project:
+      default:
+        informational: true

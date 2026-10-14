@@ -9,6 +9,19 @@ on:
 permissions:
   contents: read
 
+# Three pushes to a branch inside a minute otherwise run three Builds to
+# completion, and only the last one is answering a question anybody is asking:
+# a pull request's check list shows the head commit alone. Grouped per workflow
+# and ref, so Build never waits on Lint or Test and one branch never waits on
+# another.
+#
+# cancel-in-progress is on everywhere except main, where each push is the
+# repository re-verifying what it just merged rather than iterating towards a
+# review, and the push whose bundle Codecov records against main.
+concurrency:
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+  group: build-${{ github.ref }}
+
 jobs:
   build:
     name: Build
@@ -25,7 +38,14 @@ jobs:
         with:
           ignore-scripts: true
 
+      # CODECOV_TOKEN is what switches the bundle-analysis plugin on — see the
+      # comment beside it in tsdown.config.ts. It is an organisation secret, so
+      # a pull request from a fork gets an empty string here and the build runs
+      # without the analysis rather than failing for want of a secret it was
+      # never going to be given.
       - name: Run build
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         run: npm run build
 
       # publint reads package.json and the packed file list, so it catches an

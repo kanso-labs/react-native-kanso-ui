@@ -13,6 +13,7 @@ src/tokens/defaults.ts
 # Test output
 coverage/
 .jest/
+.vitest/
 
 # Logs
 *.log
