@@ -304,6 +304,14 @@ change. The `pull_request` trigger is deliberately unscoped: adding
 `branches: [main]` would leave a pull request against any other base without the
 checks a ruleset waits on, which reads as a hang rather than a failure.
 
+**`Deploy Storybook` publishes the web Storybook to GitHub Pages**, on each
+published release, and by hand through `workflow_dispatch` run from the
+release's tag, since a dispatch builds the ref it is given. It posts no pull
+request check, so no ruleset names it. It needs Settings → Pages → Source set to
+"GitHub Actions", and it starts on a release only because release-please
+publishes with an application token: a release published by `GITHUB_TOKEN`
+starts no workflow at all.
+
 **`Test` reports the suite's coverage on the pull request**, through
 `actions/upload-code-coverage`, from the Cobertura file `npm run test:coverage`
 writes. The Default ruleset's coverage rule reads that report, so a `Test` that
