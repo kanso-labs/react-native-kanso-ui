@@ -1,5 +1,7 @@
 // The package's public surface. Every component, hook and type a consumer
 // imports is exported here by name.
+export { Avatar } from './components/avatar'
+export type { AvatarProps } from './components/avatar'
 export { Button } from './components/button'
 export type {
   ButtonProps,

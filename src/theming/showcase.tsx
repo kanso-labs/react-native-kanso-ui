@@ -4,6 +4,7 @@ import { StyleSheet, View } from 'react-native'
 
 import type { DemoThemeName } from './themes'
 
+import { Avatar } from '../components/avatar'
 import { Button } from '../components/button'
 import { Card } from '../components/card'
 import { IconButton } from '../components/icon-button'
@@ -41,6 +42,14 @@ type ShowcaseProps = {
   /** The scheme the page names in its header: a demo scheme, or the library's dark. */
   readonly name: 'dark' | DemoThemeName
 }
+
+const AVATAR_TONES = [
+  'primary',
+  'secondary',
+  'tertiary',
+  'positive',
+  'negative',
+] as const
 
 const CARD_VARIANTS = ['elevated', 'filled', 'outlined'] as const
 
@@ -154,6 +163,19 @@ function Showcase({ name }: ShowcaseProps) {
           {description}
         </Text>
       </View>
+
+      <Section
+        description="A circle for a person, tinted from a container/on-container pair, at each tone and at both sizes, and the anonymous person a blank name draws in the on-container role."
+        title="Avatar"
+      >
+        <View style={styles.row}>
+          {AVATAR_TONES.map((tone) => (
+            <Avatar key={tone} name="Ada Lovelace" tone={tone} />
+          ))}
+          <Avatar name="Grace Hopper" size="lg" />
+          <Avatar name="" />
+        </View>
+      </Section>
 
       <Section
         description="Every variant reads its container off a colour role and its corner off the radius scale, a square button's and a selected toggle's among them, so a scheme moves all of them at once — the elevated button off its shadow scale as well."
