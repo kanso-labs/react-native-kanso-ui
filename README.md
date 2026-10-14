@@ -50,15 +50,95 @@ over everything inside it, so it belongs at the root of the app and fills it, as
 the one above does. What draws there follows the scope it was opened in rather
 than the root's.
 
+### Fonts
+
+Neither package ships a font. On iOS and Android a type role draws in the first
+family its token names when the app has registered that family with
+[expo-font](https://docs.expo.dev/versions/latest/sdk/font/), under that name,
+and in the system font otherwise. expo-font is an optional peer, so an app
+without it draws every role in the system font.
+
+```tsx
+import { useFonts } from 'expo-font'
+
+const [loaded] = useFonts({
+  'Roboto Flex': require('./assets/RobotoFlex.ttf'),
+  'Roboto Serif': require('./assets/RobotoSerif.ttf'),
+})
+```
+
+Under React Native Web the token's whole list goes to CSS, as it does on web.
+
 ## Peer dependencies
 
-Beside `react` and `react-native`, the package needs
+Beside `react` and `react-native`, the package needs `react-native-reanimated`,
+which animates the ripple its controls draw when pressed and the corner a button
+morphs between, the `react-native-worklets` Reanimated runs on,
+`react-native-svg`, which draws the icons its controls show, and
 `react-native-safe-area-context`, whose insets keep what the library draws above
 the screen clear of a notch, the status bar and the home indicator. In an Expo
-app, `npx expo install react-native-safe-area-context` installs the version the
-SDK ships with. The insets come from its `SafeAreaProvider`, which Expo Router
+app,
+`npx expo install react-native-reanimated react-native-safe-area-context react-native-svg react-native-worklets`
+installs the versions the SDK ships with, and Expo's Babel preset compiles the
+package's animations. Outside Expo, Reanimated's install guide adds
+`react-native-worklets/plugin` to the app's Babel configuration, which does the
+same.
+
+The insets come from safe-area-context's `SafeAreaProvider`, which Expo Router
 puts around an app already; elsewhere, wrap the app in one. Without it, the
 library keeps to the window's edge.
+
+## Routing
+
+A component with an `href` presses through the app's router once the app is
+wrapped in `RouterProvider`, which takes the router's `navigate`. Without one,
+and for any URL with a scheme of its own such as `https:` or `mailto:`, the
+`href` is opened with React Native's `Linking.openURL`.
+
+With Expo Router, the provider goes in the root layout:
+
+```tsx
+// app/_layout.tsx
+import { RouterProvider } from '@kanso-labs/react-native-kanso-ui'
+import { type Href, Stack, useRouter } from 'expo-router'
+
+export default function RootLayout() {
+  const router = useRouter()
+  return (
+    <RouterProvider navigate={(href) => router.push(href as Href)}>
+      <Stack />
+    </RouterProvider>
+  )
+}
+```
+
+The `as Href` is there for typed routes, which type `push` with the app's own
+paths rather than any string.
+
+With React Navigation, `useLinkTo` turns a path into a navigation through the
+container's `linking` configuration, so the provider goes inside the container:
+
+```tsx
+import type { ReactNode } from 'react'
+
+import { RouterProvider } from '@kanso-labs/react-native-kanso-ui'
+import { NavigationContainer, useLinkTo } from '@react-navigation/native'
+
+function Routed({ children }: { children: ReactNode }) {
+  const linkTo = useLinkTo()
+  return <RouterProvider navigate={linkTo}>{children}</RouterProvider>
+}
+
+export default function App() {
+  return (
+    <NavigationContainer linking={linking}>
+      <Routed>
+        <RootStack />
+      </Routed>
+    </NavigationContainer>
+  )
+}
+```
 
 ## Development
 
@@ -68,13 +148,31 @@ Install with the Node version in `.tool-versions`:
 mise exec node@"$(awk '/^nodejs/{print $2}' .tool-versions)" -- npm install
 ```
 
-| Task   | Command                 |
-| ------ | ----------------------- |
-| Test   | `npm test`              |
-| Lint   | `npm run lint`          |
-| Build  | `npm run build`         |
-| Verify | `npm run package:check` |
-| Tokens | `npm run tokens:build`  |
+| Task      | Command                  |
+| --------- | ------------------------ |
+| Test      | `npm test`               |
+| Stories   | `npm run test:storybook` |
+| Storybook | `npm run storybook`      |
+| Lint      | `npm run lint`           |
+| Build     | `npm run build`          |
+| Verify    | `npm run package:check`  |
+| Tokens    | `npm run tokens:build`   |
+
+`npm run storybook` serves the components through React Native Web. Its Theme
+control offers kanso-ui's seven demo schemes beside light and dark, and the
+`Theming` section renders every component under each of them. To see the
+components drawn by iOS or Android, run the on-device Storybook in `example/`,
+an Expo app that reads the same stories. With the root installed:
+
+```bash
+cd example
+npm install
+npm start
+```
+
+Then open it in Expo Go from the QR code Expo prints. The device's light or dark
+appearance picks the scheme the stories render in, apart from the `Theming`
+pages, which each render in their own.
 
 ## License
 

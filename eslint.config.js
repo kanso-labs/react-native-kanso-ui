@@ -10,8 +10,18 @@ export default defineConfig([
   // `.claude/worktrees/` holds per-session checkouts of this repository, so
   // without this ESLint lints every other branch alongside the current one.
   // Flat config does not read .gitignore the way oxlint and oxfmt do, so it
-  // has to be named here, and so does the generated token module.
-  globalIgnores(['.claude', 'coverage', 'dist', 'src/tokens/defaults.ts']),
+  // has to be named here, and so does what the token build, Storybook and the
+  // example app's Metro write.
+  globalIgnores([
+    '.claude',
+    'coverage',
+    'dist',
+    'example/.expo',
+    'example/.rnstorybook/storybook.requires.ts',
+    'example/dist',
+    'src/tokens/defaults.ts',
+    'storybook-static',
+  ]),
   {
     extends: [
       eslintJs.configs.recommended,
@@ -45,6 +55,18 @@ export default defineConfig([
     files: ['*.{cjs,js,ts}', 'scripts/**/*.mjs'],
     languageOptions: {
       globals: globals.node,
+    },
+  },
+  // The example app's Metro configuration is CommonJS, the format Metro loads
+  // it in, so `require` is how it imports.
+  {
+    files: ['example/metro.config.js'],
+    languageOptions: {
+      globals: globals.node,
+      sourceType: 'commonjs',
+    },
+    rules: {
+      '@typescript-eslint/no-require-imports': 'off',
     },
   },
   ...eslintPluginOxlint.buildFromOxlintConfigFile('./.oxlintrc.json'),
