@@ -37,6 +37,7 @@ import {
 import { useFieldValidation } from '../../form'
 import { MinusGlyph, PlusGlyph } from '../../glyphs'
 import { IconStyleContext } from '../../glyphs/icon-style'
+import { localeOf } from '../../number/locale'
 import { useNumberFieldState } from '../../number/state'
 import { hitSlop, usePressFeedback } from '../../press'
 import { withOpacity } from '../../theme/color'
@@ -281,8 +282,6 @@ const GLYPH_SIZE = 20
 const SPIN_DELAY = 600
 const SPIN_INTERVAL = 60
 
-let deviceLocale: string | undefined
-
 const stylesOf = themedStyles(({ radii, spacing }) =>
   StyleSheet.create({
     // One stacked stepper: half the column, its glyph in the middle.
@@ -401,22 +400,6 @@ function keyboardOf(
   }
 
   return hasDecimals ? 'decimal-pad' : 'number-pad'
-}
-
-// The locale the field writes in: the one given, where the runtime takes it
-// as a locale at all, or the device's.
-function localeOf(locale: string | undefined) {
-  if (locale !== undefined) {
-    try {
-      Intl.NumberFormat.supportedLocalesOf(locale)
-      return locale
-    } catch {
-      // A malformed tag, which falls back to the device's.
-    }
-  }
-
-  deviceLocale ??= new Intl.NumberFormat().resolvedOptions().locale
-  return deviceLocale
 }
 
 // The margin that gives a side-by-side stepper the value's line in the
