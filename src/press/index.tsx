@@ -71,6 +71,20 @@ type PressFeedbackOptions = Handlers & {
    * web's Button.
    */
   readonly disableRipple?: boolean | undefined
+  /**
+   * The side of a round layer of a fixed size, for a control whose state
+   * layer is a disc beside its label rather than the whole control: a
+   * checkbox's. The ripple then grows from the disc's centre wherever the
+   * press lands, and nothing is measured. Left out, the ripple grows from
+   * the press point across the control.
+   */
+  readonly disc?: number | undefined
+  /**
+   * The colour the pressed layer and the ripple are drawn in, where it
+   * differs from the hover and focus layers': a checkbox's swaps between
+   * primary and on surface once pressed. Defaults to `color`.
+   */
+  readonly pressedColor?: string | undefined
 }
 
 /** Where the ripple starts and ends, and how far it grows, for one press. */
@@ -152,6 +166,11 @@ function hitSlop(height: number, width = TARGET_SIZE): Insets | undefined {
  * Native Web ignores. It is not drawn while the device asks for reduced
  * motion, where the pressed layer alone marks the press.
  *
+ * A control whose layer is a disc of its own beside its label, as a
+ * checkbox's is, passes the disc's side as `disc`, and its ripple grows from
+ * the disc's centre instead. One whose pressed layer takes another colour
+ * passes it as `pressedColor`.
+ *
  * The ring shows when focus arrives from a keyboard, and not when it arrives
  * with a press, which on web is a click focusing what it presses.
  *
@@ -169,12 +188,14 @@ function usePressFeedback({
   corners,
   disabled,
   disableRipple = false,
+  disc,
   onBlur,
   onFocus,
   onHoverIn,
   onHoverOut,
   onPressIn,
   onPressOut,
+  pressedColor = color,
 }: PressFeedbackOptions): PressFeedback {
   const theme = useTheme()
   const reduceMotion = useReducedMotion()
@@ -203,7 +224,7 @@ function usePressFeedback({
     // The whole style is the animation's, so the view takes the one object it
     // hands back.
     return {
-      backgroundColor: color,
+      backgroundColor: pressedColor,
       borderRadius: size / 2,
       height: size,
       left: 0,
@@ -286,7 +307,10 @@ function usePressFeedback({
       pressedUnfocused.current = !focused.current
       setPressed(true)
 
-      if (rippled) {
+      if (rippled && disc !== undefined) {
+        ripple(disc, disc, { x: disc / 2, y: disc / 2 })
+        phase.current = 'shown'
+      } else if (rippled) {
         const { pageX, pageY } = event.nativeEvent
 
         // A touch's own location is measured from whichever child it landed
@@ -336,7 +360,7 @@ function usePressFeedback({
           : 0
   const surface = StyleSheet.compose(styles.surface, corners)
   const state = StyleSheet.compose(styles.layer, {
-    backgroundColor: color,
+    backgroundColor: active && pressed ? pressedColor : color,
     opacity: layerOpacity,
   })
 
@@ -358,5 +382,5 @@ function usePressFeedback({
   }
 }
 
-export { hitSlop, usePressFeedback }
+export { hitSlop, TARGET_SIZE, usePressFeedback }
 export type { Corners, PressFeedback, PressFeedbackOptions }
