@@ -11,6 +11,26 @@ export type {
 } from './components/button'
 export { Card } from './components/card'
 export type { CardProps, CardVariant } from './components/card'
+export { Checkbox } from './components/checkbox'
+export type { CheckboxProps } from './components/checkbox'
+export { Chip } from './components/chip'
+export type {
+  ChipActionProps,
+  ChipFilterProps,
+  ChipProps,
+  ChipVariant,
+} from './components/chip'
+export { ChipGroup, ChipGroupChip } from './components/chip-group'
+export type {
+  ChipGroupChipProps,
+  ChipGroupProps,
+} from './components/chip-group'
+export { Currency } from './components/currency'
+export type {
+  CurrencyProps,
+  CurrencySignDisplay,
+  CurrencyTone,
+} from './components/currency'
 export { IconButton } from './components/icon-button'
 export type {
   IconButtonProps,
@@ -21,6 +41,12 @@ export { Link } from './components/link'
 export type { LinkProps, LinkTone, LinkUnderline } from './components/link'
 export { ProductIcon } from './components/product-icon'
 export type { ProductIconProps } from './components/product-icon'
+export { Radio, RadioGroup } from './components/radio-group'
+export type {
+  RadioGroupOrientation,
+  RadioGroupProps,
+  RadioProps,
+} from './components/radio-group'
 export {
   SegmentedButton,
   SegmentedButtonSegment,
@@ -38,10 +64,14 @@ export type {
   StackJustify,
   StackProps,
 } from './components/stack'
+export { Switch } from './components/switch'
+export type { SwitchProps } from './components/switch'
 export { Text } from './components/text'
 export type { TextProps } from './components/text'
 export { useIconStyle } from './glyphs/icon-style'
 export type { IconStyle } from './glyphs/icon-style'
+export { useWindowSizeClass } from './hooks/useWindowSizeClass'
+export type { WindowSizeClass } from './hooks/useWindowSizeClass'
 export { RouterProvider } from './router'
 export type { RouterProviderProps } from './router'
 export { ThemeScope } from './theme-scope'
@@ -49,7 +79,4 @@ export type { KuiTheme, ThemeScopeProps } from './theme-scope'
 export type { ResolvedTheme } from './theme/scope'
 export { useTheme } from './theme/scope'
 export type { TypeRole } from './typography/roles'
-// The keys a SegmentedButton reports its segments by, as web re-exports Key
-// from React Aria, so a call site types its handlers from this package rather
-// than from React Stately's.
-export type { Key } from 'react-stately'
+export type { Key, Selection } from 'react-stately'
