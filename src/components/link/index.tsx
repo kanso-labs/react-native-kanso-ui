@@ -1,15 +1,11 @@
 import type { ComponentRef, Ref } from 'react'
-import type {
-  GestureResponderEvent,
-  TextProps as NativeTextProps,
-  TextStyle,
-} from 'react-native'
+import type { TextProps as NativeTextProps, TextStyle } from 'react-native'
 
 import { useState } from 'react'
 import { Text as NativeText, Platform, StyleSheet } from 'react-native'
 
 import { stylesOf as ringStylesOf } from '../../press/styles'
-import { useOpenLink } from '../../router'
+import { useLinkPress } from '../../router'
 import { withOpacity } from '../../theme/color'
 import { useTheme } from '../../theme/scope'
 import { composeStyles, themedStyles } from '../../theme/styles'
@@ -166,7 +162,7 @@ function Link({
   ...props
 }: LinkProps) {
   const theme = useTheme()
-  const openLink = useOpenLink()
+  const press = useLinkPress(href, onPress)
   const [hoveredState, setHovered] = useState(false)
   const [ringShown, setRingShown] = useState(false)
 
@@ -183,7 +179,7 @@ function Link({
       {...props}
       {...web}
       aria-disabled={isDisabled}
-      onPress={pressable ? pressThen(onPress, href, openLink) : undefined}
+      onPress={pressable ? press : undefined}
       role="link"
       style={composeStyles<TextStyle>(
         styles.base,
@@ -198,23 +194,6 @@ function Link({
       suppressHighlighting={suppressHighlighting}
     />
   )
-}
-
-// The call site's own `onPress`, then the link's `href`, the order web
-// reports them in. Built by a call rather than declared in the component,
-// which is what react-perf's jsx-no-new-function-as-prop is after.
-function pressThen(
-  onPress: NativeTextProps['onPress'],
-  href: string | undefined,
-  openLink: (href: string) => void,
-) {
-  return (event: GestureResponderEvent) => {
-    onPress?.(event)
-
-    if (href !== undefined) {
-      openLink(href)
-    }
-  }
 }
 
 // The browser's events, read into the link's two states. Hover counts a mouse

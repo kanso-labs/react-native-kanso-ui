@@ -49,6 +49,25 @@ function RouterProvider({ children, navigate }: RouterProviderProps) {
 }
 
 /**
+ * The press handler of a component that leads somewhere: the call site's own
+ * `onPress`, then the `href` through `useOpenLink`, which is the order web
+ * reports them in. Without an `href` it calls `onPress` alone.
+ */
+function useLinkPress<Event>(
+  href: string | undefined,
+  onPress: ((event: Event) => void) | null | undefined,
+): (event: Event) => void {
+  const openLink = useOpenLink()
+  return (event) => {
+    onPress?.(event)
+
+    if (href !== undefined) {
+      openLink(href)
+    }
+  }
+}
+
+/**
  * The handler every component with an `href` presses through. Under a
  * `RouterProvider` it hands the `href` to `navigate`; without one, or for a
  * URL with a scheme of its own, it asks the platform to open it.
@@ -64,5 +83,5 @@ function useOpenLink(): Navigate {
   }
 }
 
-export { RouterProvider, useOpenLink }
+export { RouterProvider, useLinkPress, useOpenLink }
 export type { RouterProviderProps }

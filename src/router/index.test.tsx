@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, jest } from '@jest/globals'
 import { renderHook } from '@testing-library/react-native'
 import { Linking } from 'react-native'
 
-import { RouterProvider, useOpenLink } from '.'
+import { RouterProvider, useLinkPress, useOpenLink } from '.'
 
 const navigate = jest.fn<(href: string) => void>()
 
@@ -72,5 +72,51 @@ describe('useOpenLink', () => {
     expect(warn.mock.calls).toEqual([
       ['Could not open example-app://second', failure],
     ])
+  })
+})
+
+describe('useLinkPress', () => {
+  it('calls onPress, then follows the href', async () => {
+    const calls: string[] = []
+    navigate.mockImplementation((href) => {
+      calls.push(href)
+    })
+    const onPress = jest.fn((event: string) => {
+      calls.push(event)
+    })
+    const { result } = await renderHook(
+      () => useLinkPress('/second', onPress),
+      { wrapper: Routed },
+    )
+
+    result.current('press')
+
+    expect(calls).toEqual(['press', '/second'])
+  })
+
+  it('follows the href with no onPress', async () => {
+    const { result } = await renderHook(
+      () => useLinkPress('/second', undefined),
+      { wrapper: Routed },
+    )
+
+    result.current('press')
+
+    expect(navigate.mock.calls).toEqual([['/second']])
+  })
+
+  it('calls onPress alone without an href', async () => {
+    const onPress = jest.fn()
+    const openURL = jest.spyOn(Linking, 'openURL').mockResolvedValue(true)
+    const { result } = await renderHook(
+      () => useLinkPress(undefined, onPress),
+      { wrapper: Routed },
+    )
+
+    result.current('press')
+
+    expect(onPress.mock.calls).toEqual([['press']])
+    expect(navigate).not.toHaveBeenCalled()
+    expect(openURL).not.toHaveBeenCalled()
   })
 })

@@ -5,6 +5,7 @@ import { StyleSheet, View } from 'react-native'
 import type { DemoThemeName } from './themes'
 
 import { Button } from '../components/button'
+import { Card } from '../components/card'
 import { IconButton } from '../components/icon-button'
 import { Link } from '../components/link'
 import { Separator } from '../components/separator'
@@ -41,6 +42,8 @@ type ShowcaseProps = {
   readonly name: 'dark' | DemoThemeName
 }
 
+const CARD_VARIANTS = ['elevated', 'filled', 'outlined'] as const
+
 const LIBRARY_DARK = {
   description:
     "The library's own dark theme: the default tokens' dark half, with nothing overridden.",
@@ -56,17 +59,11 @@ const stylesOf = themedStyles(({ colors, radii, spacing }) =>
     intro: {
       gap: spacing.xxs,
     },
-    // An outlined container and its rows, standing in for a card of list
-    // items, so the separator section shows rules between real rows.
+    // A row of an outlined card with no padding of its own, so the separator
+    // section shows rules between real rows.
     item: {
       paddingHorizontal: spacing.lg,
       paddingVertical: spacing.md,
-    },
-    outlined: {
-      borderColor: colors.outlineVariant,
-      borderRadius: radii.md,
-      borderWidth: 1,
-      overflow: 'hidden',
     },
     page: {
       gap: spacing.xl,
@@ -179,6 +176,32 @@ function Showcase({ name }: ShowcaseProps) {
       </Section>
 
       <Section
+        description="The three variants separate themselves by shadow, by a darker surface, and by a rule — one axis per variant, and a scheme can move any of them. A disabled card fades its container and what it holds."
+        title="Card"
+      >
+        <Stack gap="md">
+          {CARD_VARIANTS.map((variant) => (
+            <Card key={variant} variant={variant}>
+              <Stack gap="sm">
+                <Text variant="titleMedium">Headline</Text>
+                <Text tone="muted" variant="bodySmall">
+                  Supporting line
+                </Text>
+              </Stack>
+            </Card>
+          ))}
+          <Card interactive isDisabled variant="filled">
+            <Stack gap="sm">
+              <Text variant="titleMedium">Headline</Text>
+              <Text tone="muted" variant="bodySmall">
+                Supporting line
+              </Text>
+            </Stack>
+          </Card>
+        </Stack>
+      </Section>
+
+      <Section
         description="The button's variants again at the icon's own size. A chosen toggle takes a second pair of roles and rests at the squarer corner."
         title="IconButton"
       >
@@ -215,7 +238,7 @@ function Showcase({ name }: ShowcaseProps) {
         description="A rule is the same colour as a border, so it draws from the outline-variant role rather than one of its own. Full width, inset at the leading end, and inset at both."
         title="Separator"
       >
-        <View style={styles.outlined}>
+        <Card padding="none" variant="outlined">
           <Item>First item</Item>
           <Separator />
           <Item>Second item</Item>
@@ -223,7 +246,7 @@ function Showcase({ name }: ShowcaseProps) {
           <Item>Third item</Item>
           <Separator inset="both" />
           <Item>Fourth item</Item>
-        </View>
+        </Card>
       </Section>
 
       <Section
