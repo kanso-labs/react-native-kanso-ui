@@ -74,7 +74,7 @@
     "@testing-library/react-native": "14.1.0",
     "@types/node": "26.6.5",
     "@types/react": "19.2.18",
-    "@vitest/browser-playwright": "4.1.11",
+    "@vitest/browser-playwright": "5.0.4",
     "babel-plugin-react-compiler": "1.0.0",
     "eslint": "10.12.0",
     "eslint-plugin-oxlint": "1.87.0",
@@ -106,7 +106,7 @@
     "typescript": "6.0.3",
     "typescript-eslint": "8.71.2",
     "vite": "8.3.4",
-    "vitest": "4.1.11"
+    "vitest": "5.0.4"
   },
   "peerDependencies": {
     "expo-clipboard": ">=57.0.0",
