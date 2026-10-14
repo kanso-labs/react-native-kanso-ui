@@ -304,6 +304,14 @@ change. The `pull_request` trigger is deliberately unscoped: adding
 `branches: [main]` would leave a pull request against any other base without the
 checks a ruleset waits on, which reads as a hang rather than a failure.
 
+**`Deploy Storybook` publishes the web Storybook to GitHub Pages**, on each
+published release, and by hand through `workflow_dispatch` run from the
+release's tag, since a dispatch builds the ref it is given. It posts no pull
+request check, so no ruleset names it. It needs Settings → Pages → Source set to
+"GitHub Actions", and it starts on a release only because release-please
+publishes with an application token: a release published by `GITHUB_TOKEN`
+starts no workflow at all.
+
 **Releases are cut by release-please**, once a day at 09:00 UTC, from
 `release-please.yaml`. It publishes through npm's trusted publishing, so this
 repository holds no npm token. A trusted publisher is registered on the
