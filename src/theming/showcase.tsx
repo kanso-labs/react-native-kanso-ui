@@ -8,9 +8,11 @@ import { Avatar } from '../components/avatar'
 import { Button } from '../components/button'
 import { Card } from '../components/card'
 import { Checkbox } from '../components/checkbox'
+import { Currency } from '../components/currency'
 import { IconButton } from '../components/icon-button'
 import { Link } from '../components/link'
 import { ProductIcon } from '../components/product-icon'
+import { Radio, RadioGroup } from '../components/radio-group'
 import { Separator } from '../components/separator'
 import { Stack } from '../components/stack'
 import { Switch } from '../components/switch'
@@ -239,6 +241,23 @@ function Showcase({ name }: ShowcaseProps) {
       </Section>
 
       <Section
+        description="An amount takes the positive or negative role from its sign, and tabular figures from the type scale, so a column of them lines up."
+        title="Currency"
+      >
+        <View style={styles.row}>
+          <Text variant="bodyLarge">
+            <Currency locale="en-US" value={1240.5} />
+          </Text>
+          <Text variant="bodyLarge">
+            <Currency currency="EUR" locale="en-US" value={-42} />
+          </Text>
+          <Text variant="bodyLarge">
+            <Currency locale="en-US" value={0} />
+          </Text>
+        </View>
+      </Section>
+
+      <Section
         description="The button's variants again at the icon's own size. A chosen toggle takes a second pair of roles and rests at the squarer corner."
         title="IconButton"
       >
@@ -281,6 +300,17 @@ function Showcase({ name }: ShowcaseProps) {
           ))}
           <ProductIcon name="Label" size="lg" />
         </View>
+      </Section>
+
+      <Section
+        description="The ring takes the on-surface-variant role while empty and primary once chosen, the same pair the checkbox draws."
+        title="RadioGroup"
+      >
+        <RadioGroup defaultValue="second" label="Label">
+          <Radio value="first">First item</Radio>
+          <Radio value="second">Second item</Radio>
+          <Radio value="third">Third item</Radio>
+        </RadioGroup>
       </Section>
 
       <Section
