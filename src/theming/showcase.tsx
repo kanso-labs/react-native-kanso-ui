@@ -11,6 +11,7 @@ import { Checkbox } from '../components/checkbox'
 import { IconButton } from '../components/icon-button'
 import { Link } from '../components/link'
 import { ProductIcon } from '../components/product-icon'
+import { Radio, RadioGroup } from '../components/radio-group'
 import { Separator } from '../components/separator'
 import { Stack } from '../components/stack'
 import { Text } from '../components/text'
@@ -280,6 +281,17 @@ function Showcase({ name }: ShowcaseProps) {
           ))}
           <ProductIcon name="Label" size="lg" />
         </View>
+      </Section>
+
+      <Section
+        description="The ring takes the on-surface-variant role while empty and primary once chosen, the same pair the checkbox draws."
+        title="RadioGroup"
+      >
+        <RadioGroup defaultValue="second" label="Label">
+          <Radio value="first">First item</Radio>
+          <Radio value="second">Second item</Radio>
+          <Radio value="third">Third item</Radio>
+        </RadioGroup>
       </Section>
 
       <Section
