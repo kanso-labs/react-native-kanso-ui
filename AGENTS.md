@@ -304,6 +304,13 @@ change. The `pull_request` trigger is deliberately unscoped: adding
 `branches: [main]` would leave a pull request against any other base without the
 checks a ruleset waits on, which reads as a hang rather than a failure.
 
+**`Test` reports the suite's coverage on the pull request**, through
+`actions/upload-code-coverage`, from the Cobertura file `npm run test:coverage`
+writes. The Default ruleset's coverage rule reads that report, so a `Test` that
+stops uploading it leaves every pull request waiting. The upload needs the
+`code-quality: write` scope, which the pinned actionlint does not know yet;
+`.github/actionlint.yaml` suppresses that one message for `test.yaml` alone.
+
 **Releases are cut by release-please**, once a day at 09:00 UTC, from
 `release-please.yaml`. It publishes through npm's trusted publishing, so this
 repository holds no npm token. A trusted publisher is registered on the
