@@ -10,6 +10,7 @@ import { Card } from '../components/card'
 import { IconButton } from '../components/icon-button'
 import { Link } from '../components/link'
 import { ProductIcon } from '../components/product-icon'
+import { SegmentedButton } from '../components/segmented-button'
 import { Separator } from '../components/separator'
 import { Stack } from '../components/stack'
 import { Text } from '../components/text'
@@ -63,6 +64,10 @@ const LIBRARY_DARK = {
 // The icon the icon buttons hold, the library's own plus, which reads its
 // colour and size from the button around it.
 const PLUS = <PlusGlyph />
+
+// Hoisted so the keys are not a new array on every render, which is what
+// react-perf's no-new-array-as-prop is after.
+const SEGMENT_SELECTION = ['second']
 
 const stylesOf = themedStyles(({ colors, radii, spacing }) =>
   StyleSheet.create({
@@ -267,6 +272,26 @@ function Showcase({ name }: ShowcaseProps) {
           ))}
           <ProductIcon name="Label" size="lg" />
         </View>
+      </Section>
+
+      <Section
+        description="One container for the whole strip, with the chosen segment on a pair of its own and a rule between each pair of segments."
+        title="SegmentedButton"
+      >
+        <SegmentedButton
+          aria-label="Label"
+          defaultSelectedKeys={SEGMENT_SELECTION}
+        >
+          <SegmentedButton.Segment id="first">
+            First item
+          </SegmentedButton.Segment>
+          <SegmentedButton.Segment id="second">
+            Second item
+          </SegmentedButton.Segment>
+          <SegmentedButton.Segment id="third">
+            Third item
+          </SegmentedButton.Segment>
+        </SegmentedButton>
       </Section>
 
       <Section

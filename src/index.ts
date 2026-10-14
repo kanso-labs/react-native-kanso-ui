@@ -21,6 +21,14 @@ export { Link } from './components/link'
 export type { LinkProps, LinkTone, LinkUnderline } from './components/link'
 export { ProductIcon } from './components/product-icon'
 export type { ProductIconProps } from './components/product-icon'
+export {
+  SegmentedButton,
+  SegmentedButtonSegment,
+} from './components/segmented-button'
+export type {
+  SegmentedButtonProps,
+  SegmentedButtonSegmentProps,
+} from './components/segmented-button'
 export { Separator } from './components/separator'
 export type { SeparatorInset, SeparatorProps } from './components/separator'
 export { Stack } from './components/stack'
@@ -41,3 +49,7 @@ export type { KuiTheme, ThemeScopeProps } from './theme-scope'
 export type { ResolvedTheme } from './theme/scope'
 export { useTheme } from './theme/scope'
 export type { TypeRole } from './typography/roles'
+// The keys a SegmentedButton reports its segments by, as web re-exports Key
+// from React Aria, so a call site types its handlers from this package rather
+// than from React Stately's.
+export type { Key } from 'react-stately'
