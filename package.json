@@ -62,7 +62,7 @@
     "@eslint/js": "10.0.1",
     "@jest/globals": "29.7.0",
     "@kanso-labs/kanso-ui": "0.43.1",
-    "@kanso-labs/unplugin-style-dictionary": "0.10.28",
+    "@kanso-labs/unplugin-style-dictionary": "0.10.29",
     "@react-native/babel-preset": "0.86.3",
     "@react-native/jest-preset": "0.86.3",
     "@rolldown/plugin-babel": "0.2.4",
