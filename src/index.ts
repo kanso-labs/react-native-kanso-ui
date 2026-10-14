@@ -47,6 +47,14 @@ export type {
   RadioGroupProps,
   RadioProps,
 } from './components/radio-group'
+export {
+  SegmentedButton,
+  SegmentedButtonSegment,
+} from './components/segmented-button'
+export type {
+  SegmentedButtonProps,
+  SegmentedButtonSegmentProps,
+} from './components/segmented-button'
 export { Separator } from './components/separator'
 export type { SeparatorInset, SeparatorProps } from './components/separator'
 export { Stack } from './components/stack'
