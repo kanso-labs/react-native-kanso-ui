@@ -24,6 +24,7 @@ import { Radio, RadioGroup } from '../components/radio-group'
 import { SearchField } from '../components/search-field'
 import { SegmentedButton } from '../components/segmented-button'
 import { Separator } from '../components/separator'
+import { Snackbar } from '../components/snackbar'
 import { Stack } from '../components/stack'
 import { Switch } from '../components/switch'
 import { Text } from '../components/text'
@@ -94,6 +95,9 @@ const SEARCH = <SearchGlyph />
 // Hoisted so the keys are not a new array on every render, which is what
 // react-perf's no-new-array-as-prop is after.
 const SEGMENT_SELECTION = ['second']
+
+// The queue the page's snackbar shows, which its button adds to.
+const SHOWCASE_MESSAGES = new Snackbar.Queue()
 
 const stylesOf = themedStyles(({ colors, radii, spacing }) =>
   StyleSheet.create({
@@ -507,6 +511,18 @@ function Showcase({ name }: ShowcaseProps) {
       </Section>
 
       <Section
+        description="A message on the inverse surface, which is the one place a scheme's inverse pair is drawn. It has no trigger of its own, so the page carries a button that shows one."
+        title="Snackbar"
+      >
+        <View style={styles.row}>
+          <Button onPress={showSnackbar} variant="tonal">
+            Show a snackbar
+          </Button>
+          <Snackbar queue={SHOWCASE_MESSAGES} />
+        </View>
+      </Section>
+
+      <Section
         description="One direction, one gap off the spacing scale, and nothing painted, so what a scheme reaches is the step between the boxes. The dashed outlines are the page's own."
         title="Stack"
       >
@@ -581,6 +597,14 @@ function Showcase({ name }: ShowcaseProps) {
       </Section>
     </View>
   )
+}
+
+// The page shows what a snackbar looks like rather than what its action does,
+// so the action does nothing.
+function showSnackbar() {
+  SHOWCASE_MESSAGES.add('First item saved', {
+    action: { label: 'Undo', onPress: removeNothing },
+  })
 }
 
 export type { ShowcaseProps }
