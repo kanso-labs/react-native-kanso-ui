@@ -1,6 +1,6 @@
 {
   "name": "@kanso-labs/react-native-kanso-ui",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Kanso UI's Material Design components for React Native, themed through the same --kui-* design tokens as the web library",
   "keywords": [
     "react-native",
