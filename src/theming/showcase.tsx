@@ -16,6 +16,7 @@ import { Currency } from '../components/currency'
 import { Form } from '../components/form'
 import { IconButton } from '../components/icon-button'
 import { Link } from '../components/link'
+import { Meter } from '../components/meter'
 import { NumberField } from '../components/number-field'
 import { ProductIcon } from '../components/product-icon'
 import { ProgressIndicator } from '../components/progress-indicator'
@@ -388,6 +389,14 @@ function Showcase({ name }: ShowcaseProps) {
         <Text variant="bodyLarge">
           <Link href="/first">Label</Link>
         </Text>
+      </Section>
+
+      <Section
+        description="The tone recolours the active indicator and the stop indicator and leaves the track, so a column of meters still shares one track."
+        title="Meter"
+      >
+        <Meter label="Label" value={60} />
+        <Meter label="Label" tone="negative" value={94} />
       </Section>
 
       <Section
