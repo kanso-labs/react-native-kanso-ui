@@ -6,6 +6,7 @@ import type { DemoThemeName } from './themes'
 
 import { Button } from '../components/button'
 import { IconButton } from '../components/icon-button'
+import { Link } from '../components/link'
 import { Separator } from '../components/separator'
 import { Stack } from '../components/stack'
 import { Text } from '../components/text'
@@ -199,6 +200,15 @@ function Showcase({ name }: ShowcaseProps) {
             {PLUS}
           </IconButton>
         </View>
+      </Section>
+
+      <Section
+        description="The primary role in running text, so a scheme that moves primary moves every link on the page with it."
+        title="Link"
+      >
+        <Text variant="bodyLarge">
+          <Link href="/first">Label</Link>
+        </Text>
       </Section>
 
       <Section

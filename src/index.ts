@@ -13,6 +13,8 @@ export type {
   IconButtonSize,
   IconButtonVariant,
 } from './components/icon-button'
+export { Link } from './components/link'
+export type { LinkProps, LinkTone, LinkUnderline } from './components/link'
 export { Separator } from './components/separator'
 export type { SeparatorInset, SeparatorProps } from './components/separator'
 export { Stack } from './components/stack'
