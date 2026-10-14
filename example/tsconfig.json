@@ -1,0 +1,23 @@
+{
+  "extends": "expo/tsconfig.base.json",
+  "compilerOptions": {
+    // The stories and the library are in the repository's src, which would
+    // otherwise read the repository's own React and React Native types beside
+    // this app's, and two copies of a type never match. Metro bundles one
+    // copy, this app's, and these make the types agree with it. They map to
+    // types alone, so app.json turns off Expo's reading of them in Metro.
+    "paths": {
+      "react": ["./node_modules/@types/react"],
+      "react-native": ["./node_modules/react-native"],
+      "react/*": ["./node_modules/@types/react/*"]
+    },
+    "strict": true
+  },
+  "include": [
+    ".rnstorybook/*.ts",
+    ".rnstorybook/*.tsx",
+    "*.ts",
+    "../src/**/*.d.ts",
+    "../src/**/*.stories.tsx"
+  ]
+}
