@@ -30,5 +30,10 @@ export default defineConfig({
       provider: playwright(),
     },
     name: 'storybook',
+    // The file `Upload test results to Codecov` hands over, beside Jest's.
+    // `default` stays in the list because naming `reporters` at all replaces
+    // the terminal output rather than adding to it.
+    outputFile: { junit: '.vitest/test-results.junit.xml' },
+    reporters: ['default', 'junit'],
   },
 })

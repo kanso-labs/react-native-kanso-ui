@@ -1,5 +1,8 @@
 # react-native-kanso-ui
 
+[![License][license-shield]][license] [![Build][build-shield]][build-workflow]
+[![Test][test-shield]][test-workflow] [![Coverage][coverage-shield]][codecov]
+
 Kanso UI's Material Design components for React Native, built on the same design
 tokens and theming as
 [`@kanso-labs/kanso-ui`](https://github.com/kanso-labs/kanso-ui).
@@ -186,3 +189,18 @@ pages, which each render in their own.
 ## License
 
 [MIT](LICENSE.md)
+
+[build-shield]:
+  https://img.shields.io/github/actions/workflow/status/kanso-labs/react-native-kanso-ui/build.yaml?branch=main&label=Build
+[build-workflow]:
+  https://github.com/kanso-labs/react-native-kanso-ui/actions/workflows/build.yaml
+[codecov]: https://codecov.io/gh/kanso-labs/react-native-kanso-ui
+[coverage-shield]:
+  https://img.shields.io/codecov/c/github/kanso-labs/react-native-kanso-ui?label=Coverage
+[license]: ./LICENSE.md
+[license-shield]:
+  https://img.shields.io/github/license/kanso-labs/react-native-kanso-ui
+[test-shield]:
+  https://img.shields.io/github/actions/workflow/status/kanso-labs/react-native-kanso-ui/test.yaml?branch=main&label=Test
+[test-workflow]:
+  https://github.com/kanso-labs/react-native-kanso-ui/actions/workflows/test.yaml

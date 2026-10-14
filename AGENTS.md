@@ -52,7 +52,7 @@ type.
 | Task      | Command                  | Notes                                                          |
 | --------- | ------------------------ | -------------------------------------------------------------- |
 | Test      | `npm test`               | Jest, through React Native's own preset                        |
-| Coverage  | `npm run test:coverage`  | The same suite with coverage, written to `coverage/`           |
+| Coverage  | `npm run test:coverage`  | Jest with coverage and JUnit results, which `Test` uploads     |
 | Stories   | `npm run test:storybook` | Every story in Chromium through Vitest, failing on a11y        |
 | Storybook | `npm run storybook`      | The web Storybook at http://localhost:6006                     |
 | Lint      | `npm run lint`           | oxlint, then ESLint, then oxfmt formatting check               |
@@ -180,6 +180,37 @@ transforms Storybook's own ESM-only packages through that file too.
 **Prove a new assertion can fail before trusting it.** Break the code it pins,
 watch the test go red, and put the code back. `[].every()` is `true`, so a check
 built on an empty list reports a state that never happened.
+
+### Coverage
+
+`Test` runs `npm run test:coverage`, which is Jest with the Cobertura reporter
+`jest.config.js` names, over the library's own source: stories, tests, the
+generated tokens and the Theming pages are left out. The stories in Chromium run
+uninstrumented, so the number is Jest's alone.
+
+**That report goes to two places from the same `Test` job**, as in kanso-ui.
+`actions/upload-code-coverage` reports it on the pull request under the
+`code-coverage/jest` label, and that is the report the Default ruleset's
+coverage rule reads, under "Workflows and checks" below.
+`codecov/codecov-action` uploads the same Cobertura file to Codecov, which keeps
+the history the trend lines and the README's badge are drawn from, and gates
+nothing: its `fail_ci_if_error` is left at the default of `false`, so a failed
+upload does not fail `Test`, and `.github/codecov.yml` marks every Codecov
+status informational. That file is `.yml` rather than the `.yaml` everything
+else here uses because Codecov recognises `codecov.yml` and `.codecov.yml`
+alone.
+
+**A third upload is test results, not coverage.** Jest writes JUnit XML to
+`.jest/` through `jest-junit`, Vitest writes its own to `.vitest/`, and a second
+`codecov/codecov-action` step with `report_type: test_results` sends both, for
+Codecov to say which tests failed and which are flaky. It carries
+`if: ${{ !cancelled() }}`, which makes it the one step that runs when a suite is
+red, the only time it has anything to say.
+
+Every Codecov upload wants `CODECOV_TOKEN`, an organisation secret. Without it
+they fall back to a tokenless upload, which this repository being public makes
+possible but rate-limited, so a report lands intermittently rather than not at
+all, which reads as a flaky uploader rather than as a missing secret.
 
 ## Storybook
 
@@ -319,6 +350,14 @@ stops uploading it leaves every pull request waiting. The upload needs the
 `code-quality: write` scope, which the pinned actionlint does not know yet;
 `.github/actionlint.yaml` suppresses that one message for `test.yaml` alone.
 
+**`Build` also uploads the bundle to Codecov**, through `@codecov/rollup-plugin`
+in `tsdown.config.ts`, which `CODECOV_TOKEN` switches on: unset locally and
+empty for a fork, so neither writes a stats file nor uploads anything. **A
+failed upload does not fail the build**: an invalid token logs
+`Failed to get pre-signed URL` and lets `Run build` pass, so read the job log
+rather than the check mark. The bundle carries the declaration files beside the
+JavaScript, which is why its status in `.github/codecov.yml` is informational.
+
 **Releases are cut by release-please**, once a day at 09:00 UTC, from
 `release-please.yaml`. It publishes through npm's trusted publishing, so this
 repository holds no npm token. A trusted publisher is registered on the
@@ -333,12 +372,16 @@ nothing once 0.1.0 is tagged.
 
 **Dependencies come from Renovate**, through the org-wide runner in
 [`kanso-labs/renovate`](https://github.com/kanso-labs/renovate), and its commits
-are typed `deps:` so an upgrade cuts a release of its own. Dependabot raises
-security updates only, titled and labelled the same way through
-`.github/dependabot.yaml`, and `dependabot-auto-merge.yaml` merges its minor and
-patch ones. `.github/renovate.json` holds three version ceilings, each with the
-reason beside it and the condition for lifting it: Babel below 8, Jest below 30
-and TypeScript below 7.
+are typed `deps:` so an upgrade cuts a release of its own. A repository is
+managed by being listed in that runner's `config.js`, not by an onboarding pull
+request, and `.github/renovate.json` here is merged over it.
+`renovate-command.yaml` answers `@renovate rebase` on one of its pull requests;
+only the copy on `main` runs, since `issue_comment` is a repository-level event.
+Dependabot is not used, as in kanso-ui: do not add a `.github/dependabot.yaml`
+back, or the two will open competing pull requests for the same upgrades.
+`.github/renovate.json` holds three version ceilings, each with the reason
+beside it and the condition for lifting it: Babel below 8, Jest below 30 and
+TypeScript below 7.
 
 ## Commits and pull requests
 
@@ -347,7 +390,9 @@ subject and an empty body. That title becomes the only commit on `main`, and is
 what release-please reads to pick the next version and write the changelog line,
 so it is the one that has to be right: a Conventional Commit, with `!` before
 the colon for a breaking change. `.commitlintrc.json` admits `deps` beside the
-standard types and turns commitlint's default ignores off, so a title GitHub's
+standard types, lifts the header's length limit, since a title copied from an
+issue can run past the preset's 100 characters and release-please reads one of
+any length, and turns commitlint's default ignores off, so a title GitHub's
 Revert button writes has to be retitled `revert: …` before it merges.
 
 Write branch commits conventionally anyway. They are what a reviewer reads while
