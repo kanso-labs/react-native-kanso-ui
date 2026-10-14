@@ -4,6 +4,7 @@ import { StyleSheet, View } from 'react-native'
 
 import type { DemoThemeName } from './themes'
 
+import { Button } from '../components/button'
 import { Separator } from '../components/separator'
 import { Stack } from '../components/stack'
 import { Text } from '../components/text'
@@ -149,6 +150,26 @@ function Showcase({ name }: ShowcaseProps) {
           {description}
         </Text>
       </View>
+
+      <Section
+        description="Every variant reads its container off a colour role and its corner off the radius scale, a square button's and a selected toggle's among them, so a scheme moves all of them at once — the elevated button off its shadow scale as well."
+        title="Button"
+      >
+        <View style={styles.row}>
+          <Button>Label</Button>
+          <Button variant="tonal">Label</Button>
+          <Button variant="elevated">Label</Button>
+          <Button variant="outlined">Label</Button>
+          <Button variant="text">Label</Button>
+          <Button shape="square" variant="tonal">
+            Label
+          </Button>
+          <Button defaultSelected variant="outlined">
+            Label
+          </Button>
+          <Button isDisabled>Label</Button>
+        </View>
+      </Section>
 
       <Section
         description="A rule is the same colour as a border, so it draws from the outline-variant role rather than one of its own. Full width, inset at the leading end, and inset at both."

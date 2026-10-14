@@ -1,5 +1,12 @@
 // The package's public surface. Every component, hook and type a consumer
 // imports is exported here by name.
+export { Button } from './components/button'
+export type {
+  ButtonProps,
+  ButtonShape,
+  ButtonSize,
+  ButtonVariant,
+} from './components/button'
 export { Separator } from './components/separator'
 export type { SeparatorInset, SeparatorProps } from './components/separator'
 export { Stack } from './components/stack'

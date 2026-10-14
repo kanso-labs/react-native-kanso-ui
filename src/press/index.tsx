@@ -41,8 +41,18 @@ type PressFeedback = {
   readonly handlers: {
     readonly [Name in keyof Handlers]-?: NonNullable<Handlers[Name]>
   }
+  /**
+   * Whether a pointer is over the control, for a control that draws more
+   * than the layer while hovered. Never while disabled.
+   */
+  readonly hovered: boolean
   /** The state layer and the ripple, to render as the `Pressable`'s first child. */
   readonly layer: ReactNode
+  /**
+   * Whether the control is pressed, for a control that draws more than the
+   * layer while pressed. Never while disabled.
+   */
+  readonly pressed: boolean
   /** The focus ring while it shows, to compose into the control's style. */
   readonly ring: undefined | ViewStyle
 }
@@ -332,6 +342,7 @@ function usePressFeedback({
 
   return {
     handlers,
+    hovered: active && hovered,
     layer: (
       <View
         accessibilityElementsHidden
@@ -342,6 +353,7 @@ function usePressFeedback({
         {rippled ? <Animated.View style={rippleMotion} /> : null}
       </View>
     ),
+    pressed: active && pressed,
     ring: active && ringShown ? stylesOf(theme).ring : undefined,
   }
 }

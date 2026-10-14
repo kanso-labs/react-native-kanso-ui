@@ -7,7 +7,8 @@
 // compiler has no business rewriting them.
 //
 // The worklets plugin comes after it, as its install guide asks, and is the
-// suite's alone. The package ships its worklets as functions marked
+// suite's and the web Storybook's, which .storybook/main.ts gives it in the
+// same order. The package ships its worklets as functions marked
 // `'worklet'`, and an app's own Babel runs this plugin over them, through
 // babel-preset-expo or the line Reanimated's install guide adds, so the
 // package never carries code compiled for one release of worklets. It is an

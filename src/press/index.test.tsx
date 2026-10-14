@@ -9,7 +9,7 @@ import {
   jest,
 } from '@jest/globals'
 import { act, fireEvent, render, screen } from '@testing-library/react-native'
-import { Pressable, StyleSheet } from 'react-native'
+import { Pressable, StyleSheet, Text } from 'react-native'
 import { getAnimatedStyle } from 'react-native-reanimated'
 
 import type { PressFeedbackOptions } from '.'
@@ -102,6 +102,18 @@ function pressAt(pageX?: number, pageY?: number) {
     },
     nativeEvent: { pageX, pageY },
   }
+}
+
+// A control that writes the states the feedback reports into its own text,
+// as `hovered pressed`.
+function Reporter(options: Options) {
+  const feedback = usePressFeedback({ color: COLOR, ...options })
+
+  return (
+    <Pressable {...feedback.handlers} testID="control">
+      <Text>{`${String(feedback.hovered)} ${String(feedback.pressed)}`}</Text>
+    </Pressable>
+  )
 }
 
 function styleOf(element: { props: { style?: StyleProp<ViewStyle> } }) {
@@ -351,6 +363,31 @@ describe('the ripple', () => {
 
     expect(parts().ripple).toBeUndefined()
     expect(layerOpacity()).toBe(stateLayerOpacity.pressed)
+  })
+})
+
+describe('the states', () => {
+  it('report a pointer over the control and a press on it', async () => {
+    await render(<Reporter />)
+    expect(screen.getByText('false false')).toBeTruthy()
+
+    await fireEvent(control(), 'hoverIn', {})
+    expect(screen.getByText('true false')).toBeTruthy()
+
+    await fireEvent(control(), 'pressIn', pressAt(30, 30))
+    expect(screen.getByText('true true')).toBeTruthy()
+
+    await fireEvent(control(), 'pressOut', {})
+    await fireEvent(control(), 'hoverOut', {})
+    expect(screen.getByText('false false')).toBeTruthy()
+  })
+
+  it('report neither on a disabled control', async () => {
+    await render(<Reporter disabled />)
+
+    await fireEvent(control(), 'hoverIn', {})
+    await fireEvent(control(), 'pressIn', pressAt(30, 30))
+    expect(screen.getByText('false false')).toBeTruthy()
   })
 })
 

@@ -28,7 +28,18 @@ const config: StorybookConfig = {
           // The library ships what the React Compiler emits, and the suite
           // tests it, so the stories render it too. The threshold is the one
           // babel.config.cjs and tsdown.config.ts set, for the reason the
-          // latter gives.
+          // latter gives. It stays in the top-level list because that is the
+          // one list @vitejs/plugin-react reads to pre-bundle the compiler's
+          // runtime: in an override, Vite finds that import only once a story
+          // is loading and reloads the page under the test run, which fails
+          // whichever files were mid-import on a cold cache, as CI's is.
+          //
+          // Reanimated's worklets plugin runs after it, as an app's Babel
+          // runs it over the package, in an override because Babel appends an
+          // override's plugins to the list. Without it every animated style
+          // throws under React Native Web, where Reanimated asks for the
+          // plugin or a dependency array.
+          overrides: [{ plugins: ['react-native-worklets/plugin'] }],
           plugins: [
             ['babel-plugin-react-compiler', { panicThreshold: 'all_errors' }],
           ],

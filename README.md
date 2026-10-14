@@ -67,9 +67,9 @@ Under React Native Web the token's whole list goes to CSS, as it does on web.
 ## Peer dependencies
 
 Beside `react` and `react-native`, the package needs `react-native-reanimated`,
-which animates the ripple its controls draw when pressed, the
-`react-native-worklets` Reanimated runs on, and `react-native-svg`, which draws
-the icons its controls show. In an Expo app,
+which animates the ripple its controls draw when pressed and the corner a button
+morphs between, the `react-native-worklets` Reanimated runs on, and
+`react-native-svg`, which draws the icons its controls show. In an Expo app,
 `npx expo install react-native-reanimated react-native-svg react-native-worklets`
 installs the versions the SDK ships with, and Expo's Babel preset compiles the
 package's animations. Outside Expo, Reanimated's install guide adds
