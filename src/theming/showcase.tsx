@@ -4,6 +4,7 @@ import { StyleSheet, View } from 'react-native'
 
 import type { DemoThemeName } from './themes'
 
+import { Separator } from '../components/separator'
 import { Stack } from '../components/stack'
 import { Text } from '../components/text'
 import { useTheme } from '../theme/scope'
@@ -47,6 +48,18 @@ const stylesOf = themedStyles(({ colors, radii, spacing }) =>
     intro: {
       gap: spacing.xxs,
     },
+    // An outlined container and its rows, standing in for a card of list
+    // items, so the separator section shows rules between real rows.
+    item: {
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
+    },
+    outlined: {
+      borderColor: colors.outlineVariant,
+      borderRadius: radii.md,
+      borderWidth: 1,
+      overflow: 'hidden',
+    },
     page: {
       gap: spacing.xl,
       paddingBottom: spacing.xxxl,
@@ -66,17 +79,21 @@ const stylesOf = themedStyles(({ colors, radii, spacing }) =>
       flexWrap: 'wrap',
       gap: spacing.sm,
     },
-    // The hairline between two sections, in the role kanso-ui's showcase
-    // draws its rule in.
-    rule: {
-      borderTopColor: colors.outlineVariant,
-      borderTopWidth: StyleSheet.hairlineWidth,
-    },
     section: {
       gap: spacing.lg,
     },
   }),
 )
+
+function Item({ children }: PlaceholderProps) {
+  const styles = stylesOf(useTheme())
+
+  return (
+    <View style={styles.item}>
+      <Text variant="bodyLarge">{children}</Text>
+    </View>
+  )
+}
 
 function Placeholder({ children }: PlaceholderProps) {
   const styles = stylesOf(useTheme())
@@ -98,7 +115,7 @@ function Section({ children, description, title }: SectionProps) {
 
   return (
     <View style={styles.section} testID="showcase-section">
-      <View style={styles.rule} />
+      <Separator />
       <View style={styles.intro}>
         <Text role="heading" variant="titleLarge">
           {title}
@@ -132,6 +149,21 @@ function Showcase({ name }: ShowcaseProps) {
           {description}
         </Text>
       </View>
+
+      <Section
+        description="A rule is the same colour as a border, so it draws from the outline-variant role rather than one of its own. Full width, inset at the leading end, and inset at both."
+        title="Separator"
+      >
+        <View style={styles.outlined}>
+          <Item>First item</Item>
+          <Separator />
+          <Item>Second item</Item>
+          <Separator inset="start" />
+          <Item>Third item</Item>
+          <Separator inset="both" />
+          <Item>Fourth item</Item>
+        </View>
+      </Section>
 
       <Section
         description="One direction, one gap off the spacing scale, and nothing painted, so what a scheme reaches is the step between the boxes. The dashed outlines are the page's own."
