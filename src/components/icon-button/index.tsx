@@ -212,6 +212,7 @@ function IconButton({
   onPressOut,
   size = 'md',
   style,
+  type,
   variant = 'standard',
   ...props
 }: IconButtonProps) {
@@ -229,6 +230,7 @@ function IconButton({
     isToggle,
     onChange,
     onPress,
+    type,
   })
   const colors =
     palettesOf(theme)[

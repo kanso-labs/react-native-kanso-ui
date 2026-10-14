@@ -10,6 +10,7 @@ import { useId, useImperativeHandle, useRef, useState } from 'react'
 import { View } from 'react-native'
 
 import type { FieldVariant } from '../../field'
+import type { ValidationResult } from '../../form'
 
 import {
   describedBy,
@@ -18,6 +19,7 @@ import {
   FieldMessage,
   useFieldFocus,
 } from '../../field'
+import { useFieldValidation } from '../../form'
 
 // kanso-ui's TextField, drawn through the field chrome in src/field: the box
 // with its label and icons, the control on the value's line with its prefix
@@ -32,7 +34,8 @@ import {
 // **Web's `isInvalid` is not a prop here either.** The error is what puts the
 // field in its error state, the message and the colours and the invalid
 // state a screen reader reads following from it, so a field cannot be
-// invalid with nothing to say why.
+// invalid with nothing to say why. The error shown is `error`, or what the
+// field's `validate` and the `Form` around it say, which src/form decides.
 
 type TextFieldProps = Omit<
   TextInputProps,
@@ -82,7 +85,9 @@ type TextFieldProps = Omit<
    * The problem with the current value, in words. Its presence is what puts
    * the field in its error state: the message, the error colours, and the
    * invalid state a screen reader reads all follow from it. The line under
-   * the field arrives with the message, so the field grows when this does.
+   * the field arrives with the message, so the field grows when this does,
+   * unless it is inside a `Form`, which keeps the line drawn. It wins over
+   * what `validate` and the form say, and holds a `native` form back.
    */
   readonly error?: string
   /**
@@ -125,6 +130,11 @@ type TextFieldProps = Omit<
    */
   readonly leadingIcon?: ReactNode
   /**
+   * The name the value is submitted under by the `Form` around the field,
+   * and the key its `validationErrors` reach the field by.
+   */
+  readonly name?: string
+  /**
    * Renders the value in the mono face with tabular figures, for amounts and
    * other numbers meant to be compared down a column.
    * @default false
@@ -151,6 +161,14 @@ type TextFieldProps = Omit<
    * error. The slot hands it that colour and size through `useIconStyle()`.
    */
   readonly trailingIcon?: ReactNode
+  /**
+   * Checks the value, and returns its problem in words, or several, where
+   * there is one, and `true`, `null` or `undefined` where there is none.
+   * Under the default `aria` validation the error shows as the value
+   * changes; inside a `native` form it shows once a submission is tried, or
+   * once the field loses focus after an edit, and holds the form back.
+   */
+  readonly validate?: (value: string) => ValidationResult
   /** The value, when the call site keeps it. */
   readonly value?: string
   /**
@@ -162,14 +180,28 @@ type TextFieldProps = Omit<
   readonly variant?: FieldVariant
 }
 
+// The field's own blur handling, then the call site's.
+function blurThen(
+  onBlur: () => void,
+  then: TextInputProps['onBlur'],
+): TextInputProps['onBlur'] {
+  return (event) => {
+    onBlur()
+    then?.(event)
+  }
+}
+
 // Keeps an edit as the field's own value and reports it, so a field the call
-// site controls is told and one it does not still shows what was typed.
+// site controls is told and one it does not still shows what was typed, and
+// tells the field's validation it was edited.
 function editInto(
   setOwn: (value: string) => void,
   onChange: ((value: string) => void) | undefined,
+  onEdit: () => void,
 ) {
   return (text: string) => {
     setOwn(text)
+    onEdit()
     onChange?.(text)
   }
 }
@@ -203,6 +235,7 @@ function TextField({
   isRequired = false,
   label,
   leadingIcon,
+  name,
   numeric = false,
   onBlur,
   onChange,
@@ -212,6 +245,7 @@ function TextField({
   style,
   suffix,
   trailingIcon,
+  validate,
   value,
   variant = 'filled',
   ...props
@@ -219,8 +253,24 @@ function TextField({
   const id = useId()
   const control = useRef<TextInput>(null)
   const [own, setOwn] = useState(defaultValue)
-  const focus = useFieldFocus({ onBlur, onFocus })
   const current = value ?? own
+  const validation = useFieldValidation({
+    control,
+    error,
+    isDisabled,
+    isEmpty: current === '',
+    isReadOnly,
+    isRequired,
+    name,
+    submitted: current,
+    validate,
+    value: current,
+  })
+  const focus = useFieldFocus({
+    onBlur: blurThen(validation.onBlur, onBlur),
+    onFocus,
+  })
+  const shownError = validation.error
 
   useImperativeHandle<null | TextInput, null | TextInput>(
     inputRef,
@@ -235,7 +285,7 @@ function TextField({
         floatingLabel={floatingLabel}
         isDisabled={isDisabled}
         isFocused={focus.focused}
-        isInvalid={error !== undefined}
+        isInvalid={shownError !== undefined}
         isPopulated={current !== ''}
         isRequired={isRequired}
         label={label}
@@ -250,12 +300,12 @@ function TextField({
           described={describedBy(id, {
             characterLimitLabel,
             description,
-            error,
+            error: shownError,
             maxLength: props.maxLength,
           })}
           editable={!isDisabled && !isReadOnly}
           numeric={numeric}
-          onChangeText={editInto(setOwn, onChange)}
+          onChangeText={editInto(setOwn, onChange, validation.onEdit)}
           prefix={prefix}
           ref={control}
           suffix={suffix}
@@ -266,7 +316,7 @@ function TextField({
         characterCount={characterCount}
         characterLimitLabel={characterLimitLabel}
         description={description}
-        error={error}
+        error={shownError}
         id={id}
         length={current.length}
         maxLength={props.maxLength}

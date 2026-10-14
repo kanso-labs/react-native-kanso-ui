@@ -183,32 +183,29 @@ built on an empty list reports a state that never happened.
 
 ### Coverage
 
-Pull requests report coverage but nothing gates on it, so there are no
-thresholds to satisfy. `Test` runs `npm run test:coverage`, which is Jest with
-the Cobertura reporter `jest.config.js` names, over the library's own source:
-stories, tests, the generated tokens and the Theming pages are left out. The
-stories in Chromium run uninstrumented, so the number is Jest's alone.
+`Test` runs `npm run test:coverage`, which is Jest with the Cobertura reporter
+`jest.config.js` names, over the library's own source: stories, tests, the
+generated tokens and the Theming pages are left out. The stories in Chromium run
+uninstrumented, so the number is Jest's alone.
 
 **That report goes to two places from the same `Test` job**, as in kanso-ui.
-`actions/upload-code-coverage` reports it under the `code-coverage/jest` label,
-and `codecov/codecov-action` uploads the same Cobertura file to Codecov, which
-keeps the history the trend lines and the README's badge are drawn from. Neither
-gates: the action's `fail_ci_if_error` is left at its default of `false`, so a
-failed upload does not fail `Test`, and `.github/codecov.yml` marks every
-Codecov status informational. That file is `.yml` rather than the `.yaml`
-everything else here uses because Codecov recognises `codecov.yml` and
-`.codecov.yml` alone.
+`actions/upload-code-coverage` reports it on the pull request under the
+`code-coverage/jest` label, and that is the report the Default ruleset's
+coverage rule reads, under "Workflows and checks" below.
+`codecov/codecov-action` uploads the same Cobertura file to Codecov, which keeps
+the history the trend lines and the README's badge are drawn from, and gates
+nothing: its `fail_ci_if_error` is left at the default of `false`, so a failed
+upload does not fail `Test`, and `.github/codecov.yml` marks every Codecov
+status informational. That file is `.yml` rather than the `.yaml` everything
+else here uses because Codecov recognises `codecov.yml` and `.codecov.yml`
+alone.
 
 **A third upload is test results, not coverage.** Jest writes JUnit XML to
-`.jest/` through `jest-junit`, and Vitest writes its own to `.vitest/`, and a
-second `codecov/codecov-action` step with `report_type: test_results` sends
-both, for Codecov to say which tests failed and which are flaky. It carries
+`.jest/` through `jest-junit`, Vitest writes its own to `.vitest/`, and a second
+`codecov/codecov-action` step with `report_type: test_results` sends both, for
+Codecov to say which tests failed and which are flaky. It carries
 `if: ${{ !cancelled() }}`, which makes it the one step that runs when a suite is
 red, the only time it has anything to say.
-
-`actions/upload-code-coverage` needs `code-quality: write`, which the pinned
-actionlint does not know yet, so `.github/actionlint.yaml` suppresses that one
-message for `test.yaml` alone. Delete it once actionlint knows the scope.
 
 Every Codecov upload wants `CODECOV_TOKEN`, an organisation secret. Without it
 they fall back to a tokenless upload, which this repository being public makes
@@ -345,6 +342,13 @@ request check, so no ruleset names it. It needs Settings → Pages → Source se
 "GitHub Actions", and it starts on a release only because release-please
 publishes with an application token: a release published by `GITHUB_TOKEN`
 starts no workflow at all.
+
+**`Test` reports the suite's coverage on the pull request**, through
+`actions/upload-code-coverage`, from the Cobertura file `npm run test:coverage`
+writes. The Default ruleset's coverage rule reads that report, so a `Test` that
+stops uploading it leaves every pull request waiting. The upload needs the
+`code-quality: write` scope, which the pinned actionlint does not know yet;
+`.github/actionlint.yaml` suppresses that one message for `test.yaml` alone.
 
 **`Build` also uploads the bundle to Codecov**, through `@codecov/rollup-plugin`
 in `tsdown.config.ts`, which `CODECOV_TOKEN` switches on: unset locally and

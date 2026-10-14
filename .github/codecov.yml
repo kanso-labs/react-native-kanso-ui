@@ -13,7 +13,8 @@
 bundle_analysis:
   status: informational
 
-# Both statuses are informational because nothing here gates on coverage.
+# Both statuses are informational because Codecov gates nothing here: the
+# coverage check that counts is GitHub's own, which Test reports beside this.
 # Codecov's default project status fails when a pull request lowers coverage by
 # any amount at all, which would put a red cross on pull requests against a
 # threshold nobody agreed to. informational keeps the number reported and the

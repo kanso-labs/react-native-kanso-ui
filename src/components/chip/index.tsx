@@ -146,6 +146,7 @@ function Chip({
     isToggle,
     onChange,
     onPress,
+    type: undefined,
   })
   const paint = paintOf(theme, {
     assist: variant === 'assist',
