@@ -44,7 +44,7 @@
     "storybook": "storybook dev -p ${PORT:-6006}",
     "test": "npm run tokens:build && jest",
     "test:coverage": "npm run tokens:build && jest --coverage",
-    "test:storybook": "vitest run",
+    "test:storybook": "vitest run --mode development",
     "tokens:build": "node scripts/build-tokens.mjs"
   },
   "author": "Kanso Labs <kanso.labs.org@gmail.com>",

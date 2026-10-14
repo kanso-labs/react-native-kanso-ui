@@ -214,6 +214,13 @@ suite; it finds the files on disk, so a new one needs no entry.
 contrast or labelling violation in what React Native Web draws. `Test` runs
 both.
 
+**That run is in Vite's `development` mode, not Vitest's `test`**, through
+`--mode development` in the script. React Native Web's Vite plugin sets
+`__DEV__` from the mode, so under `test` every check a library makes only in
+development is off, and a story that throws on one of them in the Storybook
+passes the run. Run it through the npm script rather than a bare
+`npx vitest run`, which drops the flag.
+
 Jest reaches Storybook's packages, which ship ESM alone, through
 `transformIgnorePatterns` in `jest.config.js`; take them out and the story test
 fails to parse before it runs.

@@ -13,7 +13,11 @@ import { defineConfig } from 'vitest/config'
 //
 // The plugin builds the Vite configuration from .storybook/main.ts, the token
 // plugin and the React Compiler included, so the stories run exactly as the
-// Storybook serves them.
+// Storybook serves them. `test:storybook` passes `--mode development` for the
+// same reason: React Native Web's Vite plugin sets `__DEV__` from the mode, and
+// under Vitest's own `test` mode it is false, which turns off every check a
+// library makes only in development, so a story that throws in the Storybook
+// on one of them would pass a run in `test` mode.
 export default defineConfig({
   plugins: [
     storybookTest({ configDir: path.join(import.meta.dirname, '.storybook') }),
