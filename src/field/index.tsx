@@ -38,6 +38,7 @@ import Animated, {
 import type { IconStyle } from '../glyphs/icon-style'
 import type { ResolvedTheme } from '../theme/scope'
 
+import { useInsideForm } from '../form'
 import { IconStyleContext } from '../glyphs/icon-style'
 import { usePressFeedback } from '../press'
 import { withOpacity } from '../theme/color'
@@ -219,6 +220,8 @@ type FieldStatesProps = {
   readonly isDisabled?: boolean
   /** @default false */
   readonly isInvalid?: boolean
+  /** @default false */
+  readonly isRequired?: boolean
 }
 
 type FieldStrokeProps = StrokeMotion & {
@@ -589,7 +592,10 @@ function FieldInput({
 /**
  * The line under a field: the error while there is one, the description
  * otherwise, and the count of characters at its end. With nothing to show it
- * is out of the flow, so the field ends at its box.
+ * is out of the flow, so the field ends at its box. Inside a form it is drawn
+ * anyway, empty, since a form is where an error arrives after the fact, from
+ * a server or on a submission, and every field below this one would
+ * otherwise move by the line's height when it does.
  *
  * On iOS and Android the control reads the line out as its hint, so the line
  * itself is hidden from VoiceOver and TalkBack rather than read twice. An
@@ -620,7 +626,9 @@ function FieldMessage({
   const ids = idsOf(id)
   const invalid = error !== undefined
   const limit = limitOf(maxLength, characterLimitLabel)
-  const collapsed = !invalid && description === undefined && !characterCount
+  const insideForm = useInsideForm()
+  const collapsed =
+    !invalid && description === undefined && !characterCount && !insideForm
   const { colors, typography } = theme
   const messageStyle = composeStyles<TextStyle>(
     role,
@@ -687,10 +695,16 @@ function FieldStates({
   children,
   isDisabled = false,
   isInvalid = false,
+  isRequired = false,
 }: FieldStatesProps) {
   const states = useMemo(
-    () => ({ ...OUTSIDE_BOX, disabled: isDisabled, invalid: isInvalid }),
-    [isDisabled, isInvalid],
+    () => ({
+      ...OUTSIDE_BOX,
+      disabled: isDisabled,
+      invalid: isInvalid,
+      required: isRequired,
+    }),
+    [isDisabled, isInvalid, isRequired],
   )
 
   return <BoxContext value={states}>{children}</BoxContext>

@@ -12,6 +12,7 @@ import { Checkbox } from '../components/checkbox'
 import { Chip } from '../components/chip'
 import { ChipGroup } from '../components/chip-group'
 import { Currency } from '../components/currency'
+import { Form } from '../components/form'
 import { IconButton } from '../components/icon-button'
 import { Link } from '../components/link'
 import { NumberField } from '../components/number-field'
@@ -329,6 +330,22 @@ function Showcase({ name }: ShowcaseProps) {
             <Currency locale="en-US" value={0} />
           </Text>
         </View>
+      </Section>
+
+      <Section
+        description="A form draws nothing and lays nothing out: it hands the fields inside it their validation behaviour, and a message it reports lands in the field's own supporting text."
+        title="Form"
+      >
+        <Form>
+          <Stack gap="md">
+            <TextField defaultValue="Label" label="Label" />
+            <TextField
+              defaultValue="Label"
+              error="Supporting line"
+              label="Label"
+            />
+          </Stack>
+        </Form>
       </Section>
 
       <Section

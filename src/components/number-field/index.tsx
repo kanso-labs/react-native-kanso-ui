@@ -22,6 +22,7 @@ import {
 } from 'react-native'
 
 import type { FieldVariant } from '../../field'
+import type { ValidationResult } from '../../form'
 import type { IconStyle } from '../../glyphs/icon-style'
 import type { NumberFieldState } from '../../number/state'
 import type { ResolvedTheme } from '../../theme/scope'
@@ -33,6 +34,7 @@ import {
   FieldMessage,
   useFieldFocus,
 } from '../../field'
+import { useFieldValidation } from '../../form'
 import { MinusGlyph, PlusGlyph } from '../../glyphs'
 import { IconStyleContext } from '../../glyphs/icon-style'
 import { useNumberFieldState } from '../../number/state'
@@ -126,7 +128,9 @@ type NumberFieldProps = Omit<
    * The problem with the current value, in words. Its presence is what puts
    * the field in its error state: the message, the error colours, and the
    * invalid state a screen reader reads all follow from it. The line under
-   * the field arrives with the message, so the field grows when this does.
+   * the field arrives with the message, so the field grows when this does,
+   * unless it is inside a `Form`, which keeps the line drawn. It wins over
+   * what `validate` and the form say, and holds a `native` form back.
    */
   readonly error?: string
   /**
@@ -182,6 +186,12 @@ type NumberFieldProps = Omit<
   /** The lowest value the field takes. A committed value is clamped to it. */
   readonly minValue?: number
   /**
+   * The name the value is submitted under by the `Form` around the field,
+   * and the key its `validationErrors` reach the field by. The form submits
+   * the number written out, such as `1234.5`, and `''` for an empty field.
+   */
+  readonly name?: string
+  /**
    * Renders the value in the mono face with tabular figures, for amounts and
    * other numbers meant to be compared down a column. On by default, since a
    * number field holds nothing else.
@@ -208,6 +218,15 @@ type NumberFieldProps = Omit<
   readonly steppers?: 'horizontal' | 'vertical'
   /** Positions and sizes the field as a whole. */
   readonly style?: StyleProp<ViewStyle>
+  /**
+   * Checks the value, `NaN` for an empty field, and returns its problem in
+   * words, or several, where there is one, and `true`, `null` or `undefined`
+   * where there is none. Under the default `aria` validation the error shows
+   * as the value changes; inside a `native` form it shows once a submission
+   * is tried, or once the field loses focus after an edit, and holds the form
+   * back.
+   */
+  readonly validate?: (value: number) => ValidationResult
   /** The value, when the call site keeps it. `NaN` is an empty field. */
   readonly value?: number
   /**
@@ -316,6 +335,17 @@ const stylesOf = themedStyles(({ radii, spacing }) =>
   }),
 )
 
+// The field's own blur handling, then the call site's.
+function blurThen(
+  onBlur: () => void,
+  then: ((event: BlurEvent) => void) | undefined,
+) {
+  return (event: BlurEvent) => {
+    onBlur()
+    then?.(event)
+  }
+}
+
 // Reads the text as the field's value, then hands the event on.
 function commitBefore<Event>(
   state: NumberFieldState,
@@ -327,11 +357,13 @@ function commitBefore<Event>(
   }
 }
 
-// The text typed, kept only where it could still become a number.
-function editInto(state: NumberFieldState) {
+// The text typed, kept only where it could still become a number, and
+// reported to the field's validation as an edit.
+function editInto(state: NumberFieldState, onEdit: () => void) {
   return (text: string) => {
     if (state.validate(text)) {
       state.setInputValue(text)
+      onEdit()
     }
   }
 }
@@ -426,6 +458,7 @@ function NumberField({
   locale,
   maxValue,
   minValue,
+  name,
   numeric = true,
   onBlur,
   onChange,
@@ -436,6 +469,7 @@ function NumberField({
   step,
   steppers = 'vertical',
   style,
+  validate,
   value,
   variant = 'filled',
   ...props
@@ -455,8 +489,22 @@ function NumberField({
     step,
     value,
   })
+  const empty = Number.isNaN(state.numberValue)
+  const validation = useFieldValidation({
+    control,
+    error,
+    isDisabled,
+    isEmpty: empty,
+    isReadOnly,
+    isRequired,
+    name,
+    submitted: empty ? '' : String(state.numberValue),
+    validate,
+    value: state.numberValue,
+  })
+  const shownError = validation.error
   const focus = useFieldFocus({
-    onBlur: commitBefore<BlurEvent>(state, onBlur),
+    onBlur: commitBefore<BlurEvent>(state, blurThen(validation.onBlur, onBlur)),
     onFocus,
   })
   const hasDecimals =
@@ -486,17 +534,17 @@ function NumberField({
           onBlur: () => {
             setStepperFocused(false)
           },
-          onDecrement: announced(state.decrement),
+          onDecrement: announced(stepThen(state.decrement, validation.onEdit)),
           onFocus: () => {
             setStepperFocused(true)
           },
-          onIncrement: announced(state.increment),
+          onIncrement: announced(stepThen(state.increment, validation.onEdit)),
           outlined: variant === 'outlined',
         })}
         floatingLabel={floatingLabel}
         isDisabled={isDisabled}
         isFocused={focus.focused || stepperFocused}
-        isInvalid={error !== undefined}
+        isInvalid={shownError !== undefined}
         isPopulated={state.inputValue !== ''}
         isRequired={isRequired}
         label={label}
@@ -508,11 +556,11 @@ function NumberField({
           aria-label={label}
           autoComplete="off"
           autoCorrect={false}
-          described={describedBy(id, { description, error })}
+          described={describedBy(id, { description, error: shownError })}
           editable={!isDisabled && !isReadOnly}
           keyboardType={keyboardOf(minValue, hasDecimals)}
           numeric={numeric}
-          onChangeText={editInto(state)}
+          onChangeText={editInto(state, validation.onEdit)}
           onSubmitEditing={commitBefore<TextInputSubmitEditingEvent>(
             state,
             onSubmitEditing,
@@ -523,7 +571,7 @@ function NumberField({
           value={state.inputValue}
         />
       </FieldBox>
-      <FieldMessage description={description} error={error} id={id} />
+      <FieldMessage description={description} error={shownError} id={id} />
     </View>
   )
 }
@@ -719,6 +767,14 @@ function steppersOf(props: SteppersProps) {
  * more on release, and a press the finger slides off steps nothing at all,
  * as React Aria's stepper does for a touch.
  */
+// A stepper's step, reported to the field's validation as an edit.
+function stepThen(step: () => void, onEdit: () => void) {
+  return () => {
+    step()
+    onEdit()
+  }
+}
+
 function useSpin(step: () => void, canStep: boolean): Spin {
   // The step and whether it can move, as of the last render, since a hold
   // steps from timers that outlive the render that started them.
