@@ -82,12 +82,12 @@ async function advance(milliseconds: number) {
 }
 
 // The padding the body hands its scroll view's content.
-function bodyStyle() {
+function bodyStyle(): ViewStyle {
   const body: {
     props: { contentContainerStyle?: StyleProp<ViewStyle> }
   } = screen.getByTestId('body')
 
-  return StyleSheet.flatten([body.props.contentContainerStyle])
+  return StyleSheet.flatten([body.props.contentContainerStyle]) ?? {}
 }
 
 function child(node: TestNode | undefined): TestInstance {
@@ -213,12 +213,16 @@ function setUpUser() {
   })
 }
 
-function styleOf(element: { props: { style?: StyleProp<ViewStyle> } }) {
-  return StyleSheet.flatten([element.props.style])
+function styleOf(element: {
+  props: { style?: StyleProp<ViewStyle> }
+}): ViewStyle {
+  return StyleSheet.flatten([element.props.style]) ?? {}
 }
 
-function textStyleOf(element: { props: { style?: StyleProp<TextStyle> } }) {
-  return StyleSheet.flatten([element.props.style])
+function textStyleOf(element: {
+  props: { style?: StyleProp<TextStyle> }
+}): TextStyle {
+  return StyleSheet.flatten([element.props.style]) ?? {}
 }
 
 // A body with actions under it, or without.
@@ -1065,6 +1069,24 @@ describe('Dialog', () => {
       await renderDialog({}, { defaultOpen: true })
 
       await fireEvent.press(scrim())
+      await advance(EXIT)
+
+      expect(send).not.toHaveBeenCalled()
+    })
+
+    it('sends it nowhere when the press named its button by view tag alone', async () => {
+      const user = setUpUser()
+      const send = jest.spyOn(AccessibilityInfo, 'sendAccessibilityEvent')
+      await renderDialog()
+
+      await fireEvent.press(screen.getByRole('button', { name: 'Open' }), {
+        currentTarget: 7,
+        nativeEvent: {},
+      })
+
+      expect(modal().props.visible).toBe(true)
+
+      await user.press(screen.getByRole('button', { name: 'Cancel' }))
       await advance(EXIT)
 
       expect(send).not.toHaveBeenCalled()

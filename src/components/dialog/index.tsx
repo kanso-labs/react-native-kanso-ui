@@ -1,4 +1,4 @@
-import type { ReactNode, Ref } from 'react'
+import type { ComponentRef, ReactNode, Ref } from 'react'
 import type {
   GestureResponderEvent,
   HostInstance,
@@ -268,7 +268,7 @@ const DialogLayoutContext = createContext<DialogLayout | null>(null)
 const DialogTriggerContext = createContext<DialogTrigger | null>(null)
 
 type DialogBodyProps = ScrollViewProps & {
-  readonly ref?: Ref<ScrollView>
+  readonly ref?: Ref<ComponentRef<typeof ScrollView>>
 }
 
 type DialogContentProps = DialogOpenProps &
@@ -288,7 +288,7 @@ type DialogContentProps = DialogOpenProps &
      * @default false
      */
     readonly isKeyboardDismissDisabled?: boolean
-    readonly ref?: Ref<View>
+    readonly ref?: Ref<ComponentRef<typeof View>>
     /**
      * `alertdialog` for a dialog interrupting with something that has to be
      * answered before the app carries on. It also keeps the dialog the basic
@@ -310,7 +310,7 @@ type DialogOpenProps = {
 }
 
 type DialogPartProps = ViewProps & {
-  readonly ref?: Ref<View>
+  readonly ref?: Ref<ComponentRef<typeof View>>
 }
 
 type DialogProps = DialogOpenProps & {
@@ -373,11 +373,15 @@ function Dialog({ children, defaultOpen, isOpen, onOpenChange }: DialogProps) {
   const [trigger, setTrigger] = useState<HostInstance | null>(null)
   const context = useMemo(() => ({ state, trigger }), [state, trigger])
   // The default slot a button inside `Dialog` fills: it records
-  // itself as the button focus returns to, and opens the dialog.
+  // itself as the button focus returns to, and opens the dialog. React
+  // Native types the target as a bare view tag too, which focus cannot be
+  // sent to, so such a press records nothing.
   const slots = useMemo<ButtonSlots>(
     () => ({
       default: (event: GestureResponderEvent) => {
-        setTrigger(event.currentTarget)
+        const target = event.currentTarget
+
+        setTrigger(typeof target === 'number' ? null : target)
         state.open()
       },
     }),
