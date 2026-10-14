@@ -9,6 +9,7 @@ import { Button } from '../components/button'
 import { Card } from '../components/card'
 import { IconButton } from '../components/icon-button'
 import { Link } from '../components/link'
+import { NumberField } from '../components/number-field'
 import { ProductIcon } from '../components/product-icon'
 import { SearchField } from '../components/search-field'
 import { Separator } from '../components/separator'
@@ -261,6 +262,19 @@ function Showcase({ name }: ShowcaseProps) {
         <Text variant="bodyLarge">
           <Link href="/first">Label</Link>
         </Text>
+      </Section>
+
+      <Section
+        description="The text field's chrome around a value the field formats itself, in the tabular figures the type scale carries. The outlined box centres the value and the side-by-side steppers on one line, which a scheme's own line heights and padding move."
+        title="NumberField"
+      >
+        <NumberField defaultValue={1234.5} label="Label" />
+        <NumberField
+          defaultValue={1234.5}
+          label="Label"
+          steppers="horizontal"
+          variant="outlined"
+        />
       </Section>
 
       <Section

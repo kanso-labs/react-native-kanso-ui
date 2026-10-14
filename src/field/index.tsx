@@ -117,6 +117,13 @@ type FieldBoxProps = {
    */
   readonly control: RefObject<null | TextInput>
   /**
+   * What the box holds after the label and the control's column, drawn as
+   * it is rather than in an icon's slot, for a part laid out against the
+   * box's own edges: a number field's steppers. The column, and the label
+   * in it, end where this starts, 16dp before it.
+   */
+  readonly end?: ReactNode
+  /**
    * Whether the label sits in the empty box and floats to the top once the
    * field is focused or holds a value. `false` keeps it small at the top.
    * @default true
@@ -306,6 +313,7 @@ function describedBy(
 function FieldBox({
   children,
   control,
+  end,
   floatingLabel = true,
   isDisabled = false,
   isFocused = false,
@@ -470,6 +478,7 @@ function FieldBox({
         ) : null}
         <BoxContext value={boxControl}>{children}</BoxContext>
       </View>
+      {end}
       {trailing === undefined ? null : (
         <View style={styles.icon}>
           <IconStyleContext
