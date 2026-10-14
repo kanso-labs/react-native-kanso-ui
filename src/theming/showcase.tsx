@@ -7,6 +7,7 @@ import type { DemoThemeName } from './themes'
 import { Avatar } from '../components/avatar'
 import { Button } from '../components/button'
 import { Card } from '../components/card'
+import { Checkbox } from '../components/checkbox'
 import { Currency } from '../components/currency'
 import { IconButton } from '../components/icon-button'
 import { Link } from '../components/link'
@@ -223,6 +224,18 @@ function Showcase({ name }: ShowcaseProps) {
             </Stack>
           </Card>
         </Stack>
+      </Section>
+
+      <Section
+        description="The box takes the on-surface-variant role while empty and the primary pair once marked, and the indeterminate dash takes that same pair."
+        title="Checkbox"
+      >
+        <View style={styles.row}>
+          <Checkbox>Label</Checkbox>
+          <Checkbox defaultSelected>Label</Checkbox>
+          <Checkbox isIndeterminate>Label</Checkbox>
+          <Checkbox isDisabled>Label</Checkbox>
+        </View>
       </Section>
 
       <Section
