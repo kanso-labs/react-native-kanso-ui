@@ -11,6 +11,8 @@ export type {
 } from './components/button'
 export { Card } from './components/card'
 export type { CardProps, CardVariant } from './components/card'
+export { Checkbox } from './components/checkbox'
+export type { CheckboxProps } from './components/checkbox'
 export { IconButton } from './components/icon-button'
 export type {
   IconButtonProps,
