@@ -27,6 +27,7 @@ jest.mock('react-native-reanimated', () => ({
 }))
 
 const COLOR = '#1d1b20'
+const PRESSED_COLOR = '#6750a4'
 const CORNERS = { borderRadius: 12 }
 
 const { theme } = scopeFor('light', {})
@@ -189,6 +190,19 @@ describe('the state layer', () => {
     expect(layerOpacity()).toBe(stateLayerOpacity.focus)
   })
 
+  it('takes the pressed colour while pressed, and its own colour otherwise', async () => {
+    await render(<Control pressedColor={PRESSED_COLOR} />)
+
+    await fireEvent(control(), 'hoverIn', {})
+    expect(styleOf(parts().layer).backgroundColor).toBe(COLOR)
+
+    await fireEvent(control(), 'pressIn', pressAt(30, 30))
+    expect(styleOf(parts().layer).backgroundColor).toBe(PRESSED_COLOR)
+
+    await fireEvent(control(), 'pressOut', {})
+    expect(styleOf(parts().layer).backgroundColor).toBe(COLOR)
+  })
+
   it('draws nothing on a disabled control', async () => {
     await render(<Control disabled />)
 
@@ -283,6 +297,36 @@ describe('the ripple', () => {
       transform: [{ translateX: 40 }, { translateY: 10 }, { scale }],
     })
     expect(getAnimatedStyle(drawnRipple()).backgroundColor).toBe(COLOR)
+  })
+
+  it('grows from the centre of a disc wherever the press lands, measuring nothing', async () => {
+    const disc = 40
+    const measure = jest.fn()
+    await render(<Control disc={disc} pressedColor={PRESSED_COLOR} />)
+
+    await fireEvent(control(), 'pressIn', {
+      currentTarget: { measure },
+      nativeEvent: { pageX: 300, pageY: 30 },
+    })
+    await advance(0)
+
+    const start = (disc - disc * 0.2) / 2
+    expect(measure).not.toHaveBeenCalled()
+    expect(getAnimatedStyle(drawnRipple())).toMatchObject({
+      height: disc * 0.2,
+      transform: [{ translateX: start }, { translateY: start }, { scale: 1 }],
+    })
+    expect(getAnimatedStyle(drawnRipple()).backgroundColor).toBe(PRESSED_COLOR)
+
+    await advance(motion.durationLong1)
+
+    expect(getAnimatedStyle(drawnRipple())).toMatchObject({
+      transform: [
+        { translateX: start },
+        { translateY: start },
+        { scale: (Math.hypot(disc, disc) + spacing.sm) / (disc * 0.2) },
+      ],
+    })
   })
 
   it('starts at the centre for a press with no point', async () => {

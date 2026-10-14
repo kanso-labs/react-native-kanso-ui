@@ -35,6 +35,10 @@ const WEIGHTS = [100, 200, 300, 400, 500, 600, 700, 800, 900] as const
 
 const familyStyles = new Map<string, TextStyle>()
 
+/**
+ * The style that sets a family `useFontFamily` chose, one object per family,
+ * so every text drawn in it is handed the same one.
+ */
 function familyStyle(family: string | undefined): TextStyle | undefined {
   if (family === undefined) {
     return undefined
@@ -53,6 +57,7 @@ function familyStyle(family: string | undefined): TextStyle | undefined {
   return style
 }
 
+/** The weight React Native takes nearest a token's, from 1 to 1000. */
 function nativeWeight(weight: number) {
   return WEIGHTS[Math.min(Math.max(Math.round(weight / 100), 1), 9) - 1]
 }
@@ -104,5 +109,5 @@ function useTypeRole(role: TypeRole): StyleProp<TextStyle> {
   return composeStyles(stylesOf(theme)[role], familyStyle(family))
 }
 
-export { useTypeRole }
+export { familyStyle, nativeWeight, useTypeRole }
 export type { TypeRole }
