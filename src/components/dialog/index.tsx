@@ -521,48 +521,53 @@ function DialogContent({
       transparent
       visible
     >
-      <OverlayHost>
-        {/* A screen reader and a keyboard skip the scrim: the first closes
+      {/* Nothing in the window takes the trigger's slot, the overlays this
+          one hosts included, so a button in a snackbar raised from the dialog
+          opens nothing; only the panel's buttons take the close slot. */}
+      <ButtonSlotContext value={null}>
+        <OverlayHost>
+          {/* A screen reader and a keyboard skip the scrim: the first closes
             the dialog with the back or escape gesture, the second with
             Escape. React Native Web's Pressable is a tab stop unless told
             otherwise, whatever `focusable` says. */}
-        <AnimatedPressable
-          accessible={false}
-          aria-hidden
-          focusable={false}
-          onPress={isDismissable && state.isOpen ? close : undefined}
-          style={composeStyles<AnimatedStyle<ViewStyle>>(
-            styles.scrim,
-            motion.scrim,
-          )}
-          tabIndex={-1}
-        />
-        <View
-          style={composeStyles<ViewStyle>(
-            styles.layout,
-            basic ? undefined : styles.layoutFull,
-          )}
-        >
-          <Animated.View
-            {...(web ? undefined : panelRoleOf(role, labelledBy))}
-            onAccessibilityEscape={
-              isKeyboardDismissDisabled ? undefined : close
-            }
-            {...props}
+          <AnimatedPressable
+            accessible={false}
+            aria-hidden
+            focusable={false}
+            onPress={isDismissable && state.isOpen ? close : undefined}
             style={composeStyles<AnimatedStyle<ViewStyle>>(
-              styles.container,
-              basic ? styles.containerBasic : styles.containerFull,
-              basic ? undefined : insetsOf(insets),
-              motion.panel,
-              style,
+              styles.scrim,
+              motion.scrim,
+            )}
+            tabIndex={-1}
+          />
+          <View
+            style={composeStyles<ViewStyle>(
+              styles.layout,
+              basic ? undefined : styles.layoutFull,
             )}
           >
-            <DialogLayoutContext value={layout}>
-              <ButtonSlotContext value={slots}>{children}</ButtonSlotContext>
-            </DialogLayoutContext>
-          </Animated.View>
-        </View>
-      </OverlayHost>
+            <Animated.View
+              {...(web ? undefined : panelRoleOf(role, labelledBy))}
+              onAccessibilityEscape={
+                isKeyboardDismissDisabled ? undefined : close
+              }
+              {...props}
+              style={composeStyles<AnimatedStyle<ViewStyle>>(
+                styles.container,
+                basic ? styles.containerBasic : styles.containerFull,
+                basic ? undefined : insetsOf(insets),
+                motion.panel,
+                style,
+              )}
+            >
+              <DialogLayoutContext value={layout}>
+                <ButtonSlotContext value={slots}>{children}</ButtonSlotContext>
+              </DialogLayoutContext>
+            </Animated.View>
+          </View>
+        </OverlayHost>
+      </ButtonSlotContext>
     </Modal>
   )
 }

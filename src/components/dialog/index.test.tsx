@@ -1,5 +1,10 @@
 import type { ComponentRef, ReactNode } from 'react'
-import type { StyleProp, TextStyle, ViewStyle } from 'react-native'
+import type {
+  GestureResponderEvent,
+  StyleProp,
+  TextStyle,
+  ViewStyle,
+} from 'react-native'
 import type { EdgeInsets } from 'react-native-safe-area-context'
 import type { TestInstance, TestNode } from 'test-renderer'
 
@@ -33,6 +38,7 @@ import type { DialogContentProps } from '.'
 
 import { Dialog } from '.'
 import { CloseGlyph } from '../../glyphs'
+import { Overlay } from '../../overlay'
 import { withOpacity } from '../../theme/color'
 import { scopeFor } from '../../theme/scope'
 import { Button } from '../button'
@@ -467,6 +473,38 @@ describe('Dialog', () => {
       expect(onPress).toHaveBeenCalledTimes(1)
       expect(onOpenChange).not.toHaveBeenCalled()
       expect(screen.getByTestId('panel')).toBeTruthy()
+    })
+
+    it('leaves the trigger alone from a button in an overlay it hosts', async () => {
+      const user = setUpUser()
+      const send = jest.spyOn(AccessibilityInfo, 'sendAccessibilityEvent')
+      const onOpen = jest.fn<(event: GestureResponderEvent) => void>()
+      await render(
+        <Dialog>
+          <Button onPress={onOpen}>Open</Button>
+          <Dialog.Content testID="panel">
+            <Dialog.Footer>
+              <Button slot="close">Cancel</Button>
+            </Dialog.Footer>
+            <Overlay>
+              <Button>Label</Button>
+            </Overlay>
+          </Dialog.Content>
+        </Dialog>,
+      )
+
+      await user.press(screen.getByRole('button', { name: 'Open' }))
+      await user.press(screen.getByRole('button', { name: 'Label' }))
+
+      expect(screen.getByTestId('panel')).toBeTruthy()
+
+      await user.press(screen.getByRole('button', { name: 'Cancel' }))
+      await advance(EXIT)
+
+      expect(send).toHaveBeenCalledTimes(1)
+      expect(send.mock.calls[0]?.[0]).toBe(
+        onOpen.mock.calls[0]?.[0].currentTarget,
+      )
     })
 
     it('closes from a press on the scrim', async () => {

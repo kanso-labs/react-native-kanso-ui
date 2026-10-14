@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.2.0](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.1.1...v0.2.0) (2026-10-14)
+
+
+### Features
+
+* **button:** add isPending ([#106](https://github.com/kanso-labs/react-native-kanso-ui/issues/106)) ([5a42679](https://github.com/kanso-labs/react-native-kanso-ui/commit/5a42679b079c70ca4d457b5c7bb9eaa0f9f2b793))
+* **meter:** add Meter component ([#103](https://github.com/kanso-labs/react-native-kanso-ui/issues/103)) ([f090f1f](https://github.com/kanso-labs/react-native-kanso-ui/commit/f090f1ff33e97a18c5412687baf33e832dd49f2f))
+* **progress-indicator:** add ProgressIndicator component ([#102](https://github.com/kanso-labs/react-native-kanso-ui/issues/102)) ([ec02b7f](https://github.com/kanso-labs/react-native-kanso-ui/commit/ec02b7fc079c65c93f3caeb95fdda12733643766))
+* **snackbar:** add Snackbar component ([#104](https://github.com/kanso-labs/react-native-kanso-ui/issues/104)) ([504eb75](https://github.com/kanso-labs/react-native-kanso-ui/commit/504eb7597e57a5c92a2472efe516763cc55d8876))
+
 ## [0.1.1](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.1.0...v0.1.1) (2026-10-14)
 
 

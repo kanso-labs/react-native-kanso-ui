@@ -29,7 +29,8 @@ import { ButtonSlotContext } from './slots'
 // fills in an overlay adds to it, the corner that eases between shapes, and
 // the metrics
 // the two components' pages give alike, since the two share their five
-// heights so that they line up in a row.
+// heights so that they line up in a row. What a pending button draws and
+// says is ./pending.tsx.
 
 /**
  * A plain button, a link, or a toggle, of which a call site writes exactly
@@ -45,13 +46,36 @@ type ButtonLinkForm = {
    * with a scheme of its own, and the button is announced as a link.
    */
   readonly href: string
+  readonly isPending?: never
   readonly isSelected?: never
   readonly onChange?: never
+  readonly pendingLabel?: never
   readonly slot?: never
   readonly type?: never
 }
 
-type ButtonPressForm = {
+/**
+ * Whether the button's action is under way, which the plain button and the
+ * toggle both take and the link does not.
+ */
+type ButtonPending = {
+  /**
+   * Shows that the button's action is under way: a ring takes the place of
+   * the label and the icon, which keep their space, and the button keeps its
+   * focus and takes no press until it clears. A toggle may be pending, for a
+   * state saved somewhere slow.
+   * @default false
+   */
+  readonly isPending?: boolean
+  /**
+   * The name of the ring shown while the button is pending, for a screen
+   * reader. The content it replaces is hidden while it shows. Left out, it is
+   * the word for it in the device's locale, "Loading" in English.
+   */
+  readonly pendingLabel?: string
+}
+
+type ButtonPressForm = ButtonPending & {
   readonly defaultSelected?: never
   readonly href?: never
   readonly isSelected?: never
@@ -70,7 +94,7 @@ type ButtonPressForm = {
   readonly type?: 'button' | 'submit'
 }
 
-type ButtonToggleForm = {
+type ButtonToggleForm = ButtonPending & {
   /**
    * Whether a toggle starts selected, when it keeps its own state. Passing
    * this, `isSelected` or `onChange` is what makes the button a toggle.

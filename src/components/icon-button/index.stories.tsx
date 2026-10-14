@@ -49,6 +49,11 @@ const Outlined: Story = {
   args: { variant: 'outlined' },
 }
 
+// The ring takes the icon's place, at the icon's size and in its colour.
+const Pending: Story = {
+  args: { isPending: true },
+}
+
 // A filled toggle, unselected: surface container with the muted icon, rather
 // than the plain filled button's primary.
 const Toggle: Story = {
@@ -58,6 +63,12 @@ const Toggle: Story = {
 // The same toggle selected, on primary and at the squarer corner.
 const ToggleSelected: Story = {
   args: { defaultSelected: true, variant: 'filled' },
+}
+
+// A toggle whose new state is still being saved: the ring takes the icon's
+// place, and a press changes nothing until the call site clears `isPending`.
+const TogglePending: Story = {
+  args: { defaultSelected: true, isPending: true, variant: 'filled' },
 }
 
 // The four variants, then each as a toggle selected, then each disabled.
@@ -118,6 +129,15 @@ const BesideButton: Story = {
   ),
 }
 
-export { BesideButton, Default, Outlined, Toggle, ToggleSelected, Variants }
+export {
+  BesideButton,
+  Default,
+  Outlined,
+  Pending,
+  Toggle,
+  TogglePending,
+  ToggleSelected,
+  Variants,
+}
 
 export default meta

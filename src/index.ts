@@ -58,6 +58,8 @@ export type {
 } from './components/icon-button'
 export { Link } from './components/link'
 export type { LinkProps, LinkTone, LinkUnderline } from './components/link'
+export { Meter } from './components/meter'
+export type { MeterProps, MeterTone } from './components/meter'
 export { NumberField } from './components/number-field'
 export type { NumberFieldProps } from './components/number-field'
 export { ProductIcon } from './components/product-icon'
@@ -87,6 +89,13 @@ export type {
 } from './components/segmented-button'
 export { Separator } from './components/separator'
 export type { SeparatorInset, SeparatorProps } from './components/separator'
+export { Snackbar } from './components/snackbar'
+export type {
+  SnackbarAction,
+  SnackbarOptions,
+  SnackbarProps,
+  SnackbarQueue,
+} from './components/snackbar'
 export { Stack } from './components/stack'
 export type {
   StackAlign,

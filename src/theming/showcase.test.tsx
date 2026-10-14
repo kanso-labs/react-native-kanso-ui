@@ -3,6 +3,9 @@ import { render, screen, within } from '@testing-library/react-native'
 import { existsSync, readdirSync } from 'node:fs'
 import path from 'node:path'
 
+import type { DemoThemeName } from './themes'
+
+import { ThemeScope } from '../theme-scope'
 import Showcase from './showcase'
 
 // The showcase is the only page that draws the whole library under a scheme
@@ -28,11 +31,21 @@ const EXPECTED = readdirSync(COMPONENTS, { withFileTypes: true })
       .join(''),
   )
 
+// The page inside a ThemeScope, as the Storybook canvas draws it, whose
+// overlay host is where the page's snackbar draws.
+async function renderPage(name: 'dark' | DemoThemeName) {
+  return render(
+    <ThemeScope>
+      <Showcase name={name} />
+    </ThemeScope>,
+  )
+}
+
 describe('the showcase', () => {
   // What this catches is omission, not hollowness: a section with a title and
   // nothing in it satisfies it.
   it('gives every component a section', async () => {
-    await render(<Showcase name="editorial" />)
+    await renderPage('editorial')
 
     // The heading a section opens with, rather than every heading on the
     // page: the page's own scheme label is one too, and a component drawn
@@ -55,7 +68,7 @@ describe('the showcase', () => {
   })
 
   it('names the scheme it is drawn under', async () => {
-    await render(<Showcase name="dark" />)
+    await renderPage('dark')
 
     expect(screen.getAllByRole('heading')[0]).toHaveTextContent('Dark')
   })

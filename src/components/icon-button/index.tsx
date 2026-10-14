@@ -24,6 +24,12 @@ import {
   useCorner,
 } from '../../button'
 import { palettesOf } from '../../button/palettes'
+import {
+  BUSY,
+  PendingContent,
+  PendingRing,
+  usePending,
+} from '../../button/pending'
 import { IconStyleContext } from '../../glyphs/icon-style'
 import { hitSlop, usePressFeedback } from '../../press'
 import { useTheme } from '../../theme/scope'
@@ -51,6 +57,13 @@ import { composeStyles, themedStyles } from '../../theme/styles'
 // transparent while its icon moves to primary, and an outlined one swaps its
 // rule for the inverse surface pair. So a selected filled toggle looks like a
 // plain filled button, and an unselected one does not.
+//
+// **A pending button keeps its place**, as Button's does: the icon is hidden
+// where it stands and an indeterminate ring is drawn over it, in the icon's
+// colour and at the icon's size, which is what web's `1em` reads there. The
+// button keeps its focus and its ring, reports itself busy and takes no
+// press until it clears, and src/button's pending.tsx says the change out
+// loud.
 //
 // **The corner morphs from a circle to a rounded square.** A press tightens
 // it to the size's pressed corner, 8dp for the two small sizes, 12dp at
@@ -200,6 +213,7 @@ function IconButton({
   hitSlop: ownHitSlop,
   href,
   isDisabled = false,
+  isPending = false,
   isSelected,
   onBlur,
   onChange,
@@ -207,9 +221,11 @@ function IconButton({
   onHoverIn,
   onHoverOut,
   onLayout,
+  onLongPress,
   onPress,
   onPressIn,
   onPressOut,
+  pendingLabel,
   size = 'md',
   slot,
   style,
@@ -218,6 +234,9 @@ function IconButton({
   ...props
 }: IconButtonProps) {
   const theme = useTheme()
+  // A link is never pending, as on web, where its props have no such state.
+  const pending = href === undefined && isPending
+  const ringLabel = usePending(pending, pendingLabel)
 
   // The three props that make this a toggle, read as web reads them.
   const isToggle =
@@ -255,6 +274,7 @@ function IconButton({
     onHoverOut,
     onPressIn,
     onPressOut,
+    pending,
   })
 
   const { radii, sizing } = theme
@@ -270,12 +290,14 @@ function IconButton({
     <AnimatedPressable
       role={href === undefined ? 'button' : 'link'}
       {...(isToggle ? toggleState(action.selected) : undefined)}
+      {...(pending ? BUSY : undefined)}
       {...props}
       {...feedback.handlers}
       disabled={isDisabled}
       hitSlop={ownHitSlop ?? hitSlop(edge, edge)}
       onLayout={shaped.onLayout}
-      onPress={action.onPress}
+      onLongPress={pending ? undefined : onLongPress}
+      onPress={pending ? undefined : action.onPress}
       style={composeStyles<AnimatedStyle<ViewStyle>>(
         styles.base,
         sizesOf(theme)[size],
@@ -294,9 +316,18 @@ function IconButton({
       >
         {feedback.layer}
       </Animated.View>
-      <IconStyleContext value={iconStyleOf(colors.content, size)}>
-        {children}
-      </IconStyleContext>
+      <PendingContent isPending={pending}>
+        <IconStyleContext value={iconStyleOf(colors.content, size)}>
+          {children}
+        </IconStyleContext>
+      </PendingContent>
+      {pending ? (
+        <PendingRing
+          color={colors.content}
+          diameter={ICON_SIZES[size]}
+          label={ringLabel}
+        />
+      ) : null}
     </AnimatedPressable>
   )
 }
