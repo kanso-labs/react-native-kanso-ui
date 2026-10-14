@@ -6,7 +6,10 @@ on:
     branches:
       - main
 
+# code-quality is what the coverage upload below needs to report against the
+# pull request.
 permissions:
+  code-quality: write
   contents: read
 
 jobs:
@@ -45,8 +48,23 @@ jobs:
         with:
           ignore-scripts: true
 
+      # The same suite as npm test, with coverage written as Cobertura XML to
+      # coverage/, which the step below reports.
       - name: Run tests
-        run: npm test
+        run: npm run test:coverage
+
+      # Reports the line coverage on the pull request, which the Default
+      # ruleset's coverage rule reads. fail-on-error is off because the action
+      # defaults it on and waits on a service GitHub ships as a preview, so an
+      # outage there would fail a Test whose suite already passed. A missing
+      # report or a bad input still fails the step.
+      - name: Upload coverage report
+        uses: actions/upload-code-coverage@v1.4.4
+        with:
+          fail-on-error: false
+          file: coverage/cobertura-coverage.xml
+          label: code-coverage/jest
+          language: TypeScript
 
       # Chromium alone, the one browser vitest.config.ts names. The runner
       # image already carries its system libraries, so `--with-deps` would
