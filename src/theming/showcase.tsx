@@ -21,7 +21,8 @@ import { Separator } from '../components/separator'
 import { Stack } from '../components/stack'
 import { Switch } from '../components/switch'
 import { Text } from '../components/text'
-import { PlusGlyph } from '../glyphs'
+import { TextField } from '../components/text-field'
+import { PlusGlyph, SearchGlyph } from '../glyphs'
 import { useIconStyle } from '../glyphs/icon-style'
 import { useTheme } from '../theme/scope'
 import { themedStyles } from '../theme/styles'
@@ -79,6 +80,10 @@ const DOT = <Dot />
 // The icon the icon buttons hold, the library's own plus, which reads its
 // colour and size from the button around it.
 const PLUS = <PlusGlyph />
+
+// The text field's leading icon, the library's own search, which reads its
+// colour and size from the slot it sits in.
+const SEARCH = <SearchGlyph />
 
 // Hoisted so the keys are not a new array on every render, which is what
 // react-perf's no-new-array-as-prop is after.
@@ -456,6 +461,37 @@ function Showcase({ name }: ShowcaseProps) {
           <Text tone="negative">Negative</Text>
           <Text tone="error">Error</Text>
         </View>
+      </Section>
+
+      <Section
+        description="The filled field carries its own surface, a label that floats to the top once the field holds a value, and an underline that takes the primary role while focused, or the error role once there is a message. The outlined one moves that rule to the whole box, with a notch where the label sits."
+        title="TextField"
+      >
+        <Stack gap="md">
+          <TextField defaultValue="" label="Label" />
+          <TextField defaultValue="Label" label="Label" />
+          <TextField
+            defaultValue="01"
+            description="Supporting line"
+            label="Label"
+            numeric
+          />
+          <TextField
+            defaultValue="Label"
+            error="Supporting line"
+            label="Label"
+          />
+          <TextField
+            characterCount
+            defaultValue="Label"
+            description="Supporting line"
+            label="Label"
+            leadingIcon={SEARCH}
+            maxLength={20}
+            suffix="Suffix"
+          />
+          <TextField defaultValue="Label" label="Label" variant="outlined" />
+        </Stack>
       </Section>
     </View>
   )
