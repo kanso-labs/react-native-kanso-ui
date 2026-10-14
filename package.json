@@ -49,6 +49,7 @@
   },
   "author": "Kanso Labs <kanso.labs.org@gmail.com>",
   "dependencies": {
+    "@internationalized/number": "3.6.9",
     "react-stately": "3.51.0"
   },
   "devDependencies": {

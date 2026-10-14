@@ -277,10 +277,13 @@ than a bump at a time.
 Install the root first: the app's scripts run the root's `tokens:build`, since
 the library's token defaults are generated rather than committed. Metro watches
 `../src` and resolves everything from the app's own `node_modules`, so the
-bundle carries one React; `tsconfig.json` maps the React and React Native types
-the same way, since two copies of a type never match. Those `paths` point at
-type declarations, so `experiments.tsconfigPaths` in `app.json` is off: Expo
-would otherwise hand them to Metro, and `react` would resolve to `@types/react`.
+bundle carries one React. That also means a runtime dependency the library takes
+is one the app has to list too, at the same version, or Metro cannot resolve the
+import that needs it; CI never bundles the app, so only `npm run export` there
+says so. `tsconfig.json` maps the React and React Native types the same way,
+since two copies of a type never match. Those `paths` point at type
+declarations, so `experiments.tsconfigPaths` in `app.json` is off: Expo would
+otherwise hand them to Metro, and `react` would resolve to `@types/react`.
 `npm run export` in `example/` bundles the app for iOS and Android without a
 device, which is the quickest check that a story still resolves under Metro.
 `app.json` names those two platforms: Expo would otherwise bundle for the web as
