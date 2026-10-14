@@ -1,0 +1,87 @@
+name: Deploy Storybook
+
+on:
+  # Releases only, not every merge to main. The published site is the
+  # documentation for the version on npm, so a component whose story has landed
+  # but whose release has not is not yet documentation. release-please cuts the
+  # release with an application token rather than GITHUB_TOKEN, which is what
+  # lets the release it publishes start this run at all: GITHUB_TOKEN's own
+  # events deliberately start nothing.
+  release:
+    types:
+      - published
+  # Pages keeps serving whatever the last successful run uploaded, so a
+  # deployment that failed on something outside this repository, such as a
+  # Pages outage, leaves the site stale with nothing left to re-trigger it. This
+  # is the lever to redeploy without waiting for the next release. Run it from
+  # the tag of the release to republish, not from main: the ref the dispatch is
+  # given is the tree that gets built, and main's tip is by then ahead of what
+  # was released.
+  workflow_dispatch:
+
+# The site is replaced wholesale, so two runs deploying at once race over which
+# one ends up live. Do not add cancel-in-progress: a cancelled deployment can
+# leave a partially uploaded artifact serving as the published site.
+concurrency:
+  cancel-in-progress: false
+  group: pages
+
+# Only the checkout needs anything, and only the build job performs one. The
+# elevation the deployment requires is granted on that job alone below, since a
+# job-level block replaces this one rather than adding to it.
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build Storybook
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      # Pinned to the ref rather than left to default. On a release event the
+      # default ref is already the released commit, but a dispatch defaults to
+      # whatever branch it was started from, and github.ref_name is the tag
+      # there too, so naming it makes both paths build the released tree.
+      - name: Check out repository
+        uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ github.ref_name }}
+
+      # Skips the prepare script, which only installs husky's git hooks.
+      - name: Set up Node
+        uses: kanso-labs/actions/setup-node@v4.2.4
+        with:
+          ignore-scripts: true
+
+      # The web Storybook writes the token defaults it imports itself, through
+      # the Style Dictionary plugin in .storybook/main.ts, so nothing runs
+      # tokens:build first. No base path is set: Storybook's output references
+      # every asset relatively, so one artifact serves from a custom domain's
+      # root and from the /react-native-kanso-ui/ subpath Pages uses without
+      # one.
+      - name: Run Storybook build
+        run: npm run build-storybook
+
+      - name: Upload Storybook build
+        uses: actions/upload-pages-artifact@v5.0.0
+        with:
+          path: storybook-static
+
+  deploy:
+    name: Deploy to GitHub Pages
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # pages is what lets the deployment write the result; id-token is what it
+    # exchanges for the credentials proving the run is allowed to. It never
+    # checks the repository out, so it drops contents along with them.
+    permissions:
+      id-token: write
+      pages: write
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5.0.1
