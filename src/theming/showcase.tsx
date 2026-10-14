@@ -7,6 +7,7 @@ import type { DemoThemeName } from './themes'
 import { Avatar } from '../components/avatar'
 import { Button } from '../components/button'
 import { Card } from '../components/card'
+import { CopyField } from '../components/copy-field'
 import { IconButton } from '../components/icon-button'
 import { Link } from '../components/link'
 import { ProductIcon } from '../components/product-icon'
@@ -222,6 +223,13 @@ function Showcase({ name }: ShowcaseProps) {
             </Stack>
           </Card>
         </Stack>
+      </Section>
+
+      <Section
+        description="A read-only field with the value it copies, so it draws the field's own surface and the button that sits in its trailing slot."
+        title="CopyField"
+      >
+        <CopyField value="--kui-color-primary" />
       </Section>
 
       <Section

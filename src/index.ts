@@ -11,6 +11,8 @@ export type {
 } from './components/button'
 export { Card } from './components/card'
 export type { CardProps, CardVariant } from './components/card'
+export { CopyField } from './components/copy-field'
+export type { CopyFieldProps } from './components/copy-field'
 export { IconButton } from './components/icon-button'
 export type {
   IconButtonProps,
