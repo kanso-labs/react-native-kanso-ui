@@ -1,10 +1,12 @@
 import type { ComponentRef, Ref } from 'react'
 import type { ViewProps } from 'react-native'
 
+import { use } from 'react'
 import { StyleSheet, View } from 'react-native'
 
 import type { KuiTheme } from './tokens/defaults'
 
+import { OverlayHost, OverlayHostContext } from './overlay/host'
 import { merged, ScopeContext, scopeFor, useScope } from './theme/scope'
 import { themedStyles } from './theme/styles'
 
@@ -67,6 +69,10 @@ type ThemeScopeProps = ViewProps & {
  *
  * The scope is a `View`, so one wrapping a whole screen takes `flex: 1` to
  * fill it, as any view would.
+ *
+ * The outermost scope also hosts what the library draws above the screen,
+ * over everything inside it, so it belongs at the root of the app and fills
+ * it. What draws there follows the scope it was opened in, not the root's.
  */
 function ThemeScope({
   children,
@@ -75,6 +81,7 @@ function ThemeScope({
   theme,
   ...props
 }: ThemeScopeProps) {
+  const host = use(OverlayHostContext)
   const parent = useScope()
   const scope = scopeFor(
     scheme ?? parent.scheme,
@@ -91,7 +98,7 @@ function ThemeScope({
           style,
         )}
       >
-        {children}
+        {host === null ? <OverlayHost>{children}</OverlayHost> : children}
       </View>
     </ScopeContext>
   )
