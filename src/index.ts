@@ -33,6 +33,8 @@ export type {
   CurrencySignDisplay,
   CurrencyTone,
 } from './components/currency'
+export { Form } from './components/form'
+export type { FormHandle, FormProps } from './components/form'
 export { IconButton } from './components/icon-button'
 export type {
   IconButtonProps,

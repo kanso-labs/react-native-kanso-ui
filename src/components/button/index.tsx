@@ -350,6 +350,7 @@ function Button({
   shape = 'round',
   size = 'md',
   style,
+  type,
   variant = 'filled',
   ...props
 }: ButtonProps) {
@@ -371,6 +372,7 @@ function Button({
     isToggle,
     onChange,
     onPress,
+    type,
   })
   const colors =
     palettesOf(theme)[
