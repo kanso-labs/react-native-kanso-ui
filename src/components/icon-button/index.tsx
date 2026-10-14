@@ -227,6 +227,7 @@ function IconButton({
   onPressOut,
   pendingLabel,
   size = 'md',
+  slot,
   style,
   type,
   variant = 'standard',
@@ -249,6 +250,7 @@ function IconButton({
     isToggle,
     onChange,
     onPress,
+    slot: slot ?? 'default',
     type,
   })
   const colors =

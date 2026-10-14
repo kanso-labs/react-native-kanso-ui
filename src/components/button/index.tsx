@@ -373,6 +373,7 @@ function Button({
   pendingLabel,
   shape = 'round',
   size = 'md',
+  slot,
   style,
   type,
   variant = 'filled',
@@ -400,6 +401,7 @@ function Button({
     isToggle,
     onChange,
     onPress,
+    slot: slot ?? 'default',
     type,
   })
   const colors =
