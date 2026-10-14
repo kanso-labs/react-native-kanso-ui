@@ -349,6 +349,7 @@ function Button({
   onPressOut,
   shape = 'round',
   size = 'md',
+  slot,
   style,
   type,
   variant = 'filled',
@@ -372,6 +373,7 @@ function Button({
     isToggle,
     onChange,
     onPress,
+    slot: slot ?? 'default',
     type,
   })
   const colors =

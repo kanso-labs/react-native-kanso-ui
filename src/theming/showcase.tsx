@@ -13,6 +13,7 @@ import { Chip } from '../components/chip'
 import { ChipGroup } from '../components/chip-group'
 import { CopyField } from '../components/copy-field'
 import { Currency } from '../components/currency'
+import { Dialog } from '../components/dialog'
 import { Form } from '../components/form'
 import { IconButton } from '../components/icon-button'
 import { Link } from '../components/link'
@@ -27,7 +28,7 @@ import { Stack } from '../components/stack'
 import { Switch } from '../components/switch'
 import { Text } from '../components/text'
 import { TextField } from '../components/text-field'
-import { PlusGlyph, SearchGlyph } from '../glyphs'
+import { CloseGlyph, PlusGlyph, SearchGlyph } from '../glyphs'
 import { useIconStyle } from '../glyphs/icon-style'
 import { useTheme } from '../theme/scope'
 import { themedStyles } from '../theme/styles'
@@ -77,6 +78,9 @@ const LIBRARY_DARK = {
     "The library's own dark theme: the default tokens' dark half, with nothing overridden.",
   label: 'Dark',
 }
+
+// The dialog's close button's icon, the library's own close glyph.
+const CLOSE = <CloseGlyph />
 
 // The icon the chips hold: web's circle half the slot across, drawn as a view
 // in the colour and at the size the slot hands it.
@@ -338,6 +342,38 @@ function Showcase({ name }: ShowcaseProps) {
           <Text variant="bodyLarge">
             <Currency locale="en-US" value={0} />
           </Text>
+        </View>
+      </Section>
+
+      <Section
+        description="A dialog is centred over the screen and fills the window below the medium breakpoint. What the page pins is the trigger; the surface, the corner and the scrim behind it are the scheme's."
+        title="Dialog"
+      >
+        <View style={styles.row}>
+          <Dialog>
+            <Button variant="outlined">Open dialog</Button>
+            <Dialog.Content>
+              <Dialog.Header>
+                <Dialog.Title>Headline</Dialog.Title>
+                <IconButton aria-label="Close" slot="close">
+                  {CLOSE}
+                </IconButton>
+              </Dialog.Header>
+              <Dialog.Body>
+                A dialog is centred over the screen and fills the window below
+                the medium breakpoint, where the page draws its full-screen
+                dialog instead.
+              </Dialog.Body>
+              <Dialog.Footer>
+                <Button slot="close" variant="text">
+                  Cancel
+                </Button>
+                <Button slot="close" variant="text">
+                  Confirm
+                </Button>
+              </Dialog.Footer>
+            </Dialog.Content>
+          </Dialog>
         </View>
       </Section>
 

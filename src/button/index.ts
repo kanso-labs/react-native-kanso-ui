@@ -20,12 +20,14 @@ import type { ResolvedTheme } from '../theme/scope'
 import { FormContext } from '../form'
 import { useOpenLink } from '../router'
 import { useTheme } from '../theme/scope'
+import { ButtonSlotContext } from './slots'
 
 // What every button does past its own styles, shared by Button and
 // IconButton as web's src/button is: the three forms a button takes, the
 // toggle's state and how it is announced, what a press does after the call
-// site's own `onPress`, a submit button's included, the corner that eases
-// between shapes, and the metrics
+// site's own `onPress`, a submit button's included, and what the slot it
+// fills in an overlay adds to it, the corner that eases between shapes, and
+// the metrics
 // the two components' pages give alike, since the two share their five
 // heights so that they line up in a row.
 
@@ -45,6 +47,7 @@ type ButtonLinkForm = {
   readonly href: string
   readonly isSelected?: never
   readonly onChange?: never
+  readonly slot?: never
   readonly type?: never
 }
 
@@ -53,6 +56,12 @@ type ButtonPressForm = {
   readonly href?: never
   readonly isSelected?: never
   readonly onChange?: never
+  /**
+   * `close` closes the overlay the button is in, as web's React Aria slot of
+   * that name does: a `Dialog` given one inside its content closes when it is
+   * pressed, after the button's own `onPress`.
+   */
+  readonly slot?: 'close'
   /**
    * What a press does past `onPress`. `submit` submits the `Form` the button
    * is in, as a submit button does on web; `button` does nothing more.
@@ -80,6 +89,7 @@ type ButtonToggleForm = {
    * a toggle.
    */
   readonly onChange?: (isSelected: boolean) => void
+  readonly slot?: never
   readonly type?: never
 }
 
@@ -163,10 +173,13 @@ function measureThen(
 
 // The call site's own `onPress`, then what the button does with the press.
 // Built by a call for the reason `measureThen` is.
-function pressThen(onPress: PressableProps['onPress'], then: () => void) {
+function pressThen(
+  onPress: PressableProps['onPress'],
+  then: (event: GestureResponderEvent) => void,
+) {
   return (event: GestureResponderEvent) => {
     onPress?.(event)
-    then()
+    then(event)
   }
 }
 
@@ -177,6 +190,10 @@ function pressThen(onPress: PressableProps['onPress'], then: () => void) {
  * in. A toggle keeps its own state from `defaultSelected` unless the call
  * site holds it in `isSelected`. A submit button outside a form submits
  * nothing, as on web.
+ *
+ * Given a `slot`, a button that is not a link then does what that slot of
+ * the overlay around it does, as src/button's slots.ts sets out: opens it
+ * from the trigger, or closes it from its content.
  */
 function useButtonAction({
   defaultSelected,
@@ -185,6 +202,7 @@ function useButtonAction({
   isToggle,
   onChange,
   onPress,
+  slot,
   type,
 }: {
   readonly defaultSelected: boolean | undefined
@@ -193,22 +211,28 @@ function useButtonAction({
   readonly isToggle: boolean
   readonly onChange: ((isSelected: boolean) => void) | undefined
   readonly onPress: PressableProps['onPress']
+  readonly slot?: 'close' | 'default'
   readonly type: 'button' | 'submit' | undefined
 }) {
   const openLink = useOpenLink()
   const form = use(FormContext)
+  const slots = use(ButtonSlotContext)
   const [ownSelected, setOwnSelected] = useState(defaultSelected ?? false)
   const selected = isToggle && (isSelected ?? ownSelected)
+  const filled = slot === undefined ? undefined : slots?.[slot]
 
-  function follow() {
+  function follow(event: GestureResponderEvent) {
     if (href !== undefined) {
       openLink(href)
-    } else if (isToggle) {
+      return
+    }
+    if (isToggle) {
       setOwnSelected(!selected)
       onChange?.(!selected)
     } else if (type === 'submit') {
       form?.requestSubmit()
     }
+    filled?.(event)
   }
 
   return { onPress: pressThen(onPress, follow), selected }
