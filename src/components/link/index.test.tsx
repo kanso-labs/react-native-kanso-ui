@@ -96,8 +96,10 @@ function Routed({
   return <RouterProvider navigate={navigate}>{children}</RouterProvider>
 }
 
-function styleOf(element: { props: { style?: StyleProp<TextStyle> } }) {
-  return StyleSheet.flatten([element.props.style])
+function styleOf(element: {
+  props: { style?: StyleProp<TextStyle> }
+}): TextStyle {
+  return StyleSheet.flatten([element.props.style]) ?? {}
 }
 
 // The preset already mocks `Linking`, and a spy on a mock is that same mock,
@@ -189,7 +191,7 @@ describe('Link', () => {
     })
 
     it('is opened by the platform without a router', async () => {
-      const openURL = jest.spyOn(Linking, 'openURL').mockResolvedValue(true)
+      const openURL = jest.spyOn(Linking, 'openURL').mockResolvedValue()
 
       await render(<Link href="https://example.com">Label</Link>)
       await fireEvent.press(screen.getByRole('link'))
@@ -367,7 +369,9 @@ describe('Link', () => {
           </Link>,
         )
 
-        await fireEvent(link, 'pointerEnter', { pointerType: 'mouse' })
+        await fireEvent(link, 'pointerEnter', {
+          nativeEvent: { pointerType: 'mouse' },
+        })
 
         expect(styleOf(link)).toMatchObject({
           color: colors.primary,
@@ -388,7 +392,9 @@ describe('Link', () => {
           </Link>,
         )
 
-        await fireEvent(link, 'pointerEnter', { pointerType: 'pen' })
+        await fireEvent(link, 'pointerEnter', {
+          nativeEvent: { pointerType: 'pen' },
+        })
 
         expect(styleOf(link)).toMatchObject({
           textDecorationColor: colors.primary,
@@ -403,7 +409,9 @@ describe('Link', () => {
           </Link>,
         )
 
-        await fireEvent(link, 'pointerEnter', { pointerType: 'touch' })
+        await fireEvent(link, 'pointerEnter', {
+          nativeEvent: { pointerType: 'touch' },
+        })
 
         expect(styleOf(link)).toMatchObject({ textDecorationLine: 'none' })
         expect(styleOf(link)).not.toHaveProperty('color')
@@ -416,7 +424,9 @@ describe('Link', () => {
           </Link>,
         )
 
-        await fireEvent(link, 'pointerEnter', { pointerType: 'mouse' })
+        await fireEvent(link, 'pointerEnter', {
+          nativeEvent: { pointerType: 'mouse' },
+        })
 
         expect(styleOf(link)).toMatchObject({
           color: DISABLED_CONTENT,

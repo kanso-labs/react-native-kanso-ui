@@ -1,7 +1,9 @@
-import type { RefObject } from 'react'
+import type { ComponentRef, RefObject } from 'react'
 import type {
+  HostInstance,
   MeasureInWindowOnSuccessCallback,
   StyleProp,
+  ViewProps,
   ViewStyle,
 } from 'react-native'
 
@@ -26,6 +28,13 @@ import { Overlay } from './host'
 
 type Frame = readonly [x: number, y: number, width: number, height: number]
 
+// What React Native's Jest preset draws a View as: a class component holding
+// its props, with the native methods on its prototype. React Native's types
+// declare View a function, whose prototype they leave untyped.
+type MockedView = Pick<HostInstance, 'measureInWindow'> & {
+  readonly props: ViewProps
+}
+
 // Where `measureInWindow` reports each view: the anchor by its test id, and
 // the overlay layer, the only other view measured, at the window's corner
 // unless a case moves it.
@@ -40,11 +49,11 @@ const NOTCHED = { bottom: 0, left: 44, right: 0, top: 47 }
 const sides: string[] = []
 
 type SurfaceProps = Omit<AnchoredPlacementOptions, 'anchor'> & {
-  readonly anchor: RefObject<null | View>
+  readonly anchor: RefObject<ComponentRef<typeof View> | null>
 }
 
 function Anchored(options: Omit<AnchoredPlacementOptions, 'anchor'>) {
-  const anchor = useRef<View>(null)
+  const anchor = useRef<ComponentRef<typeof View>>(null)
 
   return (
     <ThemeScope>
@@ -53,6 +62,12 @@ function Anchored(options: Omit<AnchoredPlacementOptions, 'anchor'>) {
         <Surface anchor={anchor} {...options} />
       </Overlay>
     </ThemeScope>
+  )
+}
+
+function isMockedView(value: unknown): value is MockedView {
+  return (
+    typeof value === 'object' && value !== null && 'measureInWindow' in value
   )
 }
 
@@ -72,8 +87,10 @@ function resize(width: number, height: number) {
   Dimensions.set({ screen: metrics, window: metrics })
 }
 
-function styleOf(element: { props: { style?: StyleProp<ViewStyle> } }) {
-  return StyleSheet.flatten([element.props.style])
+function styleOf(element: {
+  props: { style?: StyleProp<ViewStyle> }
+}): ViewStyle {
+  return StyleSheet.flatten([element.props.style]) ?? {}
 }
 
 function Surface(props: SurfaceProps) {
@@ -89,16 +106,18 @@ beforeEach(() => {
   frames.layer = [0, 0, 400, 800]
   sides.length = 0
   resize(400, 800)
-  jest
-    .spyOn(View.prototype, 'measureInWindow')
-    .mockImplementation(function measure(
-      this: View,
-      callback: MeasureInWindowOnSuccessCallback,
-    ) {
-      callback(
-        ...(this.props.testID === 'anchor' ? frames.anchor : frames.layer),
-      )
-    })
+  const prototype: unknown = View.prototype
+
+  if (!isMockedView(prototype)) {
+    throw new TypeError('expected the View the Jest preset mocks')
+  }
+
+  jest.spyOn(prototype, 'measureInWindow').mockImplementation(function measure(
+    this: MockedView,
+    callback: MeasureInWindowOnSuccessCallback,
+  ) {
+    callback(...(this.props.testID === 'anchor' ? frames.anchor : frames.layer))
+  })
 })
 
 afterEach(() => {

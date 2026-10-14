@@ -91,8 +91,10 @@ function stack() {
   return screen.queryAllByTestId(/^overlay /).map(testIdOf)
 }
 
-function styleOf(element: { props: { style?: StyleProp<ViewStyle> } }) {
-  return StyleSheet.flatten([element.props.style])
+function styleOf(element: {
+  props: { style?: StyleProp<ViewStyle> }
+}): ViewStyle {
+  return StyleSheet.flatten([element.props.style]) ?? {}
 }
 
 function testIdOf(element: { props: { testID?: string } }) {

@@ -167,8 +167,10 @@ async function setup(props: Partial<CurrencyProps> = {}) {
   return screen.getByTestId('currency')
 }
 
-function styleOf(element: { props: { style?: StyleProp<TextStyle> } }) {
-  return StyleSheet.flatten([element.props.style])
+function styleOf(element: {
+  props: { style?: StyleProp<TextStyle> }
+}): TextStyle {
+  return StyleSheet.flatten([element.props.style]) ?? {}
 }
 
 // A Currency's text is one string, its only child.

@@ -109,8 +109,8 @@ function fieldOf(props: Partial<SearchFieldProps>): ReactElement {
 
 function flatStyleOf(element: {
   props: { style?: StyleProp<TextStyle | ViewStyle> }
-}) {
-  return StyleSheet.flatten([element.props.style])
+}): TextStyle | ViewStyle {
+  return StyleSheet.flatten([element.props.style]) ?? {}
 }
 
 // The magnifier, the first thing drawn after the layer and the ring.
@@ -251,7 +251,7 @@ describe('SearchField', () => {
   })
 
   it('hands inputRef the control, which a press anywhere on the bar focuses', async () => {
-    const inputRef = createRef<TextInput>()
+    const inputRef = createRef<ComponentRef<typeof TextInput>>()
     await renderField({ inputRef })
     const control = inputRef.current ?? missing('control')
     const focus = jest.spyOn(control, 'focus')
@@ -274,7 +274,7 @@ describe('SearchField', () => {
     })
 
     it('empties the field, reports it, and hands focus back', async () => {
-      const inputRef = createRef<TextInput>()
+      const inputRef = createRef<ComponentRef<typeof TextInput>>()
       const onChange = jest.fn()
       const onClear = jest.fn()
       await renderField({
@@ -497,7 +497,7 @@ describe('SearchField', () => {
     })
 
     it('draws disabled in the page colours, and takes no input', async () => {
-      const inputRef = createRef<TextInput>()
+      const inputRef = createRef<ComponentRef<typeof TextInput>>()
       await renderField({
         defaultValue: 'Keyword',
         error: 'Enter a keyword.',

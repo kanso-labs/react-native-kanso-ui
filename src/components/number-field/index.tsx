@@ -1,4 +1,4 @@
-import type { ReactNode, Ref } from 'react'
+import type { ComponentRef, ReactNode, Ref } from 'react'
 import type {
   BlurEvent,
   Insets,
@@ -155,7 +155,7 @@ type NumberFieldProps = Omit<
    * A ref to the field's own `TextInput`, which is what a call site moves
    * focus to, after a server's error, say. `ref` is the field as a whole.
    */
-  readonly inputRef?: Ref<TextInput>
+  readonly inputRef?: Ref<ComponentRef<typeof TextInput>>
   /**
    * Draws the field disabled: it takes no focus, no input and no steps.
    * @default false
@@ -204,7 +204,7 @@ type NumberFieldProps = Omit<
    * stepped to. `NaN` is an empty field.
    */
   readonly onChange?: (value: number) => void
-  readonly ref?: Ref<View>
+  readonly ref?: Ref<ComponentRef<typeof View>>
   /**
    * The amount the steppers move the value by, and the multiple of it, from
    * `minValue`, that a committed value snaps to.
@@ -458,7 +458,7 @@ function NumberField({
   ...props
 }: NumberFieldProps) {
   const id = useId()
-  const control = useRef<TextInput>(null)
+  const control = useRef<ComponentRef<typeof TextInput>>(null)
   const writtenIn = localeOf(locale)
   const state = useNumberFieldState({
     defaultValue,
@@ -498,11 +498,10 @@ function NumberField({
   // as web's is through `:focus-within`.
   const [stepperFocused, setStepperFocused] = useState(false)
 
-  useImperativeHandle<null | TextInput, null | TextInput>(
-    inputRef,
-    () => control.current,
-    [],
-  )
+  useImperativeHandle<
+    ComponentRef<typeof TextInput> | null,
+    ComponentRef<typeof TextInput> | null
+  >(inputRef, () => control.current, [])
 
   return (
     <View ref={ref} style={style}>

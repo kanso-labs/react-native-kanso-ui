@@ -62,8 +62,10 @@ function marginsOf(style: ViewStyle) {
   )
 }
 
-function styleOf(element: { props: { style?: StyleProp<ViewStyle> } }) {
-  return StyleSheet.flatten([element.props.style])
+function styleOf(element: {
+  props: { style?: StyleProp<ViewStyle> }
+}): ViewStyle {
+  return StyleSheet.flatten([element.props.style]) ?? {}
 }
 
 // The rule is not an accessibility element of its own, so Testing Library's

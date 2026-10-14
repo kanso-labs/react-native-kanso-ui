@@ -1,4 +1,4 @@
-import type { ReactNode, Ref } from 'react'
+import type { ComponentRef, ReactNode, Ref } from 'react'
 import type {
   StyleProp,
   TextInput,
@@ -101,7 +101,7 @@ type TextFieldProps = Omit<
    * A ref to the field's own `TextInput`, which is what a call site moves
    * focus to, after a server's error, say. `ref` is the field as a whole.
    */
-  readonly inputRef?: Ref<TextInput>
+  readonly inputRef?: Ref<ComponentRef<typeof TextInput>>
   /**
    * Draws the field disabled: it takes no focus and no input.
    * @default false
@@ -147,7 +147,7 @@ type TextFieldProps = Omit<
    * field is focused or holds a value.
    */
   readonly prefix?: ReactNode
-  readonly ref?: Ref<View>
+  readonly ref?: Ref<ComponentRef<typeof View>>
   /** Positions and sizes the field as a whole. */
   readonly style?: StyleProp<ViewStyle>
   /**
@@ -251,7 +251,7 @@ function TextField({
   ...props
 }: TextFieldProps) {
   const id = useId()
-  const control = useRef<TextInput>(null)
+  const control = useRef<ComponentRef<typeof TextInput>>(null)
   const [own, setOwn] = useState(defaultValue)
   const current = value ?? own
   const validation = useFieldValidation({
@@ -272,11 +272,10 @@ function TextField({
   })
   const shownError = validation.error
 
-  useImperativeHandle<null | TextInput, null | TextInput>(
-    inputRef,
-    () => control.current,
-    [],
-  )
+  useImperativeHandle<
+    ComponentRef<typeof TextInput> | null,
+    ComponentRef<typeof TextInput> | null
+  >(inputRef, () => control.current, [])
 
   return (
     <View ref={ref} style={style}>

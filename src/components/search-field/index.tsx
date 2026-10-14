@@ -1,4 +1,4 @@
-import type { ReactNode, Ref, RefObject } from 'react'
+import type { ComponentRef, ReactNode, Ref, RefObject } from 'react'
 import type {
   StyleProp,
   TextInput,
@@ -70,7 +70,7 @@ type SearchBarProps = {
   readonly children: ReactNode
   readonly clearLabel: string
   /** The control a press on the bar, or on the clear button, focuses. */
-  readonly control: RefObject<null | TextInput>
+  readonly control: RefObject<ComponentRef<typeof TextInput> | null>
   readonly isDisabled: boolean
   readonly isFocused: boolean
   readonly isInvalid: boolean
@@ -130,7 +130,7 @@ type SearchFieldProps = Omit<
    * A ref to the field's own `TextInput`, which is what a call site moves
    * focus to. `ref` is the field as a whole.
    */
-  readonly inputRef?: Ref<TextInput>
+  readonly inputRef?: Ref<ComponentRef<typeof TextInput>>
   /**
    * Draws the field disabled: it takes no focus and no input, and its clear
    * button no press.
@@ -163,7 +163,7 @@ type SearchFieldProps = Omit<
   readonly onSubmit?: (value: string) => void
   /** The supporting text in the empty bar, which is what a person reads. */
   readonly placeholder?: string
-  readonly ref?: Ref<View>
+  readonly ref?: Ref<ComponentRef<typeof View>>
   /** Positions and sizes the field as a whole. */
   readonly style?: StyleProp<ViewStyle>
   /**
@@ -239,7 +239,10 @@ function blurThen(
 
 // Empties the field from its button, and hands focus back to the control, so
 // the next keyword is typed straight in.
-function clearFrom(onClear: () => void, control: RefObject<null | TextInput>) {
+function clearFrom(
+  onClear: () => void,
+  control: RefObject<ComponentRef<typeof TextInput> | null>,
+) {
   return () => {
     onClear()
     control.current?.focus()
@@ -275,7 +278,7 @@ function editInto(
   }
 }
 
-function focusOf(control: RefObject<null | TextInput>) {
+function focusOf(control: RefObject<ComponentRef<typeof TextInput> | null>) {
   return () => {
     control.current?.focus()
   }
@@ -430,7 +433,7 @@ function SearchField({
   ...props
 }: SearchFieldProps) {
   const id = useId()
-  const control = useRef<TextInput>(null)
+  const control = useRef<ComponentRef<typeof TextInput>>(null)
   const [own, setOwn] = useState(defaultValue)
   const current = value ?? own
   const validation = useFieldValidation({
@@ -452,11 +455,10 @@ function SearchField({
   const clear = clearInto(setOwn, onChange, onClear, validation.onEdit)
   const shownError = validation.error
 
-  useImperativeHandle<null | TextInput, null | TextInput>(
-    inputRef,
-    () => control.current,
-    [],
-  )
+  useImperativeHandle<
+    ComponentRef<typeof TextInput> | null,
+    ComponentRef<typeof TextInput> | null
+  >(inputRef, () => control.current, [])
 
   return (
     <View ref={ref} style={style}>

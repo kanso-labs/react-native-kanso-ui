@@ -213,8 +213,10 @@ async function settled() {
   }
 }
 
-function styleOf(element: { props: { style?: StyleProp<TextStyle> } }) {
-  return StyleSheet.flatten([element.props.style])
+function styleOf(element: {
+  props: { style?: StyleProp<TextStyle> }
+}): TextStyle {
+  return StyleSheet.flatten([element.props.style]) ?? {}
 }
 
 function switchOf() {

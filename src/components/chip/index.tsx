@@ -1,4 +1,4 @@
-import type { ReactNode, Ref } from 'react'
+import type { ComponentRef, ReactNode, Ref } from 'react'
 import type { PressableProps, StyleProp, View, ViewStyle } from 'react-native'
 import type { AnimatedStyle } from 'react-native-reanimated'
 
@@ -67,7 +67,7 @@ type ChipBaseProps = Omit<PressableProps, 'children' | 'disabled' | 'style'> & {
    * @default false
    */
   readonly isDisabled?: boolean
-  readonly ref?: Ref<View>
+  readonly ref?: Ref<ComponentRef<typeof View>>
   readonly style?: StyleProp<ViewStyle>
 }
 

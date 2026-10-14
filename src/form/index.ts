@@ -1,4 +1,4 @@
-import type { RefObject } from 'react'
+import type { ComponentRef, RefObject } from 'react'
 import type { TextInput } from 'react-native'
 
 import { createContext, use, useEffect, useId, useRef, useState } from 'react'
@@ -14,7 +14,7 @@ import { createContext, use, useEffect, useId, useRef, useState } from 'react'
 
 type FieldValidationOptions<T> = {
   /** The control a failed native submission focuses. */
-  readonly control: RefObject<null | TextInput>
+  readonly control: RefObject<ComponentRef<typeof TextInput> | null>
   /** The field's own error, which wins over anything the form says. */
   readonly error: string | undefined
   readonly isDisabled: boolean
@@ -113,7 +113,7 @@ function createRegistry(): FormRegistry {
 }
 
 // Focuses a field's control, through the ref the field holds it in.
-function focusOf(control: RefObject<null | TextInput>) {
+function focusOf(control: RefObject<ComponentRef<typeof TextInput> | null>) {
   return () => {
     control.current?.focus()
   }

@@ -81,8 +81,10 @@ async function setup(props: Partial<AvatarProps> = {}) {
   return render(<Avatar name="Ada Lovelace" testID="avatar" {...props} />)
 }
 
-function styleOf(element: { props: { style?: StyleProp<TextStyle> } }) {
-  return StyleSheet.flatten([element.props.style])
+function styleOf(element: {
+  props: { style?: StyleProp<TextStyle> }
+}): TextStyle {
+  return StyleSheet.flatten([element.props.style]) ?? {}
 }
 
 describe('Avatar', () => {

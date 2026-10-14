@@ -107,8 +107,8 @@ function fieldOf(props: Partial<NumberFieldProps>): ReactElement {
 
 function flatStyleOf(element: {
   props: { style?: StyleProp<TextStyle | ViewStyle> }
-}) {
-  return StyleSheet.flatten([element.props.style])
+}): TextStyle | ViewStyle {
+  return StyleSheet.flatten([element.props.style]) ?? {}
 }
 
 // What a stepper draws last: its glyph.
@@ -349,7 +349,7 @@ describe('NumberField', () => {
 
   it('puts the style and ref on the field, and hands inputRef the control', async () => {
     const ref = createRef<ComponentRef<typeof View>>()
-    const inputRef = createRef<TextInput>()
+    const inputRef = createRef<ComponentRef<typeof TextInput>>()
     await render(
       <NumberField
         inputRef={inputRef}

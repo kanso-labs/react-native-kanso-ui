@@ -23,6 +23,11 @@ export default {
       { outputDirectory: '.jest', outputName: 'test-results.junit.xml' },
     ],
   ],
+  // Reanimated's own resolver, which its testing guide names: it hands Jest the
+  // web implementation of Reanimated's initializers and of worklets, where the
+  // preset's platforms would pick the native files, whose native module Jest
+  // has none of.
+  resolver: 'react-native-reanimated/jest/resolver',
   // Gesture Handler's own mocks for its native module and components, which
   // its testing guide loads before anything imports the package.
   setupFiles: ['react-native-gesture-handler/jestSetup.js'],

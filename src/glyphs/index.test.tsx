@@ -73,7 +73,7 @@ function Probe() {
 }
 
 function transformOf(element: { props: { style?: StyleProp<ViewStyle> } }) {
-  return StyleSheet.flatten(element.props.style).transform
+  return StyleSheet.flatten(element.props.style)?.transform
 }
 
 afterEach(() => {
