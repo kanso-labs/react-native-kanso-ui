@@ -7,6 +7,12 @@ export type {
   ButtonSize,
   ButtonVariant,
 } from './components/button'
+export { IconButton } from './components/icon-button'
+export type {
+  IconButtonProps,
+  IconButtonSize,
+  IconButtonVariant,
+} from './components/icon-button'
 export { Separator } from './components/separator'
 export type { SeparatorInset, SeparatorProps } from './components/separator'
 export { Stack } from './components/stack'

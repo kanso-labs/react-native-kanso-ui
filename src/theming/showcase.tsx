@@ -5,9 +5,11 @@ import { StyleSheet, View } from 'react-native'
 import type { DemoThemeName } from './themes'
 
 import { Button } from '../components/button'
+import { IconButton } from '../components/icon-button'
 import { Separator } from '../components/separator'
 import { Stack } from '../components/stack'
 import { Text } from '../components/text'
+import { PlusGlyph } from '../glyphs'
 import { useTheme } from '../theme/scope'
 import { themedStyles } from '../theme/styles'
 import { demoThemes } from './themes'
@@ -43,6 +45,10 @@ const LIBRARY_DARK = {
     "The library's own dark theme: the default tokens' dark half, with nothing overridden.",
   label: 'Dark',
 }
+
+// The icon the icon buttons hold, the library's own plus, which reads its
+// colour and size from the button around it.
+const PLUS = <PlusGlyph />
 
 const stylesOf = themedStyles(({ colors, radii, spacing }) =>
   StyleSheet.create({
@@ -168,6 +174,30 @@ function Showcase({ name }: ShowcaseProps) {
             Label
           </Button>
           <Button isDisabled>Label</Button>
+        </View>
+      </Section>
+
+      <Section
+        description="The button's variants again at the icon's own size. A chosen toggle takes a second pair of roles and rests at the squarer corner."
+        title="IconButton"
+      >
+        <View style={styles.row}>
+          <IconButton aria-label="Add">{PLUS}</IconButton>
+          <IconButton aria-label="Add" variant="outlined">
+            {PLUS}
+          </IconButton>
+          <IconButton aria-label="Add" variant="tonal">
+            {PLUS}
+          </IconButton>
+          <IconButton aria-label="Add" variant="filled">
+            {PLUS}
+          </IconButton>
+          <IconButton aria-label="Add" defaultSelected={false}>
+            {PLUS}
+          </IconButton>
+          <IconButton aria-label="Add" defaultSelected variant="tonal">
+            {PLUS}
+          </IconButton>
         </View>
       </Section>
 

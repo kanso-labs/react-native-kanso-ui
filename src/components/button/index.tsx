@@ -1,38 +1,39 @@
 import type { ReactNode, Ref } from 'react'
 import type {
-  GestureResponderEvent,
-  LayoutChangeEvent,
   PressableProps,
   StyleProp,
   TextStyle,
   View,
   ViewStyle,
 } from 'react-native'
-import type { AnimatedStyle, SharedValue } from 'react-native-reanimated'
+import type { AnimatedStyle } from 'react-native-reanimated'
 
-import { useState } from 'react'
-import {
-  Text as NativeText,
-  Platform,
-  Pressable,
-  StyleSheet,
-} from 'react-native'
-import Animated, {
-  Easing,
-  useAnimatedStyle,
-  useReducedMotion,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated'
+import { Text as NativeText, StyleSheet } from 'react-native'
+import Animated from 'react-native-reanimated'
 
+import type {
+  ButtonLinkForm,
+  ButtonPressForm,
+  ButtonToggleForm,
+} from '../../button'
+import type { PaletteName } from '../../button/palettes'
 import type { IconStyle } from '../../glyphs/icon-style'
 import type { ResolvedTheme } from '../../theme/scope'
 import type { TypeRole } from '../../typography/roles'
 
+import {
+  AnimatedPressable,
+  buttonStyles,
+  HEIGHTS,
+  OUTLINE_WIDTHS,
+  PRESSED_CORNERS,
+  toggleState,
+  useButtonAction,
+  useCorner,
+} from '../../button'
+import { palettesOf } from '../../button/palettes'
 import { IconStyleContext } from '../../glyphs/icon-style'
 import { hitSlop, usePressFeedback } from '../../press'
-import { useOpenLink } from '../../router'
-import { withOpacity } from '../../theme/color'
 import { useTheme } from '../../theme/scope'
 import { composeStyles, themedStyles } from '../../theme/styles'
 import { useTypeRole } from '../../typography/roles'
@@ -56,11 +57,10 @@ import { useTypeRole } from '../../typography/roles'
 //
 // **Disabled is the page's colour at an opacity, translucent.** A container
 // is on-surface at the `disabledContainer` opacity, and the label on-surface
-// at `disabledContent`. Web mixes both over the surface role, since a
-// `color-mix()` needs a colour to mix with; React Native has none, and the
-// page gives the two as opacities over whatever the button sits on, which is
-// what they are drawn as here. Disabled drops the shadow, since a shadow says
-// a control is there to press.
+// at `disabledContent`, over whatever the button sits on rather than mixed
+// over the surface role as web's are; src/button/palettes.ts gives the
+// reason. Disabled drops the shadow, since a shadow says a control is there
+// to press.
 //
 // **A toggle is the same button reporting a state.** Given `isSelected`,
 // `defaultSelected` or `onChange` it takes the page's second pair of colour
@@ -75,12 +75,11 @@ import { useTypeRole } from '../../typography/roles'
 // pill and `square` at the size's square corner: 12dp up to the page's S,
 // 16dp at M and 28dp above. A press tightens either to the size's pressed
 // corner, 8dp, 12dp or 16dp, and a toggle trades its shape for the other
-// once selected. The corner eases over the motion tokens' short duration on
-// the emphasised curve, through Reanimated, and moves at once for a reader
-// who asks the device for reduced motion. The pill is the radius scale's
-// `pill`, far larger than any button, so the morph runs from half the
-// button's measured height rather than from that: otherwise the corner would
-// hold the pill for most of the ease and jump at its end.
+// once selected. The corner eases through Reanimated, as src/button's
+// `useCorner` sets out.
+//
+// The forms, the toggle's state, what a press does and the corner's ease are
+// src/button's, shared with IconButton.
 
 type ButtonForm =
   | ButtonLinkForm
@@ -92,31 +91,6 @@ type ButtonForm =
        */
       readonly variant?: Exclude<ButtonVariant, 'text'>
     })
-
-/**
- * The three forms a button takes, of which a call site writes exactly one: a
- * plain button, a link, or a toggle. Each names the props of the other two as
- * `never`, so a toggle given `href` is a compile error rather than a prop that
- * silently does nothing.
- */
-type ButtonLinkForm = {
-  readonly defaultSelected?: never
-  /**
-   * Where the button leads. Given one, a press opens it through the
-   * `RouterProvider` around the button, or through the platform for a URL
-   * with a scheme of its own, and the button is announced as a link.
-   */
-  readonly href: string
-  readonly isSelected?: never
-  readonly onChange?: never
-}
-
-type ButtonPressForm = {
-  readonly defaultSelected?: never
-  readonly href?: never
-  readonly isSelected?: never
-  readonly onChange?: never
-}
 
 type ButtonProps = ButtonForm &
   Omit<PressableProps, 'children' | 'disabled' | 'style'> & {
@@ -172,59 +146,7 @@ type ButtonShape = 'round' | 'square'
 
 type ButtonSize = 'lg' | 'md' | 'xl' | 'xs' | 'xxl'
 
-type ButtonToggleForm = {
-  /**
-   * Whether a toggle starts selected, when it keeps its own state. Passing
-   * this, `isSelected` or `onChange` is what makes the button a toggle.
-   */
-  readonly defaultSelected?: boolean
-  readonly href?: never
-  /**
-   * Whether a toggle is selected, when the call site holds the state. Pass
-   * it with `onChange`; passing this, `defaultSelected` or `onChange` is what
-   * makes the button a toggle.
-   */
-  readonly isSelected?: boolean
-  /**
-   * Called with the new state when a toggle is pressed, after `onPress`.
-   * Passing this, `isSelected` or `defaultSelected` is what makes the button
-   * a toggle.
-   */
-  readonly onChange?: (isSelected: boolean) => void
-}
-
 type ButtonVariant = 'elevated' | 'filled' | 'outlined' | 'text' | 'tonal'
-
-/** What a container draws: its own style, and the colour of what is on it. */
-type Palette = {
-  readonly container: ViewStyle
-  readonly content: string
-  readonly label: TextStyle
-}
-
-// Every container a button draws, by the name web's styles give it. Three of
-// a toggle's eight are the plain button's own: an unselected tonal, elevated
-// or outlined toggle is the tonal, elevated or outlined button.
-type PaletteName =
-  | 'elevated'
-  | 'elevatedToggleSelected'
-  | 'filled'
-  | 'filledDisabled'
-  | 'filledToggle'
-  | 'filledToggleSelected'
-  | 'outlined'
-  | 'outlinedDisabled'
-  | 'outlinedToggleSelected'
-  | 'text'
-  | 'textDisabled'
-  | 'tonal'
-  | 'tonalToggleSelected'
-
-/** How a toggle reports its state to a screen reader. */
-type ToggleState = {
-  readonly 'aria-pressed'?: boolean
-  readonly 'aria-selected'?: boolean
-}
 
 type ToggleVariant = Exclude<ButtonVariant, 'text'>
 
@@ -238,15 +160,6 @@ const DISABLED: Readonly<Record<ButtonVariant, PaletteName>> = {
   tonal: 'filledDisabled',
 }
 
-// The control height each size reads, for the target it is brought up to.
-const HEIGHTS = {
-  lg: 'controlLg',
-  md: 'controlSm',
-  xl: 'controlXl',
-  xs: 'controlXs',
-  xxl: 'controlXxl',
-} as const satisfies Record<ButtonSize, keyof ResolvedTheme['sizing']>
-
 // The icon each size draws, from the page's size token sets. Literals, as on
 // web: they are icon sizes, which the theme has no scale for.
 const ICON_SIZES: Readonly<Record<ButtonSize, number>> = {
@@ -256,25 +169,6 @@ const ICON_SIZES: Readonly<Record<ButtonSize, number>> = {
   xs: 20,
   xxl: 40,
 }
-
-// The outlined button's rule thickens with the size, as the page's size
-// tokens have it: 1dp up to M, 2dp at L, 3dp at XL.
-const OUTLINE_WIDTHS: Readonly<Record<ButtonSize, number>> = {
-  lg: 1,
-  md: 1,
-  xl: 2,
-  xs: 1,
-  xxl: 3,
-}
-
-// The corner each size presses to, whatever its shape.
-const PRESSED_CORNERS = {
-  lg: 'md',
-  md: 'sm',
-  xl: 'lg',
-  xs: 'sm',
-  xxl: 'lg',
-} as const satisfies Record<ButtonSize, keyof ResolvedTheme['radii']>
 
 // The type role each size sets its label in, taken whole: label-large for the
 // two small sizes, then title-medium, headline-small and headline-large.
@@ -309,16 +203,6 @@ const TOGGLE_PALETTES: Readonly<
   tonal: { selected: 'tonalToggleSelected', unselected: 'tonal' },
 }
 
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable)
-
-// Web's toggle reports `aria-pressed`, which React Native Web writes onto the
-// element. React Native has no pressed state to report, and reports the
-// selected one instead, which VoiceOver and TalkBack both read out.
-const toggleState = Platform.select<(selected: boolean) => ToggleState>({
-  default: (selected) => ({ 'aria-selected': selected }),
-  web: (selected) => ({ 'aria-pressed': selected }),
-})
-
 const styles = StyleSheet.create({
   // The label sits in the middle of a button wider than it, one stretched by
   // a column or given a width, as the page draws every button, and a button
@@ -328,17 +212,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     maxWidth: '100%',
-  },
-  // Clips the state layer and the ripple to the corner as it morphs, and
-  // takes no touches.
-  clip: {
-    bottom: 0,
-    left: 0,
-    overflow: 'hidden',
-    pointerEvents: 'none',
-    position: 'absolute',
-    right: 0,
-    top: 0,
   },
   icon: {
     alignItems: 'center',
@@ -362,62 +235,6 @@ function inlinePaddings({
 }: ResolvedTheme): Readonly<Record<ButtonSize, number>> {
   return { lg: spacing.xl, md: spacing.lg, xl: 48, xs: spacing.md, xxl: 64 }
 }
-
-function palette(content: string, container: ViewStyle = {}): Palette {
-  return { container, content, label: { color: content } }
-}
-
-const palettesOf = themedStyles(
-  ({ colors, stateLayerOpacity }): Readonly<Record<PaletteName, Palette>> => {
-    const disabledContainer = withOpacity(
-      colors.onSurface,
-      stateLayerOpacity.disabledContainer,
-    )
-    const disabledContent = withOpacity(
-      colors.onSurface,
-      stateLayerOpacity.disabledContent,
-    )
-
-    return {
-      elevated: palette(colors.primary, {
-        backgroundColor: colors.surfaceContainerLow,
-      }),
-      elevatedToggleSelected: palette(colors.onPrimary, {
-        backgroundColor: colors.primary,
-      }),
-      filled: palette(colors.onPrimary, { backgroundColor: colors.primary }),
-      filledDisabled: palette(disabledContent, {
-        backgroundColor: disabledContainer,
-      }),
-      filledToggle: palette(colors.onSurfaceVariant, {
-        backgroundColor: colors.surfaceContainer,
-      }),
-      filledToggleSelected: palette(colors.onPrimary, {
-        backgroundColor: colors.primary,
-      }),
-      outlined: palette(colors.onSurfaceVariant, {
-        borderColor: colors.outlineVariant,
-      }),
-      outlinedDisabled: palette(disabledContent, {
-        borderColor: disabledContainer,
-      }),
-      // The rule keeps its width, drawn transparent, so a toggle does not
-      // change size as it is selected.
-      outlinedToggleSelected: palette(colors.inverseOnSurface, {
-        backgroundColor: colors.inverseSurface,
-        borderColor: 'transparent',
-      }),
-      text: palette(colors.primary),
-      textDisabled: palette(disabledContent),
-      tonal: palette(colors.onSecondaryContainer, {
-        backgroundColor: colors.secondaryContainer,
-      }),
-      tonalToggleSelected: palette(colors.onSecondary, {
-        backgroundColor: colors.secondary,
-      }),
-    }
-  },
-)
 
 const shadowsOf = themedStyles(({ shadows }) =>
   StyleSheet.create({
@@ -537,11 +354,7 @@ function Button({
   ...props
 }: ButtonProps) {
   const theme = useTheme()
-  const reduceMotion = useReducedMotion()
-  const openLink = useOpenLink()
   const role = useTypeRole(ROLES[size])
-  const [ownSelected, setOwnSelected] = useState(defaultSelected ?? false)
-  const height = useSharedValue(0)
 
   // The three props that make this a toggle, read as web reads them. The
   // types keep them off a `text` button; the check here keeps a call site
@@ -551,13 +364,22 @@ function Button({
     (defaultSelected !== undefined ||
       isSelected !== undefined ||
       onChange !== undefined)
-  const selected = isToggle && (isSelected ?? ownSelected)
+  const action = useButtonAction({
+    defaultSelected,
+    href,
+    isSelected,
+    isToggle,
+    onChange,
+    onPress,
+  })
   const colors =
     palettesOf(theme)[
       isDisabled
         ? DISABLED[variant]
         : variant !== 'text' && isToggle
-          ? TOGGLE_PALETTES[variant][selected ? 'selected' : 'unselected']
+          ? TOGGLE_PALETTES[variant][
+              action.selected ? 'selected' : 'unselected'
+            ]
           : variant
     ]
 
@@ -573,58 +395,42 @@ function Button({
     onPressOut,
   })
 
-  const { motion, radii } = theme
+  const { radii } = theme
   const resting =
-    (shape === 'square') !== selected ? radii[SQUARE_CORNERS[size]] : radii.pill
-  const radius = feedback.pressed ? radii[PRESSED_CORNERS[size]] : resting
-  const timing = {
-    duration: motion.durationShort2,
-    easing: Easing.bezier(...motion.easingEmphasized),
-  }
-  const corner = useAnimatedStyle(() => {
-    'worklet'
-    const measured = height.get()
-    const target = measured > 0 ? Math.min(radius, measured / 2) : radius
-
-    return {
-      borderRadius: reduceMotion ? target : withTiming(target, timing),
-    }
-  })
-
-  // What a press does after the call site's own `onPress`: opens the link,
-  // or changes the toggle's state.
-  function follow() {
-    if (href !== undefined) {
-      openLink(href)
-    } else if (isToggle) {
-      setOwnSelected(!selected)
-      onChange?.(!selected)
-    }
-  }
+    (shape === 'square') !== action.selected
+      ? radii[SQUARE_CORNERS[size]]
+      : radii.pill
+  const shaped = useCorner(
+    feedback.pressed ? radii[PRESSED_CORNERS[size]] : resting,
+    onLayout,
+  )
 
   return (
     <AnimatedPressable
       role={href === undefined ? 'button' : 'link'}
-      {...(isToggle ? toggleState(selected) : undefined)}
+      {...(isToggle ? toggleState(action.selected) : undefined)}
       {...props}
       {...feedback.handlers}
       disabled={isDisabled}
       hitSlop={ownHitSlop ?? hitSlop(theme.sizing[HEIGHTS[size]])}
-      onLayout={measureThen(height, onLayout)}
-      onPress={pressThen(onPress, follow)}
+      onLayout={shaped.onLayout}
+      onPress={action.onPress}
       style={composeStyles<AnimatedStyle<ViewStyle>>(
         styles.base,
         sizesOf(theme)[size],
         variant === 'outlined' ? outlinedSizesOf(theme)[size] : undefined,
         colors.container,
         shadowOf(variant, feedback, isDisabled, theme),
-        corner,
+        shaped.corner,
         feedback.ring,
         style,
       )}
     >
       <Animated.View
-        style={composeStyles<AnimatedStyle<ViewStyle>>(styles.clip, corner)}
+        style={composeStyles<AnimatedStyle<ViewStyle>>(
+          buttonStyles.clip,
+          shaped.corner,
+        )}
       >
         {feedback.layer}
       </Animated.View>
@@ -646,30 +452,6 @@ function Button({
 
 function iconStyleOf(color: string, size: ButtonSize): IconStyle {
   return { color, size: ICON_SIZES[size] }
-}
-
-// Records the button's height for the corner, then calls the call site's own
-// `onLayout`. Built by a call rather than declared in the component, which is
-// what react-perf's jsx-no-new-function-as-prop is after; the React Compiler
-// memoises the result on its inputs.
-function measureThen(
-  height: SharedValue<number>,
-  onLayout: ButtonProps['onLayout'],
-) {
-  return (event: LayoutChangeEvent) => {
-    height.set(event.nativeEvent.layout.height)
-    onLayout?.(event)
-  }
-}
-
-// The call site's own `onPress` first, then what the button does with the
-// press, which is the order web reports them in. Built by a call for the
-// reason `measureThen` is.
-function pressThen(onPress: ButtonProps['onPress'], then: () => void) {
-  return (event: GestureResponderEvent) => {
-    onPress?.(event)
-    then()
-  }
 }
 
 // The shadow a variant draws in its state: elevated rests at 1 and rises to 2
