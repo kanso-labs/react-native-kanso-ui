@@ -8,13 +8,17 @@ import type { DemoThemeName } from './themes'
 import { Avatar } from '../components/avatar'
 import { Button } from '../components/button'
 import { Card } from '../components/card'
+import { Checkbox } from '../components/checkbox'
 import { Chip } from '../components/chip'
 import { ChipGroup } from '../components/chip-group'
+import { Currency } from '../components/currency'
 import { IconButton } from '../components/icon-button'
 import { Link } from '../components/link'
 import { ProductIcon } from '../components/product-icon'
+import { Radio, RadioGroup } from '../components/radio-group'
 import { Separator } from '../components/separator'
 import { Stack } from '../components/stack'
+import { Switch } from '../components/switch'
 import { Text } from '../components/text'
 import { PlusGlyph } from '../glyphs'
 import { useIconStyle } from '../glyphs/icon-style'
@@ -255,6 +259,18 @@ function Showcase({ name }: ShowcaseProps) {
       </Section>
 
       <Section
+        description="The box takes the on-surface-variant role while empty and the primary pair once marked, and the indeterminate dash takes that same pair."
+        title="Checkbox"
+      >
+        <View style={styles.row}>
+          <Checkbox>Label</Checkbox>
+          <Checkbox defaultSelected>Label</Checkbox>
+          <Checkbox isIndeterminate>Label</Checkbox>
+          <Checkbox isDisabled>Label</Checkbox>
+        </View>
+      </Section>
+
+      <Section
         description="A chip leans on the container roles, which is where a scheme's secondary family shows up; a selected one takes a pair of its own, an icon takes the primary role, and an elevated assist chip sits on the low container at elevation 1."
         title="Chip"
       >
@@ -284,6 +300,23 @@ function Showcase({ name }: ShowcaseProps) {
           <ChipGroup.Chip id="second">Second item</ChipGroup.Chip>
           <ChipGroup.Chip id="third">Third item</ChipGroup.Chip>
         </ChipGroup>
+      </Section>
+
+      <Section
+        description="An amount takes the positive or negative role from its sign, and tabular figures from the type scale, so a column of them lines up."
+        title="Currency"
+      >
+        <View style={styles.row}>
+          <Text variant="bodyLarge">
+            <Currency locale="en-US" value={1240.5} />
+          </Text>
+          <Text variant="bodyLarge">
+            <Currency currency="EUR" locale="en-US" value={-42} />
+          </Text>
+          <Text variant="bodyLarge">
+            <Currency locale="en-US" value={0} />
+          </Text>
+        </View>
       </Section>
 
       <Section
@@ -332,6 +365,17 @@ function Showcase({ name }: ShowcaseProps) {
       </Section>
 
       <Section
+        description="The ring takes the on-surface-variant role while empty and primary once chosen, the same pair the checkbox draws."
+        title="RadioGroup"
+      >
+        <RadioGroup defaultValue="second" label="Label">
+          <Radio value="first">First item</Radio>
+          <Radio value="second">Second item</Radio>
+          <Radio value="third">Third item</Radio>
+        </RadioGroup>
+      </Section>
+
+      <Section
         description="A rule is the same colour as a border, so it draws from the outline-variant role rather than one of its own. Full width, inset at the leading end, and inset at both."
         title="Separator"
       >
@@ -355,6 +399,18 @@ function Showcase({ name }: ShowcaseProps) {
           <Placeholder>Second item</Placeholder>
           <Placeholder>Third item</Placeholder>
         </Stack>
+      </Section>
+
+      <Section
+        description="The track takes its container while off and primary once on, with the handle on the matching on-role."
+        title="Switch"
+      >
+        <View style={styles.row}>
+          <Switch>Label</Switch>
+          <Switch defaultSelected icon>
+            Label
+          </Switch>
+        </View>
       </Section>
 
       <Section
