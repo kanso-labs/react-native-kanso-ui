@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import type { ColorValue, ViewStyle } from 'react-native'
 
 import { StyleSheet, View } from 'react-native'
 
@@ -7,14 +8,22 @@ import type { DemoThemeName } from './themes'
 import { Avatar } from '../components/avatar'
 import { Button } from '../components/button'
 import { Card } from '../components/card'
+import { Checkbox } from '../components/checkbox'
+import { Chip } from '../components/chip'
+import { ChipGroup } from '../components/chip-group'
+import { Currency } from '../components/currency'
 import { IconButton } from '../components/icon-button'
 import { Link } from '../components/link'
 import { ProductIcon } from '../components/product-icon'
+import { Radio, RadioGroup } from '../components/radio-group'
+import { SegmentedButton } from '../components/segmented-button'
 import { Separator } from '../components/separator'
 import { Stack } from '../components/stack'
+import { Switch } from '../components/switch'
 import { Text } from '../components/text'
 import { TextField } from '../components/text-field'
 import { PlusGlyph, SearchGlyph } from '../glyphs'
+import { useIconStyle } from '../glyphs/icon-style'
 import { useTheme } from '../theme/scope'
 import { themedStyles } from '../theme/styles'
 import { demoThemes } from './themes'
@@ -55,11 +64,18 @@ const AVATAR_TONES = [
 
 const CARD_VARIANTS = ['elevated', 'filled', 'outlined'] as const
 
+// The chip group's selection, the second of its three chips.
+const CHIP_SELECTION = ['second']
+
 const LIBRARY_DARK = {
   description:
     "The library's own dark theme: the default tokens' dark half, with nothing overridden.",
   label: 'Dark',
 }
+
+// The icon the chips hold: web's circle half the slot across, drawn as a view
+// in the colour and at the size the slot hands it.
+const DOT = <Dot />
 
 // The icon the icon buttons hold, the library's own plus, which reads its
 // colour and size from the button around it.
@@ -68,6 +84,10 @@ const PLUS = <PlusGlyph />
 // The text field's leading icon, the library's own search, which reads its
 // colour and size from the slot it sits in.
 const SEARCH = <SearchGlyph />
+
+// Hoisted so the keys are not a new array on every render, which is what
+// react-perf's no-new-array-as-prop is after.
+const SEGMENT_SELECTION = ['second']
 
 const stylesOf = themedStyles(({ colors, radii, spacing }) =>
   StyleSheet.create({
@@ -105,6 +125,21 @@ const stylesOf = themedStyles(({ colors, radii, spacing }) =>
   }),
 )
 
+function Dot() {
+  const { color, size } = useIconStyle()
+
+  return <View style={dotOf(color, size)} />
+}
+
+function dotOf(color: ColorValue | undefined, size: number): ViewStyle {
+  return {
+    backgroundColor: color,
+    borderRadius: size / 4,
+    height: size / 2,
+    width: size / 2,
+  }
+}
+
 function Item({ children }: PlaceholderProps) {
   const styles = stylesOf(useTheme())
 
@@ -126,6 +161,10 @@ function Placeholder({ children }: PlaceholderProps) {
     </View>
   )
 }
+
+// The chip group's close targets show what a scheme does to them, and the
+// page has nothing to remove a chip from.
+function removeNothing() {}
 
 // One component's entry. The rule is drawn here rather than between two
 // sections at the call site, so a section is one element and the page is the
@@ -230,6 +269,67 @@ function Showcase({ name }: ShowcaseProps) {
       </Section>
 
       <Section
+        description="The box takes the on-surface-variant role while empty and the primary pair once marked, and the indeterminate dash takes that same pair."
+        title="Checkbox"
+      >
+        <View style={styles.row}>
+          <Checkbox>Label</Checkbox>
+          <Checkbox defaultSelected>Label</Checkbox>
+          <Checkbox isIndeterminate>Label</Checkbox>
+          <Checkbox isDisabled>Label</Checkbox>
+        </View>
+      </Section>
+
+      <Section
+        description="A chip leans on the container roles, which is where a scheme's secondary family shows up; a selected one takes a pair of its own, an icon takes the primary role, and an elevated assist chip sits on the low container at elevation 1."
+        title="Chip"
+      >
+        <View style={styles.row}>
+          <Chip icon={DOT}>First item</Chip>
+          <Chip defaultSelected icon={DOT}>
+            Second item
+          </Chip>
+          <Chip>Third item</Chip>
+          <Chip elevated icon={DOT} variant="assist">
+            Fourth item
+          </Chip>
+        </View>
+      </Section>
+
+      <Section
+        description="The same chip under a field label, selectable and removable, with the remove control taking the chip's own text role."
+        title="ChipGroup"
+      >
+        <ChipGroup
+          defaultSelectedKeys={CHIP_SELECTION}
+          label="Label"
+          onRemove={removeNothing}
+          selectionMode="multiple"
+        >
+          <ChipGroup.Chip id="first">First item</ChipGroup.Chip>
+          <ChipGroup.Chip id="second">Second item</ChipGroup.Chip>
+          <ChipGroup.Chip id="third">Third item</ChipGroup.Chip>
+        </ChipGroup>
+      </Section>
+
+      <Section
+        description="An amount takes the positive or negative role from its sign, and tabular figures from the type scale, so a column of them lines up."
+        title="Currency"
+      >
+        <View style={styles.row}>
+          <Text variant="bodyLarge">
+            <Currency locale="en-US" value={1240.5} />
+          </Text>
+          <Text variant="bodyLarge">
+            <Currency currency="EUR" locale="en-US" value={-42} />
+          </Text>
+          <Text variant="bodyLarge">
+            <Currency locale="en-US" value={0} />
+          </Text>
+        </View>
+      </Section>
+
+      <Section
         description="The button's variants again at the icon's own size. A chosen toggle takes a second pair of roles and rests at the squarer corner."
         title="IconButton"
       >
@@ -275,6 +375,37 @@ function Showcase({ name }: ShowcaseProps) {
       </Section>
 
       <Section
+        description="The ring takes the on-surface-variant role while empty and primary once chosen, the same pair the checkbox draws."
+        title="RadioGroup"
+      >
+        <RadioGroup defaultValue="second" label="Label">
+          <Radio value="first">First item</Radio>
+          <Radio value="second">Second item</Radio>
+          <Radio value="third">Third item</Radio>
+        </RadioGroup>
+      </Section>
+
+      <Section
+        description="One container for the whole strip, with the chosen segment on a pair of its own and a rule between each pair of segments."
+        title="SegmentedButton"
+      >
+        <SegmentedButton
+          aria-label="Label"
+          defaultSelectedKeys={SEGMENT_SELECTION}
+        >
+          <SegmentedButton.Segment id="first">
+            First item
+          </SegmentedButton.Segment>
+          <SegmentedButton.Segment id="second">
+            Second item
+          </SegmentedButton.Segment>
+          <SegmentedButton.Segment id="third">
+            Third item
+          </SegmentedButton.Segment>
+        </SegmentedButton>
+      </Section>
+
+      <Section
         description="A rule is the same colour as a border, so it draws from the outline-variant role rather than one of its own. Full width, inset at the leading end, and inset at both."
         title="Separator"
       >
@@ -298,6 +429,18 @@ function Showcase({ name }: ShowcaseProps) {
           <Placeholder>Second item</Placeholder>
           <Placeholder>Third item</Placeholder>
         </Stack>
+      </Section>
+
+      <Section
+        description="The track takes its container while off and primary once on, with the handle on the matching on-role."
+        title="Switch"
+      >
+        <View style={styles.row}>
+          <Switch>Label</Switch>
+          <Switch defaultSelected icon>
+            Label
+          </Switch>
+        </View>
       </Section>
 
       <Section
