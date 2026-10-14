@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react'
 import type { ColorValue, StyleProp, ViewStyle } from 'react-native'
+import type { SvgProps } from 'react-native-svg'
 
-import { I18nManager, StyleSheet } from 'react-native'
+import { I18nManager, Platform, StyleSheet } from 'react-native'
 import Svg, { Path } from 'react-native-svg'
 
 import { useIconStyle } from './icon-style'
@@ -26,6 +27,18 @@ type GlyphProps = {
   readonly style?: StyleProp<ViewStyle>
   readonly testID?: string
 }
+
+// What hides a glyph from screen readers. On iOS and Android that is React
+// Native's two props, one for VoiceOver and one for TalkBack. Under React
+// Native Web, react-native-svg hands its props to the `<svg>` as they are, so
+// it is `aria-hidden` there, which is the one the browser reads.
+const HIDDEN = Platform.select<SvgProps>({
+  default: {
+    accessibilityElementsHidden: true,
+    importantForAccessibility: 'no-hide-descendants',
+  },
+  web: { 'aria-hidden': true },
+})
 
 // What a search view's back button draws, pointing at the page it returns to.
 // It says "back" rather than "to the left", so it mirrors under a right-to-left
@@ -140,11 +153,10 @@ function Glyph({
   const side = size ?? slot.size
   return (
     <Svg
-      accessibilityElementsHidden
+      {...HIDDEN}
       color={color ?? slot.color}
       fill="currentColor"
       height={side}
-      importantForAccessibility="no-hide-descendants"
       style={StyleSheet.compose(
         mirrored && I18nManager.isRTL ? glyphStyles.mirrored : undefined,
         style,
