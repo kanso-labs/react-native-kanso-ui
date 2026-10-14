@@ -45,6 +45,11 @@ A value React Native cannot evaluate, such as a `calc()` or a `color-mix()`,
 keeps its property at the library's default, and a development build names it in
 a warning.
 
+The outermost `ThemeScope` also hosts what the library draws above the screen,
+over everything inside it, so it belongs at the root of the app and fills it, as
+the one above does. What draws there follows the scope it was opened in rather
+than the root's.
+
 ### Fonts
 
 Neither package ships a font. On iOS and Android a type role draws in the first
@@ -68,13 +73,29 @@ Under React Native Web the token's whole list goes to CSS, as it does on web.
 
 Beside `react` and `react-native`, the package needs `react-native-reanimated`,
 which animates the ripple its controls draw when pressed and the corner a button
-morphs between, the `react-native-worklets` Reanimated runs on, and
-`react-native-svg`, which draws the icons its controls show. In an Expo app,
-`npx expo install react-native-reanimated react-native-svg react-native-worklets`
+morphs between, the `react-native-worklets` Reanimated runs on,
+`react-native-svg`, which draws the icons its controls show,
+`react-native-safe-area-context`, whose insets keep what the library draws above
+the screen clear of a notch, the status bar and the home indicator, and
+`react-native-gesture-handler`, which carries a switch's handle across its track
+when it is dragged. In an Expo app,
+
+```bash
+npx expo install react-native-gesture-handler react-native-reanimated react-native-safe-area-context react-native-svg react-native-worklets
+```
+
 installs the versions the SDK ships with, and Expo's Babel preset compiles the
 package's animations. Outside Expo, Reanimated's install guide adds
 `react-native-worklets/plugin` to the app's Babel configuration, which does the
 same.
+
+The insets come from safe-area-context's `SafeAreaProvider`, which Expo Router
+puts around an app already; elsewhere, wrap the app in one. Without it, the
+library keeps to the window's edge.
+
+Gesture Handler 2 and 3 both satisfy the peer. A `Switch` draws Gesture
+Handler's root view around its own track, so an app need not wrap itself in
+`GestureHandlerRootView` for it, and one that already does loses nothing.
 
 ## Routing
 

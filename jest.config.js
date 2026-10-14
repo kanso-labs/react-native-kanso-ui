@@ -12,13 +12,16 @@ export default {
   ],
   coverageReporters: ['text', 'cobertura'],
   preset: '@react-native/jest-preset',
+  // Gesture Handler's own mocks for its native module and components, which
+  // its testing guide loads before anything imports the package.
+  setupFiles: ['react-native-gesture-handler/jestSetup.js'],
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   testMatch: ['<rootDir>/src/**/*.test.{ts,tsx}'],
-  // The preset's own pattern, with Reanimated, worklets and Storybook's
-  // packages added: all of them ship ES modules, which Jest runs only once
+  // The preset's own pattern, with Gesture Handler, Reanimated, worklets and
+  // Storybook's packages added: all of them ship ES modules, which Jest runs only once
   // Babel has transformed them, as Metro does in an app, and
   // src/stories.test.tsx renders every story through Storybook's.
   transformIgnorePatterns: [
-    'node_modules/(?!((jest-)?react-native(-reanimated|-worklets)?|@react-native(-community)?|storybook|@storybook)/)',
+    'node_modules/(?!((jest-)?react-native(-gesture-handler|-reanimated|-worklets)?|@react-native(-community)?|storybook|@storybook)/)',
   ],
 }
