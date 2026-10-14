@@ -10,6 +10,7 @@ import { Card } from '../components/card'
 import { IconButton } from '../components/icon-button'
 import { Link } from '../components/link'
 import { ProductIcon } from '../components/product-icon'
+import { SearchField } from '../components/search-field'
 import { Separator } from '../components/separator'
 import { Stack } from '../components/stack'
 import { Text } from '../components/text'
@@ -272,6 +273,20 @@ function Showcase({ name }: ShowcaseProps) {
           ))}
           <ProductIcon name="Label" size="lg" />
         </View>
+      </Section>
+
+      <Section
+        description="The field with a glyph at its leading edge, which takes the same muted role the supporting text does, and a ring in the error role once there is a message."
+        title="SearchField"
+      >
+        <Stack gap="md">
+          <SearchField label="Label" placeholder="Supporting text" />
+          <SearchField
+            error="Supporting line"
+            label="Label"
+            placeholder="Supporting text"
+          />
+        </Stack>
       </Section>
 
       <Section
