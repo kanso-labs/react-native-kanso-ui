@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import type { LayoutChangeEvent, ViewStyle } from 'react-native'
 import type { AnimatedStyle, SharedValue } from 'react-native-reanimated'
 
+import { NumberFormatter } from '@internationalized/number'
 import { useEffect, useState } from 'react'
 import { View } from 'react-native'
 import Animated, {
@@ -14,6 +15,7 @@ import Animated, {
 
 import { Text } from '../components/text'
 import { useIconStyle } from '../glyphs/icon-style'
+import { localeOf } from '../number/locale'
 import { withOpacity } from '../theme/color'
 import { useTheme } from '../theme/scope'
 import { composeStyles } from '../theme/styles'
@@ -170,6 +172,39 @@ function IndicatorLine({
 }
 
 /**
+ * The value as React Aria's `useProgressBar` and `useMeter` read it: clamped to the range,
+ * as a percentage of it, and written out by `formatOptions` in the locale,
+ * the share of the range under a percent style and the value itself under
+ * any other, unless `valueLabel` says it in words.
+ */
+function readingOf({
+  formatOptions = { style: 'percent' },
+  locale,
+  maxValue,
+  minValue,
+  value,
+  valueLabel,
+}: {
+  readonly formatOptions: Intl.NumberFormatOptions | undefined
+  readonly locale: string | undefined
+  readonly maxValue: number
+  readonly minValue: number
+  readonly value: number
+  readonly valueLabel: string | undefined
+}) {
+  const clamped = Math.min(Math.max(value, minValue), maxValue)
+  const range = maxValue - minValue
+  const share = range === 0 ? 0 : (clamped - minValue) / range
+  const text =
+    valueLabel ??
+    new NumberFormatter(localeOf(locale), formatOptions).format(
+      formatOptions.style === 'percent' ? share : clamped,
+    )
+
+  return { percentage: share * 100, text, value: clamped }
+}
+
+/**
  * A value that moves to each new target over `timing`, or jumps to it while
  * the reader has asked for reduced motion, as web's transition drops to `0s`
  * there. It starts at its first target, so nothing moves as it mounts.
@@ -229,6 +264,7 @@ export {
   fillOf,
   IndicatorLabels,
   IndicatorLine,
+  readingOf,
   useEased,
   useIndicatorColors,
   useMeasuredWidth,

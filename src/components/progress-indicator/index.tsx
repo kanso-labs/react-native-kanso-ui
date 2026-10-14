@@ -7,7 +7,6 @@ import type {
 } from 'react-native'
 import type { AnimatedStyle, SharedValue } from 'react-native-reanimated'
 
-import { NumberFormatter } from '@internationalized/number'
 import { I18nManager, StyleSheet, View } from 'react-native'
 import Animated, {
   useAnimatedProps,
@@ -27,6 +26,7 @@ import {
   fillOf,
   IndicatorLabels,
   IndicatorLine,
+  readingOf,
   useEased,
   useIndicatorColors,
   useMeasuredWidth,
@@ -46,7 +46,6 @@ import {
   stylesOf as indicatorStylesOf,
   THICKNESS,
 } from '../../indicator/styles'
-import { localeOf } from '../../number/locale'
 import { parseLength } from '../../theme/resolve'
 import { useTheme } from '../../theme/scope'
 import { composeStyles, themedStyles } from '../../theme/styles'
@@ -908,39 +907,6 @@ function ProgressIndicator({
       )}
     </View>
   )
-}
-
-/**
- * The value as React Aria's `useProgressBar` reads it: clamped to the range,
- * as a percentage of it, and written out by `formatOptions` in the locale,
- * the share of the range under a percent style and the value itself under
- * any other, unless `valueLabel` says it in words.
- */
-function readingOf({
-  formatOptions = { style: 'percent' },
-  locale,
-  maxValue,
-  minValue,
-  value,
-  valueLabel,
-}: {
-  readonly formatOptions: Intl.NumberFormatOptions | undefined
-  readonly locale: string | undefined
-  readonly maxValue: number
-  readonly minValue: number
-  readonly value: number
-  readonly valueLabel: string | undefined
-}) {
-  const clamped = Math.min(Math.max(value, minValue), maxValue)
-  const range = maxValue - minValue
-  const share = range === 0 ? 0 : (clamped - minValue) / range
-  const text =
-    valueLabel ??
-    new NumberFormatter(localeOf(locale), formatOptions).format(
-      formatOptions.style === 'percent' ? share : clamped,
-    )
-
-  return { percentage: share * 100, text, value: clamped }
 }
 
 /**
