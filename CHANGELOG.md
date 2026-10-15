@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.3.0](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.2.0...v0.3.0) (2026-10-15)
+
+
+### Features
+
+* **dialog:** add Dialog component ([#108](https://github.com/kanso-labs/react-native-kanso-ui/issues/108)) ([f97c1e7](https://github.com/kanso-labs/react-native-kanso-ui/commit/f97c1e7dc1de36c92db3082baa8b3859f1128d42))
+
+
+### Dependencies
+
+* update dependency @kanso-labs/kanso-ui to v0.43.3 ([#109](https://github.com/kanso-labs/react-native-kanso-ui/issues/109)) ([f0a9e72](https://github.com/kanso-labs/react-native-kanso-ui/commit/f0a9e7208c25b03f7121baad60c1436913707150))
+* update dependency @kanso-labs/unplugin-style-dictionary to v0.10.30 ([#110](https://github.com/kanso-labs/react-native-kanso-ui/issues/110)) ([8b6db11](https://github.com/kanso-labs/react-native-kanso-ui/commit/8b6db1190076b8ba943612bd845fe644900c84e2))
+* update dependency expo to v57.0.29 ([#111](https://github.com/kanso-labs/react-native-kanso-ui/issues/111)) ([e00057b](https://github.com/kanso-labs/react-native-kanso-ui/commit/e00057bb9adc014ccc998cf2347e1e3b3d5a0242))
+* update kanso-labs/actions action to v4.2.5 ([#112](https://github.com/kanso-labs/react-native-kanso-ui/issues/112)) ([aef77b4](https://github.com/kanso-labs/react-native-kanso-ui/commit/aef77b40bdf04d51ab71c2b4636f7780121d54ba))
+* update react-native ([#113](https://github.com/kanso-labs/react-native-kanso-ui/issues/113)) ([3587131](https://github.com/kanso-labs/react-native-kanso-ui/commit/3587131347ea63cbb927aae1f4f9b8764e16ba83))
+* update react-native ([#93](https://github.com/kanso-labs/react-native-kanso-ui/issues/93)) ([5d19a6f](https://github.com/kanso-labs/react-native-kanso-ui/commit/5d19a6f08f2874c38ca25948494f60337b91769d))
+* update react-native to v0.88.0 ([#114](https://github.com/kanso-labs/react-native-kanso-ui/issues/114)) ([d724ca8](https://github.com/kanso-labs/react-native-kanso-ui/commit/d724ca83b39ab6e6a4d8b1757987b655540c41ef))
+
 ## [0.2.0](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.1.1...v0.2.0) (2026-10-14)
 
 
