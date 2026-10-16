@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.4.0](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.3.1...v0.4.0) (2026-10-16)
+
+
+### Features
+
+* **sheet:** add Sheet component ([#129](https://github.com/kanso-labs/react-native-kanso-ui/issues/129)) ([e9b2508](https://github.com/kanso-labs/react-native-kanso-ui/commit/e9b2508c408d48dd4a6464055c7596870a9417ae))
+
+
+### Dependencies
+
+* update dependency @kanso-labs/unplugin-style-dictionary to v0.10.32 ([#125](https://github.com/kanso-labs/react-native-kanso-ui/issues/125)) ([ace2cab](https://github.com/kanso-labs/react-native-kanso-ui/commit/ace2cab03bcb6d63cb53cafbeb0ed1a1e450818f))
+* update dependency eslint to v10.13.0 ([#126](https://github.com/kanso-labs/react-native-kanso-ui/issues/126)) ([cfae6ec](https://github.com/kanso-labs/react-native-kanso-ui/commit/cfae6ece333951db41992147ee226cd983f09850))
+* update dependency react-native-gesture-handler to v2.33.1 ([#123](https://github.com/kanso-labs/react-native-kanso-ui/issues/123)) ([04022f4](https://github.com/kanso-labs/react-native-kanso-ui/commit/04022f4d1776111b5592cd5846738f3b16b20fa8))
+* update dependency react-native-gesture-handler to v3 ([#94](https://github.com/kanso-labs/react-native-kanso-ui/issues/94)) ([8664dad](https://github.com/kanso-labs/react-native-kanso-ui/commit/8664dade1b447abd5d65c5856026300d2e4b32f4))
+* update dependency react-native-gesture-handler to v3.4.0 ([#127](https://github.com/kanso-labs/react-native-kanso-ui/issues/127)) ([b24f4b0](https://github.com/kanso-labs/react-native-kanso-ui/commit/b24f4b01745fde0c9af50cb7d7743b1e0bec5a6e))
+* update dependency react-native-svg to v15.16.0 ([#120](https://github.com/kanso-labs/react-native-kanso-ui/issues/120)) ([811a3f8](https://github.com/kanso-labs/react-native-kanso-ui/commit/811a3f8626a7d4aeadc4891fbabf60867b75b3d7))
+* update example app to v58 ([#122](https://github.com/kanso-labs/react-native-kanso-ui/issues/122)) ([27294b5](https://github.com/kanso-labs/react-native-kanso-ui/commit/27294b521556d3b880d13b3095d5b907fb547757))
+
 ## [0.3.1](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.3.0...v0.3.1) (2026-10-16)
 
 
