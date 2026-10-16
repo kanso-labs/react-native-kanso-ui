@@ -25,6 +25,7 @@ import { Radio, RadioGroup } from '../components/radio-group'
 import { SearchField } from '../components/search-field'
 import { SegmentedButton } from '../components/segmented-button'
 import { Separator } from '../components/separator'
+import { Sheet } from '../components/sheet'
 import { Snackbar } from '../components/snackbar'
 import { Stack } from '../components/stack'
 import { Switch } from '../components/switch'
@@ -545,6 +546,37 @@ function Showcase({ name }: ShowcaseProps) {
           <Separator inset="both" />
           <Item>Fourth item</Item>
         </Card>
+      </Section>
+
+      <Section
+        description="A sheet runs along the end edge from the medium breakpoint up and along the bottom below it. What the page pins is the trigger; the surface, the corners, the dividers and the scrim behind it are the scheme's."
+        title="Sheet"
+      >
+        <View style={styles.row}>
+          <Sheet>
+            <Button variant="outlined">Open sheet</Button>
+            <Sheet.Content>
+              <Sheet.Handle />
+              <Sheet.Header>
+                <Sheet.Title>Headline</Sheet.Title>
+                <IconButton aria-label="Close" slot="close">
+                  {CLOSE}
+                </IconButton>
+              </Sheet.Header>
+              <Sheet.Body>
+                A sheet runs along the end edge from the medium breakpoint up,
+                and along the bottom below it, where it is dragged by its
+                handle.
+              </Sheet.Body>
+              <Sheet.Footer>
+                <Button slot="close">Confirm</Button>
+                <Button slot="close" variant="outlined">
+                  Cancel
+                </Button>
+              </Sheet.Footer>
+            </Sheet.Content>
+          </Sheet>
+        </View>
       </Section>
 
       <Section

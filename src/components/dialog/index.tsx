@@ -1,9 +1,7 @@
 import type { ComponentRef, ReactNode, Ref } from 'react'
 import type {
-  GestureResponderEvent,
   HostInstance,
   LayoutChangeEvent,
-  ModalProps,
   ScrollViewProps,
   StyleProp,
   TextProps,
@@ -12,8 +10,6 @@ import type {
   ViewStyle,
 } from 'react-native'
 import type { AnimatedStyle } from 'react-native-reanimated'
-import type { EdgeInsets } from 'react-native-safe-area-context'
-import type { OverlayTriggerState } from 'react-stately/useOverlayTriggerState'
 
 import {
   createContext,
@@ -23,14 +19,10 @@ import {
   useId,
   useLayoutEffect,
   useMemo,
-  useRef,
   useState,
 } from 'react'
 import {
-  AccessibilityInfo,
-  Modal,
   Text as NativeText,
-  Platform,
   ScrollView,
   StyleSheet,
   useWindowDimensions,
@@ -44,16 +36,22 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated'
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context'
-import { useOverlayTriggerState } from 'react-stately/useOverlayTriggerState'
 
-import type { ButtonSlots } from '../../button/slots'
+import type { ModalOpenProps, ModalTrigger } from '../../modal'
 import type { ResolvedTheme } from '../../theme/scope'
 
-import { AnimatedPressable } from '../../button'
 import { ButtonSlotContext } from '../../button/slots'
 import { useWindowSizeClass } from '../../hooks/useWindowSizeClass'
-import { OverlayHost } from '../../overlay'
-import { withOpacity } from '../../theme/color'
+import {
+  insetsOf,
+  ModalWindow,
+  NO_INSETS,
+  panelRoleOf,
+  refsOf,
+  registerOf,
+  useModalState,
+  useModalTrigger,
+} from '../../modal'
 import { useTheme } from '../../theme/scope'
 import { composeStyles, themedStyles } from '../../theme/styles'
 import { useTypeRole } from '../../typography/roles'
@@ -74,11 +72,11 @@ import { useTypeRole } from '../../typography/roles'
 // on web, where a question filling a phone read as a headline at the top of
 // the screen and its answers at the bottom with nothing between them.
 //
-// **It is drawn in a React Native `Modal`**, which keeps React context, so
-// the dialog keeps the `ThemeScope` around it, and which is a window of its
-// own on iOS and Android, above the screen and its overlays. The `Modal`
-// therefore hosts overlays of its own, so a snackbar or a popover raised from
-// inside the dialog draws above it rather than under it.
+// **It is drawn in a React Native `Modal`**, through src/modal, which keeps
+// React context, so the dialog keeps the `ThemeScope` around it, and which is
+// a window of its own on iOS and Android, above the screen and its overlays.
+// The `Modal` therefore hosts overlays of its own, so a snackbar or a popover
+// raised from inside the dialog draws above it rather than under it.
 //
 // **It animates out as well as in**, from the motion tokens: the panel scales
 // up from 90% on the emphasised decelerating curve, or rises 3% of the window
@@ -112,24 +110,6 @@ const MIN_WIDTH = 280
 const MAX_WIDTH = 560
 const SCALE_FROM = 0.9
 const RISE_FROM = 0.03
-
-// The scrim is the scrim role at 32%, the opacity Material Design gives a
-// modal's scrim and web mixes in.
-const SCRIM_OPACITY = 0.32
-
-// Outside a SafeAreaProvider the insets are unknown, and the window's own edge
-// is the best bound there is.
-const NO_INSETS = { bottom: 0, left: 0, right: 0, top: 0 }
-
-// iOS presents a `Modal` in portrait alone unless told otherwise, which would
-// turn an app held sideways round as the dialog opened.
-const ORIENTATIONS: ModalProps['supportedOrientations'] = [
-  'portrait',
-  'portrait-upside-down',
-  'landscape',
-  'landscape-left',
-  'landscape-right',
-]
 
 const NO_PARTS: Readonly<Record<DialogPart, number>> = {
   footer: 0,
@@ -229,14 +209,6 @@ const stylesOf = themedStyles(
         alignItems: 'stretch',
         padding: 0,
       },
-      scrim: {
-        backgroundColor: withOpacity(colors.scrim, SCRIM_OPACITY),
-        bottom: 0,
-        left: 0,
-        position: 'absolute',
-        right: 0,
-        top: 0,
-      },
       // The headline gives way to whatever shares its row.
       title: {
         color: colors.onSurface,
@@ -257,15 +229,8 @@ type DialogLayout = {
 
 type DialogPart = 'footer' | 'header' | 'title'
 
-// What `Dialog` hands its content: the open state, and the button that last
-// opened it, for focus to return to.
-type DialogTrigger = {
-  readonly state: OverlayTriggerState
-  readonly trigger: HostInstance | null
-}
-
 const DialogLayoutContext = createContext<DialogLayout | null>(null)
-const DialogTriggerContext = createContext<DialogTrigger | null>(null)
+const DialogTriggerContext = createContext<ModalTrigger | null>(null)
 
 type DialogBodyProps = ScrollViewProps & {
   readonly ref?: Ref<ComponentRef<typeof ScrollView>>
@@ -300,7 +265,7 @@ type DialogContentProps = DialogOpenProps &
     readonly style?: StyleProp<ViewStyle>
   }
 
-type DialogOpenProps = {
+type DialogOpenProps = ModalOpenProps & {
   /** Whether the dialog starts open, when it keeps its own state. */
   readonly defaultOpen?: boolean
   /** Whether the dialog is open, when the call site holds the state. */
@@ -369,24 +334,11 @@ function bodyPaddingOf(
  * `onOpenChange` to `Dialog.Content` instead.
  */
 function Dialog({ children, defaultOpen, isOpen, onOpenChange }: DialogProps) {
-  const state = useOverlayTriggerState({ defaultOpen, isOpen, onOpenChange })
-  const [trigger, setTrigger] = useState<HostInstance | null>(null)
-  const context = useMemo(() => ({ state, trigger }), [state, trigger])
-  // The default slot a button inside `Dialog` fills: it records
-  // itself as the button focus returns to, and opens the dialog. React
-  // Native types the target as a bare view tag too, which focus cannot be
-  // sent to, so such a press records nothing.
-  const slots = useMemo<ButtonSlots>(
-    () => ({
-      default: (event: GestureResponderEvent) => {
-        const target = event.currentTarget
-
-        setTrigger(typeof target === 'number' ? null : target)
-        state.open()
-      },
-    }),
-    [state],
-  )
+  const { context, slots } = useModalTrigger({
+    defaultOpen,
+    isOpen,
+    onOpenChange,
+  })
 
   return (
     <DialogTriggerContext value={context}>
@@ -477,8 +429,11 @@ function DialogContent({
   ...props
 }: DialogContentProps) {
   const outer = use(DialogTriggerContext)
-  const own = useOverlayTriggerState({ defaultOpen, isOpen, onOpenChange })
-  const state = outer?.state ?? own
+  const { close, present, setPresent, slots, state } = useModalState(outer, {
+    defaultOpen,
+    isOpen,
+    onOpenChange,
+  })
   const theme = useTheme()
   const styles = stylesOf(theme)
   const insets = use(SafeAreaInsetsContext) ?? NO_INSETS
@@ -488,91 +443,51 @@ function DialogContent({
   const [parts, setParts] = useState(NO_PARTS)
   const [register] = useState(() => registerOf(setParts))
   const [title, setTitle] = useState<HostInstance | null>(null)
-  const [present, setPresent] = useState(state.isOpen)
   const motion = useDialogMotion(state.isOpen, present, setPresent, basic)
-  const close = useCallback(() => {
-    state.close()
-  }, [state])
-  const slots = useMemo<ButtonSlots>(() => ({ close }), [close])
   const layout = useMemo<DialogLayout>(
     () => ({ basic, parts, register, setTitle, titleId }),
     [basic, parts, register, titleId],
   )
-
-  // Mounted the moment it opens, and kept until its exit has run.
-  if (state.isOpen && !present) {
-    setPresent(true)
-  }
-
-  useReturnFocus(present, outer)
 
   if (!present) {
     return null
   }
 
   const labelledBy = parts.title > 0 ? titleId : undefined
-  const web = Platform.OS === 'web'
 
   return (
-    <Modal
-      animationType="none"
-      aria-labelledby={web ? labelledBy : undefined}
-      navigationBarTranslucent
-      onRequestClose={isKeyboardDismissDisabled ? ignore : close}
-      onShow={focusOf(title)}
-      statusBarTranslucent
-      supportedOrientations={ORIENTATIONS}
-      transparent
-      visible
+    <ModalWindow
+      isKeyboardDismissDisabled={isKeyboardDismissDisabled}
+      labelledBy={labelledBy}
+      onClose={close}
+      onScrimPress={isDismissable && state.isOpen ? close : undefined}
+      scrim={motion.scrim}
+      title={title}
     >
-      {/* Nothing in the window takes the trigger's slot, the overlays this
-          one hosts included, so a button in a snackbar raised from the dialog
-          opens nothing; only the panel's buttons take the close slot. */}
-      <ButtonSlotContext value={null}>
-        <OverlayHost>
-          {/* A screen reader and a keyboard skip the scrim: the first closes
-            the dialog with the back or escape gesture, the second with
-            Escape. React Native Web's Pressable is a tab stop unless told
-            otherwise, whatever `focusable` says. */}
-          <AnimatedPressable
-            accessible={false}
-            aria-hidden
-            focusable={false}
-            onPress={isDismissable && state.isOpen ? close : undefined}
-            style={composeStyles<AnimatedStyle<ViewStyle>>(
-              styles.scrim,
-              motion.scrim,
-            )}
-            tabIndex={-1}
-          />
-          <View
-            style={composeStyles<ViewStyle>(
-              styles.layout,
-              basic ? undefined : styles.layoutFull,
-            )}
-          >
-            <Animated.View
-              {...(web ? undefined : panelRoleOf(role, labelledBy))}
-              onAccessibilityEscape={
-                isKeyboardDismissDisabled ? undefined : close
-              }
-              {...props}
-              style={composeStyles<AnimatedStyle<ViewStyle>>(
-                styles.container,
-                basic ? styles.containerBasic : styles.containerFull,
-                basic ? undefined : insetsOf(insets),
-                motion.panel,
-                style,
-              )}
-            >
-              <DialogLayoutContext value={layout}>
-                <ButtonSlotContext value={slots}>{children}</ButtonSlotContext>
-              </DialogLayoutContext>
-            </Animated.View>
-          </View>
-        </OverlayHost>
-      </ButtonSlotContext>
-    </Modal>
+      <View
+        style={composeStyles<ViewStyle>(
+          styles.layout,
+          basic ? undefined : styles.layoutFull,
+        )}
+      >
+        <Animated.View
+          {...panelRoleOf(role, labelledBy)}
+          onAccessibilityEscape={isKeyboardDismissDisabled ? undefined : close}
+          {...props}
+          style={composeStyles<AnimatedStyle<ViewStyle>>(
+            styles.container,
+            basic ? styles.containerBasic : styles.containerFull,
+            basic ? undefined : insetsOf(insets),
+            motion.panel,
+            style,
+          )}
+        >
+          <DialogLayoutContext value={layout}>
+            <ButtonSlotContext value={slots}>{children}</ButtonSlotContext>
+          </DialogLayoutContext>
+        </Animated.View>
+      </View>
+    </ModalWindow>
   )
 }
 
@@ -647,68 +562,6 @@ function DialogTitle({ ref, style, ...props }: DialogTitleProps) {
       style={composeStyles<TextStyle>(role, styles.title, style)}
     />
   )
-}
-
-// Sends the screen reader to the headline once the dialog has shown. React
-// Native Web's `Modal` moves focus into itself.
-function focusOf(title: HostInstance | null) {
-  return () => {
-    if (title !== null && Platform.OS !== 'web') {
-      AccessibilityInfo.sendAccessibilityEvent(title, 'focus')
-    }
-  }
-}
-
-// What the back gesture does on a dialog it may not close: nothing, rather
-// than leaving the handler out, which Android warns about.
-function ignore() {}
-
-function insetsOf(insets: EdgeInsets): ViewStyle {
-  return {
-    paddingBottom: insets.bottom,
-    paddingLeft: insets.left,
-    paddingRight: insets.right,
-    paddingTop: insets.top,
-  }
-}
-
-// The panel's role and name on iOS and Android. On web React Native Web's
-// `Modal` is the dialog element, so the panel takes neither there.
-function panelRoleOf(
-  role: 'alertdialog' | 'dialog',
-  labelledBy: string | undefined,
-): Pick<ViewProps, 'aria-labelledby' | 'aria-modal' | 'role'> {
-  return { 'aria-labelledby': labelledBy, 'aria-modal': true, role }
-}
-
-// Every ref a node is handed to, the part's own and the call site's.
-function refsOf<T>(own: (node: null | T) => void, other: Ref<T> | undefined) {
-  return (node: null | T) => {
-    own(node)
-    if (typeof other === 'function') {
-      other(node)
-    } else if (other !== null && other !== undefined) {
-      other.current = node
-    }
-  }
-}
-
-// Counts each part as it mounts and unmounts, so the body knows which ends
-// it has to pad.
-function registerOf(
-  setParts: (
-    update: (
-      parts: Readonly<Record<DialogPart, number>>,
-    ) => Readonly<Record<DialogPart, number>>,
-  ) => void,
-) {
-  return (part: DialogPart) => {
-    setParts((parts) => ({ ...parts, [part]: parts[part] + 1 }))
-
-    return () => {
-      setParts((parts) => ({ ...parts, [part]: parts[part] - 1 }))
-    }
-  }
 }
 
 /**
@@ -806,22 +659,6 @@ function useLayout(part: string) {
   }
 
   return layout
-}
-
-// Sends the screen reader back to the button that opened the dialog once the
-// dialog has gone. React Native Web's `Modal` restores focus itself.
-function useReturnFocus(present: boolean, outer: DialogTrigger | null) {
-  const shown = useRef(present)
-
-  useEffect(() => {
-    const trigger = outer?.trigger ?? null
-    const gone = shown.current && !present
-
-    shown.current = present
-    if (gone && trigger !== null && Platform.OS !== 'web') {
-      AccessibilityInfo.sendAccessibilityEvent(trigger, 'focus')
-    }
-  }, [outer, present])
 }
 
 Dialog.Body = DialogBody

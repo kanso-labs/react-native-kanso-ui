@@ -89,6 +89,23 @@ export type {
 } from './components/segmented-button'
 export { Separator } from './components/separator'
 export type { SeparatorInset, SeparatorProps } from './components/separator'
+export {
+  Sheet,
+  SheetBody,
+  SheetContent,
+  SheetFooter,
+  SheetHandle,
+  SheetHeader,
+  SheetTitle,
+} from './components/sheet'
+export type {
+  SheetBodyProps,
+  SheetContentProps,
+  SheetHandleProps,
+  SheetPartProps,
+  SheetProps,
+  SheetTitleProps,
+} from './components/sheet'
 export { Snackbar } from './components/snackbar'
 export type {
   SnackbarAction,
