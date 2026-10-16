@@ -27,6 +27,7 @@ import { createRef, useCallback, useEffect, useState } from 'react'
 import {
   AccessibilityInfo,
   Dimensions,
+  I18nManager,
   Platform,
   StyleSheet,
   Text,
@@ -771,9 +772,22 @@ describe('Dialog', () => {
 
       expect(styleOf(screen.getByTestId('panel'))).toMatchObject({
         paddingBottom: INSETS.bottom,
-        paddingLeft: INSETS.left,
-        paddingRight: INSETS.right,
+        paddingEnd: INSETS.right,
+        paddingStart: INSETS.left,
         paddingTop: INSETS.top,
+      })
+    })
+
+    // React Native swaps a left and a right style under a right-to-left
+    // layout, and the insets are physical edges, so each lands on the start
+    // or the end it is there.
+    it('keeps each side inset on its own edge under right-to-left', async () => {
+      jest.replaceProperty(I18nManager, 'isRTL', true)
+      await renderDialog({}, { defaultOpen: true, insets: INSETS })
+
+      expect(styleOf(screen.getByTestId('panel'))).toMatchObject({
+        paddingEnd: INSETS.left,
+        paddingStart: INSETS.right,
       })
     })
 
