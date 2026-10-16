@@ -20,22 +20,8 @@ import {
   useRef,
   useState,
 } from 'react'
-import {
-  AccessibilityInfo,
-  BackHandler,
-  Text as NativeText,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-} from 'react-native'
-import Animated, {
-  Easing,
-  useAnimatedStyle,
-  useReducedMotion,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated'
+import { Text as NativeText, ScrollView, StyleSheet } from 'react-native'
+import Animated from 'react-native-reanimated'
 import { useOverlayTriggerState } from 'react-stately/useOverlayTriggerState'
 
 import type { ButtonSlots } from '../../button/slots'
@@ -45,6 +31,14 @@ import type { ResolvedTheme } from '../../theme/scope'
 import { ButtonSlotContext } from '../../button/slots'
 import { ModalWindow, panelRoleOf } from '../../modal'
 import { Overlay, useAnchoredPlacement } from '../../overlay'
+import {
+  DismissLayer,
+  PANEL_ORIGINS,
+  useBackToClose,
+  useFocusOnPlaced,
+  usePanelMotion,
+  useReturnFocus,
+} from '../../overlay/panel'
 import { refsOf } from '../../ref'
 import { useTheme } from '../../theme/scope'
 import { composeStyles, themedStyles } from '../../theme/styles'
@@ -67,8 +61,8 @@ import { useTypeRole } from '../../typography/roles'
 //
 // **A non-modal popover, the default, draws in the overlay host** above the
 // screen, and a screen reader can leave it for the screen around it. A press
-// outside it lands on a layer drawn under it, hidden from a screen reader,
-// which closes it. The press goes no further, so a press on the trigger
+// outside it lands on src/overlay's dismiss layer, drawn under it and hidden
+// from a screen reader, which closes it. The press goes no further, so a press on the trigger
 // closes it rather than opening it again, as on web. Android's back gesture
 // and VoiceOver's escape gesture close it too. **A modal popover draws in a
 // `Modal`**, through src/modal, as a dialog does, which keeps a screen reader
@@ -85,9 +79,10 @@ import { useTypeRole } from '../../typography/roles'
 //
 // **It fades and scales in and out**, from 95% and from the edge facing its
 // anchor: in over the short3 duration on the emphasised decelerating curve,
-// once it has been placed, and out over short2 on the accelerating one. Web only animates in, since React
-// Aria keeps a closing surface mounted only while a CSS animation runs; here
-// the panel stays mounted until its exit has run. Under reduced motion it
+// once it has been placed, and out over short2 on the accelerating one, as
+// src/overlay's panel moves every anchored panel. Web only animates in, since
+// React Aria keeps a closing surface mounted only while a CSS animation runs;
+// here the panel stays mounted until its exit has run. Under reduced motion it
 // appears and leaves at once, as web's does.
 //
 // **A screen reader follows a press.** Opened by a press, or by a press held
@@ -107,17 +102,6 @@ const WIDTHS = { md: 320, sm: 240 } as const satisfies Record<
   number
 >
 
-// What the panel scales up from as it arrives, web's keyframes'.
-const SCALE_FROM = 0.95
-
-// The edge the panel grows from, the one facing its anchor.
-const ORIGINS = {
-  bottom: 'top',
-  left: 'right',
-  right: 'left',
-  top: 'bottom',
-} as const satisfies Record<OverlaySide, string>
-
 // A modal popover's scrim takes presses and draws nothing.
 const UNSEEN: ViewStyle = { opacity: 0 }
 
@@ -133,15 +117,6 @@ const stylesOf = themedStyles(
       },
       description: {
         color: colors.onSurfaceVariant,
-      },
-      // The layer a press outside a non-modal panel lands on, over the whole
-      // screen and under the panel.
-      layer: {
-        bottom: 0,
-        left: 0,
-        position: 'absolute',
-        right: 0,
-        top: 0,
       },
       // Only as tall as its content until the panel's room runs out, where
       // it scrolls.
@@ -290,25 +265,6 @@ type PopoverTrigger = 'hover' | 'press'
 
 const PopoverContext = createContext<null | PopoverRoot>(null)
 const TitleContext = createContext<null | PopoverTitle>(null)
-
-// Every view the panel draws in a non-modal popover besides itself: the layer
-// a press outside lands on, which nothing but that press reaches. React
-// Native Web's Pressable is a tab stop unless told otherwise, whatever
-// `focusable` says.
-function OutsideLayer({ onPress }: { readonly onPress: () => void }) {
-  const styles = stylesOf(useTheme())
-
-  return (
-    <Pressable
-      accessible={false}
-      aria-hidden
-      focusable={false}
-      onPress={onPress}
-      style={styles.layer}
-      tabIndex={-1}
-    />
-  )
-}
 
 /**
  * A panel anchored to the control that opened it, as the tooltips spec
@@ -524,7 +480,7 @@ function PopoverPanel({
 
   return (
     <>
-      {dismissable ? <OutsideLayer onPress={close} /> : null}
+      {dismissable ? <DismissLayer onPress={close} /> : null}
       <Animated.View
         {...(modal
           ? panelRoleOf('dialog', labelledBy)
@@ -539,7 +495,7 @@ function PopoverPanel({
           styles.surface,
           { maxWidth: WIDTHS[size] },
           placement.style,
-          { transformOrigin: ORIGINS[placement.side] },
+          { transformOrigin: PANEL_ORIGINS[placement.side] },
           motion,
           style,
         )}
@@ -581,39 +537,6 @@ function PopoverTitle({ ref, style, ...props }: PopoverTitleProps) {
       style={composeStyles<TextStyle>(role, styles.title, style)}
     />
   )
-}
-
-// Closes a non-modal popover from Android's back gesture, as a `Modal` closes
-// a modal one.
-function useBackToClose(close: () => void, active: boolean) {
-  useEffect(() => {
-    if (!active) {
-      return undefined
-    }
-
-    const subscription = BackHandler.addEventListener(
-      'hardwareBackPress',
-      () => {
-        close()
-        return true
-      },
-    )
-
-    return () => {
-      subscription.remove()
-    }
-  }, [active, close])
-}
-
-// Sends the screen reader to the panel's headline, or to the panel, once it
-// has been placed, and so can be seen. React Native Web has no screen reader
-// of its own to send.
-function useFocusOnPlaced(ready: boolean, target: HostInstance | null) {
-  useEffect(() => {
-    if (ready && target !== null && Platform.OS !== 'web') {
-      AccessibilityInfo.sendAccessibilityEvent(target, 'focus')
-    }
-  }, [ready, target])
 }
 
 /**
@@ -704,93 +627,6 @@ function useHoverTrigger(
       }
     },
   }
-}
-
-/**
- * The panel's motion, and the timer that unmounts it once its exit has run:
- * it fades and scales up from 95% over the short3 duration on the
- * emphasised decelerating curve, and back over short2 on the accelerating
- * one. The entrance waits for the panel to be placed, so it is not spent
- * while the panel is still hidden being measured, and the panel stays
- * transparent until then. Under reduced motion it arrives and leaves at once.
- */
-function usePanelMotion(
-  isOpen: boolean,
-  placed: boolean,
-  setPresent: (present: boolean) => void,
-) {
-  const { motion } = useTheme()
-  const reduceMotion = useReducedMotion()
-  const shown = useSharedValue(0)
-
-  useEffect(() => {
-    if (isOpen && !placed) {
-      return undefined
-    }
-
-    if (isOpen) {
-      shown.set(
-        reduceMotion
-          ? 1
-          : withTiming(1, {
-              duration: motion.durationShort3,
-              easing: Easing.bezier(...motion.easingEmphasizedDecelerate),
-            }),
-      )
-      return undefined
-    }
-
-    if (reduceMotion) {
-      shown.set(0)
-      setPresent(false)
-      return undefined
-    }
-
-    shown.set(
-      withTiming(0, {
-        duration: motion.durationShort2,
-        easing: Easing.bezier(...motion.easingEmphasizedAccelerate),
-      }),
-    )
-    const timer = setTimeout(() => {
-      setPresent(false)
-    }, motion.durationShort2)
-
-    return () => {
-      clearTimeout(timer)
-    }
-  }, [isOpen, motion, placed, reduceMotion, setPresent, shown])
-
-  return useAnimatedStyle(() => {
-    'worklet'
-    const progress = shown.get()
-
-    return {
-      opacity: progress,
-      transform: [{ scale: SCALE_FROM + (1 - SCALE_FROM) * progress }],
-    }
-  })
-}
-
-// Sends the screen reader back to the trigger once a popover a press opened
-// has gone. React Native Web's `Modal` restores focus itself, and has no
-// screen reader to send otherwise.
-function useReturnFocus(
-  present: boolean,
-  byPointer: boolean,
-  trigger: RefObject<HostInstance | null>,
-) {
-  const shown = useRef(present)
-
-  useEffect(() => {
-    const gone = shown.current && !present
-    const target = trigger.current
-
-    shown.current = present
-    if (gone && !byPointer && target !== null && Platform.OS !== 'web') {
-      AccessibilityInfo.sendAccessibilityEvent(target, 'focus')
-    }
-  }, [byPointer, present, trigger])
 }
 
 Popover.Content = PopoverContent

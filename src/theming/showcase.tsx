@@ -17,6 +17,7 @@ import { Dialog } from '../components/dialog'
 import { Form } from '../components/form'
 import { IconButton } from '../components/icon-button'
 import { Link } from '../components/link'
+import { Menu } from '../components/menu'
 import { Meter } from '../components/meter'
 import { NumberField } from '../components/number-field'
 import { Popover } from '../components/popover'
@@ -432,6 +433,23 @@ function Showcase({ name }: ShowcaseProps) {
         <Text variant="bodyLarge">
           <Link href="/first">Label</Link>
         </Text>
+      </Section>
+
+      <Section
+        description="Items on a popover surface, with a rule between the ones that belong apart. The trigger is a button placed directly inside it."
+        title="Menu"
+      >
+        <View style={styles.row}>
+          <Menu>
+            <Button variant="outlined">Open a menu</Button>
+            <Menu.Content>
+              <Menu.Item id="first">First item</Menu.Item>
+              <Menu.Item id="second">Second item</Menu.Item>
+              <Menu.Separator />
+              <Menu.Item id="third">Third item</Menu.Item>
+            </Menu.Content>
+          </Menu>
+        </View>
       </Section>
 
       <Section
