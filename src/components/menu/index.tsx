@@ -44,13 +44,11 @@ import {
 import { useTreeState } from 'react-stately/useTreeState'
 
 import type { ButtonSlots } from '../../button/slots'
-import type { IconStyle } from '../../glyphs/icon-style'
 import type { OverlayAlign, OverlaySide } from '../../overlay'
 import type { ResolvedTheme } from '../../theme/scope'
 
 import { ButtonSlotContext } from '../../button/slots'
 import { CheckGlyph, ChevronEndGlyph } from '../../glyphs'
-import { IconStyleContext } from '../../glyphs/icon-style'
 import { messagesFor } from '../../i18n'
 import { Overlay, useAnchoredPlacement } from '../../overlay'
 import {
@@ -64,7 +62,7 @@ import {
 import { usePressFeedback } from '../../press'
 import { refsOf } from '../../ref'
 import { useOpenLink } from '../../router'
-import { withOpacity } from '../../theme/color'
+import { RowContent, rowContentColor, rowStyleOf, rowStyles } from '../../row'
 import { useTheme } from '../../theme/scope'
 import { composeStyles, themedStyles } from '../../theme/styles'
 import { useTypeRole } from '../../typography/roles'
@@ -130,14 +128,9 @@ const MENU_MAX = 280
 // 20dp.
 const CHECK_SIZE = 24
 const CHEVRON_SIZE = 20
-const ICON_SIZE = 24
 
 // The loading ring at web's 20dp, which leaves the row an item's height.
 const LOADING_DIAMETER = '20px'
-
-// A row's ring sits inside it, as web's does, so the surface's clipping
-// leaves the whole ring showing.
-const INSET_RING: ViewStyle = { outlineOffset: -2 }
 
 // React Native Web writes `aria-haspopup` onto the element, which React
 // Native's types do not name.
@@ -155,11 +148,6 @@ const styles = StyleSheet.create({
   // can tell is in view.
   sentinel: {
     height: 0,
-  },
-  slot: {
-    alignItems: 'center',
-    flexShrink: 0,
-    justifyContent: 'center',
   },
 })
 
@@ -183,30 +171,11 @@ const stylesOf = themedStyles(
         paddingHorizontal: spacing.lg,
         paddingTop: spacing.md,
       },
-      // The label takes what the slots leave and wraps past it, so a long
-      // one never runs under the trailing slot.
-      label: {
-        flexGrow: 1,
-        flexShrink: 1,
-      },
       // The ring on its own, centred in a row an item's height.
       loading: {
         alignItems: 'center',
         justifyContent: 'center',
         minHeight: sizing.rowXs,
-      },
-      // The row every item draws: the lists page's padding and gap at the
-      // menus page's 48dp.
-      row: {
-        alignItems: 'center',
-        flexDirection: 'row',
-        gap: spacing.lg,
-        minHeight: sizing.rowXs,
-        paddingHorizontal: spacing.lg,
-        paddingVertical: spacing.md,
-      },
-      selected: {
-        backgroundColor: colors.tertiaryContainer,
       },
       // The menus page's divider: the rule with 8dp either side of it.
       separator: {
@@ -713,7 +682,7 @@ function EmptyRow() {
   const label = useTypeRole('labelLarge')
 
   return (
-    <View style={own.row}>
+    <View style={rowStyleOf(theme, { variant: 'menu' })}>
       <NativeText style={composeStyles<TextStyle>(label, own.empty)}>
         {messagesFor().noResults}
       </NativeText>
@@ -1057,9 +1026,6 @@ function MenuRow<T>({
   readonly panel: PanelValue<T>
 }) {
   const theme = useTheme()
-  const own = stylesOf(theme)
-  const labelRole = useTypeRole('labelLarge')
-  const { colors, stateLayerOpacity } = theme
   // oxlint-disable-next-line typescript/no-unsafe-assignment -- a node carries the props its item was written with, which React Stately types as `any`
   const {
     children,
@@ -1088,15 +1054,11 @@ function MenuRow<T>({
   const disabled = selectionManager.isDisabled(node.key)
   const selectable = selectionManager.selectionMode !== 'none'
   const selected = selectable && selectionManager.isSelected(node.key)
-  const content = disabled
-    ? withOpacity(colors.onSurface, stateLayerOpacity.disabledContent)
-    : selected
-      ? colors.onTertiaryContainer
-      : colors.onSurface
-  const icons = useMemo<IconStyle>(
-    () => ({ color: content, size: ICON_SIZE }),
-    [content],
-  )
+  const content = rowContentColor(theme, {
+    isDisabled: disabled,
+    isSelected: selected,
+    variant: 'menu',
+  })
   const feedback = usePressFeedback({
     color: content,
     disabled,
@@ -1147,25 +1109,22 @@ function MenuRow<T>({
         ref,
       )}
       style={composeStyles<ViewStyle>(
-        own.row,
-        selected ? own.selected : undefined,
+        rowStyleOf(theme, { isSelected: selected, variant: 'menu' }),
         feedback.ring,
-        feedback.ring === undefined ? undefined : INSET_RING,
+        feedback.ring === undefined ? undefined : rowStyles.ring,
         style,
       )}
     >
       {feedback.layer}
-      <IconStyleContext value={icons}>
-        {lead === null ? null : <View style={styles.slot}>{lead}</View>}
-        <NativeText
-          style={composeStyles<TextStyle>(labelRole, own.label, {
-            color: content,
-          })}
-        >
-          {children}
-        </NativeText>
-        {hasEnd ? <View style={styles.slot}>{end}</View> : null}
-      </IconStyleContext>
+      <RowContent
+        isDisabled={disabled}
+        isSelected={selected}
+        leading={lead}
+        trailing={hasEnd ? end : undefined}
+        variant="menu"
+      >
+        {children}
+      </RowContent>
     </Pressable>
   )
 }

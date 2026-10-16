@@ -58,6 +58,8 @@ export type {
 } from './components/icon-button'
 export { Link } from './components/link'
 export type { LinkProps, LinkTone, LinkUnderline } from './components/link'
+export { ListItem } from './components/list-item'
+export type { ListItemProps } from './components/list-item'
 export {
   Menu,
   MenuContent,
