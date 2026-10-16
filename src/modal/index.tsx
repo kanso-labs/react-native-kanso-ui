@@ -1,4 +1,4 @@
-import type { ReactNode, Ref } from 'react'
+import type { ReactNode } from 'react'
 import type {
   GestureResponderEvent,
   HostInstance,
@@ -196,18 +196,6 @@ function panelRoleOf(
   return { 'aria-labelledby': labelledBy, 'aria-modal': true, role }
 }
 
-// Every ref a node is handed to, the part's own and the call site's.
-function refsOf<T>(own: (node: null | T) => void, other: Ref<T> | undefined) {
-  return (node: null | T) => {
-    own(node)
-    if (typeof other === 'function') {
-      other(node)
-    } else if (other !== null && other !== undefined) {
-      other.current = node
-    }
-  }
-}
-
 // Counts each part as it mounts and unmounts, so the parts around it know
 // which of them are there.
 function registerOf<Part extends string>(
@@ -300,7 +288,6 @@ export {
   ModalWindow,
   NO_INSETS,
   panelRoleOf,
-  refsOf,
   registerOf,
   useModalState,
   useModalTrigger,

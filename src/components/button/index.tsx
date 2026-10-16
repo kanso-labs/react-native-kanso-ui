@@ -34,6 +34,7 @@ import {
   toggleState,
   useButtonAction,
   useCorner,
+  useSlotTrigger,
 } from '../../button'
 import { palettesOf } from '../../button/palettes'
 import {
@@ -353,6 +354,7 @@ const outlinedSizesOf = themedStyles((theme) => {
 function Button({
   children,
   defaultSelected,
+  delayLongPress,
   disableRipple = false,
   hitSlop: ownHitSlop,
   href,
@@ -371,6 +373,7 @@ function Button({
   onPressIn,
   onPressOut,
   pendingLabel,
+  ref,
   shape = 'round',
   size = 'md',
   slot,
@@ -404,6 +407,20 @@ function Button({
     slot: slot ?? 'default',
     type,
   })
+  const {
+    onHoverIn: hoverIn,
+    onHoverOut: hoverOut,
+    onLongPress: longPress,
+    ...triggerProps
+  } = useSlotTrigger({
+    delayLongPress,
+    href,
+    onHoverIn,
+    onHoverOut,
+    onLongPress,
+    ref,
+    slot,
+  })
   const colors =
     palettesOf(theme)[
       isDisabled
@@ -421,8 +438,8 @@ function Button({
     disableRipple,
     onBlur,
     onFocus,
-    onHoverIn,
-    onHoverOut,
+    onHoverIn: hoverIn,
+    onHoverOut: hoverOut,
     onPressIn,
     onPressOut,
     pending,
@@ -444,11 +461,12 @@ function Button({
       {...(isToggle ? toggleState(action.selected) : undefined)}
       {...(pending ? BUSY : undefined)}
       {...props}
+      {...triggerProps}
       {...feedback.handlers}
       disabled={isDisabled}
       hitSlop={ownHitSlop ?? hitSlop(theme.sizing[HEIGHTS[size]])}
       onLayout={shaped.onLayout}
-      onLongPress={pending ? undefined : onLongPress}
+      onLongPress={pending ? undefined : longPress}
       onPress={pending ? undefined : action.onPress}
       style={composeStyles<AnimatedStyle<ViewStyle>>(
         styles.base,
