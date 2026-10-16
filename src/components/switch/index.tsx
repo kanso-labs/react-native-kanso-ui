@@ -467,7 +467,9 @@ function useHandleDrag({
     offset.set(Math.min(TRAVEL, Math.max(0, (on ? TRAVEL : 0) + along)))
   }
 
-  // oxlint-disable-next-line react/capitalized-calls -- a builder Gesture Handler names after the gesture, not a component
+  // Gesture Handler 3 deprecates this builder for hooks that version 2 does not
+  // have, and the peer range admits both, so the builder stays while it does.
+  // oxlint-disable-next-line react/capitalized-calls, typescript/no-deprecated -- a builder named after its gesture, not a component; see above
   const pan = Gesture.Pan()
     .activeOffsetX([-DRAG_SLOP, DRAG_SLOP])
     .enabled(enabled)
