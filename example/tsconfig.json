@@ -6,9 +6,13 @@
     // this app's, and two copies of a type never match. Metro bundles one
     // copy, this app's, and these make the types agree with it. They map to
     // types alone, so app.json turns off Expo's reading of them in Metro.
+    // React Native names its types only in its exports map, which a path
+    // skips, so its entry names the declaration file itself.
     "paths": {
       "react": ["./node_modules/@types/react"],
-      "react-native": ["./node_modules/react-native"],
+      "react-native": [
+        "./node_modules/react-native/types_generated/index.d.ts"
+      ],
       "react/*": ["./node_modules/@types/react/*"]
     },
     "strict": true
