@@ -64,17 +64,31 @@ const config: StorybookConfig = {
         }),
       ],
       resolve: {
-        alias: {
+        alias: [
           // React Native SVG's web renderer reads its assets through
           // @react-native/assets-registry, which React Native stopped
           // installing at 0.87. React Native Web keeps the registry its own
           // Image reads, so the import is pointed at that one.
-          '@react-native/assets-registry/registry':
-            'react-native-web/dist/modules/AssetRegistry',
+          {
+            find: '@react-native/assets-registry/registry',
+            replacement: 'react-native-web/dist/modules/AssetRegistry',
+          },
           // An optional peer the root does not install; expo-clipboard.ts says
           // why, and what stands in for it.
-          'expo-clipboard': path.join(import.meta.dirname, 'expo-clipboard.ts'),
-        },
+          {
+            find: 'expo-clipboard',
+            replacement: path.join(import.meta.dirname, 'expo-clipboard.ts'),
+          },
+          // Gesture Handler probes a class Reanimated does not export by its
+          // path under src/, which is TypeScript the Babel pass here cannot
+          // read, and a second copy of Reanimated beside the one the package
+          // entry loads. Each such path is pointed at its compiled twin under
+          // lib/module, which is the file the entry itself imports.
+          {
+            find: /^react-native-reanimated\/src\/(.*)$/,
+            replacement: 'react-native-reanimated/lib/module/$1',
+          },
+        ],
       },
     }),
 }
