@@ -17,6 +17,7 @@ import { Dialog } from '../components/dialog'
 import { Form } from '../components/form'
 import { IconButton } from '../components/icon-button'
 import { Link } from '../components/link'
+import { ListItem } from '../components/list-item'
 import { Menu } from '../components/menu'
 import { Meter } from '../components/meter'
 import { NumberField } from '../components/number-field'
@@ -102,6 +103,26 @@ const SEARCH = <SearchGlyph />
 // Hoisted so the keys are not a new array on every render, which is what
 // react-perf's no-new-array-as-prop is after.
 const SEGMENT_SELECTION = ['second']
+
+// The ListItem section's rows, web's three people with an amount each, their
+// slots hoisted so no prop is a new element on every render.
+const LIST_ROWS = [
+  {
+    leading: <Avatar decorative name="Ada Lovelace" tone="primary" />,
+    name: 'Ada Lovelace',
+    trailing: <Currency locale="en-US" value={1240.5} />,
+  },
+  {
+    leading: <Avatar decorative name="Grace Hopper" tone="secondary" />,
+    name: 'Grace Hopper',
+    trailing: <Currency locale="en-US" value={-86.2} />,
+  },
+  {
+    leading: <Avatar decorative name="Alan Turing" tone="tertiary" />,
+    name: 'Alan Turing',
+    trailing: <Currency locale="en-US" value={0} />,
+  },
+] as const
 
 // The queue the page's snackbar shows, which its button adds to.
 const SHOWCASE_MESSAGES = new Snackbar.Queue()
@@ -433,6 +454,27 @@ function Showcase({ name }: ShowcaseProps) {
         <Text variant="bodyLarge">
           <Link href="/first">Label</Link>
         </Text>
+      </Section>
+
+      <Section
+        description="The row every list and menu draws, with its leading, supporting and trailing slots filled. An outlined card with no padding of its own is the bordered container, so the rows keep their inset and the rules between them start where a row's own content does, under the avatar, rather than running edge to edge."
+        title="ListItem"
+      >
+        <Card padding="none" variant="outlined">
+          {LIST_ROWS.map(({ leading, name: person, trailing }, index) => (
+            <View key={person}>
+              {index === 0 ? null : <Separator inset="start" />}
+              <ListItem
+                interactive
+                leading={leading}
+                supporting="Supporting line"
+                trailing={trailing}
+              >
+                {person}
+              </ListItem>
+            </View>
+          ))}
+        </Card>
       </Section>
 
       <Section
