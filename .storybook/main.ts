@@ -14,6 +14,21 @@ import {
 // stand-in for iOS and Android rather than either of them, so it catches token,
 // layout and contrast drift and says nothing about how a platform draws text or
 // shadows. The on-device Storybook in example/ reads the same story files.
+// React Native SVG's sound module, which a pressable shape requires on Android
+// alone; svg-sound-module.ts says why the web needs a stand-in all the same.
+// The import is relative, inside the package, where an alias never looks, so
+// a resolver answers it: in the bundle of dependencies Vite builds first, and
+// ahead of Vite's own resolver for a module it serves on its own.
+const svgSoundModule = {
+  enforce: 'pre' as const,
+  name: 'svg-sound-module',
+  resolveId: (source: string, importer: string | undefined) =>
+    source === '../fabric/NativeSvgSoundModule' &&
+    importer?.includes('react-native-svg') === true
+      ? path.join(import.meta.dirname, 'svg-sound-module.ts')
+      : null,
+}
+
 const config: StorybookConfig = {
   addons: ['@storybook/addon-docs', '@storybook/addon-a11y'],
   docs: {
@@ -51,7 +66,9 @@ const config: StorybookConfig = {
   stories: ['../src/**/*.stories.tsx'],
   viteFinal: (vite) =>
     mergeConfig(vite, {
+      optimizeDeps: { rolldownOptions: { plugins: [svgSoundModule] } },
       plugins: [
+        svgSoundModule,
         // src/tokens/defaults.ts is generated and not committed, so the
         // running Storybook writes it on start and again whenever the token
         // source changes, which a bump of @kanso-labs/kanso-ui does. The
@@ -64,17 +81,31 @@ const config: StorybookConfig = {
         }),
       ],
       resolve: {
-        alias: {
+        alias: [
           // React Native SVG's web renderer reads its assets through
           // @react-native/assets-registry, which React Native stopped
           // installing at 0.87. React Native Web keeps the registry its own
           // Image reads, so the import is pointed at that one.
-          '@react-native/assets-registry/registry':
-            'react-native-web/dist/modules/AssetRegistry',
+          {
+            find: '@react-native/assets-registry/registry',
+            replacement: 'react-native-web/dist/modules/AssetRegistry',
+          },
           // An optional peer the root does not install; expo-clipboard.ts says
           // why, and what stands in for it.
-          'expo-clipboard': path.join(import.meta.dirname, 'expo-clipboard.ts'),
-        },
+          {
+            find: 'expo-clipboard',
+            replacement: path.join(import.meta.dirname, 'expo-clipboard.ts'),
+          },
+          // Gesture Handler probes a class Reanimated does not export by its
+          // path under src/, which is TypeScript the Babel pass here cannot
+          // read, and a second copy of Reanimated beside the one the package
+          // entry loads. Each such path is pointed at its compiled twin under
+          // lib/module, which is the file the entry itself imports.
+          {
+            find: /^react-native-reanimated\/src\/(.*)$/,
+            replacement: 'react-native-reanimated/lib/module/$1',
+          },
+        ],
       },
     }),
 }
