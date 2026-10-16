@@ -19,6 +19,7 @@ import { IconButton } from '../components/icon-button'
 import { Link } from '../components/link'
 import { Meter } from '../components/meter'
 import { NumberField } from '../components/number-field'
+import { Popover } from '../components/popover'
 import { ProductIcon } from '../components/product-icon'
 import { ProgressIndicator } from '../components/progress-indicator'
 import { Radio, RadioGroup } from '../components/radio-group'
@@ -452,6 +453,40 @@ function Showcase({ name }: ShowcaseProps) {
           steppers="horizontal"
           variant="outlined"
         />
+      </Section>
+
+      <Section
+        description="The panel is anchored to the control that opened it, and takes its surface, corner and elevation from the same tokens the page does. A hovered popover holds what a tooltip cannot: its own buttons and links stay reachable while the pointer is inside it."
+        title="Popover"
+      >
+        <View style={styles.row}>
+          <Popover trigger="hover">
+            <Button variant="outlined">Hover for a popover</Button>
+            <Popover.Content>
+              <Popover.Title>Headline</Popover.Title>
+              <Popover.Description>
+                A hovered popover holds what a tooltip cannot: its own buttons
+                and links stay reachable while the pointer is inside it.
+              </Popover.Description>
+            </Popover.Content>
+          </Popover>
+          <Popover>
+            <Button variant="outlined">Open popover</Button>
+            <Popover.Content>
+              <Popover.Title>Headline</Popover.Title>
+              <Popover.Description>
+                The panel is anchored to the control that opened it, and takes
+                its surface, corner and elevation from the same tokens the page
+                does.
+              </Popover.Description>
+              <Stack direction="row" gap="sm" justify="end">
+                <Button slot="close" variant="text">
+                  Dismiss
+                </Button>
+              </Stack>
+            </Popover.Content>
+          </Popover>
+        </View>
       </Section>
 
       <Section

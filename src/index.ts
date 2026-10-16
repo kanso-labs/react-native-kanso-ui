@@ -62,6 +62,22 @@ export { Meter } from './components/meter'
 export type { MeterProps, MeterTone } from './components/meter'
 export { NumberField } from './components/number-field'
 export type { NumberFieldProps } from './components/number-field'
+export {
+  Popover,
+  PopoverContent,
+  PopoverDescription,
+  PopoverTitle,
+} from './components/popover'
+export type {
+  PopoverAlign,
+  PopoverContentProps,
+  PopoverDescriptionProps,
+  PopoverProps,
+  PopoverSide,
+  PopoverSize,
+  PopoverTitleProps,
+  PopoverTrigger,
+} from './components/popover'
 export { ProductIcon } from './components/product-icon'
 export type { ProductIconProps } from './components/product-icon'
 export { ProgressIndicator } from './components/progress-indicator'

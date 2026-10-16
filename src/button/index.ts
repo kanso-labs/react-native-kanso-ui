@@ -1,5 +1,7 @@
+import type { Ref } from 'react'
 import type {
   GestureResponderEvent,
+  HostInstance,
   LayoutChangeEvent,
   PressableProps,
 } from 'react-native'
@@ -18,6 +20,7 @@ import Animated, {
 import type { ResolvedTheme } from '../theme/scope'
 
 import { FormContext } from '../form'
+import { refsOf } from '../ref'
 import { useOpenLink } from '../router'
 import { useTheme } from '../theme/scope'
 import { ButtonSlotContext } from './slots'
@@ -121,6 +124,18 @@ type ButtonToggleForm = ButtonPending & {
 type ControlSize = 'lg' | 'md' | 'xl' | 'xs' | 'xxl'
 
 /** How a toggle reports its state to a screen reader. */
+// What `useSlotTrigger` hands the Pressable, spelled out because the
+// composed ref's inferred type names a private React Native module, which a
+// declaration file cannot reach.
+type SlotTriggerProps = {
+  readonly 'aria-expanded'?: boolean
+  readonly delayLongPress: PressableProps['delayLongPress']
+  readonly onHoverIn: PressableProps['onHoverIn']
+  readonly onHoverOut: PressableProps['onHoverOut']
+  readonly onLongPress: PressableProps['onLongPress']
+  readonly ref: Ref<HostInstance> | undefined
+}
+
 type ToggleState = {
   readonly 'aria-pressed'?: boolean
   readonly 'aria-selected'?: boolean
@@ -180,6 +195,22 @@ const buttonStyles = StyleSheet.create({
     top: 0,
   },
 })
+
+// A handler that runs the call site's own and then the slot's, which takes no
+// event, or the call site's alone where the slot adds nothing.
+function andThen<E>(
+  own: ((event: E) => void) | null | undefined,
+  slot: (() => void) | undefined,
+) {
+  if (slot === undefined) {
+    return own ?? undefined
+  }
+
+  return (event: E) => {
+    own?.(event)
+    slot()
+  }
+}
 
 // Records the button's height for the corner, then calls the call site's own
 // `onLayout`. Built by a call rather than declared in a component, which is
@@ -292,6 +323,49 @@ function useCorner(radius: number, onLayout: PressableProps['onLayout']) {
   return { corner, onLayout: measureThen(height, onLayout) }
 }
 
+/**
+ * What a button filling the default slot of an overlay drawn beside it takes
+ * on, as src/button's slots.ts sets out: its node is kept for the overlay to
+ * be placed against, alongside the call site's own `ref`, `aria-expanded`
+ * says whether the overlay is open, and the overlay's hover and long press
+ * handlers run after the call site's. A button filling no such slot, or a
+ * link, keeps its own props untouched.
+ */
+function useSlotTrigger({
+  delayLongPress,
+  href,
+  onHoverIn,
+  onHoverOut,
+  onLongPress,
+  ref,
+  slot,
+}: {
+  readonly delayLongPress: PressableProps['delayLongPress']
+  readonly href: string | undefined
+  readonly onHoverIn: PressableProps['onHoverIn']
+  readonly onHoverOut: PressableProps['onHoverOut']
+  readonly onLongPress: PressableProps['onLongPress']
+  readonly ref: Ref<HostInstance> | undefined
+  readonly slot: 'close' | undefined
+}): SlotTriggerProps {
+  const slots = use(ButtonSlotContext)
+  const trigger =
+    href === undefined && slot === undefined ? slots?.trigger : undefined
+
+  return {
+    ...(trigger === undefined
+      ? { delayLongPress, ref }
+      : {
+          'aria-expanded': trigger.expanded,
+          delayLongPress: trigger.delayLongPress ?? delayLongPress,
+          ref: refsOf(trigger.ref, ref),
+        }),
+    onHoverIn: andThen(onHoverIn, trigger?.onHoverIn),
+    onHoverOut: andThen(onHoverOut, trigger?.onHoverOut),
+    onLongPress: andThen(onLongPress, trigger?.onLongPress),
+  }
+}
+
 export {
   AnimatedPressable,
   buttonStyles,
@@ -301,5 +375,6 @@ export {
   toggleState,
   useButtonAction,
   useCorner,
+  useSlotTrigger,
 }
 export type { ButtonLinkForm, ButtonPressForm, ButtonToggleForm, ControlSize }

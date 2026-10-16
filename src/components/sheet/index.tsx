@@ -57,11 +57,11 @@ import {
   ModalWindow,
   NO_INSETS,
   panelRoleOf,
-  refsOf,
   useModalState,
   useModalTrigger,
 } from '../../modal'
 import { usePressFeedback } from '../../press'
+import { refsOf } from '../../ref'
 import { useTheme } from '../../theme/scope'
 import { composeStyles, themedStyles } from '../../theme/styles'
 import { useTypeRole } from '../../typography/roles'

@@ -17,6 +17,11 @@ type AnchoredPlacement = {
    * reported its size, and placed again whenever that size changes.
    */
   readonly onLayout: (event: LayoutChangeEvent) => void
+  /**
+   * Whether the surface has been placed. Until it has, it is laid out out of
+   * sight, and a screen reader cannot be sent to it.
+   */
+  readonly placed: boolean
   /** The side the surface opened on, which is the opposite one after a flip. */
   readonly side: OverlaySide
   /**
@@ -136,7 +141,7 @@ function useAnchoredPlacement({
   }
 
   if (measured === null || surface === null) {
-    return { onLayout, side, style: HIDDEN }
+    return { onLayout, placed: false, side, style: HIDDEN }
   }
 
   const placement = place({
@@ -153,6 +158,7 @@ function useAnchoredPlacement({
 
   return {
     onLayout,
+    placed: true,
     side: placement.side,
     style: {
       maxHeight: placement.maxHeight,

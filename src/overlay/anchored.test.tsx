@@ -47,6 +47,7 @@ const frames: { anchor: Frame; layer: Frame } = {
 const NOTCHED = { bottom: 0, left: 44, right: 0, top: 47 }
 
 const sides: string[] = []
+const placements: boolean[] = []
 
 type SurfaceProps = Omit<AnchoredPlacementOptions, 'anchor'> & {
   readonly anchor: RefObject<ComponentRef<typeof View> | null>
@@ -94,8 +95,14 @@ function styleOf(element: {
 }
 
 function Surface(props: SurfaceProps) {
-  const { onLayout, side, style } = useAnchoredPlacement(props)
+  const {
+    onLayout,
+    placed: isPlaced,
+    side,
+    style,
+  } = useAnchoredPlacement(props)
 
+  placements.push(isPlaced)
   sides.push(side)
 
   return <View onLayout={onLayout} style={style} testID="surface" />
@@ -104,6 +111,7 @@ function Surface(props: SurfaceProps) {
 beforeEach(() => {
   frames.anchor = [180, 300, 40, 40]
   frames.layer = [0, 0, 400, 800]
+  placements.length = 0
   sides.length = 0
   resize(400, 800)
   const prototype: unknown = View.prototype
@@ -129,6 +137,14 @@ describe('useAnchoredPlacement', () => {
     await render(<Anchored />)
 
     expect(placed()).toMatchObject({ opacity: 0, pointerEvents: 'none' })
+    expect(placements.at(-1)).toBe(false)
+  })
+
+  it('says when the surface has been placed', async () => {
+    await render(<Anchored />)
+    await laidOut()
+
+    expect(placements.at(-1)).toBe(true)
   })
 
   it('places the surface below the anchor, centred, by default', async () => {

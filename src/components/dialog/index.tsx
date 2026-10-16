@@ -47,11 +47,11 @@ import {
   ModalWindow,
   NO_INSETS,
   panelRoleOf,
-  refsOf,
   registerOf,
   useModalState,
   useModalTrigger,
 } from '../../modal'
+import { refsOf } from '../../ref'
 import { useTheme } from '../../theme/scope'
 import { composeStyles, themedStyles } from '../../theme/styles'
 import { useTypeRole } from '../../typography/roles'

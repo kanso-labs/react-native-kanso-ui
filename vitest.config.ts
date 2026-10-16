@@ -18,6 +18,13 @@ import { defineConfig } from 'vitest/config'
 // under Vitest's own `test` mode it is false, which turns off every check a
 // library makes only in development, so a story that throws in the Storybook
 // on one of them would pass a run in `test` mode.
+//
+// The browser asks for reduced motion, so a check reads what an overlay
+// settles on rather than a frame of its entrance. axe measures colour with
+// every ancestor's opacity blended in, and a panel caught mid-fade under a
+// loaded run read as low contrast however its tokens pair. Reanimated reads
+// `prefers-reduced-motion` on web, which is what the components' own
+// reduced-motion branches follow; the motion itself is pinned in Jest.
 export default defineConfig({
   plugins: [
     storybookTest({ configDir: path.join(import.meta.dirname, '.storybook') }),
@@ -27,7 +34,7 @@ export default defineConfig({
       enabled: true,
       headless: true,
       instances: [{ browser: 'chromium' }],
-      provider: playwright(),
+      provider: playwright({ contextOptions: { reducedMotion: 'reduce' } }),
     },
     name: 'storybook',
     // The file `Upload test results to Codecov` hands over, beside Jest's.
