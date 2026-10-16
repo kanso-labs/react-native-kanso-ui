@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.3.1](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.3.0...v0.3.1) (2026-10-16)
+
+
+### Dependencies
+
+* update dependency @kanso-labs/kanso-ui to v0.43.4 ([#115](https://github.com/kanso-labs/react-native-kanso-ui/issues/115)) ([fbb4182](https://github.com/kanso-labs/react-native-kanso-ui/commit/fbb41824294ad43a2bc1982c6b0ac3e26ae18a96))
+* update dependency @kanso-labs/unplugin-style-dictionary to v0.10.31 ([#116](https://github.com/kanso-labs/react-native-kanso-ui/issues/116)) ([04c3963](https://github.com/kanso-labs/react-native-kanso-ui/commit/04c396328b650878efc1283518efdbf9807b65ed))
+* update dependency react-native to v0.88.0 ([#119](https://github.com/kanso-labs/react-native-kanso-ui/issues/119)) ([f92db82](https://github.com/kanso-labs/react-native-kanso-ui/commit/f92db82b73cf2e0ef22a5a50bc046e000ef8ce83))
+* update dependency style-dictionary to v5.7.0 ([#124](https://github.com/kanso-labs/react-native-kanso-ui/issues/124)) ([6042c5f](https://github.com/kanso-labs/react-native-kanso-ui/commit/6042c5f3401d10f641c146aa0b59c4e22cecd851))
+* update example app ([#117](https://github.com/kanso-labs/react-native-kanso-ui/issues/117)) ([bb9fed7](https://github.com/kanso-labs/react-native-kanso-ui/commit/bb9fed7f399af6d068e1e11913b0a650a78d647e))
+* update vitest to v5.0.5 ([#118](https://github.com/kanso-labs/react-native-kanso-ui/issues/118)) ([22daa3c](https://github.com/kanso-labs/react-native-kanso-ui/commit/22daa3cc6e67cd9c190430c1669c0125d3ecd6be))
+
 ## [0.3.0](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.2.0...v0.3.0) (2026-10-15)
 
 
