@@ -5,7 +5,10 @@ import Canvas from './Canvas'
 const preview: Preview = {
   decorators: [
     (Story, context) => (
-      <Canvas name={context.globals.theme}>
+      <Canvas
+        name={context.globals.theme}
+        scrolls={context.parameters.scrolls === true}
+      >
         <Story />
       </Canvas>
     ),
