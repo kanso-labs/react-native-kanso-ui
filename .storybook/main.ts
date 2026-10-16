@@ -14,6 +14,21 @@ import {
 // stand-in for iOS and Android rather than either of them, so it catches token,
 // layout and contrast drift and says nothing about how a platform draws text or
 // shadows. The on-device Storybook in example/ reads the same story files.
+// React Native SVG's sound module, which a pressable shape requires on Android
+// alone; svg-sound-module.ts says why the web needs a stand-in all the same.
+// The import is relative, inside the package, where an alias never looks, so
+// a resolver answers it: in the bundle of dependencies Vite builds first, and
+// ahead of Vite's own resolver for a module it serves on its own.
+const svgSoundModule = {
+  enforce: 'pre' as const,
+  name: 'svg-sound-module',
+  resolveId: (source: string, importer: string | undefined) =>
+    source === '../fabric/NativeSvgSoundModule' &&
+    importer?.includes('react-native-svg') === true
+      ? path.join(import.meta.dirname, 'svg-sound-module.ts')
+      : null,
+}
+
 const config: StorybookConfig = {
   addons: ['@storybook/addon-docs', '@storybook/addon-a11y'],
   docs: {
@@ -51,7 +66,9 @@ const config: StorybookConfig = {
   stories: ['../src/**/*.stories.tsx'],
   viteFinal: (vite) =>
     mergeConfig(vite, {
+      optimizeDeps: { rolldownOptions: { plugins: [svgSoundModule] } },
       plugins: [
+        svgSoundModule,
         // src/tokens/defaults.ts is generated and not committed, so the
         // running Storybook writes it on start and again whenever the token
         // source changes, which a bump of @kanso-labs/kanso-ui does. The
