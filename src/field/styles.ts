@@ -70,6 +70,18 @@ const fieldStylesOf = themedStyles(
         justifyContent: 'flex-start',
         minWidth: 0,
       },
+      // A multi-line control growing under React Native Web, over the copy
+      // of its text that gives it its height.
+      copied: {
+        flexGrow: 1,
+        flexShrink: 1,
+        minWidth: 0,
+      },
+      // The copy: the control's type and wrapping, drawn in nothing.
+      copy: {
+        opacity: 0,
+        pointerEvents: 'none',
+      },
       // The count of characters, at the end of the message line in tabular
       // figures so it does not jitter as it counts.
       counter: {
@@ -105,6 +117,20 @@ const fieldStylesOf = themedStyles(
         outlineStyle: 'solid',
         outlineWidth: 0,
         padding: 0,
+      },
+      // A text area's text starts at the top of its lines, where Android
+      // would centre it in them.
+      inputMultiline: {
+        textAlignVertical: 'top',
+      },
+      // The growing control, laid over the copy that sizes it.
+      inputOverCopy: {
+        bottom: 0,
+        end: 0,
+        overflow: 'hidden',
+        position: 'absolute',
+        start: 0,
+        top: 0,
       },
       // The label's place: the column's width at its top, the label at its
       // start as wide as its text, so it sits at the right end of a

@@ -48,6 +48,7 @@ import { SupportingPane } from '../components/supporting-pane'
 import { Switch } from '../components/switch'
 import { Tag } from '../components/tag'
 import { Text } from '../components/text'
+import { TextArea } from '../components/text-area'
 import { TextField } from '../components/text-field'
 import {
   ArrowBackGlyph,
@@ -1023,6 +1024,16 @@ function Showcase({ name }: ShowcaseProps) {
           <Text tone="negative">Negative</Text>
           <Text tone="error">Error</Text>
         </View>
+      </Section>
+
+      <Section
+        description="The field grown to several lines, which keeps the label floated and the underline the full width of the box."
+        title="TextArea"
+      >
+        <TextArea
+          defaultValue={'First line.\nSecond line.\nThird line.'}
+          label="Label"
+        />
       </Section>
 
       <Section
