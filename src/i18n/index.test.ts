@@ -1,6 +1,6 @@
 import { describe, expect, it } from '@jest/globals'
 
-import { messagesFor } from '.'
+import { messagesFor, resultsFor } from '.'
 import { localeOf } from '../number/locale'
 
 describe('the library’s words', () => {
@@ -34,5 +34,48 @@ describe('the library’s words', () => {
 
   it('reads the device’s locale when given none', () => {
     expect(messagesFor()).toBe(messagesFor(localeOf(undefined)))
+  })
+})
+
+describe('how many rows a search leaves', () => {
+  it.each([
+    [1, 'en-US', '1 option available.'],
+    [3, 'en-US', '3 options available.'],
+    [1, 'de-DE', '1 Option verfügbar.'],
+    [1200, 'de-DE', '1.200 Optionen verfügbar.'],
+    [2, 'ja-JP', '2 個のオプションを利用できます。'],
+  ])('says %i in %s', (count, locale, words) => {
+    expect(resultsFor(count, locale)).toBe(words)
+  })
+
+  // Russian's singular form is for any count ending in one but eleven, not
+  // for one alone.
+  it('takes the form the locale’s plural rules pick', () => {
+    expect(resultsFor(21, 'ru-RU')).toBe('21 параметр доступно.')
+    expect(resultsFor(11, 'ru-RU')).toBe('11 параметров доступно.')
+  })
+
+  it('says there are none in the empty row’s words', () => {
+    expect(resultsFor(0, 'en-US')).toBe('No results')
+    expect(resultsFor(0, 'de-DE')).toBe('Keine Ergebnisse')
+  })
+
+  // Jest replaces no function-valued property, so the runtime's own is set
+  // aside by hand and put back after.
+  it('takes the singular for one alone without plural rules', () => {
+    const rules = Object.getOwnPropertyDescriptor(Intl, 'PluralRules')
+    Object.defineProperty(Intl, 'PluralRules', {
+      configurable: true,
+      value: undefined,
+    })
+
+    try {
+      expect(resultsFor(1, 'ru-RU')).toBe('1 параметр доступно.')
+      expect(resultsFor(21, 'ru-RU')).toBe('21 параметров доступно.')
+    } finally {
+      if (rules !== undefined) {
+        Object.defineProperty(Intl, 'PluralRules', rules)
+      }
+    }
   })
 })

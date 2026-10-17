@@ -1,5 +1,10 @@
 // The package's public surface. Every component, hook and type a consumer
 // imports is exported here by name.
+export { Autocomplete } from './components/autocomplete'
+export type {
+  AutocompleteFilter,
+  AutocompleteProps,
+} from './components/autocomplete'
 export { Avatar } from './components/avatar'
 export type { AvatarProps } from './components/avatar'
 export { Button } from './components/button'
