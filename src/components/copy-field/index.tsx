@@ -11,6 +11,7 @@ import {
 } from 'react-native'
 
 import { useClipboardAvailable, writeClipboard } from '../../clipboard'
+import { useMessages } from '../../i18n/provider'
 import { useTheme } from '../../theme/scope'
 import { composeStyles, themedStyles } from '../../theme/styles'
 import { useFontFamily } from '../../typography/fonts'
@@ -129,13 +130,13 @@ type CopyFieldProps = Omit<ViewProps, 'children'> & {
   /**
    * What the button says once the value has been copied, and what is
    * announced. It reverts to `copyLabel` on its own after a couple of
-   * seconds.
-   * @default 'Copied'
+   * seconds. Left out, it is the word for it in the `I18nProvider`'s locale,
+   * or the device's outside one, "Copied" in English.
    */
   readonly copiedLabel?: string
   /**
-   * What the button says at rest.
-   * @default 'Copy'
+   * What the button says at rest. Left out, it is the word for it in the
+   * `I18nProvider`'s locale, or the device's outside one, "Copy" in English.
    */
   readonly copyLabel?: string
   /**
@@ -180,8 +181,8 @@ type CopyFieldProps = Omit<ViewProps, 'children'> & {
  * `style`, `ref` and `testID` land on the box.
  */
 function CopyField({
-  copiedLabel = 'Copied',
-  copyLabel = 'Copy',
+  copiedLabel: ownCopiedLabel,
+  copyLabel: ownCopyLabel,
   label,
   onCopied,
   onCopyFailed,
@@ -189,6 +190,9 @@ function CopyField({
   value,
   ...props
 }: CopyFieldProps) {
+  const messages = useMessages()
+  const copiedLabel = ownCopiedLabel ?? messages.copied
+  const copyLabel = ownCopyLabel ?? messages.copy
   const theme = useTheme()
   const themed = stylesOf(theme)
   const bodySmall = useTypeRole('bodySmall')

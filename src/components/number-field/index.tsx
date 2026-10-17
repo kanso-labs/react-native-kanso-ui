@@ -37,6 +37,7 @@ import {
 import { useFieldValidation } from '../../form'
 import { MinusGlyph, PlusGlyph } from '../../glyphs'
 import { IconStyleContext } from '../../glyphs/icon-style'
+import { messagesFor } from '../../i18n'
 import { useLocaleOf } from '../../i18n/provider'
 import { useNumberFieldState } from '../../number/state'
 import { hitSlop, usePressFeedback } from '../../press'
@@ -116,7 +117,9 @@ type NumberFieldProps = Omit<
 > & {
   /**
    * The name of the stepper that lowers the value, for a screen reader. Left
-   * out, it is the English "Decrease" followed by the field's own label.
+   * out, it is the name React Aria gives web's in the `I18nProvider`'s
+   * locale, or the device's outside one, around the field's own label:
+   * "Decrease Label" in English.
    */
   readonly decrementLabel?: string
   /** The value the field opens with, when it keeps its own. */
@@ -149,7 +152,9 @@ type NumberFieldProps = Omit<
   readonly formatOptions?: Intl.NumberFormatOptions
   /**
    * The name of the stepper that raises the value, for a screen reader. Left
-   * out, it is the English "Increase" followed by the field's own label.
+   * out, it is the name React Aria gives web's in the `I18nProvider`'s
+   * locale, or the device's outside one, around the field's own label:
+   * "Increase Label" in English.
    */
   readonly incrementLabel?: string
   /**
@@ -511,8 +516,12 @@ function NumberField({
         end={steppersOf({
           canDecrement: state.canDecrement,
           canIncrement: state.canIncrement,
-          decrementLabel: decrementLabel ?? `Decrease ${label}`,
-          incrementLabel: incrementLabel ?? `Increase ${label}`,
+          decrementLabel:
+            decrementLabel ??
+            messagesFor(writtenIn).decrease.replace('{label}', label),
+          incrementLabel:
+            incrementLabel ??
+            messagesFor(writtenIn).increase.replace('{label}', label),
           inline: steppers === 'horizontal',
           onBlur: () => {
             setStepperFocused(false)

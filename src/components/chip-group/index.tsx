@@ -34,6 +34,7 @@ import {
 } from '../../chip'
 import { GLYPH_SIZE, RULE_WIDTH, stylesOf } from '../../chip/styles'
 import { CloseGlyph } from '../../glyphs'
+import { useMessages } from '../../i18n/provider'
 import { TARGET_SIZE, usePressFeedback } from '../../press'
 import { useTheme } from '../../theme/scope'
 import { composeStyles, themedStyles } from '../../theme/styles'
@@ -71,13 +72,10 @@ import { useTypeRole } from '../../typography/roles'
 // keeps a chip's height while it is empty, so removing the last chip leaves
 // what sits under the group where it was.
 //
-// Three departures from web. Arrow keys do not move between the chips, and
+// Two departures from web. Arrow keys do not move between the chips, and
 // Backspace and Delete do not remove one: each chip and each close target is
-// a stop of its own for a hardware keyboard. The close target is named
-// `Remove` and the chip's text in English unless `removeLabel` says
-// otherwise, where web's follows the reader's locale. And the close glyph
-// takes the label's colour at once rather than easing with it, as the check
-// does.
+// a stop of its own for a hardware keyboard. And the close glyph takes the
+// label's colour at once rather than easing with it, as the check does.
 
 type ChipGroupChipProps = Omit<
   PressableProps,
@@ -161,8 +159,9 @@ type ChipGroupProps<T extends object = object> = Omit<
   /**
    * What the close target on each chip is called, for a screen reader. The
    * chip's own text follows it, so this is the verb rather than the whole
-   * phrase: "Remove" becomes "Remove First item".
-   * @default 'Remove'
+   * phrase: "Remove" becomes "Remove First item". Left out, it is the word
+   * React Aria gives web's in the `I18nProvider`'s locale, or the device's
+   * outside one, "Remove" in English.
    */
   readonly removeLabel?: string
   /** What the row draws once it holds no chips. */
@@ -295,13 +294,15 @@ function ChipGroup<T extends object = object>({
   label,
   onRemove,
   onSelectionChange,
-  removeLabel = 'Remove',
+  removeLabel: ownRemoveLabel,
   renderEmptyState,
   selectedKeys,
   selectionMode = 'none',
   style,
   ...props
 }: ChipGroupProps<T>) {
+  const messages = useMessages()
+  const removeLabel = ownRemoveLabel ?? messages.remove
   const theme = useTheme()
   const state = useListState<T>({
     // Each chip builds its own entry in the collection; see

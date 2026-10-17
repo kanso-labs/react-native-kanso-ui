@@ -28,6 +28,7 @@ import {
 import { useFieldValidation } from '../../form'
 import { CloseGlyph, SearchGlyph } from '../../glyphs'
 import { IconStyleContext } from '../../glyphs/icon-style'
+import { useMessages } from '../../i18n/provider'
 import { usePressFeedback } from '../../press'
 import { withOpacity } from '../../theme/color'
 import { useTheme } from '../../theme/scope'
@@ -108,8 +109,8 @@ type SearchFieldProps = Omit<
 > & {
   /**
    * The name of the button that clears the field, for a screen reader.
-   * Left out, it is "Clear search", the English name web's takes from React
-   * Aria.
+   * Left out, it is the name React Aria gives web's in the `I18nProvider`'s
+   * locale, or the device's outside one, "Clear search" in English.
    */
   readonly clearLabel?: string
   /**
@@ -191,10 +192,6 @@ const ICON_SIZE = 24
 
 // The widest the page draws a search bar.
 const MAX_WIDTH = 720
-
-// The clear button's name when the call site gives none, as React Aria names
-// web's in English.
-const CLEAR_LABEL = 'Clear search'
 
 const stylesOf = themedStyles(({ colors, radii, spacing, stateLayerOpacity }) =>
   StyleSheet.create({
@@ -436,7 +433,7 @@ function SearchBar({
  * ```
  */
 function SearchField({
-  clearLabel = CLEAR_LABEL,
+  clearLabel: ownClearLabel,
   defaultValue = '',
   description,
   error,
@@ -458,6 +455,8 @@ function SearchField({
   value,
   ...props
 }: SearchFieldProps) {
+  const messages = useMessages()
+  const clearLabel = ownClearLabel ?? messages.clearSearch
   const id = useId()
   const control = useRef<ComponentRef<typeof TextInput>>(null)
   const autocomplete = use(AutocompleteContext)

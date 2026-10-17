@@ -87,5 +87,14 @@ function useMessages(own?: string): LibraryMessages {
   return messagesFor(useLocaleOf(own))
 }
 
-export { I18nProvider, useLocale, useLocaleOf, useMessages }
+/**
+ * The nearest provider's locale as given, undefined outside one, for an
+ * overlay to hand on to what it draws in the host at the app's root, where
+ * a provider inside the app would not otherwise reach.
+ */
+function useProvidedLocale(): string | undefined {
+  return use(LocaleContext)
+}
+
+export { I18nProvider, useLocale, useLocaleOf, useMessages, useProvidedLocale }
 export type { I18nProviderProps, Locale }

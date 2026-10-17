@@ -28,6 +28,7 @@ import { SafeAreaInsetsContext } from 'react-native-safe-area-context'
 
 import { CloseGlyph } from '../../glyphs'
 import { useWindowSizeClass } from '../../hooks/useWindowSizeClass'
+import { useMessages } from '../../i18n/provider'
 import { Overlay } from '../../overlay'
 import { hitSlop, usePressFeedback } from '../../press'
 import { useTheme } from '../../theme/scope'
@@ -268,8 +269,8 @@ type SnackbarProps = Omit<ViewProps, 'children' | 'style'> & {
   /**
    * What a screen reader calls the button that dismisses a snackbar. It sits
    * here rather than on a message's own options because it does not vary by
-   * message.
-   * @default 'Close'
+   * message. Left out, it is the word React Aria gives web's in the
+   * `I18nProvider`'s locale, or the device's outside one, "Close" in English.
    */
   readonly closeLabel?: string
   /** The queue the snackbar shows messages from. */
@@ -413,11 +414,13 @@ function measureInto(height: SharedValue<number>) {
  * the screen that holds the message.
  */
 function Snackbar({
-  closeLabel = 'Close',
+  closeLabel: ownCloseLabel,
   queue,
   style,
   ...props
 }: SnackbarProps) {
+  const messages = useMessages()
+  const closeLabel = ownCloseLabel ?? messages.close
   const theme = useTheme()
   const insets = use(SafeAreaInsetsContext) ?? NO_INSETS
   const wide = useWindowSizeClass() !== 'compact'
