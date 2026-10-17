@@ -54,6 +54,7 @@ import { SplitButton } from '../components/split-button'
 import { Stack } from '../components/stack'
 import { SupportingPane } from '../components/supporting-pane'
 import { Switch } from '../components/switch'
+import { Tabs } from '../components/tabs'
 import { Tag } from '../components/tag'
 import { Text } from '../components/text'
 import { TextArea } from '../components/text-area'
@@ -124,6 +125,7 @@ const CHIP_SELECTION = ['second']
 // The disclosure group's open section, the first of its two.
 const DISCLOSURE_GROUP_SELECTION = ['first']
 
+const TABS = ['First item', 'Second item', 'Third item'] as const
 const TAG_TONES = ['primary', 'positive', 'negative', 'neutral'] as const
 
 const LIBRARY_DARK = {
@@ -239,6 +241,9 @@ const stylesOf = themedStyles(({ colors, radii, spacing }) =>
     page: {
       gap: spacing.xl,
       paddingBottom: spacing.xxxl,
+    },
+    panel: {
+      paddingTop: spacing.md,
     },
     placeholder: {
       borderColor: colors.outlineVariant,
@@ -1153,6 +1158,37 @@ function Showcase({ name }: ShowcaseProps) {
             Label
           </Switch>
         </View>
+      </Section>
+
+      <Section
+        description="The active tab's label and the indicator under it take the primary role. The secondary strip keeps its active label on surface and runs a primary line across the tab, with each icon in its tab's own colour."
+        title="Tabs"
+      >
+        <Tabs defaultSelectedKey="First item">
+          <Tabs.List aria-label="Sections">
+            {TABS.map((tab) => (
+              <Tabs.Tab id={tab} key={tab}>
+                {tab}
+              </Tabs.Tab>
+            ))}
+          </Tabs.List>
+          {TABS.map((tab) => (
+            <Tabs.Panel id={tab} key={tab} style={styles.panel}>
+              <Text tone="muted" variant="bodyMedium">
+                Supporting line
+              </Text>
+            </Tabs.Panel>
+          ))}
+        </Tabs>
+        <Tabs defaultSelectedKey="First item" variant="secondary">
+          <Tabs.List aria-label="Sections">
+            {TABS.map((tab) => (
+              <Tabs.Tab icon={DOT} id={tab} key={tab}>
+                {tab}
+              </Tabs.Tab>
+            ))}
+          </Tabs.List>
+        </Tabs>
       </Section>
 
       <Section

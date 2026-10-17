@@ -248,6 +248,22 @@ export { SupportingPane } from './components/supporting-pane'
 export type { SupportingPaneProps } from './components/supporting-pane'
 export { Switch } from './components/switch'
 export type { SwitchProps } from './components/switch'
+export {
+  Tabs,
+  TabsList,
+  TabsPanel,
+  TabsPanels,
+  TabsTab,
+} from './components/tabs'
+export type {
+  TabsLayout,
+  TabsListProps,
+  TabsPanelProps,
+  TabsPanelsProps,
+  TabsProps,
+  TabsTabProps,
+  TabsVariant,
+} from './components/tabs'
 export { Tag } from './components/tag'
 export type { TagProps, TagTone, TagVariant } from './components/tag'
 export { Text } from './components/text'
