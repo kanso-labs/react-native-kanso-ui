@@ -51,7 +51,7 @@ import type { ResolvedTheme } from '../../theme/scope'
 
 import { ButtonSlotContext } from '../../button/slots'
 import { useWindowSizeClass } from '../../hooks/useWindowSizeClass'
-import { messagesFor } from '../../i18n'
+import { useMessages } from '../../i18n/provider'
 import {
   insetsOf,
   ModalWindow,
@@ -93,8 +93,8 @@ import { useTypeRole } from '../../typography/roles'
 // **The handle is a control where the sheet has two heights**, as Android's
 // drag handle is: a press moves the sheet to the other one, and it says which
 // it is at as expanded or collapsed. It takes the press feedback every control
-// does, over a 48dp target, and is named "Drag handle" in the device's locale
-// unless `aria-label` says otherwise. A sheet with one height has nothing for
+// does, over a 48dp target, and is named "Drag handle" in the `I18nProvider`'s
+// locale, or the device's outside one, unless `aria-label` says otherwise. A sheet with one height has nothing for
 // it to do, and draws it as web does, as a mark the screen reader skips. The
 // side sheet draws no handle.
 //
@@ -546,8 +546,8 @@ function SheetFooter({ style, ...props }: SheetPartProps) {
 /**
  * The bottom sheet's drag handle, a 32 by 4dp bar centred along its top edge.
  * Where the sheet has two heights it is a button moving it to the other one,
- * named "Drag handle" in the device's locale unless `aria-label` says
- * otherwise; elsewhere it is a mark a screen reader skips. A side sheet draws
+ * named "Drag handle" in the `I18nProvider`'s locale, or the device's outside
+ * one, unless `aria-label` says otherwise; elsewhere it is a mark a screen reader skips. A side sheet draws
  * none. `style`, `ref` and `testID` land on its view.
  */
 function SheetHandle({
@@ -564,6 +564,7 @@ function SheetHandle({
     corners: { borderRadius: radii.pill },
   })
   const { toggle } = layout
+  const messages = useMessages()
 
   if (!layout.bottom) {
     return null
@@ -584,7 +585,7 @@ function SheetHandle({
   return (
     <Pressable
       aria-expanded={layout.expanded}
-      aria-label={label ?? messagesFor().dragHandle}
+      aria-label={label ?? messages.dragHandle}
       role="button"
       {...props}
       {...feedback.handlers}

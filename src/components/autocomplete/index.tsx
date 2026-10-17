@@ -6,7 +6,7 @@ import { useMemo, useState } from 'react'
 import type { AutocompleteValue } from '../../autocomplete'
 
 import { AutocompleteContext, containsIn } from '../../autocomplete'
-import { localeOf } from '../../number/locale'
+import { useLocaleOf } from '../../i18n/provider'
 
 // kanso-ui's Autocomplete, from the search page's search with suggestions: a
 // SearchField over a List, where typing narrows the rows the list shows. It
@@ -17,8 +17,8 @@ import { localeOf } from '../../number/locale'
 // Three things are worth knowing, and the last two differ from web's.
 //
 // **Filtering is on by default,** as on web: `filter` falls back to a match
-// anywhere in a row's text, compared by an `Intl.Collator` in the device's
-// locale at base sensitivity, so case and accents are ignored, which is what
+// anywhere in a row's text, compared by an `Intl.Collator` in the
+// `I18nProvider`'s locale, or the device's outside one, at base sensitivity, so case and accents are ignored, which is what
 // web's falls back to as well.
 //
 // **There is no virtual focus.** Web keeps the keyboard in the input while
@@ -93,13 +93,14 @@ function Autocomplete<T extends object = object>({
 }: AutocompleteProps<T>) {
   const [own, setOwn] = useState(defaultInputValue)
   const current = inputValue ?? own
+  const locale = useLocaleOf(undefined)
   const value = useMemo<AutocompleteValue>(
     () => ({
       inputValue: current,
-      matches: matchesOf(filter ?? containsIn(localeOf(undefined)), current),
+      matches: matchesOf(filter ?? containsIn(locale), current),
       setInputValue: setterOf(setOwn, onInputChange),
     }),
-    [current, filter, onInputChange],
+    [current, filter, locale, onInputChange],
   )
 
   return <AutocompleteContext value={value}>{children}</AutocompleteContext>

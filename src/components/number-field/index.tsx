@@ -37,7 +37,7 @@ import {
 import { useFieldValidation } from '../../form'
 import { MinusGlyph, PlusGlyph } from '../../glyphs'
 import { IconStyleContext } from '../../glyphs/icon-style'
-import { localeOf } from '../../number/locale'
+import { useLocaleOf } from '../../i18n/provider'
 import { useNumberFieldState } from '../../number/state'
 import { hitSlop, usePressFeedback } from '../../press'
 import { withOpacity } from '../../theme/color'
@@ -77,9 +77,10 @@ import { IconButton } from '../icon-button'
 // the numbers and punctuation keyboard alone, so a field that takes one gets
 // that.
 //
-// **The locale is a prop**, defaulting to the device's, where web reads it
-// from React Aria's `I18nProvider`. It decides how the value is written and
-// read, so a field in a German app reads "1.234,5" as 1234.5.
+// **The locale is the `I18nProvider`'s**, as web reads it from React Aria's,
+// unless the `locale` prop names another, and the device's under neither. It
+// decides how the value is written and read, so a field in a German app reads
+// "1.234,5" as 1234.5.
 //
 // A stepper press is announced on iOS and Android, by the value it leaves,
 // since VoiceOver and TalkBack stay on the stepper rather than reading the
@@ -179,7 +180,7 @@ type NumberFieldProps = Omit<
   readonly label: string
   /**
    * The BCP 47 locale the value is written and read in. Defaults to the
-   * device's.
+   * `I18nProvider`'s, or the device's outside one.
    */
   readonly locale?: string
   /** The highest value the field takes. A committed value is clamped to it. */
@@ -459,7 +460,7 @@ function NumberField({
 }: NumberFieldProps) {
   const id = useId()
   const control = useRef<ComponentRef<typeof TextInput>>(null)
-  const writtenIn = localeOf(locale)
+  const writtenIn = useLocaleOf(locale)
   const state = useNumberFieldState({
     defaultValue,
     formatOptions,

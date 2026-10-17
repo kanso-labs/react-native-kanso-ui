@@ -3,8 +3,8 @@
 // `src/mark/initials.ts` rather than shared through a package, so the two
 // read a name the same way and each can be read without the other.
 //
-// It works in graphemes, what a reader sees as one character, in the
-// device's locale. A code point drops an accent written as a combining mark,
+// It works in graphemes, what a reader sees as one character, in the locale
+// the mark is drawn in. A code point drops an accent written as a combining mark,
 // splits an Indic conjunct and cuts a flag or a joined emoji in half;
 // upper-casing without the locale turns a Turkish "i" into "I" rather than
 // "İ".

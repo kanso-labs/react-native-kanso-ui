@@ -21,6 +21,7 @@ import type { Curve, Keyframe } from '../../indicator/motion'
 import type { RingWave } from '../../indicator/paths'
 
 import { HIDDEN } from '../../glyphs/hidden'
+import { useLocaleOf } from '../../i18n/provider'
 import {
   activeLength,
   fillOf,
@@ -146,7 +147,8 @@ type ProgressIndicatorProps = Omit<ViewProps, 'children' | 'style'> & {
    */
   readonly label?: string
   /**
-   * The BCP 47 locale the value is written in. Defaults to the device's.
+   * The BCP 47 locale the value is written in. Defaults to the
+   * `I18nProvider`'s, or the device's outside one.
    */
   readonly locale?: string
   /**
@@ -858,9 +860,10 @@ function ProgressIndicator({
 }: ProgressIndicatorProps) {
   const theme = useTheme()
   const colors = useIndicatorColors(tone)
+  const writtenIn = useLocaleOf(locale)
   const reading = readingOf({
     formatOptions,
-    locale,
+    locale: writtenIn,
     maxValue,
     minValue,
     value,

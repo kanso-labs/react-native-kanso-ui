@@ -77,8 +77,8 @@ type ProductIconProps = Omit<ViewProps, 'children' | 'style'> & {
  * already written next to the mark, mark it `decorative`, so a screen reader
  * reads the name once.
  *
- * The initial is taken in the device's locale. `style`, `ref` and `testID`
- * land on the square.
+ * The initial is taken in the `I18nProvider`'s locale, or the device's outside
+ * one. `style`, `ref` and `testID` land on the square.
  */
 function ProductIcon({
   size = 'md',

@@ -4,10 +4,12 @@ import { localeOf } from '../number/locale'
 import { MESSAGES } from './messages'
 
 // The words the library writes itself, in the locale a component is given or
-// the device's. Web reads them through React Aria's dictionary, in the
-// I18nProvider's locale, and this falls back the way that dictionary does: the
-// table's entry for the locale, then the first for its language, then English,
-// so `fr-CA` reads French and a locale the table lacks reads English.
+// the device's. A component asks through `useMessages` in ./provider.tsx,
+// which gives it the `I18nProvider`'s locale, as web reads them through React
+// Aria's dictionary in its provider's. This falls back the way that dictionary
+// does: the table's entry for the locale, then the first for its language,
+// then English, so `fr-CA` reads French and a locale the table lacks reads
+// English.
 
 const TABLE = new Map(Object.entries(MESSAGES))
 

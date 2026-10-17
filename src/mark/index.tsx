@@ -15,6 +15,7 @@ import type { ResolvedTheme } from '../theme/scope'
 import type { MarkSize, MarkTone } from './styles'
 
 import { PersonGlyph } from '../glyphs'
+import { useLocaleOf } from '../i18n/provider'
 import { useTheme } from '../theme/scope'
 import { composeStyles } from '../theme/styles'
 import { useTypeRole } from '../typography/roles'
@@ -116,7 +117,8 @@ function Mark({
 
   const own = markStylesOf(theme)
   const text = initialsStylesOf(theme)
-  const fallback = initials(name)
+  const locale = useLocaleOf(undefined)
+  const fallback = initials(name, locale)
 
   // Announced as an image named for whoever or whatever it stands for,
   // rather than letting the initials be read: "AL" is not what anyone means

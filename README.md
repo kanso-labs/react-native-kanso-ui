@@ -155,6 +155,43 @@ export default function App() {
 }
 ```
 
+## Localisation
+
+Wrap the app in `I18nProvider`, as kanso-ui is wrapped in React Aria's, and the
+components write in its locale: the library's own words, such as a pending
+ring's name, a bottom sheet's handle, a list's or a menu's loading and empty
+rows and a calendar's chevrons, and its numbers and dates, such as a
+`Currency`'s amount, a field's count, a `Meter`'s value and a `Calendar`'s
+month. A component given a `locale` of its own writes in that one instead.
+
+Outside any provider, and for a locale the runtime cannot parse, the components
+write in the device's. So an app that follows the device needs no provider, and
+one with a language setting of its own passes the setting, falling back to the
+device's first language from Expo Localization:
+
+```tsx
+// app/_layout.tsx
+import { I18nProvider } from '@kanso-labs/react-native-kanso-ui'
+import { useLocales } from 'expo-localization'
+import { Stack } from 'expo-router'
+
+export default function RootLayout() {
+  const [device] = useLocales()
+  const language = useLanguageSetting() // the app's own, or undefined
+
+  return (
+    <I18nProvider locale={language ?? device?.languageTag}>
+      <Stack />
+    </I18nProvider>
+  )
+}
+```
+
+`useLocale()` returns `{ direction, locale }`, as React Aria's does on web, for
+an app's own formatting to match. The direction is `I18nManager`'s, which is
+what React Native lays out by: the provider sets none, and an app turns its
+layout over with `I18nManager.forceRTL` and a reload.
+
 ## Development
 
 Install with the Node version in `.tool-versions`:

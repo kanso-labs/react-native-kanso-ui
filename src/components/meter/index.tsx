@@ -5,6 +5,7 @@ import { StyleSheet, View } from 'react-native'
 
 import type { IndicatorTone } from '../../indicator'
 
+import { useLocaleOf } from '../../i18n/provider'
 import {
   IndicatorLabels,
   IndicatorLine,
@@ -57,7 +58,8 @@ type MeterProps = Omit<ViewProps, 'children' | 'style'> & {
    */
   readonly label?: string
   /**
-   * The BCP 47 locale the value is written in. Defaults to the device's.
+   * The BCP 47 locale the value is written in. Defaults to the
+   * `I18nProvider`'s, or the device's outside one.
    */
   readonly locale?: string
   /**
@@ -137,9 +139,10 @@ function Meter({
 }: MeterProps) {
   const theme = useTheme()
   const colors = useIndicatorColors(tone)
+  const writtenIn = useLocaleOf(locale)
   const reading = readingOf({
     formatOptions,
-    locale,
+    locale: writtenIn,
     maxValue,
     minValue,
     value,

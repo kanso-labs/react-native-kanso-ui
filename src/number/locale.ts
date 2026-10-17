@@ -1,8 +1,8 @@
 // The locale a component writes its numbers in, and src/i18n its words: the
 // one given, where the runtime takes it as a locale at all, or the device's.
-// Web reads the page's from React Aria's `I18nProvider`; React Native has no
-// such context, so a component that formats a number takes the locale as a
-// prop and falls back to this.
+// Which one is given is `useLocaleOf`'s in src/i18n/provider.tsx, the
+// component's own prop or the `I18nProvider`'s, as web reads the page's from
+// React Aria's provider.
 
 let deviceLocale: string | undefined
 
