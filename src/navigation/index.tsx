@@ -24,21 +24,26 @@ import type { ResolvedTheme } from '../theme/scope'
 import { Badge } from '../badge'
 import { IconStyleContext } from '../glyphs/icon-style'
 import { hitSlop, usePressFeedback } from '../press'
+import { useLinkPress } from '../router'
 import { withOpacity } from '../theme/color'
 import { useTheme } from '../theme/scope'
 import { composeStyles } from '../theme/styles'
 import { useTypeRole } from '../typography/roles'
 import { INDICATOR, PILL_HEIGHT, styles, stylesOf } from './styles'
 
-// The destination NavigationBar draws, in the two forms its page gives it,
-// as kanso-ui's src/navigation draws it. Apart from the bar, so the forms it
-// shares with a rail cannot drift.
+// The destination NavigationBar and NavigationRail both draw, in the four
+// forms their pages give it, as kanso-ui's src/navigation draws it. Apart
+// from either component, so the two cannot drift.
 //
 // A vertical destination puts its icon in the page's 56dp by 32dp active
-// indicator with the label 4dp under it, in label medium. A horizontal one is
-// a 40dp pill holding the icon and the label side by side, 16dp in at either
-// end with 4dp between the two, in label medium too. Which one a destination
-// draws is the bar's to say, through the context it hands them.
+// indicator with the label 4dp under it, in label medium: the bar in a
+// compact window, sharing its width with the others, and the collapsed rail,
+// as wide as the rail. A horizontal one is a pill holding the icon and the
+// label side by side, 16dp in at either end: the bar from the medium window
+// size class at 40dp with 4dp between the two in label medium, and the
+// expanded rail at 56dp with 8dp between them in label large. Which form a
+// destination draws is its bar's or its rail's to say, through the context
+// it hands them.
 //
 // The current destination's indicator is the secondary container, with its
 // icon in on secondary container and, under the indicator, its label in
@@ -56,9 +61,10 @@ import { INDICATOR, PILL_HEIGHT, styles, stylesOf } from './styles'
 // The state layer, the ripple and the focus ring are src/press's, in on
 // secondary container, drawn on the pill: the indicator in a vertical
 // destination, which its ripple grows from the centre of wherever it is
-// pressed, and the whole destination in a horizontal one. A horizontal pill's
-// press reaches 4dp above and below it, to the 48dp target; a vertical
-// destination is the bar's full height already. A disabled one draws its icon
+// pressed, and the whole destination in a horizontal one. The bar's 40dp
+// pill's press reaches 4dp above and below it, to the 48dp target; a
+// vertical destination is the bar's full height already, and the other two
+// forms are 56dp and 64dp tall. A disabled one draws its icon
 // and label on surface at the disabled content opacity, with no layer.
 //
 // A destination is a `tab`, reporting whether it is the selected one, and is
@@ -114,10 +120,19 @@ type NavigationDestinationProps = Omit<
 }
 
 /**
- * Which of the page's two forms a destination draws: the label under the
- * icon, or beside it.
+ * Which form a destination draws: the bar's `vertical` and `horizontal`,
+ * and the rail's `collapsed` and `expanded`. The label is under the icon in
+ * the first and the third, and beside it in the other two.
  */
-type NavigationForm = 'horizontal' | 'vertical'
+type NavigationForm = 'collapsed' | 'expanded' | 'horizontal' | 'vertical'
+
+type NavigationItemProps = NavigationDestinationProps & {
+  /**
+   * Where the destination goes, through the app's router, and what the
+   * `selectedRoute` around it is matched against.
+   */
+  readonly href: string
+}
 
 // The indicator's width when it starts to grow, as a share of its whole
 // width, and the share of the move it fades in over.
@@ -125,6 +140,14 @@ const GROWN_FROM = 0.4
 const FADE_SHARE = 0.2
 
 const ICON_SIZE = 24
+
+// Whether a form sets the label beside the icon rather than under it.
+const BESIDE: Readonly<Record<NavigationForm, boolean>> = {
+  collapsed: false,
+  expanded: true,
+  horizontal: true,
+  vertical: false,
+}
 
 const NavigationContext = createContext<NavigationContextValue>({
   form: 'vertical',
@@ -178,8 +201,8 @@ function ActiveIndicator({ selected }: { readonly selected: boolean }) {
 
 /**
  * What a destination draws over its indicator: the icon and its badge, and
- * in a horizontal destination the label before them in the tree, which the
- * pill's reversed row draws after them.
+ * where the label is beside the icon the label before them in the tree,
+ * which the pill's reversed row draws after them.
  */
 function DestinationContent({
   badge,
@@ -197,11 +220,11 @@ function DestinationContent({
   readonly selected: boolean
 }) {
   const theme = useTheme()
-  const horizontal = form === 'horizontal'
+  const beside = BESIDE[form]
 
   return (
     <>
-      {horizontal ? (
+      {beside ? (
         <Label form={form} isDisabled={isDisabled} selected={selected}>
           {label}
         </Label>
@@ -213,10 +236,7 @@ function DestinationContent({
           {badge === undefined || badge === false ? (
             icon
           ) : (
-            <Badge
-              count={badge === true ? undefined : badge}
-              inFlow={horizontal}
-            >
+            <Badge count={badge === true ? undefined : badge} inFlow={beside}>
               {icon}
             </Badge>
           )}
@@ -245,7 +265,10 @@ function iconStyleOf(color: ColorValue): IconStyle {
   return { color, size: ICON_SIZE }
 }
 
-/** A destination's label, on one line, in label medium. */
+/**
+ * A destination's label, on one line: in label large in an expanded rail,
+ * and in label medium everywhere else.
+ */
 function Label({
   children,
   form,
@@ -258,7 +281,7 @@ function Label({
   readonly selected: boolean
 }) {
   const theme = useTheme()
-  const role = useTypeRole('labelMedium')
+  const role = useTypeRole(form === 'expanded' ? 'labelLarge' : 'labelMedium')
 
   return (
     <NativeText
@@ -279,7 +302,7 @@ function labelColorOf(
   isDisabled: boolean,
   selected: boolean,
 ): string {
-  return selected && !isDisabled && form === 'vertical'
+  return selected && !isDisabled && !BESIDE[form]
     ? theme.colors.secondary
     : iconColorOf(theme, isDisabled, selected)
 }
@@ -314,9 +337,9 @@ function NavigationDestination({
   const theme = useTheme()
   const { form, measuring } = use(NavigationContext)
   const own = stylesOf(theme)
-  const horizontal = form === 'horizontal'
+  const beside = BESIDE[form]
   const feedback = usePressFeedback({
-    area: horizontal ? undefined : INDICATOR,
+    area: beside ? undefined : INDICATOR,
     color: theme.colors.onSecondaryContainer,
     corners: own.pill,
     disabled: isDisabled,
@@ -342,17 +365,17 @@ function NavigationDestination({
     return <View style={own.horizontal}>{content}</View>
   }
 
-  if (horizontal) {
+  if (beside) {
     return (
       <Pressable
         aria-label={ariaLabel ?? nameOf(children)}
         aria-selected={selected}
-        hitSlop={hitSlop(PILL_HEIGHT)}
+        hitSlop={form === 'horizontal' ? hitSlop(PILL_HEIGHT) : undefined}
         role="tab"
         {...props}
         {...feedback.handlers}
         disabled={isDisabled}
-        style={composeStyles<ViewStyle>(own.horizontal, feedback.ring, style)}
+        style={composeStyles<ViewStyle>(own[form], feedback.ring, style)}
       >
         <ActiveIndicator selected={selected} />
         {feedback.layer}
@@ -369,7 +392,7 @@ function NavigationDestination({
       {...props}
       {...feedback.handlers}
       disabled={isDisabled}
-      style={composeStyles<ViewStyle>(own.vertical, style)}
+      style={composeStyles<ViewStyle>(own[form], style)}
     >
       <Label form={form} isDisabled={isDisabled} selected={selected}>
         {children}
@@ -383,10 +406,35 @@ function NavigationDestination({
   )
 }
 
+/**
+ * A destination that goes to its `href` through the app's router, selected
+ * while the `selectedRoute` around it is that `href`: the item of a bar and
+ * of a rail alike.
+ */
+function NavigationItem({ href, onPress, ...props }: NavigationItemProps) {
+  const { selectedRoute } = use(NavigationContext)
+  const press = useLinkPress(href, onPress)
+
+  return (
+    <NavigationDestination
+      {...props}
+      onPress={press}
+      selected={selectedRoute !== undefined && href === selectedRoute}
+    />
+  )
+}
+
 export type {
   NavigationContextValue,
   NavigationDestinationProps,
   NavigationForm,
+  NavigationItemProps,
 }
 
-export { iconColorOf, labelColorOf, NavigationContext, NavigationDestination }
+export {
+  iconColorOf,
+  labelColorOf,
+  NavigationContext,
+  NavigationDestination,
+  NavigationItem,
+}
