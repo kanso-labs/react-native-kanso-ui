@@ -19,6 +19,7 @@ import { Form } from '../components/form'
 import { IconButton } from '../components/icon-button'
 import { Link } from '../components/link'
 import { List } from '../components/list'
+import { ListDetail } from '../components/list-detail'
 import { ListItem } from '../components/list-item'
 import { Menu } from '../components/menu'
 import { Meter } from '../components/meter'
@@ -126,6 +127,18 @@ const LIST_ROWS = [
     trailing: <Currency locale="en-US" value={0} />,
   },
 ] as const
+
+// The ListDetail section's two panes, hoisted for the same reason.
+const LIST_DETAIL_DETAIL = <Placeholder>Detail</Placeholder>
+const LIST_DETAIL_LIST = (
+  <Card padding="none" variant="outlined">
+    <List aria-label="Label" scrollEnabled={false}>
+      <List.Item id="first">First item</List.Item>
+      <List.Item id="second">Second item</List.Item>
+      <List.Item id="third">Third item</List.Item>
+    </List>
+  </Card>
+)
 
 // The queue the page's snackbar shows, which its button adds to.
 const SHOWCASE_MESSAGES = new Snackbar.Queue()
@@ -503,6 +516,13 @@ function Showcase({ name }: ShowcaseProps) {
             </List.Item>
           </List>
         </Card>
+      </Section>
+
+      <Section
+        description="A list pane beside a detail pane, laid down and painted by neither, so what a scheme reaches is the space between them. Below the expanded window size the list shows alone. The dashed outline is the page's own."
+        title="ListDetail"
+      >
+        <ListDetail detail={LIST_DETAIL_DETAIL} list={LIST_DETAIL_LIST} />
       </Section>
 
       <Section
