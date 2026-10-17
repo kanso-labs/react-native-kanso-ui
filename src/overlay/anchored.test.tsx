@@ -224,6 +224,28 @@ describe('useAnchoredPlacement', () => {
     expect(placed()).toMatchObject({ left: 340, maxHeight: 240, top: 148 })
   })
 
+  it('lines end up with the right edge where the direction is unset', async () => {
+    // React Native Web's I18nManager has no `isRTL`, which leaves it
+    // undefined there rather than false.
+    const isRTL = Object.getOwnPropertyDescriptor(I18nManager, 'isRTL')
+
+    Object.defineProperty(I18nManager, 'isRTL', {
+      configurable: true,
+      value: undefined,
+    })
+
+    try {
+      await render(<Anchored align="end" />)
+      await laidOut()
+
+      expect(placed()).toMatchObject({ left: 100 })
+    } finally {
+      if (isRTL !== undefined) {
+        Object.defineProperty(I18nManager, 'isRTL', isRTL)
+      }
+    }
+  })
+
   describe('in a right-to-left layout', () => {
     beforeEach(() => {
       jest.replaceProperty(I18nManager, 'isRTL', true)

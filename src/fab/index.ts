@@ -99,10 +99,44 @@ const extendedFabSizesOf = themedStyles(({ sizing, spacing }) =>
   }),
 )
 
+/** A FAB's container colour and the colour drawn on it. */
+type FabColors = { readonly container: string; readonly content: string }
+
 /**
- * The six colour pairs, each tone's container pair and the tone itself, and
- * the one disabled container every button shares: on-surface at the two
- * disabled opacities, as src/button/palettes.ts draws it.
+ * The six colour pairs, by variant and tone: each tone's container pair, and
+ * the tone itself. Plain colours, for FabMenu's FAB, which eases from one
+ * pair to another as its menu opens.
+ */
+const fabColorsOf = themedStyles(
+  ({
+    colors,
+  }): Readonly<Record<FabVariant, Readonly<Record<FabTone, FabColors>>>> => ({
+    filled: {
+      primary: { container: colors.primary, content: colors.onPrimary },
+      secondary: { container: colors.secondary, content: colors.onSecondary },
+      tertiary: { container: colors.tertiary, content: colors.onTertiary },
+    },
+    tonal: {
+      primary: {
+        container: colors.primaryContainer,
+        content: colors.onPrimaryContainer,
+      },
+      secondary: {
+        container: colors.secondaryContainer,
+        content: colors.onSecondaryContainer,
+      },
+      tertiary: {
+        container: colors.tertiaryContainer,
+        content: colors.onTertiaryContainer,
+      },
+    },
+  }),
+)
+
+/**
+ * The six colour pairs as the palettes a button draws, and the one disabled
+ * container every button shares: on-surface at the two disabled opacities,
+ * as src/button/palettes.ts draws it.
  */
 const fabPalettesOf = themedStyles(
   (
@@ -112,23 +146,12 @@ const fabPalettesOf = themedStyles(
     readonly filled: Readonly<Record<FabTone, Palette>>
     readonly tonal: Readonly<Record<FabTone, Palette>>
   } => {
-    const { colors } = theme
+    const pairs = fabColorsOf(theme)
 
     return {
       disabled: palettesOf(theme).filledDisabled,
-      filled: {
-        primary: palette(colors.onPrimary, colors.primary),
-        secondary: palette(colors.onSecondary, colors.secondary),
-        tertiary: palette(colors.onTertiary, colors.tertiary),
-      },
-      tonal: {
-        primary: palette(colors.onPrimaryContainer, colors.primaryContainer),
-        secondary: palette(
-          colors.onSecondaryContainer,
-          colors.secondaryContainer,
-        ),
-        tertiary: palette(colors.onTertiaryContainer, colors.tertiaryContainer),
-      },
+      filled: palettesFor(pairs.filled),
+      tonal: palettesFor(pairs.tonal),
     }
   },
 )
@@ -160,11 +183,21 @@ function fabShadowOf(
   return fabShadowsOf(theme)[hovered && !pressed ? 'elevation4' : 'elevation3']
 }
 
-function palette(content: string, backgroundColor: string): Palette {
+function palette({ container, content }: FabColors): Palette {
   return {
-    container: { backgroundColor },
+    container: { backgroundColor: container },
     content,
     label: { color: content },
+  }
+}
+
+function palettesFor(
+  pairs: Readonly<Record<FabTone, FabColors>>,
+): Readonly<Record<FabTone, Palette>> {
+  return {
+    primary: palette(pairs.primary),
+    secondary: palette(pairs.secondary),
+    tertiary: palette(pairs.tertiary),
   }
 }
 
@@ -172,9 +205,10 @@ export {
   EXTENDED_FAB_ROLES,
   extendedFabSizesOf,
   FAB_ICON_SIZES,
+  fabColorsOf,
   fabCornersOf,
   fabPalettesOf,
   fabShadowOf,
   fabSizesOf,
 }
-export type { FabSize, FabTone, FabVariant }
+export type { FabColors, FabSize, FabTone, FabVariant }
