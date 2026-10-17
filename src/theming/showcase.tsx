@@ -40,6 +40,7 @@ import { Sheet } from '../components/sheet'
 import { Snackbar } from '../components/snackbar'
 import { Stack } from '../components/stack'
 import { Switch } from '../components/switch'
+import { Tag } from '../components/tag'
 import { Text } from '../components/text'
 import { TextField } from '../components/text-field'
 import { ArrowBackGlyph, CloseGlyph, PlusGlyph, SearchGlyph } from '../glyphs'
@@ -90,6 +91,8 @@ const CARD_VARIANTS = ['elevated', 'filled', 'outlined'] as const
 
 // The chip group's selection, the second of its three chips.
 const CHIP_SELECTION = ['second']
+
+const TAG_TONES = ['primary', 'positive', 'negative', 'neutral'] as const
 
 const LIBRARY_DARK = {
   description:
@@ -885,6 +888,24 @@ function Showcase({ name }: ShowcaseProps) {
           <Switch defaultSelected icon>
             Label
           </Switch>
+        </View>
+      </Section>
+
+      <Section
+        description="Filled and outlined at each tone, the filled one off a container pair and the outlined one off the rule the borders take."
+        title="Tag"
+      >
+        <View style={styles.row}>
+          {TAG_TONES.map((tone) => (
+            <Tag key={tone} tone={tone}>
+              Label
+            </Tag>
+          ))}
+          {TAG_TONES.map((tone) => (
+            <Tag key={`${tone}-outlined`} tone={tone} variant="outlined">
+              Label
+            </Tag>
+          ))}
         </View>
       </Section>
 

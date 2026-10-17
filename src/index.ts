@@ -197,6 +197,8 @@ export type {
 } from './components/stack'
 export { Switch } from './components/switch'
 export type { SwitchProps } from './components/switch'
+export { Tag } from './components/tag'
+export type { TagProps, TagTone, TagVariant } from './components/tag'
 export { Text } from './components/text'
 export type { TextProps } from './components/text'
 export { TextField } from './components/text-field'
