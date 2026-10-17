@@ -508,7 +508,7 @@ describe('CheckboxGroup', () => {
 
       await submit()
 
-      expect(onSubmit).toHaveBeenCalledWith({})
+      expect(onSubmit).toHaveBeenCalledWith({ items: ['second'] })
     })
 
     it('shows a required group’s error once a press leaves it empty', async () => {
@@ -584,7 +584,7 @@ describe('CheckboxGroup', () => {
       expect(screen.queryByText('Choose another item.')).toBeNull()
     })
 
-    it('submits no value of its own beside the fields', async () => {
+    it('submits its ticked entries as a list under its name', async () => {
       const onSubmit = jest.fn()
       await render(
         withForm(
@@ -595,10 +595,55 @@ describe('CheckboxGroup', () => {
         ),
       )
 
+      await fireEvent.press(box('Third item'))
       await submit()
 
-      // Strictly, since an entry under its name with no value in it would
-      // otherwise pass for none at all.
+      expect(onSubmit.mock.calls).toStrictEqual([
+        [{ items: ['first', 'third'] }],
+      ])
+    })
+
+    // Strictly, since no entry under its name would otherwise pass for an
+    // empty one.
+    it('submits an empty list while nothing is ticked', async () => {
+      const onSubmit = jest.fn()
+      await render(
+        withForm(
+          <CheckboxGroup label="Label" name="items">
+            <Items />
+          </CheckboxGroup>,
+          { onSubmit },
+        ),
+      )
+
+      await submit()
+
+      expect(onSubmit.mock.calls).toStrictEqual([[{ items: [] }]])
+    })
+
+    it('submits nothing while disabled, or with no name', async () => {
+      const onSubmit = jest.fn()
+      await render(
+        withForm(
+          <>
+            <CheckboxGroup
+              defaultValue={FIRST}
+              isDisabled
+              label="Label"
+              name="items"
+            >
+              <Items />
+            </CheckboxGroup>
+            <CheckboxGroup defaultValue={FIRST} label="Other label">
+              <Items />
+            </CheckboxGroup>
+          </>,
+          { onSubmit },
+        ),
+      )
+
+      await submit()
+
       expect(onSubmit.mock.calls).toStrictEqual([[{}]])
     })
   })
