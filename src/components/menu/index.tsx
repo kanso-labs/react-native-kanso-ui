@@ -807,9 +807,9 @@ function LoaderRow({
       testID={testID}
     >
       <ProgressIndicator
+        aria-label={label ?? messagesFor().loadingMore}
         diameter={LOADING_DIAMETER}
         isIndeterminate
-        label={label ?? messagesFor().loadingMore}
         variant="circular"
       />
     </View>

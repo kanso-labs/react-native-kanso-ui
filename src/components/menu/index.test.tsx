@@ -988,6 +988,8 @@ describe('Menu', () => {
       )
 
       expect(screen.getByLabelText('Loading more')).toBeTruthy()
+      // The name is for a screen reader, and the ring draws no text beside it.
+      expect(screen.queryByText('Loading more')).toBe(null)
       expect(styleOf(screen.getByTestId('loader'))).toMatchObject({
         minHeight: sizing.rowXs,
       })
@@ -1008,6 +1010,7 @@ describe('Menu', () => {
       )
 
       expect(screen.getByLabelText('Fetching')).toBeTruthy()
+      expect(screen.queryByText('Fetching')).toBe(null)
     })
 
     it('loads more once it comes within a visible height of the end', async () => {
