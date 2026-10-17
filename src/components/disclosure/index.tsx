@@ -1,6 +1,8 @@
 import type { ComponentRef, ReactNode, Ref } from 'react'
 import type { LayoutChangeEvent, StyleProp, ViewStyle } from 'react-native'
 import type { AnimatedStyle } from 'react-native-reanimated'
+import type { Key } from 'react-stately'
+import type { DisclosureGroupState } from 'react-stately/useDisclosureGroupState'
 import type { DisclosureState } from 'react-stately/useDisclosureState'
 
 import {
@@ -24,6 +26,7 @@ import { useDisclosureState } from 'react-stately/useDisclosureState'
 
 import type { ResolvedTheme } from '../../theme/scope'
 
+import { DisclosureGroupStateContext } from '../../disclosure'
 import { ChevronEndGlyph } from '../../glyphs'
 import { usePressFeedback } from '../../press'
 import { RowContent, rowContentColor, rowStyleOf, rowStyles } from '../../row'
@@ -56,7 +59,9 @@ import { composeStyles, themedStyles } from '../../theme/styles'
 // hidden from a screen reader while it closes.
 //
 // The state is React Stately's `useDisclosureState`, the one web's React Aria
-// keeps, handed to the two parts through context.
+// keeps, handed to the two parts through context. Inside a DisclosureGroup
+// the group's keys say whether the section is open, under its `id`, and the
+// group's `isDisabled` disables it as its own does, as React Aria's do.
 
 const stylesOf = themedStyles(({ spacing }: ResolvedTheme) =>
   StyleSheet.create({
@@ -117,8 +122,11 @@ type DisclosureProps = {
   readonly children?: ReactNode
   /** Whether the section starts open, when it keeps its own state. */
   readonly defaultExpanded?: boolean
-  /** The section's native id. */
-  readonly id?: string
+  /**
+   * The section's key in a `DisclosureGroup`, which the group reports as
+   * expanded. Outside a group it does nothing.
+   */
+  readonly id?: Key
   /**
    * Keeps the section from opening or closing, and draws its header
    * disabled.
@@ -194,6 +202,8 @@ function chevronFor(isExpanded: boolean) {
  * rows lines up with them. The panel opens to whatever height its content
  * reports, and opens and closes at once under reduced motion.
  *
+ * Inside a `DisclosureGroup`, give it an `id`, the key the group reports.
+ *
  * `style`, `ref` and `testID` land on the section's own view, as they do on
  * each part's.
  */
@@ -208,20 +218,24 @@ function Disclosure({
   style,
   testID,
 }: DisclosureProps) {
+  const group = use(DisclosureGroupStateContext)
+  const fallback = useId()
+  const key = id ?? fallback
   const state = useDisclosureState({
     defaultExpanded,
-    isExpanded,
-    onExpandedChange,
+    isExpanded: group === null ? isExpanded : group.expandedKeys.has(key),
+    onExpandedChange: expandedChangeOf(group, key, onExpandedChange),
   })
   const header = useId()
+  const disabled = isDisabled || (group?.isDisabled ?? false)
   const value = useMemo<DisclosureContextValue>(
-    () => ({ header, isDisabled, state }),
-    [header, isDisabled, state],
+    () => ({ header, isDisabled: disabled, state }),
+    [disabled, header, state],
   )
 
   return (
     <DisclosureContext value={value}>
-      <View id={id} ref={ref} style={style} testID={testID}>
+      <View ref={ref} style={style} testID={testID}>
         {children}
       </View>
     </DisclosureContext>
@@ -383,6 +397,19 @@ function DisclosurePanel({
       </View>
     </Animated.View>
   )
+}
+
+// What a section calls as it opens or closes: inside a group, the group's
+// toggle of its key first, then the call site's own handler either way.
+function expandedChangeOf(
+  group: DisclosureGroupState | null,
+  key: Key,
+  onExpandedChange: ((isExpanded: boolean) => void) | undefined,
+) {
+  return (expanded: boolean) => {
+    group?.toggleKey(key)
+    onExpandedChange?.(expanded)
+  }
 }
 
 // A press's toggle. Built by a call rather than declared in the component,

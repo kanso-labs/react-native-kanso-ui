@@ -85,6 +85,8 @@ export type {
   DisclosurePanelProps,
   DisclosureProps,
 } from './components/disclosure'
+export { DisclosureGroup } from './components/disclosure-group'
+export type { DisclosureGroupProps } from './components/disclosure-group'
 export { Fab } from './components/fab'
 export type { FabProps, FabSize, FabTone, FabVariant } from './components/fab'
 export { FabMenu, FabMenuItem } from './components/fab-menu'
