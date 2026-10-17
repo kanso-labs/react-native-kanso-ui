@@ -15,6 +15,7 @@ import { Card } from '../components/card'
 import { Checkbox } from '../components/checkbox'
 import { Chip } from '../components/chip'
 import { ChipGroup } from '../components/chip-group'
+import { Container } from '../components/container'
 import { CopyField } from '../components/copy-field'
 import { Currency } from '../components/currency'
 import { Dialog } from '../components/dialog'
@@ -450,6 +451,18 @@ function Showcase({ name }: ShowcaseProps) {
           <ChipGroup.Chip id="second">Second item</ChipGroup.Chip>
           <ChipGroup.Chip id="third">Third item</ChipGroup.Chip>
         </ChipGroup>
+      </Section>
+
+      <Section
+        description="It lays down a measure and a gutter and paints nothing, so what a scheme reaches here is the spacing."
+        title="Container"
+      >
+        <Container maxInlineSize={360}>
+          <Placeholder>
+            The container centres its content on the measure it is given, and
+            pads it by the margin the window&apos;s size asks for.
+          </Placeholder>
+        </Container>
       </Section>
 
       <Section
