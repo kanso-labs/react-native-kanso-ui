@@ -10,6 +10,7 @@ import { AppBar } from '../components/app-bar'
 import { Autocomplete } from '../components/autocomplete'
 import { Avatar } from '../components/avatar'
 import { Badge } from '../components/badge'
+import { Breadcrumbs } from '../components/breadcrumbs'
 import { Button } from '../components/button'
 import { Calendar } from '../components/calendar'
 import { Card } from '../components/card'
@@ -389,6 +390,17 @@ function Showcase({ name }: ShowcaseProps) {
           <IconButton aria-label="Label, new">{BADGED}</IconButton>
           <IconButton aria-label="Label, 3 new">{BADGED_COUNT}</IconButton>
         </View>
+      </Section>
+
+      <Section
+        description="The trail leans on the muted role, with the page you are on at full strength."
+        title="Breadcrumbs"
+      >
+        <Breadcrumbs aria-label="Label">
+          <Breadcrumbs.Item href="/first">First item</Breadcrumbs.Item>
+          <Breadcrumbs.Item href="/second">Second item</Breadcrumbs.Item>
+          <Breadcrumbs.Item>Third item</Breadcrumbs.Item>
+        </Breadcrumbs>
       </Section>
 
       <Section

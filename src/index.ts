@@ -11,6 +11,11 @@ export { Avatar } from './components/avatar'
 export type { AvatarProps } from './components/avatar'
 export { Badge } from './components/badge'
 export type { BadgeProps } from './components/badge'
+export { Breadcrumbs, BreadcrumbsItem } from './components/breadcrumbs'
+export type {
+  BreadcrumbsItemProps,
+  BreadcrumbsProps,
+} from './components/breadcrumbs'
 export { Button } from './components/button'
 export type {
   ButtonProps,
