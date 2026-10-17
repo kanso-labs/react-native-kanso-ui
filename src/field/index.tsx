@@ -172,13 +172,27 @@ type FieldInputProps = Omit<
   | 'accessibilityHint'
   | 'cursorColor'
   | 'multiline'
+  | 'numberOfLines'
   | 'placeholderTextColor'
+  | 'rows'
   | 'selectionColor'
   | 'style'
   | 'underlineColorAndroid'
 > & {
+  /**
+   * Whether a multi-line control grows with the text it holds, from `rows`
+   * up. `false` holds it at `rows` and scrolls the text inside.
+   * @default true
+   */
+  readonly autosize?: boolean
   /** What describes the control, after its prefix and suffix. */
   readonly described?: readonly FieldDescriptionPart[]
+  /**
+   * Whether the control holds several lines rather than one, the return key
+   * starting a new one.
+   * @default false
+   */
+  readonly multiline?: boolean
   /**
    * The value in the mono face with tabular figures.
    * @default false
@@ -187,6 +201,12 @@ type FieldInputProps = Omit<
   /** Text before the value on its line. */
   readonly prefix?: ReactNode
   readonly ref?: Ref<ComponentRef<typeof TextInput>>
+  /**
+   * How many lines a multi-line control shows: the least it shows while it
+   * grows, or all it shows when it does not.
+   * @default 1
+   */
+  readonly rows?: number
   /** Text after the value on its line. */
   readonly suffix?: ReactNode
 }
@@ -521,11 +541,23 @@ function FieldBox({
  * in `described`, so a reader hears the unit the value is read against as a
  * sighted one sees it beside the value: on iOS and Android as its hint, and
  * under React Native Web through `aria-describedby`, which drops the hint.
+ *
+ * `multiline` makes it a text area, `rows` lines of body large tall at the
+ * least, its text from the top. iOS and Android grow a multi-line input with
+ * what it holds by themselves, so a height floor is all `autosize` asks of
+ * them, and `autosize={false}` sets the height instead, which they scroll
+ * inside. React Native Web's textarea keeps the height it is given, so there
+ * the control lies over a hidden copy of `value` that takes the height the
+ * text would, as web's text area lies over its replica. A control that grows
+ * is therefore handed its `value`.
  */
 function FieldInput({
+  autosize = true,
   described = NO_PARTS,
+  multiline = false,
   numeric = false,
   prefix,
+  rows = 1,
   suffix,
   ...props
 }: FieldInputProps) {
@@ -549,6 +581,10 @@ function FieldInput({
     ? marginTopOf(typography.bodySmallLineHeight * fontScale)
     : undefined
   const affixStyle = composeStyles<TextStyle>(role, colorOf(muted))
+  const lines =
+    typography.bodyLargeLineHeight * fontScale * (multiline ? rows : 1)
+  const copied = multiline && autosize && Platform.OS === 'web'
+  const extent = multiline && !autosize ? heightOf(lines) : minHeightOf(lines)
 
   const control = (
     <TextInput
@@ -562,6 +598,7 @@ function FieldInput({
       {...webStateOf(box)}
       aria-disabled={box.disabled}
       cursorColor={caret}
+      multiline={multiline}
       placeholderTextColor={muted}
       selectionColor={caret}
       style={composeStyles<TextStyle>(
@@ -569,12 +606,29 @@ function FieldInput({
         styles.input,
         colorOf(content),
         numeric ? numericOf(mono) : undefined,
-        minHeightOf(typography.bodyLargeLineHeight * fontScale),
-        affixed ? undefined : clearance,
+        multiline ? styles.inputMultiline : undefined,
+        copied ? styles.inputOverCopy : extent,
+        affixed || copied ? undefined : clearance,
       )}
       underlineColorAndroid="transparent"
     />
   )
+
+  if (copied) {
+    // The space keeps a final line break a line of the copy, as the control
+    // draws one.
+    return (
+      <View style={composeStyles<ViewStyle>(styles.copied, clearance)}>
+        <NativeText
+          aria-hidden
+          style={composeStyles<TextStyle>(role, styles.copy, extent)}
+        >
+          {`${props.value ?? ''} `}
+        </NativeText>
+        {control}
+      </View>
+    )
+  }
 
   if (!affixed) {
     return control
@@ -981,6 +1035,10 @@ function focusOf(control: RefObject<ComponentRef<typeof TextInput> | null>) {
   return () => {
     control.current?.focus()
   }
+}
+
+function heightOf(height: number): ViewStyle {
+  return { height }
 }
 
 function iconStyleOf(color: string): IconStyle {
