@@ -75,6 +75,16 @@ export type {
   DialogProps,
   DialogTitleProps,
 } from './components/dialog'
+export {
+  Disclosure,
+  DisclosureHeader,
+  DisclosurePanel,
+} from './components/disclosure'
+export type {
+  DisclosureHeaderProps,
+  DisclosurePanelProps,
+  DisclosureProps,
+} from './components/disclosure'
 export { Fab } from './components/fab'
 export type { FabProps, FabSize, FabTone, FabVariant } from './components/fab'
 export { FabMenu, FabMenuItem } from './components/fab-menu'
