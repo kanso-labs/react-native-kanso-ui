@@ -24,6 +24,7 @@ import { Container } from '../components/container'
 import { CopyField } from '../components/copy-field'
 import { Currency } from '../components/currency'
 import { Dialog } from '../components/dialog'
+import { Disclosure } from '../components/disclosure'
 import { Fab } from '../components/fab'
 import { FabMenu } from '../components/fab-menu'
 import { Feed } from '../components/feed'
@@ -636,6 +637,24 @@ function Showcase({ name }: ShowcaseProps) {
             </Dialog.Content>
           </Dialog>
         </View>
+      </Section>
+
+      <Section
+        description="The header draws the shared row with a caret that turns, and the panel takes the surface under it."
+        title="Disclosure"
+      >
+        <Card padding="none" variant="outlined">
+          <Disclosure defaultExpanded>
+            <Disclosure.Header supporting="Supporting line">
+              First item
+            </Disclosure.Header>
+            <Disclosure.Panel>
+              <Text tone="muted" variant="bodyMedium">
+                Supporting line
+              </Text>
+            </Disclosure.Panel>
+          </Disclosure>
+        </Card>
       </Section>
 
       <Section
