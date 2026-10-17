@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.8.0](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.7.0...v0.8.0) (2026-10-17)
+
+
+### Features
+
+* **i18n:** add I18nProvider for an app-wide locale ([#154](https://github.com/kanso-labs/react-native-kanso-ui/issues/154)) ([e9d27f9](https://github.com/kanso-labs/react-native-kanso-ui/commit/e9d27f95a06a8ef6f3ce65163956b5f16f01bb85))
+* **i18n:** translate the library's remaining English defaults ([#156](https://github.com/kanso-labs/react-native-kanso-ui/issues/156)) ([0ea2d70](https://github.com/kanso-labs/react-native-kanso-ui/commit/0ea2d700840744a0ec91fa3de44f28fc096e6273))
+* **tag:** add Tag component ([#152](https://github.com/kanso-labs/react-native-kanso-ui/issues/152)) ([fd145ec](https://github.com/kanso-labs/react-native-kanso-ui/commit/fd145ecccbc4b8795c4d79eea871782baa8150bd))
+
 ## [0.7.0](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.6.0...v0.7.0) (2026-10-17)
 
 
