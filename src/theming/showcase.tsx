@@ -23,6 +23,7 @@ import { Container } from '../components/container'
 import { CopyField } from '../components/copy-field'
 import { Currency } from '../components/currency'
 import { Dialog } from '../components/dialog'
+import { Fab } from '../components/fab'
 import { Feed } from '../components/feed'
 import { Form } from '../components/form'
 import { IconButton } from '../components/icon-button'
@@ -602,6 +603,21 @@ function Showcase({ name }: ShowcaseProps) {
               </Dialog.Footer>
             </Dialog.Content>
           </Dialog>
+        </View>
+      </Section>
+
+      <Section
+        description="Each tone reads its container off a colour role, its corner off the radius scale and its lift off the shadow scale, the extended form's label off the type scale as well."
+        title="Fab"
+      >
+        <View style={styles.row}>
+          <Fab aria-label="Label">{PLUS}</Fab>
+          <Fab aria-label="Label" tone="secondary" variant="filled">
+            {PLUS}
+          </Fab>
+          <Fab label="Label" tone="tertiary">
+            {PLUS}
+          </Fab>
         </View>
       </Section>
 

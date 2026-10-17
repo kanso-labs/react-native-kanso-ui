@@ -70,6 +70,8 @@ export type {
   DialogProps,
   DialogTitleProps,
 } from './components/dialog'
+export { Fab } from './components/fab'
+export type { FabProps, FabSize, FabTone, FabVariant } from './components/fab'
 export { Feed } from './components/feed'
 export type { FeedProps } from './components/feed'
 export { Form } from './components/form'
