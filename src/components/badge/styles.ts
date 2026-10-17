@@ -1,13 +1,9 @@
 import { StyleSheet } from 'react-native'
 
-import { themedStyles } from '../theme/styles'
+import { themedStyles } from '../../theme/styles'
 
-// The icon a badge is drawn on, which the large badge's corner is measured
-// from: the 24dp every destination draws.
-const ICON_SIZE = 24
-
-// How far back over the icon the large badge reaches, from the icon's
-// trailing edge, and how far above the icon it stands. The page's own
+// How far back over what it is drawn on the large badge reaches, from its
+// trailing edge, and how far above it the badge stands. The page's own
 // figures: its bottom leading corner 14dp down and 12dp in from the icon's
 // top trailing corner, on a 16dp badge.
 const OVERLAP = 12
@@ -18,9 +14,14 @@ const SMALL_SIZE = 6
 const LARGE_SIZE = 16
 
 const styles = StyleSheet.create({
-  // What the badge is drawn on. It shrinks to what it holds, so its box is
-  // the icon's and the mark lands where the page puts it, and lays a mark
-  // that joins the flow after the icon.
+  // A badge with nothing to be drawn on: the mark in the line, where what
+  // comes before it puts it, so neither corner's placement applies.
+  alone: {
+    position: 'relative',
+  },
+  // What the badge is drawn on. It shrinks to what it holds along the row,
+  // so its box is the icon's and the mark lands where the page puts it, and
+  // lays a mark that joins the flow after the icon.
   anchor: {
     alignItems: 'flex-start',
     flexDirection: 'row',
@@ -33,19 +34,26 @@ const styles = StyleSheet.create({
     position: 'relative',
     top: -RISE,
   },
-  // The large badge over the icon's top trailing corner.
+  // The large badge over the top trailing corner of what it is drawn on: its
+  // leading edge 12dp inside the trailing edge, whatever the width, as web's
+  // `calc(100% - 12px)` places it.
   over: {
+    marginStart: -OVERLAP,
     position: 'absolute',
-    start: ICON_SIZE - OVERLAP,
+    start: '100%',
     top: -RISE,
   },
-  // The small badge, filling the icon's top trailing 6dp square.
+  // The small badge's 6dp square.
   small: {
-    end: 0,
     height: SMALL_SIZE,
+    width: SMALL_SIZE,
+  },
+  // The small badge on what it is drawn on, filling its top trailing 6dp
+  // square.
+  smallOver: {
+    end: 0,
     position: 'absolute',
     top: 0,
-    width: SMALL_SIZE,
   },
   // The space before the count, out of the flow, so it sets the count apart
   // from the text before it without moving anything.

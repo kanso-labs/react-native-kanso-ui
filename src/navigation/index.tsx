@@ -21,7 +21,8 @@ import Animated, {
 import type { IconStyle } from '../glyphs/icon-style'
 import type { ResolvedTheme } from '../theme/scope'
 
-import { Badge } from '../badge'
+import { BadgeInFlowContext } from '../badge'
+import { Badge } from '../components/badge'
 import { IconStyleContext } from '../glyphs/icon-style'
 import { hitSlop, usePressFeedback } from '../press'
 import { useLinkPress } from '../router'
@@ -236,9 +237,9 @@ function DestinationContent({
           {badge === undefined || badge === false ? (
             icon
           ) : (
-            <Badge count={badge === true ? undefined : badge} inFlow={beside}>
-              {icon}
-            </Badge>
+            <BadgeInFlowContext value={beside}>
+              <Badge count={badge === true ? undefined : badge}>{icon}</Badge>
+            </BadgeInFlowContext>
           )}
         </IconStyleContext>
       </View>

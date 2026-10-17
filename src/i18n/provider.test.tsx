@@ -6,7 +6,7 @@ import { act, render, screen } from '@testing-library/react-native'
 import { Text, View } from 'react-native'
 
 import { messagesFor } from '.'
-import { Badge } from '../badge'
+import { Badge } from '../components/badge'
 import { Button } from '../components/button'
 import { Calendar } from '../components/calendar'
 import { ChipGroup } from '../components/chip-group'

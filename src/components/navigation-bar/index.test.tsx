@@ -854,11 +854,12 @@ describe('NavigationBar', () => {
 
       expect(styleOf(markOf('First item'))).toMatchObject({
         backgroundColor: colors.error,
+        marginStart: -12,
         minHeight: 16,
         minWidth: 16,
         paddingHorizontal: spacing.xs,
         position: 'absolute',
-        start: 12,
+        start: '100%',
         top: -2,
       })
       const count = countOf('First item')
@@ -935,7 +936,7 @@ describe('NavigationBar', () => {
         </ThemeScope>,
       )
 
-      expect(styleOf(markOf('First item'))).toMatchObject({ start: 12 })
+      expect(styleOf(markOf('First item'))).toMatchObject({ start: '100%' })
       expect(styleOf(markOf('Second item'))).toMatchObject({ end: 0 })
       expect(styleOf(markOf('First item')).left).toBeUndefined()
       expect(styleOf(markOf('Second item')).right).toBeUndefined()

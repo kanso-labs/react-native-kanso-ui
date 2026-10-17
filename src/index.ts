@@ -9,6 +9,8 @@ export type {
 } from './components/autocomplete'
 export { Avatar } from './components/avatar'
 export type { AvatarProps } from './components/avatar'
+export { Badge } from './components/badge'
+export type { BadgeProps } from './components/badge'
 export { Button } from './components/button'
 export type {
   ButtonProps,
