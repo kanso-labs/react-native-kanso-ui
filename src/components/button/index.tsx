@@ -8,12 +8,13 @@ import type {
 } from 'react-native'
 import type { AnimatedStyle } from 'react-native-reanimated'
 
+import { use } from 'react'
 import {
   Text as NativeText,
   StyleSheet,
   useWindowDimensions,
 } from 'react-native'
-import Animated from 'react-native-reanimated'
+import Animated, { useSharedValue } from 'react-native-reanimated'
 
 import type {
   ButtonLinkForm,
@@ -31,11 +32,20 @@ import {
   HEIGHTS,
   OUTLINE_WIDTHS,
   PRESSED_CORNERS,
+  pressThen,
   toggleState,
   useButtonAction,
   useCorner,
   useSlotTrigger,
 } from '../../button'
+import {
+  ButtonGroupItemContext,
+  groupPressHandlers,
+  groupSelectionOf,
+  groupStyles,
+  groupWidthThen,
+  useGroupShift,
+} from '../../button/group'
 import { palettesOf } from '../../button/palettes'
 import {
   BUSY,
@@ -100,6 +110,17 @@ import { useTypeRole } from '../../typography/roles'
 // once selected. The corner eases through Reanimated, as src/button's
 // `useCorner` sets out.
 //
+// **A ButtonGroup around it hands it what the group decides**, through
+// src/button's group.ts: its size, unless the button names its own, whether
+// it is disabled, a connected group's corners in place of its own shape, and
+// a standard group's widening while it or a neighbour is pressed, which the
+// button takes as inline padding. In a group that selects, the group keeps
+// the selection by the buttons' `id`s, and a button there is a toggle of the
+// group's whatever its own props say: a radio in a group that chooses one,
+// and a button reporting its state in one that chooses several. A `text`
+// button keeps its plain colours there, and draws its selection by nothing
+// but a connected group's corners, as on web.
+//
 // The forms, the toggle's state, what a press does and the corner's ease are
 // src/button's, shared with IconButton.
 
@@ -130,6 +151,8 @@ type ButtonProps = ButtonForm &
      * `useIconStyle()`.
      */
     readonly icon?: ReactNode
+    /** The key a ButtonGroup that selects reports the button by. */
+    readonly id?: string
     /**
      * Draws the button disabled, and takes no presses.
      * @default false
@@ -150,7 +173,7 @@ type ButtonProps = ButtonForm &
      * and type role. `md` is the page's default. The height is a floor, so a
      * label that wraps, or that the device's text size enlarges, grows the
      * button rather than running out of it.
-     * @default 'md'
+     * @default the size of the ButtonGroup around it, else 'md'
      */
     readonly size?: ButtonSize
     readonly style?: StyleProp<ViewStyle>
@@ -359,7 +382,8 @@ function Button({
   hitSlop: ownHitSlop,
   href,
   icon,
-  isDisabled = false,
+  id,
+  isDisabled: ownDisabled = false,
   isPending = false,
   isSelected,
   onBlur,
@@ -375,7 +399,7 @@ function Button({
   pendingLabel,
   ref,
   shape = 'round',
-  size = 'md',
+  size: ownSize,
   slot,
   style,
   type,
@@ -383,6 +407,12 @@ function Button({
   ...props
 }: ButtonProps) {
   const theme = useTheme()
+  // A ButtonGroup around the button hands it a size, which one named here
+  // still beats, and its part in the group; src/button's group.ts sets it out.
+  const group = use(ButtonGroupItemContext)
+  const size = ownSize ?? group?.size ?? 'md'
+  const isDisabled = ownDisabled || group?.isDisabled === true
+  const membership = groupSelectionOf(group, id)
   const role = useTypeRole(ROLES[size])
   const { fontScale } = useWindowDimensions()
   // A link is never pending, as on web, where its props have no such state.
@@ -391,8 +421,10 @@ function Button({
 
   // The three props that make this a toggle, read as web reads them. The
   // types keep them off a `text` button; the check here keeps a call site
-  // that slipped past them a plain button.
+  // that slipped past them a plain button. A group that selects keeps the
+  // selection itself, so they mean nothing there.
   const isToggle =
+    membership === undefined &&
     variant !== 'text' &&
     (defaultSelected !== undefined ||
       isSelected !== undefined ||
@@ -421,17 +453,22 @@ function Button({
     ref,
     slot,
   })
+  // A text button in a selecting group takes part in its selection but
+  // draws none of it, since the page gives text no selected colours.
+  const toggles = variant !== 'text' && (isToggle || membership !== undefined)
+  const selected = toggles && (membership?.selected ?? action.selected)
   const colors =
     palettesOf(theme)[
       isDisabled
         ? DISABLED[variant]
-        : variant !== 'text' && isToggle
-          ? TOGGLE_PALETTES[variant][
-              action.selected ? 'selected' : 'unselected'
-            ]
+        : variant !== 'text' && toggles
+          ? TOGGLE_PALETTES[variant][selected ? 'selected' : 'unselected']
           : variant
     ]
 
+  // The width a standard group widens the button from, recorded as it is
+  // laid out, before the press feedback that tells the group of a press.
+  const width = useSharedValue(0)
   const feedback = usePressFeedback({
     color: colors.content,
     disabled: isDisabled,
@@ -440,25 +477,33 @@ function Button({
     onFocus,
     onHoverIn: hoverIn,
     onHoverOut: hoverOut,
-    onPressIn,
-    onPressOut,
+    ...groupPressHandlers(group, width, onPressIn, onPressOut),
     pending,
   })
 
   const { radii } = theme
   const resting =
-    (shape === 'square') !== action.selected
-      ? radii[SQUARE_CORNERS[size]]
-      : radii.pill
+    (shape === 'square') !== selected ? radii[SQUARE_CORNERS[size]] : radii.pill
   const shaped = useCorner(
-    feedback.pressed ? radii[PRESSED_CORNERS[size]] : resting,
-    onLayout,
+    group?.corners?.({
+      pressed: feedback.pressed,
+      selected: membership?.selected ?? action.selected,
+    }) ?? (feedback.pressed ? radii[PRESSED_CORNERS[size]] : resting),
+    groupWidthThen(group, width, onLayout),
+  )
+  const border = variant === 'outlined' ? OUTLINE_WIDTHS[size] : 0
+  const shift = useGroupShift(
+    group,
+    inlinePaddings(theme)[size] - border,
+    'padding',
   )
 
   return (
     <AnimatedPressable
+      id={id}
       role={href === undefined ? 'button' : 'link'}
       {...(isToggle ? toggleState(action.selected) : undefined)}
+      {...membership?.accessibility}
       {...(pending ? BUSY : undefined)}
       {...props}
       {...triggerProps}
@@ -467,7 +512,13 @@ function Button({
       hitSlop={ownHitSlop ?? hitSlop(theme.sizing[HEIGHTS[size]])}
       onLayout={shaped.onLayout}
       onLongPress={pending ? undefined : longPress}
-      onPress={pending ? undefined : action.onPress}
+      onPress={
+        pending
+          ? undefined
+          : membership === undefined
+            ? action.onPress
+            : pressThen(action.onPress, membership.toggle)
+      }
       style={composeStyles<AnimatedStyle<ViewStyle>>(
         styles.base,
         sizesOf(theme)[size],
@@ -475,6 +526,8 @@ function Button({
         colors.container,
         shadowOf(variant, feedback, isDisabled, theme),
         shaped.corner,
+        shift,
+        group?.keepsTarget === true ? groupStyles.target : undefined,
         feedback.ring,
         style,
       )}

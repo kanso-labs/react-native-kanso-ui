@@ -12,6 +12,7 @@ import { Avatar } from '../components/avatar'
 import { Badge } from '../components/badge'
 import { Breadcrumbs } from '../components/breadcrumbs'
 import { Button } from '../components/button'
+import { ButtonGroup } from '../components/button-group'
 import { Calendar } from '../components/calendar'
 import { Card } from '../components/card'
 import { Checkbox } from '../components/checkbox'
@@ -104,6 +105,9 @@ const AVATAR_TONES = [
 // The calendar's month, fixed so every scheme's page reads the same whenever
 // it is opened, and before today, so no outline moves into it.
 const CALENDAR_DATE = new CalendarDate(2026, 9, 15)
+
+// The button group's selection, the first of its two buttons.
+const BUTTON_GROUP_SELECTION = ['first']
 
 const CARD_VARIANTS = ['elevated', 'filled', 'outlined'] as const
 
@@ -428,6 +432,31 @@ function Showcase({ name }: ShowcaseProps) {
           </Button>
           <Button isDisabled>Label</Button>
           <Button isPending>Label</Button>
+        </View>
+      </Section>
+
+      <Section
+        description="A group draws nothing of its own: what a scheme reaches is the buttons' containers and their corners, which a connected group squares off where its buttons meet."
+        title="ButtonGroup"
+      >
+        <View style={styles.row}>
+          <ButtonGroup aria-label="Label">
+            <Button variant="tonal">First item</Button>
+            <Button variant="tonal">Second item</Button>
+          </ButtonGroup>
+          <ButtonGroup
+            aria-label="Label"
+            defaultSelectedKeys={BUTTON_GROUP_SELECTION}
+            selectionMode="single"
+            variant="connected"
+          >
+            <Button id="first" variant="outlined">
+              First item
+            </Button>
+            <Button id="second" variant="outlined">
+              Second item
+            </Button>
+          </ButtonGroup>
         </View>
       </Section>
 
