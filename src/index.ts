@@ -36,6 +36,8 @@ export type {
   ChipGroupChipProps,
   ChipGroupProps,
 } from './components/chip-group'
+export { Code } from './components/code'
+export type { CodeProps } from './components/code'
 export { Container } from './components/container'
 export type { ContainerPadding, ContainerProps } from './components/container'
 export { CopyField } from './components/copy-field'

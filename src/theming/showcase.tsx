@@ -16,6 +16,7 @@ import { Card } from '../components/card'
 import { Checkbox } from '../components/checkbox'
 import { Chip } from '../components/chip'
 import { ChipGroup } from '../components/chip-group'
+import { Code } from '../components/code'
 import { Container } from '../components/container'
 import { CopyField } from '../components/copy-field'
 import { Currency } from '../components/currency'
@@ -483,6 +484,20 @@ function Showcase({ name }: ShowcaseProps) {
           <ChipGroup.Chip id="second">Second item</ChipGroup.Chip>
           <ChipGroup.Chip id="third">Third item</ChipGroup.Chip>
         </ChipGroup>
+      </Section>
+
+      <Section
+        description="An inline span in the mono face the scheme's type carries, taking its colour and its size from the text around it."
+        title="Code"
+      >
+        <View style={styles.intro}>
+          <Text variant="bodyLarge">
+            A line naming <Code>--kui-radius-md</Code>
+          </Text>
+          <Text tone="muted" variant="bodyLarge">
+            A muted line naming <Code>--kui-radius-md</Code>
+          </Text>
+        </View>
       </Section>
 
       <Section
