@@ -246,6 +246,12 @@ export { TextField } from './components/text-field'
 export type { TextFieldProps } from './components/text-field'
 export { Toolbar } from './components/toolbar'
 export type { ToolbarProps, ToolbarTone } from './components/toolbar'
+export { Tooltip } from './components/tooltip'
+export type {
+  TooltipAlign,
+  TooltipProps,
+  TooltipSide,
+} from './components/tooltip'
 export type { FieldVariant } from './field'
 export { useIconStyle } from './glyphs/icon-style'
 export type { IconStyle } from './glyphs/icon-style'

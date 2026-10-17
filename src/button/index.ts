@@ -24,7 +24,7 @@ import { FormContext } from '../form'
 import { refsOf } from '../ref'
 import { useOpenLink } from '../router'
 import { useTheme } from '../theme/scope'
-import { ButtonSlotContext } from './slots'
+import { ButtonSlotContext, ButtonTooltipContext } from './slots'
 
 // What every button does past its own styles, shared by Button and
 // IconButton as web's src/button is: the three forms a button takes, the
@@ -130,11 +130,14 @@ type ControlSize = 'lg' | 'md' | 'xl' | 'xs' | 'xxl'
 // composed ref's inferred type names a private React Native module, which a
 // declaration file cannot reach.
 type SlotTriggerProps = {
+  readonly accessibilityHint: string | undefined
   readonly 'aria-expanded'?: boolean
   readonly delayLongPress: PressableProps['delayLongPress']
   readonly onHoverIn: PressableProps['onHoverIn']
   readonly onHoverOut: PressableProps['onHoverOut']
   readonly onLongPress: PressableProps['onLongPress']
+  readonly onPressIn: PressableProps['onPressIn']
+  readonly onPressOut: PressableProps['onPressOut']
   readonly ref: Ref<HostInstance> | undefined
 }
 
@@ -359,40 +362,63 @@ function useCorner(
  * be placed against, alongside the call site's own `ref`, `aria-expanded`
  * says whether the overlay is open, and the overlay's hover and long press
  * handlers run after the call site's. A button filling no such slot, or a
- * link, keeps its own props untouched.
+ * link, keeps its own props untouched. A button inside a `Tooltip` takes the
+ * tooltip's node, hover, press and long press handlers on top of either, and
+ * its label as the hint, unless the call site gave a hint of its own.
  */
 function useSlotTrigger({
+  accessibilityHint,
   delayLongPress,
   href,
   onHoverIn,
   onHoverOut,
   onLongPress,
+  onPressIn,
+  onPressOut,
   ref,
   slot,
 }: {
+  readonly accessibilityHint: string | undefined
   readonly delayLongPress: PressableProps['delayLongPress']
   readonly href: string | undefined
   readonly onHoverIn: PressableProps['onHoverIn']
   readonly onHoverOut: PressableProps['onHoverOut']
   readonly onLongPress: PressableProps['onLongPress']
+  readonly onPressIn: PressableProps['onPressIn']
+  readonly onPressOut: PressableProps['onPressOut']
   readonly ref: Ref<HostInstance> | undefined
   readonly slot: 'close' | undefined
 }): SlotTriggerProps {
   const slots = use(ButtonSlotContext)
+  const tooltip = use(ButtonTooltipContext) ?? undefined
   const trigger =
     href === undefined && slot === undefined ? slots?.trigger : undefined
 
   return {
+    accessibilityHint: accessibilityHint ?? tooltip?.hint,
     ...(trigger === undefined
-      ? { delayLongPress, ref }
-      : {
-          'aria-expanded': trigger.expanded,
-          delayLongPress: trigger.delayLongPress ?? delayLongPress,
-          ref: refsOf(trigger.ref, ref),
-        }),
-    onHoverIn: andThen(onHoverIn, trigger?.onHoverIn),
-    onHoverOut: andThen(onHoverOut, trigger?.onHoverOut),
-    onLongPress: andThen(onLongPress, trigger?.onLongPress),
+      ? undefined
+      : { 'aria-expanded': trigger.expanded }),
+    delayLongPress:
+      trigger?.delayLongPress ?? tooltip?.delayLongPress ?? delayLongPress,
+    onHoverIn: andThen(
+      andThen(onHoverIn, trigger?.onHoverIn),
+      tooltip?.onHoverIn,
+    ),
+    onHoverOut: andThen(
+      andThen(onHoverOut, trigger?.onHoverOut),
+      tooltip?.onHoverOut,
+    ),
+    onLongPress: andThen(
+      andThen(onLongPress, trigger?.onLongPress),
+      tooltip?.onLongPress,
+    ),
+    onPressIn: andThen(onPressIn, tooltip?.onPressIn),
+    onPressOut: andThen(onPressOut, tooltip?.onPressOut),
+    ref:
+      trigger === undefined && tooltip === undefined
+        ? ref
+        : refsOf(trigger?.ref, tooltip?.ref, ref),
   }
 }
 
