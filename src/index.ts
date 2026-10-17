@@ -112,6 +112,18 @@ export type {
   ListRowProps,
   ListSectionProps,
 } from './components/list'
+export {
+  ListBox,
+  ListBoxItem,
+  ListBoxLoadMore,
+  ListBoxSection,
+} from './components/list-box'
+export type {
+  ListBoxItemProps,
+  ListBoxLoadMoreProps,
+  ListBoxProps,
+  ListBoxSectionProps,
+} from './components/list-box'
 export { ListDetail } from './components/list-detail'
 export type { ListDetailProps } from './components/list-detail'
 export { ListItem } from './components/list-item'

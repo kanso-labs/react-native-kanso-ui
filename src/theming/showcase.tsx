@@ -34,6 +34,7 @@ import { IconButton } from '../components/icon-button'
 import { Keycap } from '../components/keycap'
 import { Link } from '../components/link'
 import { List } from '../components/list'
+import { ListBox } from '../components/list-box'
 import { ListDetail } from '../components/list-detail'
 import { ListItem } from '../components/list-item'
 import { Menu } from '../components/menu'
@@ -818,6 +819,30 @@ function Showcase({ name }: ShowcaseProps) {
               Third item
             </List.Item>
           </List>
+        </Card>
+      </Section>
+
+      <Section
+        description="The same row again with the selected one on primary container, which is the layer every selectable collection here draws from."
+        title="ListBox"
+      >
+        <Card padding="none" variant="outlined">
+          <ListBox
+            aria-label="Label"
+            defaultSelectedKeys={LIST_SELECTION}
+            scrollEnabled={false}
+            selectionMode="single"
+          >
+            <ListBox.Item id="first" supporting="Supporting line">
+              First item
+            </ListBox.Item>
+            <ListBox.Item id="second" supporting="Supporting line">
+              Second item
+            </ListBox.Item>
+            <ListBox.Item id="third" supporting="Supporting line">
+              Third item
+            </ListBox.Item>
+          </ListBox>
         </Card>
       </Section>
 
