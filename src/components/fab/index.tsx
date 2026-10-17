@@ -171,6 +171,7 @@ const styles = StyleSheet.create({
  * site positions over its screen.
  */
 function Fab({
+  accessibilityHint,
   children,
   delayLongPress,
   disableRipple = false,
@@ -210,13 +211,18 @@ function Fab({
     onHoverIn: hoverIn,
     onHoverOut: hoverOut,
     onLongPress: longPress,
+    onPressIn: pressIn,
+    onPressOut: pressOut,
     ...triggerProps
   } = useSlotTrigger({
+    accessibilityHint,
     delayLongPress,
     href,
     onHoverIn,
     onHoverOut,
     onLongPress,
+    onPressIn,
+    onPressOut,
     ref,
     slot,
   })
@@ -230,8 +236,8 @@ function Fab({
     onFocus,
     onHoverIn: hoverIn,
     onHoverOut: hoverOut,
-    onPressIn,
-    onPressOut,
+    onPressIn: pressIn,
+    onPressOut: pressOut,
   })
   const corner = fabCornersOf(theme)[size]
   const isExtended = label !== undefined

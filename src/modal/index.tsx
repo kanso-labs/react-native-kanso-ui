@@ -24,7 +24,7 @@ import type { ButtonSlots } from '../button/slots'
 import type { ResolvedTheme } from '../theme/scope'
 
 import { AnimatedPressable } from '../button'
-import { ButtonSlotContext } from '../button/slots'
+import { ButtonSlotContext, ButtonTooltipContext } from '../button/slots'
 import { OverlayHost } from '../overlay'
 import { SeparatorOrientationContext } from '../separator'
 import { withOpacity } from '../theme/color'
@@ -163,28 +163,31 @@ function ModalWindow({
       {/* Nothing in the window takes the trigger's slot, the overlays it
           hosts included, so a button in a snackbar raised from the surface
           opens nothing; only the surface's buttons take the close slot. Nor
-          does a rule in it run the way the toolbar that opened it set. */}
+          does a button in it take the tooltip of the one that opened it, nor
+          a rule in it run the way the toolbar that opened it set. */}
       <ButtonSlotContext value={null}>
-        <SeparatorOrientationContext value={null}>
-          <OverlayHost>
-            {/* A screen reader and a keyboard skip the scrim: the first closes
-            the surface with the back or escape gesture, the second with
-            Escape. React Native Web's Pressable is a tab stop unless told
-            otherwise, whatever `focusable` says. */}
-            <AnimatedPressable
-              accessible={false}
-              aria-hidden
-              focusable={false}
-              onPress={onScrimPress}
-              style={composeStyles<AnimatedStyle<ViewStyle>>(
-                styles.scrim,
-                scrim,
-              )}
-              tabIndex={-1}
-            />
-            {children}
-          </OverlayHost>
-        </SeparatorOrientationContext>
+        <ButtonTooltipContext value={null}>
+          <SeparatorOrientationContext value={null}>
+            <OverlayHost>
+              {/* A screen reader and a keyboard skip the scrim: the first
+              closes the surface with the back or escape gesture, the second
+              with Escape. React Native Web's Pressable is a tab stop unless
+              told otherwise, whatever `focusable` says. */}
+              <AnimatedPressable
+                accessible={false}
+                aria-hidden
+                focusable={false}
+                onPress={onScrimPress}
+                style={composeStyles<AnimatedStyle<ViewStyle>>(
+                  styles.scrim,
+                  scrim,
+                )}
+                tabIndex={-1}
+              />
+              {children}
+            </OverlayHost>
+          </SeparatorOrientationContext>
+        </ButtonTooltipContext>
       </ButtonSlotContext>
     </Modal>
   )

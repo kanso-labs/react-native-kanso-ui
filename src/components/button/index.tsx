@@ -376,6 +376,7 @@ const outlinedSizesOf = themedStyles((theme) => {
  * `style`, `ref` and `testID` land on the `Pressable`.
  */
 function Button({
+  accessibilityHint,
   children,
   defaultSelected,
   delayLongPress,
@@ -444,13 +445,18 @@ function Button({
     onHoverIn: hoverIn,
     onHoverOut: hoverOut,
     onLongPress: longPress,
+    onPressIn: pressIn,
+    onPressOut: pressOut,
     ...triggerProps
   } = useSlotTrigger({
+    accessibilityHint,
     delayLongPress,
     href,
     onHoverIn,
     onHoverOut,
     onLongPress,
+    onPressIn,
+    onPressOut,
     ref,
     slot,
   })
@@ -478,7 +484,7 @@ function Button({
     onFocus,
     onHoverIn: hoverIn,
     onHoverOut: hoverOut,
-    ...groupPressHandlers(group, width, onPressIn, onPressOut),
+    ...groupPressHandlers(group, width, pressIn, pressOut),
     held: group?.held,
     pending,
   })

@@ -57,6 +57,7 @@ import { Text } from '../components/text'
 import { TextArea } from '../components/text-area'
 import { TextField } from '../components/text-field'
 import { Toolbar } from '../components/toolbar'
+import { Tooltip } from '../components/tooltip'
 import {
   ArrowBackGlyph,
   CloseGlyph,
@@ -1191,6 +1192,17 @@ function Showcase({ name }: ShowcaseProps) {
             <Separator />
             <IconButton aria-label="Close">{CLOSE}</IconButton>
           </Toolbar>
+        </View>
+      </Section>
+
+      <Section
+        description="The inverse surface again, at the label size, anchored to the control it describes."
+        title="Tooltip"
+      >
+        <View style={styles.row}>
+          <Tooltip label="Supporting text">
+            <Button variant="outlined">Hover or press and hold</Button>
+          </Tooltip>
         </View>
       </Section>
     </View>

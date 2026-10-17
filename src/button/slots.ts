@@ -40,7 +40,31 @@ type ButtonSlotTrigger = {
   readonly ref: RefObject<HostInstance | null>
 }
 
-const ButtonSlotContext = createContext<ButtonSlots | null>(null)
+/**
+ * What a button takes on inside a `Tooltip`, whichever slot it fills: its
+ * node, which the tooltip is placed against, the tooltip's label as its
+ * accessibility hint, and the pointer and the held press that open and close
+ * the tooltip. The handlers run after the button's own and an overlay
+ * trigger's. Kept apart from the slots so that a tooltip and the overlay a
+ * button opens can wrap it in either order, and a close button and a link
+ * take one too.
+ */
+type ButtonTooltip = {
+  /** How long a press is held before it opens the tooltip, in milliseconds. */
+  readonly delayLongPress: number
+  /** The tooltip's label, read after the button's name. */
+  readonly hint: string
+  readonly onHoverIn?: (() => void) | undefined
+  readonly onHoverOut?: (() => void) | undefined
+  readonly onLongPress: () => void
+  readonly onPressIn?: (() => void) | undefined
+  readonly onPressOut: () => void
+  /** Where the button's node is kept, for the tooltip to be placed against. */
+  readonly ref: RefObject<HostInstance | null>
+}
 
-export { ButtonSlotContext }
-export type { ButtonSlots, ButtonSlotTrigger }
+const ButtonSlotContext = createContext<ButtonSlots | null>(null)
+const ButtonTooltipContext = createContext<ButtonTooltip | null>(null)
+
+export { ButtonSlotContext, ButtonTooltipContext }
+export type { ButtonSlots, ButtonSlotTrigger, ButtonTooltip }

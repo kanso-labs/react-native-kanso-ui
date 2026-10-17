@@ -227,6 +227,7 @@ const sizesOf = themedStyles(({ sizing }) => {
  * `style`, `ref` and `testID` land on the `Pressable`.
  */
 function IconButton({
+  accessibilityHint,
   children,
   defaultSelected,
   delayLongPress,
@@ -288,13 +289,18 @@ function IconButton({
     onHoverIn: hoverIn,
     onHoverOut: hoverOut,
     onLongPress: longPress,
+    onPressIn: pressIn,
+    onPressOut: pressOut,
     ...triggerProps
   } = useSlotTrigger({
+    accessibilityHint,
     delayLongPress,
     href,
     onHoverIn,
     onHoverOut,
     onLongPress,
+    onPressIn,
+    onPressOut,
     ref,
     slot,
   })
@@ -320,7 +326,7 @@ function IconButton({
     onFocus,
     onHoverIn: hoverIn,
     onHoverOut: hoverOut,
-    ...groupPressHandlers(group, width, onPressIn, onPressOut),
+    ...groupPressHandlers(group, width, pressIn, pressOut),
     pending,
   })
 
