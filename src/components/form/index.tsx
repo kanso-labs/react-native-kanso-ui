@@ -50,8 +50,9 @@ type FormProps = {
    * Called with the values when the form is submitted: each field with a
    * `name` and not disabled, as the string a web form submits for it, so a
    * number field's value is its number written out, and an empty one is
-   * `''`. Under `native` it is not called while a field blocks the
-   * submission.
+   * `''`. A checkbox group's is the list of its ticked entries' values, an
+   * empty list while none is ticked. Under `native` it is not called while a
+   * field blocks the submission.
    */
   readonly onSubmit?: (values: FormValues) => void
   readonly ref?: Ref<FormHandle>

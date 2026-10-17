@@ -42,7 +42,9 @@ import { useTypeRole } from '../../typography/roles'
 // it to its checkboxes through src/control/group, as RadioGroup hands its
 // buttons theirs. Its validation is src/form's, as a field's is: `isRequired`,
 // `validate`, and the form's errors under the group's `name`. A native Form
-// holding it back focuses its first checkbox.
+// holding it back focuses its first checkbox. A Form submits the selection
+// under the group's `name` as a list, where a web form sends one entry per
+// ticked box under it.
 //
 // Inside a Form the line is held from the start, as web's is, so an error
 // arriving on submit moves nothing under the group. Outside one it takes
@@ -92,10 +94,9 @@ type CheckboxGroupProps = Omit<ViewProps, 'children' | 'style'> & {
    */
   readonly label: string
   /**
-   * The name the form around the group knows it by, which its
-   * `validationErrors` are keyed on. A form hands `onSubmit` one string per
-   * name, so a group's selection is not among those values: read it through
-   * `onChange`, or hold it with `value`.
+   * The name the form around the group knows it by: its `onSubmit` is handed
+   * the ticked entries' values as a list under it, an empty one while none
+   * is ticked, and its `validationErrors` are keyed on it.
    */
   readonly name?: string
   /** Called with the newly selected entries whenever a press changes them. */
@@ -216,7 +217,7 @@ function CheckboxGroup({
     isReadOnly,
     isRequired,
     name,
-    submitted: undefined,
+    submitted: state.value,
     validate,
     value: state.value,
   })

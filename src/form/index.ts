@@ -23,10 +23,11 @@ type FieldValidationOptions<T> = {
   readonly isRequired: boolean
   readonly name: string | undefined
   /**
-   * The value as the form submits it, or `undefined` for a field whose value
-   * is not one string, which submits nothing.
+   * The value as the form submits it: one string, a list of them for a field
+   * holding several, as a checkbox group does, or `undefined` for a field
+   * that submits nothing.
    */
-  readonly submitted: string | undefined
+  readonly submitted: FormValues[string] | undefined
   readonly validate: ((value: T) => ValidationResult) | undefined
   readonly value: T
 }
@@ -45,7 +46,7 @@ type FormEntry = {
   /** Shows the field's own error, once a submission it held back is tried. */
   readonly show: () => void
   /** The name and value the field submits, where it submits one. */
-  readonly submits: readonly [string, string] | undefined
+  readonly submits: readonly [string, FormValues[string]] | undefined
 }
 
 type FormRegistry = {
@@ -69,8 +70,11 @@ type FormState = {
  */
 type FormValidationBehavior = 'aria' | 'native'
 
-/** The values a form submits, as strings by each field's `name`. */
-type FormValues = Readonly<Record<string, string>>
+/**
+ * The values a form submits by each field's `name`: a string, or a list of
+ * them for a field holding several, as a checkbox group does.
+ */
+type FormValues = Readonly<Record<string, readonly string[] | string>>
 
 /** A field's problem in words: one message, or several read as one line. */
 type ValidationError = readonly string[] | string

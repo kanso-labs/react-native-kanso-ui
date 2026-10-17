@@ -24,12 +24,18 @@ import type { FormHandle, FormProps } from '.'
 import { Form } from '.'
 import { scopeFor } from '../../theme/scope'
 import { Button } from '../button'
+import { Checkbox } from '../checkbox'
+import { CheckboxGroup } from '../checkbox-group'
 import { IconButton } from '../icon-button'
 import { NumberField } from '../number-field'
 import { SearchField } from '../search-field'
 import { TextField } from '../text-field'
 
 const { theme } = scopeFor('light', {})
+
+// Hoisted so it is one stable array per render, which is what react-perf's
+// jsx-no-new-array-as-prop is after.
+const CHOSEN = ['second']
 
 // React Native's Jest preset reports a font scale of 2.
 const FONT_SCALE = 2
@@ -153,6 +159,29 @@ describe('Form', () => {
       expect(submitted(onSubmit)).toEqual({
         first: 'Headline',
         second: 'Supporting line',
+      })
+    })
+
+    it("hands onSubmit a checkbox group's selection as a list beside the strings", async () => {
+      const onSubmit = jest.fn()
+      await render(
+        formOf(
+          { onSubmit },
+          <>
+            <TextField defaultValue="Headline" label="First" name="first" />
+            <CheckboxGroup defaultValue={CHOSEN} label="Items" name="items">
+              <Checkbox value="first">First item</Checkbox>
+              <Checkbox value="second">Second item</Checkbox>
+            </CheckboxGroup>
+          </>,
+        ),
+      )
+
+      await submit()
+
+      expect(submitted(onSubmit)).toEqual({
+        first: 'Headline',
+        items: ['second'],
       })
     })
 
