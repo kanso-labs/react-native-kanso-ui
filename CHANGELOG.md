@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.9.0](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.8.0...v0.9.0) (2026-10-17)
+
+
+### Features
+
+* **badge:** add Badge component ([#158](https://github.com/kanso-labs/react-native-kanso-ui/issues/158)) ([824e97c](https://github.com/kanso-labs/react-native-kanso-ui/commit/824e97c1f6dd776f7353f68cd0c5a6db7d0b46aa))
+* **breadcrumbs:** add Breadcrumbs component ([#209](https://github.com/kanso-labs/react-native-kanso-ui/issues/209)) ([c5bbfff](https://github.com/kanso-labs/react-native-kanso-ui/commit/c5bbfff5126420d390a92686da47784dda92c1f3))
+* **checkbox-group:** add CheckboxGroup component ([#208](https://github.com/kanso-labs/react-native-kanso-ui/issues/208)) ([35a379e](https://github.com/kanso-labs/react-native-kanso-ui/commit/35a379e475475f095a94ba29385e1391098e6b9c))
+* **code:** add Code component ([#205](https://github.com/kanso-labs/react-native-kanso-ui/issues/205)) ([7358dc1](https://github.com/kanso-labs/react-native-kanso-ui/commit/7358dc149aa9c6c5cdde43ede864624d56d41a05))
+* **container:** add Container component ([#160](https://github.com/kanso-labs/react-native-kanso-ui/issues/160)) ([5c81d27](https://github.com/kanso-labs/react-native-kanso-ui/commit/5c81d275dfdf2b6322d5d7f3c182bee85614f3d5))
+* **fab-menu:** add FabMenu component ([#212](https://github.com/kanso-labs/react-native-kanso-ui/issues/212)) ([a6812f1](https://github.com/kanso-labs/react-native-kanso-ui/commit/a6812f1d273a859bd1f8c787326cc491e23ffcdf))
+* **fab:** add Fab component ([#211](https://github.com/kanso-labs/react-native-kanso-ui/issues/211)) ([6daf767](https://github.com/kanso-labs/react-native-kanso-ui/commit/6daf76719c6699059a6711cd57efe1cc8a8d5926))
+* **feed:** add Feed component ([#166](https://github.com/kanso-labs/react-native-kanso-ui/issues/166)) ([7b016cf](https://github.com/kanso-labs/react-native-kanso-ui/commit/7b016cfb2507eb813e0d4e14b07d667535cbb0bc))
+* **keycap:** add Keycap component ([#206](https://github.com/kanso-labs/react-native-kanso-ui/issues/206)) ([d1c693d](https://github.com/kanso-labs/react-native-kanso-ui/commit/d1c693d921f991793ca38caa58e4d10d38d57ab5))
+* **supporting-pane:** add SupportingPane component ([#195](https://github.com/kanso-labs/react-native-kanso-ui/issues/195)) ([cf1da17](https://github.com/kanso-labs/react-native-kanso-ui/commit/cf1da17346d6003be7bc2ccb442e17a59fca46e9))
+* **text-area:** add TextArea component ([#207](https://github.com/kanso-labs/react-native-kanso-ui/issues/207)) ([f3fc5ff](https://github.com/kanso-labs/react-native-kanso-ui/commit/f3fc5ff53cef7936ab8030eaed58f90bf6e389ea))
+* **toolbar:** add Toolbar component ([#210](https://github.com/kanso-labs/react-native-kanso-ui/issues/210)) ([02d1357](https://github.com/kanso-labs/react-native-kanso-ui/commit/02d135725fcd794f7a639c7514f4672e3bbe9cc7))
+
 ## [0.8.0](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.7.0...v0.8.0) (2026-10-17)
 
 
