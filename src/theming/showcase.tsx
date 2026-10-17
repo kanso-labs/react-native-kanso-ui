@@ -24,6 +24,7 @@ import { Dialog } from '../components/dialog'
 import { Feed } from '../components/feed'
 import { Form } from '../components/form'
 import { IconButton } from '../components/icon-button'
+import { Keycap } from '../components/keycap'
 import { Link } from '../components/link'
 import { List } from '../components/list'
 import { ListDetail } from '../components/list-detail'
@@ -621,6 +622,15 @@ function Showcase({ name }: ShowcaseProps) {
           <IconButton aria-label="Add" defaultSelected variant="tonal">
             {PLUS}
           </IconButton>
+        </View>
+      </Section>
+
+      <Section
+        description="A key drawn with a border and a rule under it, sized from the text around it rather than from a step of the scale."
+        title="Keycap"
+      >
+        <View style={styles.row}>
+          <Keycap>Esc</Keycap>
         </View>
       </Section>
 
