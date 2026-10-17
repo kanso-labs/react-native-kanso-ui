@@ -203,6 +203,8 @@ export type {
   StackJustify,
   StackProps,
 } from './components/stack'
+export { SupportingPane } from './components/supporting-pane'
+export type { SupportingPaneProps } from './components/supporting-pane'
 export { Switch } from './components/switch'
 export type { SwitchProps } from './components/switch'
 export { Tag } from './components/tag'
