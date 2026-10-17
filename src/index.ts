@@ -73,6 +73,8 @@ export type {
   IconButtonSize,
   IconButtonVariant,
 } from './components/icon-button'
+export { Keycap } from './components/keycap'
+export type { KeycapProps } from './components/keycap'
 export { Link } from './components/link'
 export type { LinkProps, LinkTone, LinkUnderline } from './components/link'
 export { List, ListLoadMore, ListRow, ListSection } from './components/list'

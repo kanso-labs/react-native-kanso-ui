@@ -9,6 +9,7 @@ import { useTheme } from '../../theme/scope'
 import { composeStyles, themedStyles } from '../../theme/styles'
 import { useTypeRole } from '../../typography/roles'
 import { TextSizeContext } from '../../typography/size'
+import { sentenceLabel } from '../keycap'
 
 // Tone is a separate axis from variant so the two compose freely: any of the
 // fifteen roles in any of these colours, the same set web's Text takes.
@@ -80,13 +81,20 @@ function Text({
   const tones = stylesOf(useTheme())
   const composed = composeStyles<TextStyle>(role, tones[tone], style)
   // The size the text ends up at, the call site's over the role's, which a
-  // Code inside it sets a share of. Plain text holds no Code, so it goes in
-  // as it is, and a host Text's children stay the string a call site wrote.
+  // Code or a Keycap inside it sets a share of. Plain text holds neither, so
+  // it goes in as it is, and a host Text's children stay the string a call
+  // site wrote.
   const size = StyleSheet.flatten(composed)?.fontSize
   const plain = typeof children === 'string' || typeof children === 'number'
+  // A Keycap is an inline View, whose name a native screen reader leaves out
+  // of the sentence, so a Text holding one says the sentence itself unless
+  // the call site has labelled it.
+  const label =
+    props.accessibilityLabel ??
+    (props['aria-label'] === undefined ? sentenceLabel(children) : undefined)
 
   return (
-    <NativeText {...props} style={composed}>
+    <NativeText {...props} accessibilityLabel={label} style={composed}>
       {plain ? (
         children
       ) : (
