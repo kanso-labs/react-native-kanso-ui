@@ -2,8 +2,9 @@ import type { ComponentRef, ReactNode, Ref } from 'react'
 import type { PressableProps, StyleProp, View, ViewStyle } from 'react-native'
 import type { AnimatedStyle } from 'react-native-reanimated'
 
+import { use } from 'react'
 import { StyleSheet } from 'react-native'
-import Animated from 'react-native-reanimated'
+import Animated, { useSharedValue } from 'react-native-reanimated'
 
 import type {
   ButtonLinkForm,
@@ -19,11 +20,20 @@ import {
   HEIGHTS,
   OUTLINE_WIDTHS,
   PRESSED_CORNERS,
+  pressThen,
   toggleState,
   useButtonAction,
   useCorner,
   useSlotTrigger,
 } from '../../button'
+import {
+  ButtonGroupItemContext,
+  groupPressHandlers,
+  groupSelectionOf,
+  groupStyles,
+  groupWidthThen,
+  useGroupShift,
+} from '../../button/group'
 import { palettesOf } from '../../button/palettes'
 import {
   BUSY,
@@ -32,7 +42,7 @@ import {
   usePending,
 } from '../../button/pending'
 import { IconStyleContext } from '../../glyphs/icon-style'
-import { hitSlop, usePressFeedback } from '../../press'
+import { hitSlop, TARGET_SIZE, usePressFeedback } from '../../press'
 import { useTheme } from '../../theme/scope'
 import { composeStyles, themedStyles } from '../../theme/styles'
 
@@ -71,6 +81,12 @@ import { composeStyles, themedStyles } from '../../theme/styles'
 // `lg` and 16dp at the two large, and a selected toggle rests there, which is
 // the page's round-to-square morph. It eases as Button's does.
 //
+// **A ButtonGroup around it hands it what the group decides**, as it does a
+// Button, through src/button's group.ts: its size, whether it is disabled, a
+// connected group's corners, and a standard group's widening while it or a
+// neighbour is pressed, which the button takes as width. In a group that
+// selects it is a toggle of the group's, by its `id`.
+//
 // The forms, the toggle's state, what a press does and the corner's ease are
 // src/button's, shared with Button.
 
@@ -92,6 +108,8 @@ type IconButtonProps = (ButtonLinkForm | ButtonPressForm | ButtonToggleForm) &
      * @default false
      */
     readonly disableRipple?: boolean
+    /** The key a ButtonGroup that selects reports the button by. */
+    readonly id?: string
     /**
      * Draws the button disabled, and takes no presses.
      * @default false
@@ -103,7 +121,7 @@ type IconButtonProps = (ButtonLinkForm | ButtonPressForm | ButtonToggleForm) &
      * the icon buttons spec page's XS to XL, and the same heights `Button`
      * uses, so the two line up beside each other in a row. The icon is 20dp,
      * 24dp, 24dp, 32dp and 40dp in turn.
-     * @default 'md'
+     * @default the size of the ButtonGroup around it, else 'md'
      */
     readonly size?: IconButtonSize
     readonly style?: StyleProp<ViewStyle>
@@ -214,7 +232,8 @@ function IconButton({
   disableRipple = false,
   hitSlop: ownHitSlop,
   href,
-  isDisabled = false,
+  id,
+  isDisabled: ownDisabled = false,
   isPending = false,
   isSelected,
   onBlur,
@@ -229,7 +248,7 @@ function IconButton({
   onPressOut,
   pendingLabel,
   ref,
-  size = 'md',
+  size: ownSize,
   slot,
   style,
   type,
@@ -237,15 +256,23 @@ function IconButton({
   ...props
 }: IconButtonProps) {
   const theme = useTheme()
+  // A ButtonGroup around the button hands it a size, which one named here
+  // still beats, and its part in the group; src/button's group.ts sets it out.
+  const group = use(ButtonGroupItemContext)
+  const size = ownSize ?? group?.size ?? 'md'
+  const isDisabled = ownDisabled || group?.isDisabled === true
+  const membership = groupSelectionOf(group, id)
   // A link is never pending, as on web, where its props have no such state.
   const pending = href === undefined && isPending
   const ringLabel = usePending(pending, pendingLabel)
 
-  // The three props that make this a toggle, read as web reads them.
+  // The three props that make this a toggle, read as web reads them. A group
+  // that selects keeps the selection itself, so they mean nothing there.
   const isToggle =
-    defaultSelected !== undefined ||
-    isSelected !== undefined ||
-    onChange !== undefined
+    membership === undefined &&
+    (defaultSelected !== undefined ||
+      isSelected !== undefined ||
+      onChange !== undefined)
   const action = useButtonAction({
     defaultSelected,
     href,
@@ -270,17 +297,20 @@ function IconButton({
     ref,
     slot,
   })
+  const toggles = isToggle || membership !== undefined
+  const selected = membership?.selected ?? action.selected
   const colors =
     palettesOf(theme)[
       isDisabled
         ? DISABLED[variant]
-        : isToggle
-          ? TOGGLE_PALETTES[variant][
-              action.selected ? 'selected' : 'unselected'
-            ]
+        : toggles
+          ? TOGGLE_PALETTES[variant][selected ? 'selected' : 'unselected']
           : variant
     ]
 
+  // The width a standard group widens the button from, recorded as it is
+  // laid out, before the press feedback that tells the group of a press.
+  const width = useSharedValue(0)
   const feedback = usePressFeedback({
     color: colors.content,
     disabled: isDisabled,
@@ -289,39 +319,56 @@ function IconButton({
     onFocus,
     onHoverIn: hoverIn,
     onHoverOut: hoverOut,
-    onPressIn,
-    onPressOut,
+    ...groupPressHandlers(group, width, onPressIn, onPressOut),
     pending,
   })
 
   const { radii, sizing } = theme
   const edge = sizing[HEIGHTS[size]]
   const shaped = useCorner(
-    feedback.pressed || action.selected
-      ? radii[PRESSED_CORNERS[size]]
-      : radii.pill,
-    onLayout,
+    group?.corners?.({ pressed: feedback.pressed, selected }) ??
+      (feedback.pressed || selected
+        ? radii[PRESSED_CORNERS[size]]
+        : radii.pill),
+    groupWidthThen(group, width, onLayout),
   )
+  const shift = useGroupShift(group, edge, 'width')
+  // A connected group's two smallest sizes are 48dp wide, which leaves the
+  // target nothing to add across.
+  const keepsTarget = group?.keepsTarget === true
 
   return (
     <AnimatedPressable
+      id={id}
       role={href === undefined ? 'button' : 'link'}
       {...(isToggle ? toggleState(action.selected) : undefined)}
+      {...membership?.accessibility}
       {...(pending ? BUSY : undefined)}
       {...props}
       {...triggerProps}
       {...feedback.handlers}
       disabled={isDisabled}
-      hitSlop={ownHitSlop ?? hitSlop(edge, edge)}
+      hitSlop={
+        ownHitSlop ??
+        hitSlop(edge, keepsTarget ? Math.max(edge, TARGET_SIZE) : edge)
+      }
       onLayout={shaped.onLayout}
       onLongPress={pending ? undefined : longPress}
-      onPress={pending ? undefined : action.onPress}
+      onPress={
+        pending
+          ? undefined
+          : membership === undefined
+            ? action.onPress
+            : pressThen(action.onPress, membership.toggle)
+      }
       style={composeStyles<AnimatedStyle<ViewStyle>>(
         styles.base,
         sizesOf(theme)[size],
         variant === 'outlined' ? outlineWidths[size] : undefined,
         colors.container,
         shaped.corner,
+        shift,
+        keepsTarget ? groupStyles.target : undefined,
         feedback.ring,
         style,
       )}

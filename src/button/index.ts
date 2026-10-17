@@ -18,6 +18,7 @@ import Animated, {
 } from 'react-native-reanimated'
 
 import type { ResolvedTheme } from '../theme/scope'
+import type { GroupCorners } from './group'
 
 import { FormContext } from '../form'
 import { refsOf } from '../ref'
@@ -30,10 +31,10 @@ import { ButtonSlotContext } from './slots'
 // toggle's state and how it is announced, what a press does after the call
 // site's own `onPress`, a submit button's included, and what the slot it
 // fills in an overlay adds to it, the corner that eases between shapes, and
-// the metrics
-// the two components' pages give alike, since the two share their five
-// heights so that they line up in a row. What a pending button draws and
-// says is ./pending.tsx.
+// the metrics the two components' pages give alike, since the two share
+// their five heights so that they line up in a row. What a pending button
+// draws and says is ./pending.tsx, and what a ButtonGroup hands the buttons
+// in it is ./group.ts.
 
 /**
  * A plain button, a link, or a toggle, of which a call site writes exactly
@@ -297,16 +298,25 @@ function useButtonAction({
 /**
  * The corner a button eases to, over the motion tokens' short duration on the
  * emphasised curve, and at once for a reader who asks the device for reduced
- * motion. The pill is the radius scale's `pill`, far larger than any button,
- * so the ease runs from half the button's measured height rather than from
- * that: otherwise the corner would hold the pill for most of the ease and
- * jump at its end. The `onLayout` it hands back measures the button, then
- * calls the call site's own.
+ * motion: one radius for all four, or a connected ButtonGroup's two, one for
+ * the start side and one for the end, which follow the layout's direction on
+ * native. On web Reanimated writes an animated style straight onto the
+ * element, where only the physical corners are CSS properties, so the start
+ * side is the left there, as the web Storybook lays a row out.
+ * The pill is the radius scale's `pill`, far larger than any button, so the
+ * ease runs from half the button's measured height rather than from that:
+ * otherwise the corner would hold the pill for most of the ease and jump at
+ * its end. The `onLayout` it hands back measures the button, then calls the
+ * call site's own.
  */
-function useCorner(radius: number, onLayout: PressableProps['onLayout']) {
+function useCorner(
+  radius: GroupCorners | number,
+  onLayout: PressableProps['onLayout'],
+) {
   const { motion } = useTheme()
   const reduceMotion = useReducedMotion()
   const height = useSharedValue(0)
+  const web = Platform.OS === 'web'
   const timing = {
     duration: motion.durationShort2,
     easing: Easing.bezier(...motion.easingEmphasized),
@@ -314,10 +324,29 @@ function useCorner(radius: number, onLayout: PressableProps['onLayout']) {
   const corner = useAnimatedStyle(() => {
     'worklet'
     const measured = height.get()
-    const target = measured > 0 ? Math.min(radius, measured / 2) : radius
+    const ease = (value: number) => {
+      const target = measured > 0 ? Math.min(value, measured / 2) : value
+
+      return reduceMotion ? target : withTiming(target, timing)
+    }
+
+    if (typeof radius === 'number') {
+      return { borderRadius: ease(radius) }
+    }
+    if (web) {
+      return {
+        borderBottomLeftRadius: ease(radius.start),
+        borderBottomRightRadius: ease(radius.end),
+        borderTopLeftRadius: ease(radius.start),
+        borderTopRightRadius: ease(radius.end),
+      }
+    }
 
     return {
-      borderRadius: reduceMotion ? target : withTiming(target, timing),
+      borderBottomEndRadius: ease(radius.end),
+      borderBottomStartRadius: ease(radius.start),
+      borderTopEndRadius: ease(radius.end),
+      borderTopStartRadius: ease(radius.start),
     }
   })
 
@@ -373,6 +402,7 @@ export {
   HEIGHTS,
   OUTLINE_WIDTHS,
   PRESSED_CORNERS,
+  pressThen,
   toggleState,
   useButtonAction,
   useCorner,

@@ -23,6 +23,11 @@ export type {
   ButtonSize,
   ButtonVariant,
 } from './components/button'
+export { ButtonGroup } from './components/button-group'
+export type {
+  ButtonGroupProps,
+  ButtonGroupVariant,
+} from './components/button-group'
 export { Calendar } from './components/calendar'
 export type { CalendarProps } from './components/calendar'
 export { Card } from './components/card'
