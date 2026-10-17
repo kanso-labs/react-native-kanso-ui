@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.7.0](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.6.0...v0.7.0) (2026-10-17)
+
+
+### Features
+
+* **calendar:** add Calendar component ([#147](https://github.com/kanso-labs/react-native-kanso-ui/issues/147)) ([8d2ff8d](https://github.com/kanso-labs/react-native-kanso-ui/commit/8d2ff8d09ba2c78ea0f985c75667ebc983730204))
+* **navigation-rail:** add NavigationRail component ([#145](https://github.com/kanso-labs/react-native-kanso-ui/issues/145)) ([fe9ca72](https://github.com/kanso-labs/react-native-kanso-ui/commit/fe9ca72a0f96dc047f5e7bfb13daa380ec5bd542))
+
+
+### Dependencies
+
+* update dependency @kanso-labs/unplugin-style-dictionary to v0.10.34 ([#149](https://github.com/kanso-labs/react-native-kanso-ui/issues/149)) ([bf7c682](https://github.com/kanso-labs/react-native-kanso-ui/commit/bf7c682a72fdd52496b07f80358260203dc8ea7f))
+* update kanso-labs/actions action to v4.3.0 ([#148](https://github.com/kanso-labs/react-native-kanso-ui/issues/148)) ([cc2dd29](https://github.com/kanso-labs/react-native-kanso-ui/commit/cc2dd29b156dce47b240d087525a7f6d1a9f15c4))
+
 ## [0.6.0](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.5.0...v0.6.0) (2026-10-17)
 
 
