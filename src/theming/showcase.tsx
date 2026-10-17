@@ -17,6 +17,7 @@ import { Dialog } from '../components/dialog'
 import { Form } from '../components/form'
 import { IconButton } from '../components/icon-button'
 import { Link } from '../components/link'
+import { List } from '../components/list'
 import { ListItem } from '../components/list-item'
 import { Menu } from '../components/menu'
 import { Meter } from '../components/meter'
@@ -102,6 +103,7 @@ const SEARCH = <SearchGlyph />
 
 // Hoisted so the keys are not a new array on every render, which is what
 // react-perf's no-new-array-as-prop is after.
+const LIST_SELECTION = ['second']
 const SEGMENT_SELECTION = ['second']
 
 // The ListItem section's rows, web's three people with an amount each, their
@@ -454,6 +456,30 @@ function Showcase({ name }: ShowcaseProps) {
         <Text variant="bodyLarge">
           <Link href="/first">Label</Link>
         </Text>
+      </Section>
+
+      <Section
+        description="The shared row under selection, with a checkbox drawn on every one while the list toggles."
+        title="List"
+      >
+        <Card padding="none" variant="outlined">
+          <List
+            aria-label="Label"
+            defaultSelectedKeys={LIST_SELECTION}
+            scrollEnabled={false}
+            selectionMode="multiple"
+          >
+            <List.Item id="first" supporting="Supporting line">
+              First item
+            </List.Item>
+            <List.Item id="second" supporting="Supporting line">
+              Second item
+            </List.Item>
+            <List.Item id="third" supporting="Supporting line">
+              Third item
+            </List.Item>
+          </List>
+        </Card>
       </Section>
 
       <Section

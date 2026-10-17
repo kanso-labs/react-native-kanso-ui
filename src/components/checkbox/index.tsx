@@ -1,18 +1,12 @@
 import type { ComponentRef, ReactNode, Ref } from 'react'
 import type { StyleProp, ViewProps, ViewStyle } from 'react-native'
-import type { AnimatedStyle } from 'react-native-reanimated'
 import type { ToggleState } from 'react-stately/useToggleState'
 
 import { useId } from 'react'
-import { Pressable, StyleSheet, View } from 'react-native'
-import Animated, {
-  Easing,
-  useAnimatedStyle,
-  useReducedMotion,
-  withTiming,
-} from 'react-native-reanimated'
+import { Pressable, View } from 'react-native'
 import { useToggleState } from 'react-stately/useToggleState'
 
+import type { CheckboxTone } from '../../control/checkbox-box'
 import type { ResolvedTheme } from '../../theme/scope'
 
 import {
@@ -22,10 +16,9 @@ import {
   LAYER_SIZE,
   messageOf,
 } from '../../control'
+import { CheckboxBox } from '../../control/checkbox-box'
 import { controlStylesOf } from '../../control/styles'
-import { CheckGlyph, IndeterminateGlyph } from '../../glyphs'
 import { hitSlop, usePressFeedback } from '../../press'
-import { withOpacity } from '../../theme/color'
 import { useTheme } from '../../theme/scope'
 import { composeStyles } from '../../theme/styles'
 
@@ -101,19 +94,11 @@ type CheckboxProps = Omit<ViewProps, 'children' | 'style'> & {
   readonly style?: StyleProp<ViewStyle>
 }
 
-type Tone = 'error' | 'marked' | 'unmarked'
-
-// The box's side, its rule and its corner, from the page. The glyph is the
-// box's size and sits over the whole of it, rule included.
-const BOX_SIZE = 18
-const BOX_CORNER = 2
-const BOX_RULE = 2
-
 // The state layer's colour roles, hovered or focused and pressed. Error is
 // error throughout; otherwise the two swap once pressed.
 const LAYERS: Readonly<
   Record<
-    Tone,
+    CheckboxTone,
     {
       readonly hover: keyof ResolvedTheme['colors']
       readonly pressed: keyof ResolvedTheme['colors']
@@ -124,22 +109,6 @@ const LAYERS: Readonly<
   marked: { hover: 'primary', pressed: 'onSurface' },
   unmarked: { hover: 'onSurface', pressed: 'primary' },
 }
-
-const styles = StyleSheet.create({
-  box: {
-    borderRadius: BOX_CORNER,
-    borderWidth: BOX_RULE,
-    height: BOX_SIZE,
-    width: BOX_SIZE,
-  },
-  // Over the box rather than inside it, since a box's children are laid out
-  // inside its rule and the glyph covers the rule as well.
-  glyph: {
-    left: (LAYER_SIZE - BOX_SIZE) / 2,
-    position: 'absolute',
-    top: (LAYER_SIZE - BOX_SIZE) / 2,
-  },
-})
 
 /**
  * A checkbox with its label, and optionally a description or an error under
@@ -187,7 +156,7 @@ function Checkbox({
   const { colors, radii } = theme
   const marked = state.isSelected || isIndeterminate
   const interactive = !isDisabled && !isReadOnly
-  const tone: Tone =
+  const tone: CheckboxTone =
     error === undefined ? (marked ? 'marked' : 'unmarked') : 'error'
 
   const feedback = usePressFeedback({
@@ -199,13 +168,6 @@ function Checkbox({
   })
   const active =
     feedback.hovered || feedback.pressed || feedback.ring !== undefined
-  const paint = paintOf(theme, { active, isDisabled, marked, tone })
-  const box = useBoxColors(paint)
-  const Glyph = isIndeterminate
-    ? IndeterminateGlyph
-    : state.isSelected
-      ? CheckGlyph
-      : null
 
   return (
     <View {...props} style={style}>
@@ -227,69 +189,20 @@ function Checkbox({
           )}
         >
           {feedback.layer}
-          <Animated.View
-            style={composeStyles<AnimatedStyle<ViewStyle>>(styles.box, box)}
+          <CheckboxBox
+            active={active}
+            isDisabled={isDisabled}
+            isIndeterminate={isIndeterminate}
+            isSelected={state.isSelected}
+            tone={tone}
+            within={LAYER_SIZE}
           />
-          {Glyph === null ? null : (
-            <Glyph color={paint.glyph} size={BOX_SIZE} style={styles.glyph} />
-          )}
         </View>
         <ControlLabel isDisabled={isDisabled}>{children}</ControlLabel>
       </Pressable>
       <ControlMessage description={description} error={error} id={messageId} />
     </View>
   )
-}
-
-/**
- * What the box is painted in: its fill, its rule and the glyph's colour.
- * Where the page draws no fill or no rule it is the colour beside it made
- * clear rather than plain transparent black, so the box eases through its
- * own colour rather than through grey.
- */
-function paintOf(
-  { colors, stateLayerOpacity }: ResolvedTheme,
-  {
-    active,
-    isDisabled,
-    marked,
-    tone,
-  }: {
-    readonly active: boolean
-    readonly isDisabled: boolean
-    readonly marked: boolean
-    readonly tone: Tone
-  },
-) {
-  const disabled = withOpacity(
-    colors.onSurface,
-    stateLayerOpacity.disabledContent,
-  )
-
-  if (marked) {
-    const fill = isDisabled
-      ? disabled
-      : tone === 'error'
-        ? colors.error
-        : colors.primary
-    const glyph = isDisabled
-      ? colors.surface
-      : tone === 'error'
-        ? colors.onError
-        : colors.onPrimary
-
-    return { fill, glyph, rule: withOpacity(fill, 0) }
-  }
-
-  const rule = isDisabled
-    ? disabled
-    : tone === 'error'
-      ? colors.error
-      : active
-        ? colors.onSurface
-        : colors.onSurfaceVariant
-
-  return { fill: withOpacity(rule, 0), glyph: colors.onPrimary, rule }
 }
 
 // A press's toggle. Built by a call rather than declared in the component,
@@ -299,24 +212,6 @@ function toggleOf(state: ToggleState) {
   return () => {
     state.toggle()
   }
-}
-
-// The box's fill and rule, eased to as the state changes.
-function useBoxColors({ fill, rule }: { fill: string; rule: string }) {
-  const { motion } = useTheme()
-  const reduceMotion = useReducedMotion()
-  const timing = {
-    duration: motion.durationShort2,
-    easing: Easing.bezier(...motion.easingStandard),
-  }
-
-  return useAnimatedStyle(() => {
-    'worklet'
-    return {
-      backgroundColor: reduceMotion ? fill : withTiming(fill, timing),
-      borderColor: reduceMotion ? rule : withTiming(rule, timing),
-    }
-  })
 }
 
 export { Checkbox }
