@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.5.0](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.4.0...v0.5.0) (2026-10-17)
+
+
+### Features
+
+* **autocomplete:** add Autocomplete component ([#139](https://github.com/kanso-labs/react-native-kanso-ui/issues/139)) ([79ea9a4](https://github.com/kanso-labs/react-native-kanso-ui/commit/79ea9a480c158260d693ac369bac5a8f174533da))
+* **list-item:** add ListItem component ([#136](https://github.com/kanso-labs/react-native-kanso-ui/issues/136)) ([238621f](https://github.com/kanso-labs/react-native-kanso-ui/commit/238621f00a2c0a466778670c32d7c892583664f7))
+* **list:** add List component ([#137](https://github.com/kanso-labs/react-native-kanso-ui/issues/137)) ([83c1b73](https://github.com/kanso-labs/react-native-kanso-ui/commit/83c1b73a1eb59d90f4345eaf93293593bae9549a))
+* **menu:** add Menu component ([#135](https://github.com/kanso-labs/react-native-kanso-ui/issues/135)) ([59a870a](https://github.com/kanso-labs/react-native-kanso-ui/commit/59a870aff40d23921eecadd0845a4e325e45bb39))
+* **popover:** add Popover component ([#130](https://github.com/kanso-labs/react-native-kanso-ui/issues/130)) ([e6a4099](https://github.com/kanso-labs/react-native-kanso-ui/commit/e6a40997f98222299606d53ef91641194c981806))
+
+
+### Bug Fixes
+
+* **menu:** name the loading ring without drawing its label ([#138](https://github.com/kanso-labs/react-native-kanso-ui/issues/138)) ([c65a603](https://github.com/kanso-labs/react-native-kanso-ui/commit/c65a603c87b43a5fe3f286ba482a649b0bc731f8))
+
+
+### Dependencies
+
+* update dependency @kanso-labs/kanso-ui to v0.43.5 ([#132](https://github.com/kanso-labs/react-native-kanso-ui/issues/132)) ([3dbe798](https://github.com/kanso-labs/react-native-kanso-ui/commit/3dbe7981d68762b87fe2c76e793c17e1368ac5b5))
+* update dependency @kanso-labs/unplugin-style-dictionary to v0.10.33 ([#133](https://github.com/kanso-labs/react-native-kanso-ui/issues/133)) ([8f81f82](https://github.com/kanso-labs/react-native-kanso-ui/commit/8f81f82944d4cbfe02b00de92d82cf47abecb615))
+* update dependency expo to v58.0.14 ([#134](https://github.com/kanso-labs/react-native-kanso-ui/issues/134)) ([0b957df](https://github.com/kanso-labs/react-native-kanso-ui/commit/0b957df60471d50671981d80459db4d262776288))
+
 ## [0.4.0](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.3.1...v0.4.0) (2026-10-16)
 
 
