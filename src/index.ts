@@ -109,6 +109,14 @@ export type {
   NavigationBarProps,
   NavigationTabBarProps,
 } from './components/navigation-bar'
+export {
+  NavigationRail,
+  NavigationRailItem,
+} from './components/navigation-rail'
+export type {
+  NavigationRailItemProps,
+  NavigationRailProps,
+} from './components/navigation-rail'
 export { NumberField } from './components/number-field'
 export type { NumberFieldProps } from './components/number-field'
 export {

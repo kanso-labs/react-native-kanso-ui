@@ -25,6 +25,7 @@ import { ListItem } from '../components/list-item'
 import { Menu } from '../components/menu'
 import { Meter } from '../components/meter'
 import { NavigationBar } from '../components/navigation-bar'
+import { NavigationRail } from '../components/navigation-rail'
 import { NumberField } from '../components/number-field'
 import { Popover } from '../components/popover'
 import { ProductIcon } from '../components/product-icon'
@@ -180,14 +181,19 @@ const stylesOf = themedStyles(({ colors, radii, spacing }) =>
       gap: spacing.xl,
       paddingBottom: spacing.xxxl,
     },
-    // A dashed box for the layouts, which paint nothing of their own, so
-    // what a scheme reaches in them shows as the space between boxes.
     placeholder: {
       borderColor: colors.outlineVariant,
       borderRadius: radii.md,
       borderStyle: 'dashed',
       borderWidth: 1,
       padding: spacing.md,
+    },
+    // A dashed box for the layouts, which paint nothing of their own, so
+    // what a scheme reaches in them shows as the space between boxes.
+    // The two rails side by side, as they would sit at a screen's edge.
+    rails: {
+      flexDirection: 'row',
+      gap: spacing.lg,
     },
     row: {
       alignItems: 'center',
@@ -628,6 +634,34 @@ function Showcase({ name }: ShowcaseProps) {
             Third item
           </NavigationBar.Item>
         </NavigationBar>
+      </Section>
+
+      <Section
+        description="The same destinations down the leading edge, collapsed and expanded, on the surface role a scheme sets."
+        title="NavigationRail"
+      >
+        <View style={styles.rails}>
+          <NavigationRail aria-label="Second label" selectedRoute="/first">
+            <NavigationRail.Item href="/first" icon={DOT}>
+              First item
+            </NavigationRail.Item>
+            <NavigationRail.Item href="/second" icon={SEARCH}>
+              Second item
+            </NavigationRail.Item>
+          </NavigationRail>
+          <NavigationRail
+            aria-label="Third label"
+            isExpanded
+            selectedRoute="/first"
+          >
+            <NavigationRail.Item href="/first" icon={DOT}>
+              First item
+            </NavigationRail.Item>
+            <NavigationRail.Item href="/second" icon={SEARCH}>
+              Second item
+            </NavigationRail.Item>
+          </NavigationRail>
+        </View>
       </Section>
 
       <Section

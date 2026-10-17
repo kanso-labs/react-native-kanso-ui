@@ -11,7 +11,7 @@ import { use, useMemo, useState } from 'react'
 import { StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
-import type { NavigationDestinationProps } from '../../navigation'
+import type { NavigationItemProps } from '../../navigation'
 
 import { useWindowSizeClass } from '../../hooks/useWindowSizeClass'
 import {
@@ -19,8 +19,8 @@ import {
   labelColorOf,
   NavigationContext,
   NavigationDestination,
+  NavigationItem,
 } from '../../navigation'
-import { useLinkPress } from '../../router'
 import { useTheme } from '../../theme/scope'
 import { composeStyles, themedStyles } from '../../theme/styles'
 
@@ -60,13 +60,7 @@ import { composeStyles, themedStyles } from '../../theme/styles'
 // `RouterProvider`. `NavigationTabBar` draws the bar for React Navigation's
 // bottom tabs and Expo Router's tabs instead.
 
-type NavigationBarItemProps = NavigationDestinationProps & {
-  /**
-   * Where the destination goes, through the app's router, and what the
-   * bar's `selectedRoute` is matched against.
-   */
-  readonly href: string
-}
+type NavigationBarItemProps = NavigationItemProps
 
 type NavigationBarProps = Omit<ViewProps, 'children' | 'style'> & {
   /** The destinations, each a `NavigationBar.Item`. */
@@ -400,21 +394,8 @@ function NavigationBar({
  *
  * `style`, `ref` and `testID` land on the destination's `Pressable`.
  */
-function NavigationBarItem({
-  href,
-  onPress,
-  ...props
-}: NavigationBarItemProps) {
-  const { selectedRoute } = use(NavigationContext)
-  const press = useLinkPress(href, onPress)
-
-  return (
-    <NavigationDestination
-      {...props}
-      onPress={press}
-      selected={selectedRoute !== undefined && href === selectedRoute}
-    />
-  )
+function NavigationBarItem(props: NavigationBarItemProps) {
+  return <NavigationItem {...props} />
 }
 
 /**
