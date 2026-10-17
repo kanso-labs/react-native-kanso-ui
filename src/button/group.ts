@@ -2,6 +2,8 @@ import type {
   GestureResponderEvent,
   LayoutChangeEvent,
   PressableProps,
+  StyleProp,
+  ViewStyle,
 } from 'react-native'
 import type { SharedValue } from 'react-native-reanimated'
 import type { ToggleGroupState } from 'react-stately/useToggleGroupState'
@@ -16,16 +18,19 @@ import {
 } from 'react-native-reanimated'
 
 import type { ControlSize } from '.'
+import type { PressFeedback } from '../press'
 
 import { toggleState } from '.'
 import { TARGET_SIZE } from '../press'
 import { useTheme } from '../theme/scope'
 
-// What a ButtonGroup hands each Button or IconButton in it, as web's
-// src/button/context.ts does: the group's size, whether it is disabled, its
-// selection, a connected group's corners, and a standard group's part in a
-// press. Apart from src/components, which holds the public components alone,
-// and from ./index.ts, which the group reads too.
+// What a group hands each Button or IconButton in it, as web's
+// src/button/context.ts does, for ButtonGroup's two variants and
+// SplitButton's two halves: the group's size, whether it is disabled, its
+// selection, the corners it gives the button, a standard group's part in a
+// press, and a split button's paddings and held press. Apart from
+// src/components, which holds the public components alone, and from
+// ./index.ts, which the group reads too.
 
 type ButtonGroupItem = {
   /**
@@ -33,6 +38,12 @@ type ButtonGroupItem = {
    * the place of its own shape.
    */
   readonly corners?: (state: GroupButtonState) => GroupCorners
+  /**
+   * Whether the button draws its pressed layer though nothing presses it, as
+   * a split button's menu half does while its menu is open. Button reads
+   * it, which is what a split button's halves are.
+   */
+  readonly held?: boolean
   /** Whether the group is disabled, which disables every button in it. */
   readonly isDisabled: boolean
   /**
@@ -63,10 +74,20 @@ type ButtonGroupItem = {
   readonly shift: number
   /** The group's size, which a button takes unless it names its own. */
   readonly size: ControlSize | undefined
+  /**
+   * A style laid over the button's own size, before its corners: a split
+   * button's paddings. Button reads it, as it reads `held`.
+   */
+  readonly style?: StyleProp<ViewStyle>
 }
 
-/** What a connected group shapes a button's corners from. */
+/** What a group shapes a button's corners from. */
 type GroupButtonState = {
+  /**
+   * Whether a pointer is over the button, its focus ring shows or it is
+   * pressed, which a split button opens its inner corners out for.
+   */
+  readonly active: boolean
   readonly pressed: boolean
   readonly selected: boolean
 }
@@ -94,6 +115,23 @@ const groupStyles = StyleSheet.create({
     minWidth: TARGET_SIZE,
   },
 })
+
+/**
+ * The corners the group around a button gives it, from the button's press
+ * feedback and whether it is selected. Nothing outside a group that shapes
+ * its buttons, which leaves the button its own shape.
+ */
+function groupCornersOf(
+  group: ButtonGroupItem | null,
+  { hovered, pressed, ring }: PressFeedback,
+  selected: boolean,
+): GroupCorners | undefined {
+  return group?.corners?.({
+    active: hovered || pressed || ring !== undefined,
+    pressed,
+    selected,
+  })
+}
 
 /**
  * The press handlers a button in a group that tracks presses takes: its own,
@@ -217,6 +255,7 @@ function useGroupShift(
 
 export {
   ButtonGroupItemContext,
+  groupCornersOf,
   groupPressHandlers,
   groupSelectionOf,
   groupStyles,

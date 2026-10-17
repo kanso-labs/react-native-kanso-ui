@@ -40,6 +40,7 @@ import {
 } from '../../button'
 import {
   ButtonGroupItemContext,
+  groupCornersOf,
   groupPressHandlers,
   groupSelectionOf,
   groupStyles,
@@ -478,6 +479,7 @@ function Button({
     onHoverIn: hoverIn,
     onHoverOut: hoverOut,
     ...groupPressHandlers(group, width, onPressIn, onPressOut),
+    held: group?.held,
     pending,
   })
 
@@ -485,10 +487,8 @@ function Button({
   const resting =
     (shape === 'square') !== selected ? radii[SQUARE_CORNERS[size]] : radii.pill
   const shaped = useCorner(
-    group?.corners?.({
-      pressed: feedback.pressed,
-      selected: membership?.selected ?? action.selected,
-    }) ?? (feedback.pressed ? radii[PRESSED_CORNERS[size]] : resting),
+    groupCornersOf(group, feedback, membership?.selected ?? action.selected) ??
+      (feedback.pressed ? radii[PRESSED_CORNERS[size]] : resting),
     groupWidthThen(group, width, onLayout),
   )
   const border = variant === 'outlined' ? OUTLINE_WIDTHS[size] : 0
@@ -523,6 +523,7 @@ function Button({
         styles.base,
         sizesOf(theme)[size],
         variant === 'outlined' ? outlinedSizesOf(theme)[size] : undefined,
+        group?.style,
         colors.container,
         shadowOf(variant, feedback, isDisabled, theme),
         shaped.corner,

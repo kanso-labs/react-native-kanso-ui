@@ -214,6 +214,17 @@ export type {
   SnackbarProps,
   SnackbarQueue,
 } from './components/snackbar'
+export {
+  SplitButton,
+  SplitButtonAction,
+  SplitButtonMenu,
+} from './components/split-button'
+export type {
+  SplitButtonActionProps,
+  SplitButtonMenuProps,
+  SplitButtonProps,
+  SplitButtonVariant,
+} from './components/split-button'
 export { Stack } from './components/stack'
 export type {
   StackAlign,

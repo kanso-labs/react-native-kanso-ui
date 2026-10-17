@@ -209,6 +209,28 @@ describe('the state layer', () => {
     expect(styleOf(parts().layer).backgroundColor).toBe(COLOR)
   })
 
+  it('draws the pressed layer while held, with no ripple', async () => {
+    await render(<Control held pressedColor={PRESSED_COLOR} />)
+
+    expect(styleOf(parts().layer)).toMatchObject({
+      backgroundColor: PRESSED_COLOR,
+      opacity: stateLayerOpacity.pressed,
+    })
+    expect(styleOf(drawnRipple()).opacity).toBe(0)
+  })
+
+  it('reports no press while held', async () => {
+    await render(<Reporter held />)
+
+    expect(screen.getByText('false false')).toBeTruthy()
+  })
+
+  it('draws nothing while held on a disabled control', async () => {
+    await render(<Control disabled held />)
+
+    expect(layerOpacity()).toBe(0)
+  })
+
   it('draws nothing on a disabled control', async () => {
     await render(<Control disabled />)
 

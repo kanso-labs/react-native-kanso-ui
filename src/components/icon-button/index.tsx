@@ -28,6 +28,7 @@ import {
 } from '../../button'
 import {
   ButtonGroupItemContext,
+  groupCornersOf,
   groupPressHandlers,
   groupSelectionOf,
   groupStyles,
@@ -326,7 +327,7 @@ function IconButton({
   const { radii, sizing } = theme
   const edge = sizing[HEIGHTS[size]]
   const shaped = useCorner(
-    group?.corners?.({ pressed: feedback.pressed, selected }) ??
+    groupCornersOf(group, feedback, selected) ??
       (feedback.pressed || selected
         ? radii[PRESSED_CORNERS[size]]
         : radii.pill),
