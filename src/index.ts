@@ -219,6 +219,8 @@ export type {
   SheetProps,
   SheetTitleProps,
 } from './components/sheet'
+export { Slider } from './components/slider'
+export type { SliderProps, SliderSize } from './components/slider'
 export { Snackbar } from './components/snackbar'
 export type {
   SnackbarAction,

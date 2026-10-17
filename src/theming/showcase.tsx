@@ -49,6 +49,7 @@ import { SearchField } from '../components/search-field'
 import { SegmentedButton } from '../components/segmented-button'
 import { Separator } from '../components/separator'
 import { Sheet } from '../components/sheet'
+import { Slider } from '../components/slider'
 import { Snackbar } from '../components/snackbar'
 import { SplitButton } from '../components/split-button'
 import { Stack } from '../components/stack'
@@ -1093,6 +1094,16 @@ function Showcase({ name }: ShowcaseProps) {
             </Sheet.Content>
           </Sheet>
         </View>
+      </Section>
+
+      <Section
+        description="The filled half of the track takes primary and the rest its container, with the handle on primary again, and the stops on each take on primary and on secondary container. At the medium size the track takes the medium corner and the inset icon on primary."
+        title="Slider"
+      >
+        <Stack gap="lg">
+          <Slider defaultValue={40} label="Label" showStops step={10} />
+          <Slider defaultValue={40} icon={DOT} label="Label" size="md" />
+        </Stack>
       </Section>
 
       <Section

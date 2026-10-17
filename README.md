@@ -99,9 +99,10 @@ the exception: each measures its own insets through safe-area-context's
 `SafeAreaView`, so it clears only the edges it actually meets, and on a device
 it needs no provider. Under React Native Web that view reads the provider too.
 
-Gesture Handler 2 and 3 both satisfy the peer. A `Switch` draws Gesture
-Handler's root view around its own track, so an app need not wrap itself in
-`GestureHandlerRootView` for it, and one that already does loses nothing.
+Gesture Handler 2 and 3 both satisfy the peer. A `Switch` and a `Slider` each
+draw Gesture Handler's root view around their own track, so an app need not wrap
+itself in `GestureHandlerRootView` for them, and one that already does loses
+nothing.
 
 ## Routing
 
