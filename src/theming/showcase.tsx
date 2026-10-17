@@ -51,6 +51,7 @@ import { Tag } from '../components/tag'
 import { Text } from '../components/text'
 import { TextArea } from '../components/text-area'
 import { TextField } from '../components/text-field'
+import { Toolbar } from '../components/toolbar'
 import {
   ArrowBackGlyph,
   CloseGlyph,
@@ -1082,6 +1083,20 @@ function Showcase({ name }: ShowcaseProps) {
           />
           <TextField defaultValue="Label" label="Label" variant="outlined" />
         </Stack>
+      </Section>
+
+      <Section
+        description="A row of icon buttons on a surface of its own, with a rule between the ones that belong apart."
+        title="Toolbar"
+      >
+        <View style={styles.row}>
+          <Toolbar aria-label="Label">
+            <IconButton aria-label="Add">{PLUS}</IconButton>
+            <IconButton aria-label="Add">{PLUS}</IconButton>
+            <Separator />
+            <IconButton aria-label="Close">{CLOSE}</IconButton>
+          </Toolbar>
+        </View>
       </Section>
     </View>
   )

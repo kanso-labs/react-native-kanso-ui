@@ -1,8 +1,10 @@
 import type { ComponentRef, Ref } from 'react'
 import type { ViewProps, ViewStyle } from 'react-native'
 
+import { use } from 'react'
 import { StyleSheet, View } from 'react-native'
 
+import { SeparatorOrientationContext } from '../../separator'
 import { useTheme } from '../../theme/scope'
 import { composeStyles, themedStyles } from '../../theme/styles'
 
@@ -80,7 +82,8 @@ type SeparatorProps = ViewProps & {
   readonly inset?: SeparatorInset
   /**
    * Which way the rule runs. A rule takes its length from its parent: a
-   * horizontal one spans a column, and a vertical one a row.
+   * horizontal one spans a column, and a vertical one a row. Inside a
+   * `Toolbar` it runs across the bar unless this says otherwise.
    * @default 'horizontal'
    */
   readonly orientation?: 'horizontal' | 'vertical'
@@ -109,11 +112,13 @@ type SeparatorProps = ViewProps & {
  */
 function Separator({
   inset = 'none',
-  orientation = 'horizontal',
+  orientation: own,
   style,
   ...props
 }: SeparatorProps) {
   const theme = useTheme()
+  const provided = use(SeparatorOrientationContext)
+  const orientation = own ?? provided ?? 'horizontal'
 
   return (
     <View
