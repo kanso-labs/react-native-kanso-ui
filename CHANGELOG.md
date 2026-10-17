@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.6.0](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.5.0...v0.6.0) (2026-10-17)
+
+
+### Features
+
+* **app-bar:** add AppBar component ([#142](https://github.com/kanso-labs/react-native-kanso-ui/issues/142)) ([2e1430d](https://github.com/kanso-labs/react-native-kanso-ui/commit/2e1430ddb1a55c1e48c6a60c36186891f6e8866d))
+* **list-detail:** add ListDetail component ([#140](https://github.com/kanso-labs/react-native-kanso-ui/issues/140)) ([a477c8c](https://github.com/kanso-labs/react-native-kanso-ui/commit/a477c8cb1308e5ba201df2f1039f518e52e2c3c4))
+* **navigation-bar:** add NavigationBar component ([#144](https://github.com/kanso-labs/react-native-kanso-ui/issues/144)) ([aca006b](https://github.com/kanso-labs/react-native-kanso-ui/commit/aca006b0c8f7e96836dc9a455b253a6cae7f48ba))
+
+
+### Dependencies
+
+* update dependency @kanso-labs/kanso-ui to v0.43.6 ([#143](https://github.com/kanso-labs/react-native-kanso-ui/issues/143)) ([9b7e98e](https://github.com/kanso-labs/react-native-kanso-ui/commit/9b7e98e02caf0afad1cfdc3f6cb53a8cce12bbee))
+
 ## [0.5.0](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.4.0...v0.5.0) (2026-10-17)
 
 
