@@ -70,6 +70,8 @@ export type {
   ListRowProps,
   ListSectionProps,
 } from './components/list'
+export { ListDetail } from './components/list-detail'
+export type { ListDetailProps } from './components/list-detail'
 export { ListItem } from './components/list-item'
 export type { ListItemProps } from './components/list-item'
 export {
