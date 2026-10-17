@@ -5,6 +5,7 @@ import { StyleSheet, View } from 'react-native'
 
 import type { DemoThemeName } from './themes'
 
+import { Autocomplete } from '../components/autocomplete'
 import { Avatar } from '../components/avatar'
 import { Button } from '../components/button'
 import { Card } from '../components/card'
@@ -248,6 +249,28 @@ function Showcase({ name }: ShowcaseProps) {
           {description}
         </Text>
       </View>
+
+      <Section
+        description="A search field wired to a list, so the filtering is the component and the bar and the rows are all it draws. The card is the page's, giving the rows an edge the wrapper itself never sets."
+        title="Autocomplete"
+      >
+        <Stack gap="sm">
+          <Autocomplete>
+            <SearchField label="Label" placeholder="Search" />
+            <Card padding="none" variant="outlined">
+              <List
+                aria-label="Label"
+                scrollEnabled={false}
+                selectionMode="single"
+              >
+                <List.Item id="first">First item</List.Item>
+                <List.Item id="second">Second item</List.Item>
+                <List.Item id="third">Third item</List.Item>
+              </List>
+            </Card>
+          </Autocomplete>
+        </Stack>
+      </Section>
 
       <Section
         description="A circle for a person, tinted from a container/on-container pair, at each tone and at both sizes, and the anonymous person a blank name draws in the on-container role."

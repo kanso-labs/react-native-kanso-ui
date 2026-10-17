@@ -8,12 +8,14 @@ import type {
   ViewStyle,
 } from 'react-native'
 
-import { useId, useImperativeHandle, useRef, useState } from 'react'
+import { use, useId, useImperativeHandle, useRef, useState } from 'react'
 import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native'
 
+import type { AutocompleteValue } from '../../autocomplete'
 import type { ValidationResult } from '../../form'
 import type { IconStyle } from '../../glyphs/icon-style'
 
+import { AutocompleteContext } from '../../autocomplete'
 import {
   describedBy,
   FieldInput,
@@ -110,7 +112,10 @@ type SearchFieldProps = Omit<
    * Aria.
    */
   readonly clearLabel?: string
-  /** The value the field opens with, when it keeps its own. */
+  /**
+   * The value the field opens with, when it keeps its own. Inside an
+   * `Autocomplete` the autocomplete's is read instead.
+   */
   readonly defaultValue?: string
   /**
    * A hint shown under the bar. Replaced by `error` when there is one, so the
@@ -174,7 +179,10 @@ type SearchFieldProps = Omit<
    * once the field loses focus after an edit, and holds the form back.
    */
   readonly validate?: (value: string) => ValidationResult
-  /** The value, when the call site keeps it. */
+  /**
+   * The value, when the call site keeps it. Inside an `Autocomplete` the
+   * autocomplete's `inputValue` is read instead.
+   */
   readonly value?: string
 }
 
@@ -307,6 +315,22 @@ function minHeightOf(minHeight: number): ViewStyle {
   return { minHeight }
 }
 
+// Inside an Autocomplete, an edit reaches it as well as the call site, which
+// is what makes the list under the field narrow as it is typed into.
+function reportTo(
+  autocomplete: AutocompleteValue | null,
+  onChange: ((value: string) => void) | undefined,
+) {
+  if (autocomplete === null) {
+    return onChange
+  }
+
+  return (value: string) => {
+    autocomplete.setInputValue(value)
+    onChange?.(value)
+  }
+}
+
 /**
  * The bar around the control: the pill with its state layer and ring, the
  * magnifier at the start and the clear button at the end. A press anywhere on
@@ -403,7 +427,9 @@ function SearchBar({
  * The bar is the search page's rather than the box the other fields share;
  * the control and the line under it are the field chrome in `src/field`.
  * React Native's own `TextInput` props reach the control; `style` and `ref`
- * are the field as a whole, and `inputRef` the control.
+ * are the field as a whole, and `inputRef` the control. Inside an
+ * `Autocomplete`, the field shows what the autocomplete holds and reports
+ * each edit to it, which filters the list beside it.
  *
  * ```tsx
  * <SearchField label="Label" placeholder="Supporting text" />
@@ -434,8 +460,10 @@ function SearchField({
 }: SearchFieldProps) {
   const id = useId()
   const control = useRef<ComponentRef<typeof TextInput>>(null)
+  const autocomplete = use(AutocompleteContext)
   const [own, setOwn] = useState(defaultValue)
-  const current = value ?? own
+  const current = autocomplete?.inputValue ?? value ?? own
+  const report = reportTo(autocomplete, onChange)
   const validation = useFieldValidation({
     control,
     error,
@@ -452,7 +480,7 @@ function SearchField({
     onBlur: blurThen(validation.onBlur, onBlur),
     onFocus,
   })
-  const clear = clearInto(setOwn, onChange, onClear, validation.onEdit)
+  const clear = clearInto(setOwn, report, onClear, validation.onEdit)
   const shownError = validation.error
 
   useImperativeHandle<
@@ -478,7 +506,7 @@ function SearchField({
           aria-label={label}
           described={describedBy(id, { description, error: shownError })}
           editable={!isDisabled}
-          onChangeText={editInto(setOwn, onChange, validation.onEdit)}
+          onChangeText={editInto(setOwn, report, validation.onEdit)}
           onKeyPress={keyInto(
             current === '' || isDisabled ? undefined : clear,
             onKeyPress,

@@ -29,11 +29,13 @@ import {
 } from 'react-native'
 import { useListState } from 'react-stately/useListState'
 
+import type { AutocompleteValue } from '../../autocomplete'
 import type { ResolvedTheme } from '../../theme/scope'
 
+import { AutocompleteContext } from '../../autocomplete'
 import { toggleState } from '../../button'
 import { CheckboxBox } from '../../control/checkbox-box'
-import { messagesFor } from '../../i18n'
+import { messagesFor, resultsFor } from '../../i18n'
 import { hitSlop, usePressFeedback } from '../../press'
 import {
   hasContent,
@@ -106,6 +108,15 @@ const styles = StyleSheet.create({
   idle: {
     height: 0,
   },
+  // The count a search leaves, which a screen reader hears and no one sees:
+  // out of the flow, and a point across, as web's visually hidden status is.
+  status: {
+    height: 1,
+    overflow: 'hidden',
+    pointerEvents: 'none',
+    position: 'absolute',
+    width: 1,
+  },
 })
 
 const stylesOf = themedStyles(({ colors, sizing, spacing }: ResolvedTheme) =>
@@ -143,6 +154,10 @@ const stylesOf = themedStyles(({ colors, sizing, spacing }: ResolvedTheme) =>
       alignItems: 'center',
       justifyContent: 'center',
       minHeight: sizing.rowSm,
+    },
+    // Never seen, but in a pair that reads, for a checker that looks.
+    status: {
+      color: colors.onSurface,
     },
   }),
 )
@@ -325,6 +340,10 @@ const ListContext = createContext<ListValue | null>(null)
  * height to fill: a short list on a page that scrolls takes
  * `scrollEnabled={false}` and is laid out at its full length. `style` and
  * `ref` land on the `FlatList`.
+ *
+ * Inside an `Autocomplete`, the list shows the rows the search keeps and
+ * says how many there are to a screen reader, and a tap on a row reaches it
+ * while the keyboard is up.
  */
 function List<T extends object = object>({
   children,
@@ -333,6 +352,7 @@ function List<T extends object = object>({
   disabledKeys,
   disallowEmptySelection,
   items,
+  keyboardShouldPersistTaps,
   onAction,
   onSelectionChange,
   ref,
@@ -345,6 +365,12 @@ function List<T extends object = object>({
 }: ListProps<T>) {
   const theme = useTheme()
   const own = stylesOf(theme)
+  const autocomplete = use(AutocompleteContext)
+  const matches = autocomplete?.matches
+  const filter = useMemo(
+    () => (matches === undefined ? undefined : filterOf<T>(matches)),
+    [matches],
+  )
   const state = useListState<T>({
     // Each part builds its own entry in the collection; see the parts'
     // `getCollectionNode`. The collection skips what is not an element, as a
@@ -354,12 +380,16 @@ function List<T extends object = object>({
     defaultSelectedKeys,
     disabledKeys,
     disallowEmptySelection,
+    filter,
     items,
     onSelectionChange,
     selectedKeys,
     selectionMode,
   })
-  const { entries, loader, sticky } = useMemo(() => entriesOf(state), [state])
+  const { entries, loader, rows, sticky } = useMemo(
+    () => entriesOf(state),
+    [state],
+  )
   const listStyle = composeStyles<ViewStyle>(own.list, style)
   // oxlint-disable-next-line typescript/no-unsafe-assignment -- a node carries the props its part was written with, which React Stately types as `any`
   const loadMore: ListLoadMoreProps | undefined = loader?.props
@@ -388,6 +418,10 @@ function List<T extends object = object>({
           contentContainerStyle,
         )}
         data={entries}
+        keyboardShouldPersistTaps={
+          keyboardShouldPersistTaps ??
+          (autocomplete === null ? undefined : 'handled')
+        }
         keyExtractor={keyOf}
         ListEmptyComponent={isLoading ? undefined : EmptyState}
         ListFooterComponent={loadMore === undefined ? undefined : LoaderRow}
@@ -398,6 +432,7 @@ function List<T extends object = object>({
         stickyHeaderIndices={sticky}
         style={listStyle}
       />
+      {autocomplete === null ? null : <ResultsStatus count={rows} />}
     </ListContext>
   )
 }
@@ -512,14 +547,16 @@ function EmptyState() {
 }
 
 /**
- * The cells the `FlatList` draws, in order, and where the headers among
- * them are: the rows outside any section, and each section's header
- * followed by its rows. The row that loads more is drawn after them all.
+ * The cells the `FlatList` draws, in order, where the headers among them
+ * are, and how many rows there are: the rows outside any section, and each
+ * section's header followed by its rows. The row that loads more is drawn
+ * after them all.
  */
 function entriesOf<T>(state: ListState<T>) {
   const entries: ListEntry[] = []
   const sticky: number[] = []
   let loader: Node<T> | undefined
+  let rows = 0
 
   for (const node of state.collection) {
     if (node.type === 'loader') {
@@ -529,19 +566,54 @@ function entriesOf<T>(state: ListState<T>) {
         sticky.push(entries.length)
         entries.push({ kind: 'header', node })
       }
-      const rows =
+      const children =
         state.collection.getChildren?.(node.key) ??
         // oxlint-disable-next-line typescript/no-deprecated -- a fallback for a collection without getChildren
         node.childNodes
-      for (const row of rows) {
+      for (const row of children) {
         entries.push({ kind: 'item', node: row })
+        rows++
       }
     } else {
       entries.push({ kind: 'item', node })
+      rows++
     }
   }
 
-  return { entries, loader, sticky }
+  return { entries, loader, rows, sticky }
+}
+
+/**
+ * What a list inside an Autocomplete builds its collection from: the rows
+ * the search keeps, each section with a row left in it, and the row that
+ * loads more. Each node is copied rather than handed on, as React Stately's
+ * ComboBox copies its own, since a collection numbers the nodes it holds.
+ */
+function filterOf<T>(matches: AutocompleteValue['matches']) {
+  return (nodes: Iterable<Node<T>>) => keptOf(nodes, matches)
+}
+
+function keptOf<T>(
+  nodes: Iterable<Node<T>>,
+  matches: AutocompleteValue['matches'],
+): Node<T>[] {
+  const kept: Node<T>[] = []
+
+  for (const node of nodes) {
+    if (node.type === 'section') {
+      // oxlint-disable-next-line typescript/no-deprecated -- a filter is handed the nodes before a collection holds them, so there is none to ask
+      const rows = keptOf(node.childNodes, matches)
+
+      if (rows.some((row) => row.type === 'item')) {
+        // oxlint-disable-next-line typescript/no-deprecated -- the field the collection reads a section's rows from
+        kept.push({ ...node, childNodes: rows })
+      }
+    } else if (node.type !== 'item' || matches(node.textValue, node)) {
+      kept.push({ ...node })
+    }
+  }
+
+  return kept
 }
 
 // A cell's key in the `FlatList`: a header's and a row's apart, since a
@@ -767,6 +839,29 @@ function renderEntry({ item }: ListRenderItemInfo<ListEntry>) {
   )
 }
 
+/**
+ * How many rows a search leaves, said to a screen reader as it changes and
+ * never drawn: in a polite live region on Android and under React Native
+ * Web, and through `AccessibilityInfo` on iOS, which has no live regions,
+ * so nothing is drawn there at all.
+ */
+function ResultsStatus({ count }: { readonly count: number }) {
+  const own = stylesOf(useTheme())
+  const message = resultsFor(count)
+
+  useResultsAnnouncement(message)
+
+  if (Platform.OS === 'ios') {
+    return null
+  }
+
+  return (
+    <View aria-live="polite" style={styles.status}>
+      <NativeText style={own.status}>{message}</NativeText>
+    </View>
+  )
+}
+
 /** A section's heading, on the list's ground so the rows pass under it. */
 function SectionHeader({ node }: { readonly node: Node<unknown> }) {
   const own = stylesOf(useTheme())
@@ -859,6 +954,20 @@ function useLoadingAnnouncement(isLoading: boolean, label: string) {
     }
     was.current = isLoading
   }, [isLoading, label])
+}
+
+// Says how many rows are left on iOS each time the count changes. The count
+// a list mounts with is not said, as a live region does not read what it was
+// mounted holding.
+function useResultsAnnouncement(message: string) {
+  const was = useRef(message)
+
+  useEffect(() => {
+    if (message !== was.current && Platform.OS === 'ios') {
+      AccessibilityInfo.announceForAccessibility(message)
+    }
+    was.current = message
+  }, [message])
 }
 
 /**

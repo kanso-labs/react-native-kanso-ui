@@ -43,5 +43,38 @@ function messagesFor(locale?: string): LibraryMessages {
   return messages
 }
 
-export { messagesFor }
+// The plural form a count takes in `locale`. Hermes has not always shipped
+// `Intl.PluralRules`, and where it is missing a count of one takes the
+// singular and any other the plural, which is English's rule.
+function pluralOf(locale: string, count: number) {
+  // oxlint-disable-next-line typescript/no-unnecessary-condition -- typed as always there, which a runtime without it is not
+  if (Intl.PluralRules === undefined) {
+    return count === 1 ? 'one' : 'other'
+  }
+
+  return new Intl.PluralRules(locale).select(count)
+}
+
+/**
+ * How many rows a search leaves, in `locale` or the device's, for a screen
+ * reader: the count in the locale's plural form, or the empty row's words
+ * when it is none.
+ */
+function resultsFor(count: number, locale?: string): string {
+  const resolved = localeOf(locale)
+  const messages = messagesFor(resolved)
+
+  if (count === 0) {
+    return messages.noResults
+  }
+
+  const form =
+    pluralOf(resolved, count) === 'one'
+      ? messages.results.one
+      : messages.results.other
+
+  return form.replace('{count}', new Intl.NumberFormat(resolved).format(count))
+}
+
+export { messagesFor, resultsFor }
 export type { LibraryMessages }
