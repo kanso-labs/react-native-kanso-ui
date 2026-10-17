@@ -25,6 +25,7 @@ import { CopyField } from '../components/copy-field'
 import { Currency } from '../components/currency'
 import { Dialog } from '../components/dialog'
 import { Disclosure } from '../components/disclosure'
+import { DisclosureGroup } from '../components/disclosure-group'
 import { Fab } from '../components/fab'
 import { FabMenu } from '../components/fab-menu'
 import { Feed } from '../components/feed'
@@ -119,6 +120,9 @@ const CHECKBOX_SELECTION = ['second']
 
 // The chip group's selection, the second of its three chips.
 const CHIP_SELECTION = ['second']
+
+// The disclosure group's open section, the first of its two.
+const DISCLOSURE_GROUP_SELECTION = ['first']
 
 const TAG_TONES = ['primary', 'positive', 'negative', 'neutral'] as const
 
@@ -654,6 +658,36 @@ function Showcase({ name }: ShowcaseProps) {
               </Text>
             </Disclosure.Panel>
           </Disclosure>
+        </Card>
+      </Section>
+
+      <Section
+        description="Several of those under one container, with a rule between each pair drawn from the same role the borders around them take."
+        title="DisclosureGroup"
+      >
+        <Card padding="none" variant="outlined">
+          <DisclosureGroup defaultExpandedKeys={DISCLOSURE_GROUP_SELECTION}>
+            <Disclosure id="first">
+              <Disclosure.Header supporting="Supporting line">
+                First item
+              </Disclosure.Header>
+              <Disclosure.Panel>
+                <Text tone="muted" variant="bodyMedium">
+                  Supporting line
+                </Text>
+              </Disclosure.Panel>
+            </Disclosure>
+            <Disclosure id="second">
+              <Disclosure.Header supporting="Supporting line">
+                Second item
+              </Disclosure.Header>
+              <Disclosure.Panel>
+                <Text tone="muted" variant="bodyMedium">
+                  Supporting line
+                </Text>
+              </Disclosure.Panel>
+            </Disclosure>
+          </DisclosureGroup>
         </Card>
       </Section>
 

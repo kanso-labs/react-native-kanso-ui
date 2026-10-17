@@ -534,7 +534,9 @@ describe('Disclosure', () => {
   })
 
   describe('the call site', () => {
-    it("lands style, ref, testID and id on the section's own view", async () => {
+    // The id is a key for the group around it, as on web, where React Aria
+    // leaves it off the element too.
+    it("lands style, ref and testID on the section's own view, and not its id", async () => {
       const ref = createRef<ComponentRef<typeof View>>()
       await render(
         <Disclosure id="section" ref={ref} style={CALL_SITE} testID="section">
@@ -544,7 +546,7 @@ describe('Disclosure', () => {
       const section = screen.getByTestId('section')
 
       expect(styleOf(section).marginTop).toBe(4)
-      expect(section.props.id).toBe('section')
+      expect(section.props.id).toBeUndefined()
       expect(ref.current).not.toBeNull()
     })
 
