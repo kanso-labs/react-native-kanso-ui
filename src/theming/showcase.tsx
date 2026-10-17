@@ -14,6 +14,7 @@ import { Button } from '../components/button'
 import { Calendar } from '../components/calendar'
 import { Card } from '../components/card'
 import { Checkbox } from '../components/checkbox'
+import { CheckboxGroup } from '../components/checkbox-group'
 import { Chip } from '../components/chip'
 import { ChipGroup } from '../components/chip-group'
 import { Code } from '../components/code'
@@ -101,6 +102,9 @@ const AVATAR_TONES = [
 const CALENDAR_DATE = new CalendarDate(2026, 9, 15)
 
 const CARD_VARIANTS = ['elevated', 'filled', 'outlined'] as const
+
+// The checkbox group's selection, the second of its three checkboxes.
+const CHECKBOX_SELECTION = ['second']
 
 // The chip group's selection, the second of its three chips.
 const CHIP_SELECTION = ['second']
@@ -459,6 +463,19 @@ function Showcase({ name }: ShowcaseProps) {
           <Checkbox isIndeterminate>Label</Checkbox>
           <Checkbox isDisabled>Label</Checkbox>
         </View>
+      </Section>
+
+      <Section
+        description="A field label and its supporting text above a column of checkboxes, which is where a scheme's field chrome shows on a control with no box of its own."
+        title="CheckboxGroup"
+      >
+        <CheckboxGroup defaultValue={CHECKBOX_SELECTION} label="Label">
+          <Checkbox value="first">First item</Checkbox>
+          <Checkbox value="second">Second item</Checkbox>
+          <Checkbox isIndeterminate value="third">
+            Third item
+          </Checkbox>
+        </CheckboxGroup>
       </Section>
 
       <Section

@@ -24,6 +24,8 @@ export { Card } from './components/card'
 export type { CardProps, CardVariant } from './components/card'
 export { Checkbox } from './components/checkbox'
 export type { CheckboxProps } from './components/checkbox'
+export { CheckboxGroup } from './components/checkbox-group'
+export type { CheckboxGroupProps } from './components/checkbox-group'
 export { Chip } from './components/chip'
 export type {
   ChipActionProps,

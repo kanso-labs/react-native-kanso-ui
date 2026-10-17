@@ -1,12 +1,16 @@
 import type { ComponentRef, ReactNode, Ref } from 'react'
 import type { StyleProp, ViewProps, ViewStyle } from 'react-native'
-import type { ToggleState } from 'react-stately/useToggleState'
+import type {
+  ToggleState,
+  ToggleStateOptions,
+} from 'react-stately/useToggleState'
 
-import { useId } from 'react'
+import { use, useEffect, useId, useRef } from 'react'
 import { Pressable, View } from 'react-native'
 import { useToggleState } from 'react-stately/useToggleState'
 
 import type { CheckboxTone } from '../../control/checkbox-box'
+import type { CheckboxGroupContextValue } from '../../control/group'
 import type { ResolvedTheme } from '../../theme/scope'
 
 import {
@@ -17,6 +21,7 @@ import {
   messageOf,
 } from '../../control'
 import { CheckboxBox } from '../../control/checkbox-box'
+import { CheckboxGroupContext } from '../../control/group'
 import { controlStylesOf } from '../../control/styles'
 import { hitSlop, usePressFeedback } from '../../press'
 import { useTheme } from '../../theme/scope'
@@ -40,6 +45,11 @@ import { composeStyles } from '../../theme/styles'
 // and Switch draw through as well. The whole row is the `Pressable`, so a
 // press on the label toggles the box, as a press on web's label does. The
 // line under it is outside the row, as web's is outside its label.
+//
+// Inside a CheckboxGroup the selection is the group's, as web's Checkbox
+// reads React Aria's group state: the box stands for the entry its `value`
+// names, a press selects or clears that entry, and the group's disabled,
+// read-only and error states reach the box as its own would.
 //
 // The corner is a literal: the page's 2dp is a step the shape scale does not
 // carry.
@@ -92,6 +102,12 @@ type CheckboxProps = Omit<ViewProps, 'children' | 'style'> & {
   readonly onChange?: (isSelected: boolean) => void
   readonly ref?: Ref<ComponentRef<typeof View>>
   readonly style?: StyleProp<ViewStyle>
+  /**
+   * The entry this checkbox stands for inside a `CheckboxGroup`, which the
+   * group's value holds while it is selected. Required there, and unused
+   * outside one.
+   */
+  readonly value?: string
 }
 
 // The state layer's colour roles, hovered or focused and pressed. Error is
@@ -136,28 +152,49 @@ function Checkbox({
   defaultSelected,
   description,
   error,
-  isDisabled = false,
+  isDisabled: ownDisabled = false,
   isIndeterminate = false,
-  isReadOnly = false,
+  isReadOnly: ownReadOnly = false,
   isSelected,
   onChange,
   style,
+  value,
   ...props
 }: CheckboxProps) {
   const theme = useTheme()
-  const state = useToggleState({
-    defaultSelected,
-    isReadOnly,
-    isSelected,
-    onChange,
-  })
+  const group = use(CheckboxGroupContext)
   const messageId = useId()
+  const control = useRef<ComponentRef<typeof Pressable>>(null)
+  const members = group?.members
+
+  if (group !== null && value === undefined) {
+    throw new Error(
+      'A Checkbox inside a CheckboxGroup names the entry it stands for with `value`.',
+    )
+  }
+
+  const isDisabled = ownDisabled || (group?.isDisabled ?? false)
+  const isReadOnly = ownReadOnly || (group?.isReadOnly ?? false)
+  const state = useToggleState(
+    group === null || value === undefined
+      ? { defaultSelected, isReadOnly, isSelected, onChange }
+      : memberOf(group, value, { isReadOnly, onChange }),
+  )
+
+  // Joins the group's list of checkboxes once, in the order the tree mounts
+  // them, so a native form holding the group back focuses the first.
+  useEffect(() => {
+    members?.add(messageId, control)
+    return () => {
+      members?.remove(messageId)
+    }
+  }, [members, messageId])
 
   const { colors, radii } = theme
   const marked = state.isSelected || isIndeterminate
   const interactive = !isDisabled && !isReadOnly
-  const tone: CheckboxTone =
-    error === undefined ? (marked ? 'marked' : 'unmarked') : 'error'
+  const invalid = error !== undefined || (group?.isInvalid ?? false)
+  const tone: CheckboxTone = invalid ? 'error' : marked ? 'marked' : 'unmarked'
 
   const feedback = usePressFeedback({
     color: colors[LAYERS[tone].hover],
@@ -180,6 +217,7 @@ function Checkbox({
         disabled={isDisabled}
         hitSlop={hitSlop(LAYER_SIZE, LAYER_SIZE)}
         onPress={toggleOf(state)}
+        ref={control}
         style={controlStylesOf(theme).row}
       >
         <View
@@ -203,6 +241,27 @@ function Checkbox({
       <ControlMessage description={description} error={error} id={messageId} />
     </View>
   )
+}
+
+// The toggle state of a checkbox in a group: selected while the group's
+// value holds its entry, and a change made to the group's value, reported to
+// the checkbox's own `onChange` as well, as React Aria's group item does.
+function memberOf(
+  group: CheckboxGroupContextValue,
+  value: string,
+  {
+    isReadOnly,
+    onChange,
+  }: Pick<ToggleStateOptions, 'onChange'> & { readonly isReadOnly: boolean },
+): ToggleStateOptions {
+  return {
+    isReadOnly,
+    isSelected: group.isSelected(value),
+    onChange: (isSelected) => {
+      group.set(value, isSelected)
+      onChange?.(isSelected)
+    },
+  }
 }
 
 // A press's toggle. Built by a call rather than declared in the component,

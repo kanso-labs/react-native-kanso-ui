@@ -1162,8 +1162,11 @@ function FieldStroke({ color, sides, style, width }: FieldStrokeProps) {
   )
 }
 
-// Says an error on iOS as it arrives. An error the field opened with is not
-// said, and neither is one that has not changed.
+/**
+ * Says an error on iOS as it arrives, where a live region says nothing. An
+ * error the field opened with is not said, and neither is one that has not
+ * changed.
+ */
 function useErrorAnnouncement(error: string | undefined) {
   const said = useRef(error)
 
@@ -1255,6 +1258,7 @@ export {
   FieldMessage,
   FieldStates,
   FieldStroke,
+  useErrorAnnouncement,
   useFieldFocus,
   useStrokeMotion,
 }

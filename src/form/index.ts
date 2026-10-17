@@ -1,5 +1,4 @@
-import type { ComponentRef, RefObject } from 'react'
-import type { TextInput } from 'react-native'
+import type { RefObject } from 'react'
 
 import { createContext, use, useEffect, useId, useRef, useState } from 'react'
 
@@ -14,7 +13,7 @@ import { createContext, use, useEffect, useId, useRef, useState } from 'react'
 
 type FieldValidationOptions<T> = {
   /** The control a failed native submission focuses. */
-  readonly control: RefObject<ComponentRef<typeof TextInput> | null>
+  readonly control: RefObject<Focusable | null>
   /** The field's own error, which wins over anything the form says. */
   readonly error: string | undefined
   readonly isDisabled: boolean
@@ -23,10 +22,18 @@ type FieldValidationOptions<T> = {
   readonly isReadOnly: boolean
   readonly isRequired: boolean
   readonly name: string | undefined
-  /** The value as the form submits it. */
-  readonly submitted: string
+  /**
+   * The value as the form submits it, or `undefined` for a field whose value
+   * is not one string, which submits nothing.
+   */
+  readonly submitted: string | undefined
   readonly validate: ((value: T) => ValidationResult) | undefined
   readonly value: T
+}
+
+/** What a failed native submission moves focus to: a field's control. */
+type Focusable = {
+  readonly focus: () => void
 }
 
 /** What a field tells the form it is in, as of its last render. */
@@ -113,7 +120,7 @@ function createRegistry(): FormRegistry {
 }
 
 // Focuses a field's control, through the ref the field holds it in.
-function focusOf(control: RefObject<ComponentRef<typeof TextInput> | null>) {
+function focusOf(control: RefObject<Focusable | null>) {
   return () => {
     control.current?.focus()
   }
@@ -243,7 +250,10 @@ function useFieldValidation<T>({
     show: () => {
       setShowing(true)
     },
-    submits: isDisabled || name === undefined ? undefined : [name, submitted],
+    submits:
+      isDisabled || name === undefined || submitted === undefined
+        ? undefined
+        : [name, submitted],
   }
 
   // Reported after every render, so the form reads what the field shows.
@@ -288,6 +298,7 @@ export {
   useInsideForm,
 }
 export type {
+  Focusable,
   FormValidationBehavior,
   FormValues,
   ValidationError,
