@@ -48,6 +48,7 @@ import { SegmentedButton } from '../components/segmented-button'
 import { Separator } from '../components/separator'
 import { Sheet } from '../components/sheet'
 import { Snackbar } from '../components/snackbar'
+import { SplitButton } from '../components/split-button'
 import { Stack } from '../components/stack'
 import { SupportingPane } from '../components/supporting-pane'
 import { Switch } from '../components/switch'
@@ -1044,6 +1045,26 @@ function Showcase({ name }: ShowcaseProps) {
             Show a snackbar
           </Button>
           <Snackbar queue={SHOWCASE_MESSAGES} />
+        </View>
+      </Section>
+
+      <Section
+        description="Both halves read their containers off the variant's colour roles, and the corner where they meet off the radius scale."
+        title="SplitButton"
+      >
+        <View style={styles.row}>
+          <SplitButton>
+            <SplitButton.Action>Label</SplitButton.Action>
+            <SplitButton.Menu aria-label="More options">
+              <Menu.Item id="first">First item</Menu.Item>
+            </SplitButton.Menu>
+          </SplitButton>
+          <SplitButton variant="tonal">
+            <SplitButton.Action>Label</SplitButton.Action>
+            <SplitButton.Menu aria-label="More options">
+              <Menu.Item id="first">First item</Menu.Item>
+            </SplitButton.Menu>
+          </SplitButton>
         </View>
       </Section>
 
