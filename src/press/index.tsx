@@ -60,6 +60,13 @@ type PressFeedback = {
 
 type PressFeedbackOptions = Handlers & {
   /**
+   * The size of a layer drawn on a part of the control rather than across
+   * it, as a navigation destination draws its layer on the indicator behind
+   * its icon. The ripple then grows from that part's centre wherever the
+   * press lands, and nothing is measured, as for `disc`.
+   */
+  readonly area?: Size | undefined
+  /**
    * The colour the layer and the ripple are drawn in: the theme's value for
    * the control's content colour role.
    */
@@ -104,6 +111,8 @@ type RippleGeometry = {
 // Where the ripple of the latest press is: waiting on the control's
 // measurement, shown, or released before the measurement arrived.
 type RipplePhase = 'idle' | 'measuring' | 'released' | 'shown'
+
+type Size = { readonly height: number; readonly width: number }
 
 /**
  * The least a touch target measures each way, from Material Design's
@@ -174,7 +183,8 @@ function hitSlop(height: number, width = TARGET_SIZE): Insets | undefined {
  *
  * A control whose layer is a disc of its own beside its label, as a
  * checkbox's is, passes the disc's side as `disc`, and its ripple grows from
- * the disc's centre instead. One whose pressed layer takes another colour
+ * the disc's centre instead. One whose layer is drawn on a part of it of a
+ * fixed size passes that size as `area`, with the same effect. One whose pressed layer takes another colour
  * passes it as `pressedColor`.
  *
  * The ring shows when focus arrives from a keyboard, and not when it arrives
@@ -190,6 +200,7 @@ function hitSlop(height: number, width = TARGET_SIZE): Insets | undefined {
  * ```
  */
 function usePressFeedback({
+  area,
   color,
   corners,
   disabled,
@@ -315,8 +326,13 @@ function usePressFeedback({
       pressedUnfocused.current = !focused.current
       setPressed(true)
 
-      if (rippled && disc !== undefined) {
-        ripple(disc, disc, { x: disc / 2, y: disc / 2 })
+      const fixed = disc === undefined ? area : { height: disc, width: disc }
+
+      if (rippled && fixed !== undefined) {
+        ripple(fixed.width, fixed.height, {
+          x: fixed.width / 2,
+          y: fixed.height / 2,
+        })
         phase.current = 'shown'
       } else if (rippled && typeof event.currentTarget !== 'number') {
         const { pageX, pageY } = event.nativeEvent

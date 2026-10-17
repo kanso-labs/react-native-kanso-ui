@@ -26,6 +26,10 @@ jest.mock('react-native-reanimated', () => ({
   useReducedMotion: () => mockReducedMotion,
 }))
 
+// A part of a control its layer is drawn on, the size of a navigation
+// destination's indicator.
+const AREA = { height: 32, width: 56 }
+
 const COLOR = '#1d1b20'
 const PRESSED_COLOR = '#6750a4'
 const CORNERS = { borderRadius: 12 }
@@ -341,6 +345,28 @@ describe('the ripple', () => {
         { translateX: start },
         { translateY: start },
         { scale: (Math.hypot(disc, disc) + spacing.sm) / (disc * 0.2) },
+      ],
+    })
+  })
+
+  it('grows from the centre of an area wherever the press lands, measuring nothing', async () => {
+    const measure = jest.fn()
+    await render(<Control area={AREA} />)
+
+    await fireEvent(control(), 'pressIn', {
+      currentTarget: { measure },
+      nativeEvent: { pageX: 300, pageY: 30 },
+    })
+    await advance(motion.durationLong1)
+
+    const side = Math.floor(AREA.width * 0.2)
+    expect(measure).not.toHaveBeenCalled()
+    expect(getAnimatedStyle(drawnRipple())).toMatchObject({
+      height: side,
+      transform: [
+        { translateX: (AREA.width - side) / 2 },
+        { translateY: (AREA.height - side) / 2 },
+        { scale: (Math.hypot(AREA.width, AREA.height) + spacing.sm) / side },
       ],
     })
   })
