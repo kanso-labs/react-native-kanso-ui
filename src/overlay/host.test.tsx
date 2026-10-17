@@ -7,6 +7,7 @@ import { StyleSheet, Text, View } from 'react-native'
 
 import type { KuiTheme } from '../tokens/defaults'
 
+import { I18nProvider, useLocale } from '../i18n/provider'
 import { ThemeScope } from '../theme-scope'
 import { type ResolvedTheme, useTheme } from '../theme/scope'
 import { Overlay, OverlayHost } from './host'
@@ -61,6 +62,10 @@ function Opening({ second }: { readonly second: boolean }) {
       <Labelled label="first" />
     </ThemeScope>
   )
+}
+
+function ReadLocale() {
+  return <Text testID="locale">{useLocale().locale}</Text>
 }
 
 function ReadMarker() {
@@ -183,6 +188,22 @@ describe('Overlay', () => {
     )
 
     expect(screen.getByTestId('marker')).toHaveTextContent('unset')
+  })
+
+  // A provider inside the app's ThemeScope sits below the host, so the
+  // overlay carries its locale over, as it carries the scope.
+  it('reads the I18nProvider around it', async () => {
+    await render(
+      <ThemeScope>
+        <I18nProvider locale="de-DE">
+          <Overlay>
+            <ReadLocale />
+          </Overlay>
+        </I18nProvider>
+      </ThemeScope>,
+    )
+
+    expect(screen.getByTestId('locale')).toHaveTextContent('de-DE')
   })
 
   it('keeps the context around the app', async () => {

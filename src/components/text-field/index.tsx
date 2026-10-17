@@ -20,6 +20,7 @@ import {
   useFieldFocus,
 } from '../../field'
 import { useFieldValidation } from '../../form'
+import { useLocaleOf } from '../../i18n/provider'
 
 // kanso-ui's TextField, drawn through the field chrome in src/field: the box
 // with its label and icons, the control on the value's line with its prefix
@@ -71,8 +72,10 @@ type TextFieldProps = Omit<
    * How the limit is said to a screen reader, where there is a `maxLength`.
    * Read with the field rather than as the value changes, so it names the
    * limit and not what is left of it; the visible count is hidden from
-   * screen readers, which is what this replaces. Left out, it is the English
-   * sentence, "Up to 20 characters", singular for a limit of one.
+   * screen readers, which is what this replaces. Left out, it is the
+   * library's sentence in the `I18nProvider`'s locale, or the device's
+   * outside one, in the plural form the limit takes there: "Up to 20
+   * characters" in English, singular for a limit of one.
    */
   readonly characterLimitLabel?: string
   /** The value the field opens with, when it keeps its own. */
@@ -272,6 +275,7 @@ function TextField({
     onFocus,
   })
   const shownError = validation.error
+  const locale = useLocaleOf(undefined)
 
   useImperativeHandle<
     ComponentRef<typeof TextInput> | null,
@@ -301,6 +305,7 @@ function TextField({
             characterLimitLabel,
             description,
             error: shownError,
+            locale,
             maxLength: props.maxLength,
           })}
           editable={!isDisabled && !isReadOnly}

@@ -40,6 +40,7 @@ import type { ResolvedTheme } from '../theme/scope'
 
 import { useInsideForm } from '../form'
 import { IconStyleContext } from '../glyphs/icon-style'
+import { limitFor } from '../i18n'
 import { useLocaleOf } from '../i18n/provider'
 import { formatCount } from '../number/count'
 import { usePressFeedback } from '../press'
@@ -289,18 +290,25 @@ function describedBy(
     characterLimitLabel,
     description,
     error,
+    locale,
     maxLength,
   }: Pick<
     FieldMessageProps,
     'characterLimitLabel' | 'description' | 'error' | 'maxLength'
-  >,
+  > & {
+    /**
+     * The locale the limit is said in, the field's `useLocaleOf`, or the
+     * device's when left out.
+     */
+    readonly locale?: string
+  },
 ): readonly FieldDescriptionPart[] {
   const ids = idsOf(id)
   const message =
     error === undefined
       ? { id: ids.description, text: description ?? '' }
       : { id: ids.error, text: error }
-  const limit = limitOf(maxLength, characterLimitLabel)
+  const limit = limitOf(maxLength, characterLimitLabel, locale)
 
   return [
     ...(message.text === '' ? [] : [message]),
@@ -625,8 +633,8 @@ function FieldMessage({
   const { fontScale } = useWindowDimensions()
   const ids = idsOf(id)
   const invalid = error !== undefined
-  const limit = limitOf(maxLength, characterLimitLabel)
   const locale = useLocaleOf(undefined)
+  const limit = limitOf(maxLength, characterLimitLabel, locale)
   const insideForm = useInsideForm()
   const collapsed =
     !invalid && description === undefined && !characterCount && !insideForm
@@ -988,20 +996,19 @@ function idsOf(id: string) {
 }
 
 /**
- * The limit in words where there is one: the field's own, or English, which
- * an app in another language replaces through `characterLimitLabel`.
+ * The limit in words where there is one: the field's own, or the library's
+ * in `locale`.
  */
-function limitOf(maxLength: number | undefined, label: string | undefined) {
+function limitOf(
+  maxLength: number | undefined,
+  label: string | undefined,
+  locale: string | undefined,
+) {
   if (maxLength === undefined) {
     return undefined
   }
 
-  return (
-    label ??
-    (maxLength === 1
-      ? 'Up to 1 character'
-      : `Up to ${String(maxLength)} characters`)
-  )
+  return label ?? limitFor(maxLength, locale)
 }
 
 function marginTopOf(marginTop: number): ViewStyle {

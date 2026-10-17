@@ -1,6 +1,6 @@
 import { describe, expect, it } from '@jest/globals'
 
-import { messagesFor, resultsFor } from '.'
+import { limitFor, messagesFor, resultsFor } from '.'
 import { localeOf } from '../number/locale'
 import { MESSAGES } from './messages'
 
@@ -47,6 +47,68 @@ describe('the library’s words', () => {
       expect(calendar.todayDateSelected).toContain('{date}')
     },
   )
+
+  // A stepper is named around the field's label, and a limit's other form
+  // is the one any count may land in, so either losing its placeholder
+  // would name every field, or every limit, the same.
+  it.each(Object.entries(MESSAGES))(
+    'leaves room for the label and the count in %s',
+    (_locale, { characterLimit, decrease, increase }) => {
+      expect(decrease).toContain('{label}')
+      expect(increase).toContain('{label}')
+      expect(characterLimit.other).toContain('{count}')
+    },
+  )
+})
+
+describe('a field’s character limit', () => {
+  it.each([
+    [1, 'en-US', 'Up to 1 character'],
+    [20, 'en-US', 'Up to 20 characters'],
+    [1200, 'en-US', 'Up to 1,200 characters'],
+    [1200, 'de-DE', 'Bis zu 1.200 Zeichen'],
+    [3, 'ru-RU', 'Не более 3 символов'],
+  ])('says %i in %s', (count, locale, words) => {
+    expect(limitFor(count, locale)).toBe(words)
+  })
+
+  // Russian's singular form is for any count ending in one but eleven.
+  it('takes the form the locale’s plural rules pick', () => {
+    expect(limitFor(21, 'ru-RU')).toBe('Не более 21 символа')
+    expect(limitFor(25, 'ru-RU')).toBe('Не более 25 символов')
+  })
+
+  // German has no singular of its own here, so every count reads `other`.
+  it('takes the other form for one the locale’s entry leaves out', () => {
+    expect(limitFor(1, 'de-DE')).toBe('Bis zu 1 Zeichen')
+  })
+
+  it('writes the count in the locale’s digits', () => {
+    expect(limitFor(20, 'ar-EG')).toBe(
+      `حتى ${new Intl.NumberFormat('ar-EG').format(20)} حرفًا`,
+    )
+  })
+
+  it('reads the device’s locale when given none', () => {
+    expect(limitFor(20)).toBe(limitFor(20, localeOf(undefined)))
+  })
+
+  it('takes the singular for one alone without plural rules', () => {
+    const rules = Object.getOwnPropertyDescriptor(Intl, 'PluralRules')
+    Object.defineProperty(Intl, 'PluralRules', {
+      configurable: true,
+      value: undefined,
+    })
+
+    try {
+      expect(limitFor(1, 'en-US')).toBe('Up to 1 character')
+      expect(limitFor(21, 'en-US')).toBe('Up to 21 characters')
+    } finally {
+      if (rules !== undefined) {
+        Object.defineProperty(Intl, 'PluralRules', rules)
+      }
+    }
+  })
 })
 
 describe('how many rows a search leaves', () => {

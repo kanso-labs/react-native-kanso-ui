@@ -10,6 +10,7 @@ import {
 } from 'react'
 import { StyleSheet, View } from 'react-native'
 
+import { I18nProvider, useProvidedLocale } from '../i18n/provider'
 import { ScopeContext, useScope } from '../theme/scope'
 
 type Entry = readonly [key: string, content: ReactNode]
@@ -47,15 +48,18 @@ const styles = StyleSheet.create({
  * outermost `ThemeScope`, for as long as it is mounted. A later overlay draws
  * above an earlier one.
  *
- * The content reads the `ThemeScope` around the `Overlay`, as anything else
- * there would. Other context set between the host and the `Overlay` does not
- * reach it: an overlay is a surface of its own, as web's `OverlayScope` makes
- * one, so it starts from what is around the app rather than from what is
- * around the control that opened it.
+ * The content reads the `ThemeScope` and the `I18nProvider` around the
+ * `Overlay`, as anything else there would, so a dialog writes in the locale
+ * of the screen that opened it, as web's portal does. Other context set
+ * between the host and the `Overlay` does not reach it: an overlay is a
+ * surface of its own, as web's `OverlayScope` makes one, so it starts from
+ * what is around the app rather than from what is around the control that
+ * opened it.
  */
 function Overlay({ children }: { readonly children?: ReactNode }) {
   const store = use(OverlayHostContext)
   const scope = useScope()
+  const locale = useProvidedLocale()
   const key = useId()
 
   if (store === null) {
@@ -67,8 +71,13 @@ function Overlay({ children }: { readonly children?: ReactNode }) {
   // Set before paint, so an overlay opening never draws a frame without it,
   // and replaced in place on an update, so it keeps its place in the stack.
   useLayoutEffect(() => {
-    store.set(key, <ScopeContext value={scope}>{children}</ScopeContext>)
-  }, [children, key, scope, store])
+    store.set(
+      key,
+      <ScopeContext value={scope}>
+        <I18nProvider locale={locale}>{children}</I18nProvider>
+      </ScopeContext>,
+    )
+  }, [children, key, locale, scope, store])
 
   useLayoutEffect(
     () => () => {

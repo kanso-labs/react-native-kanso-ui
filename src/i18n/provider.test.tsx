@@ -1,21 +1,33 @@
 import type { ReactElement } from 'react'
 
 import { CalendarDate } from '@internationalized/date'
-import { describe, expect, it } from '@jest/globals'
-import { render, screen } from '@testing-library/react-native'
+import { describe, expect, it, jest } from '@jest/globals'
+import { act, render, screen } from '@testing-library/react-native'
 import { Text, View } from 'react-native'
 
 import { messagesFor } from '.'
 import { Badge } from '../badge'
 import { Button } from '../components/button'
 import { Calendar } from '../components/calendar'
+import { ChipGroup } from '../components/chip-group'
+import { CopyField } from '../components/copy-field'
 import { Currency } from '../components/currency'
 import { List } from '../components/list'
 import { Meter } from '../components/meter'
 import { NumberField } from '../components/number-field'
+import { SearchField } from '../components/search-field'
+import { Snackbar } from '../components/snackbar'
 import { TextField } from '../components/text-field'
 import { localeOf } from '../number/locale'
+import { ThemeScope } from '../theme-scope'
 import { I18nProvider, useLocale } from './provider'
+
+// The app has expo-clipboard installed, so a CopyField draws its button.
+jest.mock(
+  'expo-clipboard',
+  () => ({ setStringAsync: async () => Promise.resolve(true) }),
+  { virtual: true },
+)
 
 // A locale the runtime cannot parse, which gives way to the device's.
 const MALFORMED = 'xx_YY'
@@ -32,6 +44,11 @@ function amountIn(locale: string | undefined) {
 // The calendar's own view, which a provider draws nothing around.
 function calendarName(): unknown {
   return screen.root?.props['aria-label']
+}
+
+// What a TextField's control is told to read after its label.
+function hintOf(label: string): unknown {
+  return screen.getByLabelText(label).props.accessibilityHint
 }
 
 // Writes what `useLocale()` returns, so a case reads it off the screen.
@@ -151,6 +168,68 @@ describe('I18nProvider', () => {
 
       expect(calendarName()).toBe('Label, September 2026')
     })
+
+    // A NumberField writes its number in its own locale, so its steppers
+    // are named in it too, as a Calendar's chevrons are.
+    it('wins over the provider’s for a NumberField’s steppers', async () => {
+      await renderIn('de-DE', <NumberField label="Label" locale="en-US" />)
+
+      expect(screen.getByLabelText('Decrease Label')).toBeTruthy()
+      expect(screen.getByLabelText('Increase Label')).toBeTruthy()
+    })
+  })
+
+  describe('a component’s own words', () => {
+    it('win over the provider’s for a field’s limit', async () => {
+      await renderIn(
+        'de-DE',
+        <TextField characterLimitLabel="Label" label="Field" maxLength={20} />,
+      )
+
+      expect(hintOf('Field')).toBe('Label')
+    })
+
+    it('win over the provider’s for a CopyField', async () => {
+      await renderIn(
+        'de-DE',
+        <CopyField
+          copiedLabel="Second label"
+          copyLabel="First label"
+          label="Label"
+          value="Label"
+        />,
+      )
+
+      expect(
+        screen.getByRole('button', { name: 'First label Label' }),
+      ).toBeTruthy()
+      expect(
+        screen.getByText('Second label', { includeHiddenElements: true }),
+      ).toBeTruthy()
+    })
+
+    it('win over the provider’s for a SearchField', async () => {
+      await renderIn(
+        'de-DE',
+        <SearchField clearLabel="Clear" defaultValue="Label" label="Label" />,
+      )
+
+      expect(screen.getByLabelText('Clear')).toBeTruthy()
+    })
+
+    it('win over the provider’s for a NumberField', async () => {
+      await renderIn(
+        'de-DE',
+        <NumberField
+          decrementLabel="Fewer"
+          incrementLabel="More"
+          label="Label"
+        />,
+      )
+
+      expect(screen.getByLabelText('Fewer')).toBeTruthy()
+      expect(screen.getByLabelText('More')).toBeTruthy()
+    })
   })
 
   describe('the library’s words', () => {
@@ -182,6 +261,94 @@ describe('I18nProvider', () => {
       await renderIn('de-AT', <List aria-label="Label" />)
 
       expect(screen.getByText('Keine Ergebnisse')).toBeTruthy()
+    })
+
+    it('says a field’s limit in its locale', async () => {
+      await renderIn('de-DE', <TextField label="Label" maxLength={20} />)
+
+      expect(hintOf('Label')).toBe('Bis zu 20 Zeichen')
+    })
+
+    // Arabic has six plural forms where English has two, and writes the
+    // limit in its own digits.
+    it.each([
+      [1, 'حتى حرف واحد'],
+      [2, 'حتى حرفين'],
+      [3, `حتى ${new Intl.NumberFormat('ar-EG').format(3)} أحرف`],
+      [20, `حتى ${new Intl.NumberFormat('ar-EG').format(20)} حرفًا`],
+    ])(
+      'says a limit of %i in the form Arabic gives it',
+      async (maxLength, words) => {
+        await renderIn(
+          'ar-EG',
+          <TextField label="Label" maxLength={maxLength} />,
+        )
+
+        expect(hintOf('Label')).toBe(words)
+      },
+    )
+
+    it('names a CopyField’s button in its locale', async () => {
+      await renderIn('de-DE', <CopyField label="Label" value="Label" />)
+
+      expect(
+        screen.getByRole('button', { name: 'Kopieren Label' }),
+      ).toBeTruthy()
+      // The confirmation the button is sized to hold, drawn hidden at rest.
+      expect(
+        screen.getByText('Kopiert', { includeHiddenElements: true }),
+      ).toBeTruthy()
+    })
+
+    it('names a SearchField’s clear button in its locale', async () => {
+      await renderIn(
+        'de-DE',
+        <SearchField defaultValue="Label" label="Label" />,
+      )
+
+      expect(screen.getByLabelText('Suche zurücksetzen')).toBeTruthy()
+    })
+
+    it('names a removable chip’s close target in its locale', async () => {
+      await renderIn(
+        'de-DE',
+        <ChipGroup label="Label" onRemove={jest.fn()}>
+          <ChipGroup.Chip id="first">First item</ChipGroup.Chip>
+        </ChipGroup>,
+      )
+
+      expect(
+        screen.getByRole('button', { name: 'Entfernen First item' }),
+      ).toBeTruthy()
+    })
+
+    it('names a Snackbar’s close button in its locale', async () => {
+      jest.useFakeTimers()
+      try {
+        const queue = new Snackbar.Queue()
+        await renderIn(
+          'de-DE',
+          <ThemeScope>
+            <Snackbar queue={queue} />
+          </ThemeScope>,
+        )
+        await act(() => {
+          queue.add('Label', { showCloseButton: true })
+        })
+
+        expect(screen.getByRole('button', { name: 'Schließen' })).toBeTruthy()
+      } finally {
+        jest.useRealTimers()
+      }
+    })
+
+    // React Aria words web's steppers around the field's label, which German
+    // puts first.
+    it('names a NumberField’s steppers in its locale', async () => {
+      await renderIn('de-DE', <NumberField label="Label" />)
+
+      expect(screen.getByLabelText('Label verringern')).toBeTruthy()
+      expect(screen.getByLabelText('Label erhöhen')).toBeTruthy()
     })
   })
 

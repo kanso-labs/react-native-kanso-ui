@@ -1,10 +1,15 @@
 // The words the library writes itself: the pending ring's name, a bottom
 // sheet's drag handle, a collection's loading-more and empty rows, what
-// selecting a list's row is called, how many rows a search leaves, and a
-// calendar's. Each of the first five stands behind a prop that names it
-// otherwise: `pendingLabel` for the ring, `aria-label` for the handle,
-// `label` for the loading-more row, `renderEmptyState` for the empty one and
-// `selectLabel` for the selection.
+// selecting a list's row is called, how many rows a search leaves, a
+// calendar's, a field's character limit, CopyField's button, the names of
+// SearchField's clear button, Snackbar's close button, a chip's remove button
+// and NumberField's steppers. Each one a call site might want in other words
+// stands behind a prop that names it otherwise: `pendingLabel` for the ring,
+// `aria-label` for the handle, `label` for the loading-more row,
+// `renderEmptyState` for the empty one, `selectLabel` for the selection,
+// `characterLimitLabel` for the limit, `copyLabel` and `copiedLabel` for
+// CopyField, `clearLabel`, `closeLabel` and `removeLabel` for the three
+// buttons, and `decrementLabel` and `incrementLabel` for the steppers.
 //
 // Copied from kanso-ui's src/i18n/messages.ts, one entry per locale React
 // Aria ships, and kept in step with it by hand: the web library publishes no
@@ -18,9 +23,12 @@
 // React Aria's calendar dictionary, which web's Calendar reads, beside the
 // names of the month and year fields that web reads from the browser's
 // `Intl.DisplayNames` and Hermes lacks, written here from the same CLDR
-// data. The others were drafted for kanso-ui's table rather than taken from
-// a translation service, and each one wants a native speaker's eye before it
-// is trusted; a call site can always pass its own words through the prop.
+// data. `clearSearch`, `close`, `decrease`, `increase` and `remove` are React
+// Aria's as well, from the search field, toast, number field and tag
+// dictionaries its own controls name those buttons from on web. The others
+// were drafted for kanso-ui's table rather than taken from a translation
+// service, and each one wants a native speaker's eye before it is trusted; a
+// call site can always pass its own words through the prop.
 
 type LibraryMessages = {
   /**
@@ -48,14 +56,42 @@ type LibraryMessages = {
     /** What the year is called, after the year a menu button shows. */
     readonly year: string
   }
+  /**
+   * What a field's character limit says, for a screen reader, in the plural
+   * forms the locale's rules give it; `{count}` is the limit.
+   */
+  readonly characterLimit: PluralForms
+  /** What SearchField's clear button is called. */
+  readonly clearSearch: string
+  /** What Snackbar's close button is called. */
+  readonly close: string
+  /** What CopyField's button says, and announces, once it has copied. */
+  readonly copied: string
+  /** What CopyField's button says. */
+  readonly copy: string
+  /**
+   * What NumberField's stepper that lowers the value is called; `{label}`
+   * is the field's label.
+   */
+  readonly decrease: string
   /** What a bottom sheet's handle is called, where it is a control. */
   readonly dragHandle: string
+  /**
+   * What NumberField's stepper that raises the value is called; `{label}`
+   * is the field's label.
+   */
+  readonly increase: string
   /** What a pending button's ring is called. */
   readonly loading: string
   /** What a collection's row says while more items are on their way. */
   readonly loadingMore: string
   /** What a collection with nothing in it says. */
   readonly noResults: string
+  /**
+   * What a removable chip's remove button is called, before the chip's own
+   * text.
+   */
+  readonly remove: string
   /**
    * How many rows a search leaves, for a screen reader, in the plural
    * forms React Aria's table gives the locale; `{count}` is the number.
@@ -66,6 +102,14 @@ type LibraryMessages = {
   }
   /** What selecting a list's row is called, beside its checkbox. */
   readonly select: string
+}
+
+/**
+ * A message in each plural form the locale's rules give it, where `other`
+ * always stands in for a form the locale's entry leaves out.
+ */
+type PluralForms = Partial<Record<Intl.LDMLPluralRule, string>> & {
+  readonly other: string
 }
 
 const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
@@ -81,10 +125,25 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       todayDateSelected: 'اليوم، {date} محدد',
       year: 'السنة',
     },
+    characterLimit: {
+      few: 'حتى {count} أحرف',
+      many: 'حتى {count} حرفًا',
+      one: 'حتى حرف واحد',
+      other: 'حتى {count} حرف',
+      two: 'حتى حرفين',
+      zero: 'حتى {count} حرف',
+    },
+    clearSearch: 'مسح البحث',
+    close: 'إغلاق',
+    copied: 'تم النسخ',
+    copy: 'نسخ',
+    decrease: 'خفض {label}',
     dragHandle: 'مقبض السحب',
+    increase: 'زيادة {label}',
     loading: 'جارٍ التحميل',
     loadingMore: 'جارٍ تحميل المزيد',
     noResults: 'لا توجد نتائج',
+    remove: 'إزالة',
     results: {
       one: '{count} خيار متاحة.',
       other: '{count} خيارات متاحة.',
@@ -103,10 +162,21 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       todayDateSelected: 'Днес, {date} са избрани',
       year: 'година',
     },
+    characterLimit: {
+      one: 'До {count} знак',
+      other: 'До {count} знака',
+    },
+    clearSearch: 'Изчистване на търсене',
+    close: 'Затвори',
+    copied: 'Копирано',
+    copy: 'Копиране',
+    decrease: 'Намаляване {label}',
     dragHandle: 'Манипулатор за плъзгане',
+    increase: 'Усилване {label}',
     loading: 'Зареждане',
     loadingMore: 'Зареждане на още',
     noResults: 'Няма резултати',
+    remove: 'Премахване',
     results: {
       one: '{count} опция на разположение.',
       other: '{count} опции на разположение.',
@@ -125,10 +195,23 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       todayDateSelected: 'Dnes, vybráno {date}',
       year: 'rok',
     },
+    characterLimit: {
+      few: 'Nejvýše {count} znaky',
+      many: 'Nejvýše {count} znaku',
+      one: 'Nejvýše {count} znak',
+      other: 'Nejvýše {count} znaků',
+    },
+    clearSearch: 'Vymazat hledání',
+    close: 'Zavřít',
+    copied: 'Zkopírováno',
+    copy: 'Kopírovat',
+    decrease: 'Snížit {label}',
     dragHandle: 'Úchyt pro přetažení',
+    increase: 'Zvýšit {label}',
     loading: 'Načítání',
     loadingMore: 'Načítání dalších',
     noResults: 'Žádné výsledky',
+    remove: 'Odebrat',
     results: {
       one: 'K dispozici je {count} možnost.',
       other: 'K dispozici jsou/je {count} možnosti/-í.',
@@ -147,10 +230,20 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       todayDateSelected: 'I dag, {date} valgt',
       year: 'år',
     },
+    characterLimit: {
+      other: 'Op til {count} tegn',
+    },
+    clearSearch: 'Ryd søgning',
+    close: 'Luk',
+    copied: 'Kopieret',
+    copy: 'Kopiér',
+    decrease: 'Reducer {label}',
     dragHandle: 'Trækhåndtag',
+    increase: 'Øg {label}',
     loading: 'Indlæser',
     loadingMore: 'Indlæser flere',
     noResults: 'Ingen resultater',
+    remove: 'Fjern',
     results: {
       one: '{count} mulighed tilgængelig.',
       other: '{count} muligheder tilgængelige.',
@@ -169,10 +262,20 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       todayDateSelected: 'Heute, {date} ausgewählt',
       year: 'Jahr',
     },
+    characterLimit: {
+      other: 'Bis zu {count} Zeichen',
+    },
+    clearSearch: 'Suche zurücksetzen',
+    close: 'Schließen',
+    copied: 'Kopiert',
+    copy: 'Kopieren',
+    decrease: '{label} verringern',
     dragHandle: 'Ziehpunkt',
+    increase: '{label} erhöhen',
     loading: 'Wird geladen',
     loadingMore: 'Weitere werden geladen',
     noResults: 'Keine Ergebnisse',
+    remove: 'Entfernen',
     results: {
       one: '{count} Option verfügbar.',
       other: '{count} Optionen verfügbar.',
@@ -191,10 +294,21 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       todayDateSelected: 'Σήμερα, επιλέχτηκε {date}',
       year: 'έτος',
     },
+    characterLimit: {
+      one: 'Έως {count} χαρακτήρας',
+      other: 'Έως {count} χαρακτήρες',
+    },
+    clearSearch: 'Απαλοιφή αναζήτησης',
+    close: 'Κλείσιμο',
+    copied: 'Αντιγράφηκε',
+    copy: 'Αντιγραφή',
+    decrease: 'Μείωση {label}',
     dragHandle: 'Λαβή μεταφοράς',
+    increase: 'Αύξηση {label}',
     loading: 'Φόρτωση',
     loadingMore: 'Φόρτωση περισσότερων',
     noResults: 'Δεν υπάρχουν αποτελέσματα',
+    remove: 'Κατάργηση',
     results: {
       one: '{count} επιλογή διαθέσιμες.',
       other: '{count} επιλογές  διαθέσιμες.',
@@ -213,10 +327,21 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       todayDateSelected: 'Today, {date} selected',
       year: 'year',
     },
+    characterLimit: {
+      one: 'Up to {count} character',
+      other: 'Up to {count} characters',
+    },
+    clearSearch: 'Clear search',
+    close: 'Close',
+    copied: 'Copied',
+    copy: 'Copy',
+    decrease: 'Decrease {label}',
     dragHandle: 'Drag handle',
+    increase: 'Increase {label}',
     loading: 'Loading',
     loadingMore: 'Loading more',
     noResults: 'No results',
+    remove: 'Remove',
     results: {
       one: '{count} option available.',
       other: '{count} options available.',
@@ -235,10 +360,21 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       todayDateSelected: 'Hoy, {date} seleccionado',
       year: 'año',
     },
+    characterLimit: {
+      one: 'Hasta {count} carácter',
+      other: 'Hasta {count} caracteres',
+    },
+    clearSearch: 'Borrar búsqueda',
+    close: 'Cerrar',
+    copied: 'Copiado',
+    copy: 'Copiar',
+    decrease: 'Reducir {label}',
     dragHandle: 'Control de arrastre',
+    increase: 'Aumentar {label}',
     loading: 'Cargando',
     loadingMore: 'Cargando más',
     noResults: 'No hay resultados',
+    remove: 'Quitar',
     results: {
       one: '{count} opción disponible(s).',
       other: '{count} opciones disponible(s).',
@@ -257,10 +393,21 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       todayDateSelected: 'Täna, {date} valitud',
       year: 'aasta',
     },
+    characterLimit: {
+      one: 'Kuni {count} märk',
+      other: 'Kuni {count} märki',
+    },
+    clearSearch: 'Tühjenda otsing',
+    close: 'Sule',
+    copied: 'Kopeeritud',
+    copy: 'Kopeeri',
+    decrease: 'Vähenda {label}',
     dragHandle: 'Lohistamispide',
+    increase: 'Suurenda {label}',
     loading: 'Laadimine',
     loadingMore: 'Laaditakse veel',
     noResults: 'Tulemusi pole',
+    remove: 'Eemalda',
     results: {
       one: '{count} valik saadaval.',
       other: '{count} valikud saadaval.',
@@ -279,10 +426,21 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       todayDateSelected: 'Tänään, {date} valittu',
       year: 'vuosi',
     },
+    characterLimit: {
+      one: 'Enintään {count} merkki',
+      other: 'Enintään {count} merkkiä',
+    },
+    clearSearch: 'Tyhjennä haku',
+    close: 'Sulje',
+    copied: 'Kopioitu',
+    copy: 'Kopioi',
+    decrease: 'Vähennä {label}',
     dragHandle: 'Vetokahva',
+    increase: 'Lisää {label}',
     loading: 'Ladataan',
     loadingMore: 'Ladataan lisää',
     noResults: 'Ei tuloksia',
+    remove: 'Poista',
     results: {
       one: '{count} vaihtoehto saatavilla.',
       other: '{count} vaihtoehtoa saatavilla.',
@@ -301,10 +459,21 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       todayDateSelected: 'Aujourd’hui, {date} sélectionné',
       year: 'année',
     },
+    characterLimit: {
+      one: 'Jusqu’à {count} caractère',
+      other: 'Jusqu’à {count} caractères',
+    },
+    clearSearch: 'Effacer la recherche',
+    close: 'Fermer',
+    copied: 'Copié',
+    copy: 'Copier',
+    decrease: 'Diminuer {label}',
     dragHandle: 'Poignée de déplacement',
+    increase: 'Augmenter {label}',
     loading: 'Chargement',
     loadingMore: 'Chargement de la suite',
     noResults: 'Aucun résultat',
+    remove: 'Supprimer',
     results: {
       one: '{count} option disponible(s).',
       other: '{count} options disponible(s).',
@@ -323,10 +492,22 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       todayDateSelected: 'היום, {date} נבחר',
       year: 'שנה',
     },
+    characterLimit: {
+      one: 'עד תו אחד',
+      other: 'עד {count} תווים',
+      two: 'עד שני תווים',
+    },
+    clearSearch: 'נקה חיפוש',
+    close: 'סגור',
+    copied: 'הועתק',
+    copy: 'העתק',
+    decrease: 'הקטן {label}',
     dragHandle: 'ידית גרירה',
+    increase: 'הגדל {label}',
     loading: 'טוען',
     loadingMore: 'טוען עוד',
     noResults: 'אין תוצאות',
+    remove: 'הסר',
     results: {
       one: 'אפשרות {count} במצב זמין.',
       other: '{count} אפשרויות במצב זמין.',
@@ -345,10 +526,22 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       todayDateSelected: 'Danas, odabran {date}',
       year: 'godina',
     },
+    characterLimit: {
+      few: 'Najviše {count} znaka',
+      one: 'Najviše {count} znak',
+      other: 'Najviše {count} znakova',
+    },
+    clearSearch: 'Obriši pretragu',
+    close: 'Zatvori',
+    copied: 'Kopirano',
+    copy: 'Kopiraj',
+    decrease: 'Smanji {label}',
     dragHandle: 'Ručica za povlačenje',
+    increase: 'Povećaj {label}',
     loading: 'Učitavanje',
     loadingMore: 'Učitava se još',
     noResults: 'Nema rezultata',
+    remove: 'Ukloni',
     results: {
       one: 'Dostupno još: {count} opcija.',
       other: 'Dostupno još: {count} opcije/a.',
@@ -367,10 +560,20 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       todayDateSelected: 'Ma, {date} kijelölve',
       year: 'év',
     },
+    characterLimit: {
+      other: 'Legfeljebb {count} karakter',
+    },
+    clearSearch: 'Keresés törlése',
+    close: 'Bezárás',
+    copied: 'Másolva',
+    copy: 'Másolás',
+    decrease: '{label} csökkentése',
     dragHandle: 'Húzófogantyú',
+    increase: '{label} növelése',
     loading: 'Betöltés',
     loadingMore: 'Továbbiak betöltése',
     noResults: 'Nincs találat',
+    remove: 'Eltávolítás',
     results: {
       one: '{count} lehetőség áll rendelkezésre.',
       other: '{count} lehetőség áll rendelkezésre.',
@@ -389,10 +592,21 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       todayDateSelected: 'Oggi, {date} selezionata',
       year: 'anno',
     },
+    characterLimit: {
+      one: 'Fino a {count} carattere',
+      other: 'Fino a {count} caratteri',
+    },
+    clearSearch: 'Cancella ricerca',
+    close: 'Chiudi',
+    copied: 'Copiato',
+    copy: 'Copia',
+    decrease: 'Riduci {label}',
     dragHandle: 'Punto di trascinamento',
+    increase: 'Aumenta {label}',
     loading: 'Caricamento',
     loadingMore: 'Caricamento di altri elementi',
     noResults: 'Nessun risultato',
+    remove: 'Rimuovi',
     results: {
       one: '{count} opzione disponibile.',
       other: '{count} opzioni disponibili.',
@@ -411,10 +625,20 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       todayDateSelected: '本日、{date} を選択',
       year: '年',
     },
+    characterLimit: {
+      other: '最大 {count} 文字',
+    },
+    clearSearch: '検索をクリア',
+    close: '閉じる',
+    copied: 'コピーしました',
+    copy: 'コピー',
+    decrease: '{label}を縮小',
     dragHandle: 'ドラッグハンドル',
+    increase: '{label}を拡大',
     loading: '読み込み中',
     loadingMore: 'さらに読み込み中',
     noResults: '結果がありません',
+    remove: '削除',
     results: {
       one: '{count} 個のオプションを利用できます。',
       other: '{count} 個のオプションを利用できます。',
@@ -433,10 +657,20 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       todayDateSelected: '오늘, {date} 선택됨',
       year: '년',
     },
+    characterLimit: {
+      other: '최대 {count}자',
+    },
+    clearSearch: '검색 지우기',
+    close: '닫기',
+    copied: '복사됨',
+    copy: '복사',
+    decrease: '{label} 감소',
     dragHandle: '드래그 핸들',
+    increase: '{label} 증가',
     loading: '로드 중',
     loadingMore: '더 로드하는 중',
     noResults: '결과 없음',
+    remove: '제거',
     results: {
       one: '{count}개 옵션을 사용할 수 있습니다.',
       other: '{count}개 옵션을 사용할 수 있습니다.',
@@ -455,10 +689,23 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       todayDateSelected: 'Šiandien, pasirinkta {date}',
       year: 'metai',
     },
+    characterLimit: {
+      few: 'Ne daugiau kaip {count} simboliai',
+      many: 'Ne daugiau kaip {count} simbolio',
+      one: 'Ne daugiau kaip {count} simbolis',
+      other: 'Ne daugiau kaip {count} simbolių',
+    },
+    clearSearch: 'Išvalyti iešką',
+    close: 'Uždaryti',
+    copied: 'Nukopijuota',
+    copy: 'Kopijuoti',
+    decrease: 'Sumažinti {label}',
     dragHandle: 'Vilkimo rankenėlė',
+    increase: 'Padidinti {label}',
     loading: 'Įkeliama',
     loadingMore: 'Įkeliama daugiau',
     noResults: 'Rezultatų nėra',
+    remove: 'Pašalinti',
     results: {
       one: 'Yra {count} parinktis.',
       other: 'Yra {count} parinktys (-ių).',
@@ -477,10 +724,22 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       todayDateSelected: 'Atlasīta šodiena, {date}',
       year: 'gads',
     },
+    characterLimit: {
+      one: 'Līdz {count} rakstzīmei',
+      other: 'Līdz {count} rakstzīmēm',
+      zero: 'Līdz {count} rakstzīmēm',
+    },
+    clearSearch: 'Notīrīt meklēšanu',
+    close: 'Aizvērt',
+    copied: 'Nokopēts',
+    copy: 'Kopēt',
+    decrease: 'Samazināšana {label}',
     dragHandle: 'Vilkšanas turis',
+    increase: 'Palielināšana {label}',
     loading: 'Notiek ielāde',
     loadingMore: 'Notiek papildu ielāde',
     noResults: 'Nav rezultātu',
+    remove: 'Noņemt',
     results: {
       one: 'Pieejamo opciju skaits: {count} opcija.',
       other: 'Pieejamo opciju skaits: {count} opcijas.',
@@ -499,10 +758,20 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       todayDateSelected: 'I dag, {date} valgt',
       year: 'år',
     },
+    characterLimit: {
+      other: 'Opptil {count} tegn',
+    },
+    clearSearch: 'Tøm søk',
+    close: 'Lukk',
+    copied: 'Kopiert',
+    copy: 'Kopier',
+    decrease: 'Reduser {label}',
     dragHandle: 'Drahåndtak',
+    increase: 'Øk {label}',
     loading: 'Laster inn',
     loadingMore: 'Laster inn flere',
     noResults: 'Ingen resultater',
+    remove: 'Fjern',
     results: {
       one: '{count} alternativ finnes.',
       other: '{count} alternativer finnes.',
@@ -521,10 +790,21 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       todayDateSelected: 'Vandaag, {date} geselecteerd',
       year: 'jaar',
     },
+    characterLimit: {
+      one: 'Maximaal {count} teken',
+      other: 'Maximaal {count} tekens',
+    },
+    clearSearch: 'Zoekactie wissen',
+    close: 'Sluiten',
+    copied: 'Gekopieerd',
+    copy: 'Kopiëren',
+    decrease: '{label} verlagen',
     dragHandle: 'Sleepgreep',
+    increase: '{label} verhogen',
     loading: 'Laden',
     loadingMore: 'Meer laden',
     noResults: 'Geen resultaten',
+    remove: 'Verwijderen',
     results: {
       one: '{count} optie beschikbaar.',
       other: '{count} opties beschikbaar.',
@@ -543,10 +823,23 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       todayDateSelected: 'Dzisiaj wybrano {date}',
       year: 'rok',
     },
+    characterLimit: {
+      few: 'Maksymalnie {count} znaki',
+      many: 'Maksymalnie {count} znaków',
+      one: 'Maksymalnie {count} znak',
+      other: 'Maksymalnie {count} znaku',
+    },
+    clearSearch: 'Wyczyść zawartość wyszukiwania',
+    close: 'Zamknij',
+    copied: 'Skopiowano',
+    copy: 'Kopiuj',
+    decrease: 'Zmniejsz {label}',
     dragHandle: 'Uchwyt do przeciągania',
+    increase: 'Zwiększ {label}',
     loading: 'Ładowanie',
     loadingMore: 'Ładowanie kolejnych',
     noResults: 'Brak wyników',
+    remove: 'Usuń',
     results: {
       one: 'dostępna/dostępne(-nych) {count} opcja.',
       other: 'dostępna/dostępne(-nych) {count} opcje(-i).',
@@ -565,10 +858,21 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       todayDateSelected: 'Hoje, {date} selecionado',
       year: 'ano',
     },
+    characterLimit: {
+      one: 'Até {count} caractere',
+      other: 'Até {count} caracteres',
+    },
+    clearSearch: 'Limpar pesquisa',
+    close: 'Fechar',
+    copied: 'Copiado',
+    copy: 'Copiar',
+    decrease: 'Diminuir {label}',
     dragHandle: 'Alça de arrastar',
+    increase: 'Aumentar {label}',
     loading: 'Carregando',
     loadingMore: 'Carregando mais',
     noResults: 'Nenhum resultado',
+    remove: 'Remover',
     results: {
       one: '{count} opção disponível.',
       other: '{count} opções disponível.',
@@ -587,10 +891,21 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       todayDateSelected: 'Hoje, {date} selecionado',
       year: 'ano',
     },
+    characterLimit: {
+      one: 'Até {count} carácter',
+      other: 'Até {count} caracteres',
+    },
+    clearSearch: 'Limpar pesquisa',
+    close: 'Fechar',
+    copied: 'Copiado',
+    copy: 'Copiar',
+    decrease: 'Diminuir {label}',
     dragHandle: 'Pega para arrastar',
+    increase: 'Aumentar {label}',
     loading: 'A carregar',
     loadingMore: 'A carregar mais',
     noResults: 'Nenhum resultado',
+    remove: 'Eliminar',
     results: {
       one: '{count} opção disponível.',
       other: '{count} opções disponível.',
@@ -609,10 +924,22 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       todayDateSelected: 'Azi, {date} selectată',
       year: 'an',
     },
+    characterLimit: {
+      few: 'Maximum {count} caractere',
+      one: 'Maximum {count} caracter',
+      other: 'Maximum {count} de caractere',
+    },
+    clearSearch: 'Ştergeţi căutarea',
+    close: 'Închideţi',
+    copied: 'Copiat',
+    copy: 'Copiați',
+    decrease: 'Scădere {label}',
     dragHandle: 'Mâner de tragere',
+    increase: 'Creștere {label}',
     loading: 'Se încarcă',
     loadingMore: 'Se încarcă mai multe',
     noResults: 'Niciun rezultat',
+    remove: 'Îndepărtaţi',
     results: {
       one: '{count} opțiune disponibile.',
       other: '{count} opțiuni disponibile.',
@@ -631,10 +958,23 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       todayDateSelected: 'Сегодня, выбрано {date}',
       year: 'год',
     },
+    characterLimit: {
+      few: 'Не более {count} символов',
+      many: 'Не более {count} символов',
+      one: 'Не более {count} символа',
+      other: 'Не более {count} символа',
+    },
+    clearSearch: 'Очистить поиск',
+    close: 'Закрыть',
+    copied: 'Скопировано',
+    copy: 'Копировать',
+    decrease: 'Уменьшение {label}',
     dragHandle: 'Маркер перемещения',
+    increase: 'Увеличение {label}',
     loading: 'Загрузка',
     loadingMore: 'Загрузка ещё',
     noResults: 'Нет результатов',
+    remove: 'Удалить',
     results: {
       one: '{count} параметр доступно.',
       other: '{count} параметров доступно.',
@@ -653,10 +993,23 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       todayDateSelected: 'Vybratý dnešný dátum {date}',
       year: 'rok',
     },
+    characterLimit: {
+      few: 'Najviac {count} znaky',
+      many: 'Najviac {count} znaku',
+      one: 'Najviac {count} znak',
+      other: 'Najviac {count} znakov',
+    },
+    clearSearch: 'Vymazať vyhľadávanie',
+    close: 'Zatvoriť',
+    copied: 'Skopírované',
+    copy: 'Kopírovať',
+    decrease: 'Znížiť {label}',
     dragHandle: 'Úchyt na presúvanie',
+    increase: 'Zvýšiť {label}',
     loading: 'Načítava sa',
     loadingMore: 'Načítavajú sa ďalšie',
     noResults: 'Žiadne výsledky',
+    remove: 'Odstrániť',
     results: {
       one: '{count} možnosť k dispozícii.',
       other: '{count} možnosti/-í k dispozícii.',
@@ -675,10 +1028,23 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       todayDateSelected: 'Danes, {date} izbrano',
       year: 'leto',
     },
+    characterLimit: {
+      few: 'Največ {count} znaki',
+      one: 'Največ {count} znak',
+      other: 'Največ {count} znakov',
+      two: 'Največ {count} znaka',
+    },
+    clearSearch: 'Počisti iskanje',
+    close: 'Zapri',
+    copied: 'Kopirano',
+    copy: 'Kopiraj',
+    decrease: 'Upadati {label}',
     dragHandle: 'Ročica za vlečenje',
+    increase: 'Povečajte {label}',
     loading: 'Nalaganje',
     loadingMore: 'Nalaganje več',
     noResults: 'Ni rezultatov',
+    remove: 'Odstrani',
     results: {
       one: 'Na voljo je {count} opcija.',
       other: 'Na voljo je {count} opcije.',
@@ -697,10 +1063,22 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       todayDateSelected: 'Danas, izabran {date}',
       year: 'година',
     },
+    characterLimit: {
+      few: 'Najviše {count} znaka',
+      one: 'Najviše {count} znak',
+      other: 'Najviše {count} znakova',
+    },
+    clearSearch: 'Obriši pretragu',
+    close: 'Zatvori',
+    copied: 'Kopirano',
+    copy: 'Kopiraj',
+    decrease: 'Smanji {label}',
     dragHandle: 'Ručica za prevlačenje',
+    increase: 'Povećaj {label}',
     loading: 'Učitavanje',
     loadingMore: 'Učitavanje još',
     noResults: 'Nema rezultata',
+    remove: 'Ukloni',
     results: {
       one: 'Dostupno još: {count} opcija.',
       other: 'Dostupno još: {count} opcije/a.',
@@ -719,10 +1097,20 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       todayDateSelected: 'Idag, {date} har valts',
       year: 'år',
     },
+    characterLimit: {
+      other: 'Högst {count} tecken',
+    },
+    clearSearch: 'Rensa sökning',
+    close: 'Stäng',
+    copied: 'Kopierat',
+    copy: 'Kopiera',
+    decrease: 'Minska {label}',
     dragHandle: 'Draghandtag',
+    increase: 'Öka {label}',
     loading: 'Läser in',
     loadingMore: 'Läser in fler',
     noResults: 'Inga resultat',
+    remove: 'Ta bort',
     results: {
       one: '{count} alternativ tillgängliga.',
       other: '{count} alternativ tillgängliga.',
@@ -741,10 +1129,20 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       todayDateSelected: 'Bugün, {date} seçildi',
       year: 'yıl',
     },
+    characterLimit: {
+      other: 'En fazla {count} karakter',
+    },
+    clearSearch: 'Aramayı temizle',
+    close: 'Kapat',
+    copied: 'Kopyalandı',
+    copy: 'Kopyala',
+    decrease: '{label} azalt',
     dragHandle: 'Sürükleme tutamacı',
+    increase: '{label} arttır',
     loading: 'Yükleniyor',
     loadingMore: 'Daha fazlası yükleniyor',
     noResults: 'Sonuç yok',
+    remove: 'Kaldır',
     results: {
       one: '{count} seçenek kullanılabilir.',
       other: '{count} seçenekler kullanılabilir.',
@@ -763,10 +1161,23 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       todayDateSelected: 'Сьогодні, вибрано {date}',
       year: 'рік',
     },
+    characterLimit: {
+      few: 'Не більше {count} символів',
+      many: 'Не більше {count} символів',
+      one: 'Не більше {count} символу',
+      other: 'Не більше {count} символу',
+    },
+    clearSearch: 'Очистити пошук',
+    close: 'Закрити',
+    copied: 'Скопійовано',
+    copy: 'Копіювати',
+    decrease: 'Зменшити {label}',
     dragHandle: 'Маркер переміщення',
+    increase: 'Збільшити {label}',
     loading: 'Завантаження',
     loadingMore: 'Завантаження ще',
     noResults: 'Немає результатів',
+    remove: 'Вилучити',
     results: {
       one: '{count} параметр доступно.',
       other: '{count} параметри(-ів) доступно.',
@@ -785,10 +1196,20 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       todayDateSelected: '已选择今天，即 {date}',
       year: '年',
     },
+    characterLimit: {
+      other: '最多 {count} 个字符',
+    },
+    clearSearch: '清除搜索',
+    close: '关闭',
+    copied: '已复制',
+    copy: '复制',
+    decrease: '降低 {label}',
     dragHandle: '拖动手柄',
+    increase: '提高 {label}',
     loading: '正在加载',
     loadingMore: '正在加载更多',
     noResults: '没有结果',
+    remove: '删除',
     results: {
       one: '有 {count} 个选项可用。',
       other: '有 {count} 个选项可用。',
@@ -807,10 +1228,20 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       todayDateSelected: '已選取今天，{date}',
       year: '年',
     },
+    characterLimit: {
+      other: '最多 {count} 個字元',
+    },
+    clearSearch: '清除搜尋條件',
+    close: '關閉',
+    copied: '已複製',
+    copy: '複製',
+    decrease: '縮小 {label}',
     dragHandle: '拖曳控點',
+    increase: '放大 {label}',
     loading: '正在載入',
     loadingMore: '正在載入更多',
     noResults: '沒有結果',
+    remove: '移除',
     results: {
       one: '{count} 選項 可用。',
       other: '{count} 選項 可用。',
@@ -820,4 +1251,4 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
 }
 
 export { MESSAGES }
-export type { LibraryMessages }
+export type { LibraryMessages, PluralForms }

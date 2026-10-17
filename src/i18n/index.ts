@@ -1,5 +1,6 @@
 import type { LibraryMessages } from './messages'
 
+import { formatCount } from '../number/count'
 import { localeOf } from '../number/locale'
 import { MESSAGES } from './messages'
 
@@ -16,6 +17,19 @@ const TABLE = new Map(Object.entries(MESSAGES))
 // One set per locale an app renders in, looked up the first time a component
 // asks for it.
 const cache = new Map<string, LibraryMessages>()
+
+/**
+ * A field's character limit in words, in `locale` or the device's, for a
+ * screen reader: the limit in the locale's digits, in the plural form its
+ * rules give it.
+ */
+function limitFor(count: number, locale?: string): string {
+  const resolved = localeOf(locale)
+  const forms = messagesFor(resolved).characterLimit
+  const form = forms[pluralOf(resolved, count)] ?? forms.other
+
+  return form.replace('{count}', formatCount(count, resolved))
+}
 
 // A device's locale can carry a Unicode extension, `pt-PT-u-nu-latn`, which
 // says how numbers are written rather than which words; it is set aside, or
@@ -78,5 +92,5 @@ function resultsFor(count: number, locale?: string): string {
   return form.replace('{count}', new Intl.NumberFormat(resolved).format(count))
 }
 
-export { messagesFor, resultsFor }
+export { limitFor, messagesFor, resultsFor }
 export type { LibraryMessages }
