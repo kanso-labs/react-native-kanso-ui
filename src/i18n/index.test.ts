@@ -2,6 +2,7 @@ import { describe, expect, it } from '@jest/globals'
 
 import { messagesFor, resultsFor } from '.'
 import { localeOf } from '../number/locale'
+import { MESSAGES } from './messages'
 
 describe('the library’s words', () => {
   it.each([
@@ -35,6 +36,17 @@ describe('the library’s words', () => {
   it('reads the device’s locale when given none', () => {
     expect(messagesFor()).toBe(messagesFor(localeOf(undefined)))
   })
+
+  // A calendar puts the date in full where each of these says, so one that
+  // lost its placeholder would name every date the same.
+  it.each(Object.entries(MESSAGES))(
+    'leaves room for the date in each calendar phrase in %s',
+    (_locale, { calendar }) => {
+      expect(calendar.dateSelected).toContain('{date}')
+      expect(calendar.todayDate).toContain('{date}')
+      expect(calendar.todayDateSelected).toContain('{date}')
+    },
+  )
 })
 
 describe('how many rows a search leaves', () => {

@@ -16,6 +16,8 @@ export type {
   ButtonSize,
   ButtonVariant,
 } from './components/button'
+export { Calendar } from './components/calendar'
+export type { CalendarProps } from './components/calendar'
 export { Card } from './components/card'
 export type { CardProps, CardVariant } from './components/card'
 export { Checkbox } from './components/checkbox'

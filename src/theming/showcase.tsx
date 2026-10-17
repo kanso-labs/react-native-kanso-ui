@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import type { ColorValue, ViewStyle } from 'react-native'
 
+import { CalendarDate } from '@internationalized/date'
 import { StyleSheet, View } from 'react-native'
 
 import type { DemoThemeName } from './themes'
@@ -9,6 +10,7 @@ import { AppBar } from '../components/app-bar'
 import { Autocomplete } from '../components/autocomplete'
 import { Avatar } from '../components/avatar'
 import { Button } from '../components/button'
+import { Calendar } from '../components/calendar'
 import { Card } from '../components/card'
 import { Checkbox } from '../components/checkbox'
 import { Chip } from '../components/chip'
@@ -79,6 +81,10 @@ const AVATAR_TONES = [
   'positive',
   'negative',
 ] as const
+
+// The calendar's month, fixed so every scheme's page reads the same whenever
+// it is opened, and before today, so no outline moves into it.
+const CALENDAR_DATE = new CalendarDate(2026, 9, 15)
 
 const CARD_VARIANTS = ['elevated', 'filled', 'outlined'] as const
 
@@ -360,6 +366,17 @@ function Showcase({ name }: ShowcaseProps) {
           <Button isDisabled>Label</Button>
           <Button isPending>Label</Button>
         </View>
+      </Section>
+
+      <Section
+        description="The dates and the weekday row take body large from the type scale and the month in the header label large, and the chosen day sits on the primary role."
+        title="Calendar"
+      >
+        <Calendar
+          aria-label="Label"
+          defaultValue={CALENDAR_DATE}
+          locale="en-US"
+        />
       </Section>
 
       <Section
