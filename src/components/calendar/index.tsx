@@ -11,7 +11,7 @@ import { useCalendarState } from 'react-stately/useCalendarState'
 
 import { CalendarFrame, visibleMonthOf } from '../../calendar'
 import { stylesOf } from '../../calendar/styles'
-import { localeOf } from '../../number/locale'
+import { useLocaleOf } from '../../i18n/provider'
 import { useTheme } from '../../theme/scope'
 import { composeStyles } from '../../theme/styles'
 
@@ -70,9 +70,10 @@ import { composeStyles } from '../../theme/styles'
 // new month comes from, Material Design's shared axis transition, and change
 // at once under reduced motion.
 //
-// **The locale is a prop**, defaulting to the device's, where web reads it
-// from React Aria's `I18nProvider`. The words the calendar writes, its
-// chevrons' names and its dates', are React Aria's in that locale.
+// **The locale is the `I18nProvider`'s**, as web reads it from React Aria's,
+// unless the `locale` prop names another, and the device's under neither. The
+// words the calendar writes, its chevrons' names and its dates', are React
+// Aria's in that locale.
 
 type CalendarProps<T extends DateValue = DateValue> = Pick<
   StatelyCalendarProps<T>,
@@ -97,7 +98,7 @@ type CalendarProps<T extends DateValue = DateValue> = Pick<
   /**
    * The BCP 47 locale the calendar is written in: its month and weekday
    * names, its digits, its first day of the week and its calendar system.
-   * Defaults to the device's.
+   * Defaults to the `I18nProvider`'s, or the device's outside one.
    */
   readonly locale?: string
   readonly ref?: Ref<ComponentRef<typeof View>>
@@ -141,7 +142,7 @@ function Calendar<T extends DateValue = DateValue>({
   testID,
   ...props
 }: CalendarProps<T>) {
-  const writtenIn = localeOf(locale)
+  const writtenIn = useLocaleOf(locale)
   const own = stylesOf(useTheme())
   const state = useCalendarState<T>({
     ...props,

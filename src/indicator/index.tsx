@@ -15,7 +15,6 @@ import Animated, {
 
 import { Text } from '../components/text'
 import { useIconStyle } from '../glyphs/icon-style'
-import { localeOf } from '../number/locale'
 import { withOpacity } from '../theme/color'
 import { useTheme } from '../theme/scope'
 import { composeStyles } from '../theme/styles'
@@ -186,7 +185,7 @@ function readingOf({
   valueLabel,
 }: {
   readonly formatOptions: Intl.NumberFormatOptions | undefined
-  readonly locale: string | undefined
+  readonly locale: string
   readonly maxValue: number
   readonly minValue: number
   readonly value: number
@@ -197,7 +196,7 @@ function readingOf({
   const share = range === 0 ? 0 : (clamped - minValue) / range
   const text =
     valueLabel ??
-    new NumberFormatter(localeOf(locale), formatOptions).format(
+    new NumberFormatter(locale, formatOptions).format(
       formatOptions.style === 'percent' ? share : clamped,
     )
 

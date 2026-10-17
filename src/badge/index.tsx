@@ -3,6 +3,8 @@ import type { TextStyle, ViewStyle } from 'react-native'
 
 import { Text as NativeText, View } from 'react-native'
 
+import { useLocaleOf } from '../i18n/provider'
+import { formatCount } from '../number/count'
 import { useTheme } from '../theme/scope'
 import { composeStyles } from '../theme/styles'
 import { useTypeRole } from '../typography/roles'
@@ -61,8 +63,6 @@ type BadgeProps = {
   readonly max?: number
 }
 
-let countFormat: Intl.NumberFormat | undefined
-
 /**
  * A badge on the top trailing corner of the icon it wraps: the small dot, or
  * with `count` the large badge holding the number.
@@ -70,7 +70,8 @@ let countFormat: Intl.NumberFormat | undefined
 function Badge({ children, count, inFlow = false, max = 999 }: BadgeProps) {
   const own = stylesOf(useTheme())
   const role = useTypeRole('labelSmall')
-  const label = count === undefined ? undefined : countOf(count, max)
+  const locale = useLocaleOf(undefined)
+  const label = count === undefined ? undefined : countOf(count, max, locale)
 
   return (
     <View style={styles.anchor}>
@@ -97,12 +98,12 @@ function Badge({ children, count, inFlow = false, max = 999 }: BadgeProps) {
   )
 }
 
-// The count in the device's digits and grouping, as web writes it in the
-// reader's locale. One formatter, since a badge's count changes often.
-function countOf(count: number, max: number) {
-  countFormat ??= new Intl.NumberFormat()
-
-  return count > max ? `${countFormat.format(max)}+` : countFormat.format(count)
+// The count in the locale's digits and grouping, as web writes it in the
+// provider's.
+function countOf(count: number, max: number, locale: string) {
+  return count > max
+    ? `${formatCount(max, locale)}+`
+    : formatCount(count, locale)
 }
 
 export type { BadgeProps }

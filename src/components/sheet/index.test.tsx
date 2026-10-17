@@ -36,6 +36,7 @@ import type { SheetContentProps } from '.'
 
 import { Sheet } from '.'
 import { CloseGlyph } from '../../glyphs'
+import { I18nProvider } from '../../i18n/provider'
 import { scopeFor } from '../../theme/scope'
 import { Button } from '../button'
 import { IconButton } from '../icon-button'
@@ -785,6 +786,20 @@ describe('Sheet', () => {
       await layOut(TALL)
 
       expect(screen.getByRole('button', { name: 'Resize' })).toBeTruthy()
+    })
+
+    it('names the handle in the provider’s locale', async () => {
+      await render(
+        <I18nProvider locale="de-DE">
+          <Sheet.Content defaultOpen testID="panel">
+            <Sheet.Handle />
+            <Sheet.Body>Supporting text</Sheet.Body>
+          </Sheet.Content>
+        </I18nProvider>,
+      )
+      await layOut(TALL)
+
+      expect(screen.getByRole('button', { name: 'Ziehpunkt' })).toBeTruthy()
     })
 
     it('holds the drag off a body that scrolls, once whole', async () => {

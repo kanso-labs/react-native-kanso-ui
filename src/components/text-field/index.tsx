@@ -62,7 +62,8 @@ type TextFieldProps = Omit<
   /**
    * Counts the characters the field holds at the end of the supporting line,
    * against `maxLength` where there is one, as the text fields page's
-   * character counter does. The count is written in the device's digits.
+   * character counter does. The count is written in the digits of the
+   * `I18nProvider`'s locale, or the device's outside one.
    * @default false
    */
   readonly characterCount?: boolean

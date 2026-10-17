@@ -49,7 +49,7 @@ import type { ResolvedTheme } from '../../theme/scope'
 
 import { ButtonSlotContext } from '../../button/slots'
 import { CheckGlyph, ChevronEndGlyph } from '../../glyphs'
-import { messagesFor } from '../../i18n'
+import { useMessages } from '../../i18n/provider'
 import { Overlay, useAnchoredPlacement } from '../../overlay'
 import {
   DismissLayer,
@@ -244,8 +244,8 @@ type MenuContentProps<T extends object = object> = Omit<
   readonly ref?: Ref<HostInstance>
   /**
    * What the menu shows when nothing is in it. Left out, it is a muted row
-   * saying "No results" in the device's language, so the menu keeps a row's
-   * height.
+   * saying "No results" in the `I18nProvider`'s language, or the device's
+   * outside one, so the menu keeps a row's height.
    */
   readonly renderEmptyState?: () => ReactNode
   /**
@@ -347,7 +347,8 @@ type MenuLoadMoreProps = {
   readonly isLoading?: boolean
   /**
    * What a screen reader calls the ring while it shows. Left out, it is the
-   * word for it in the device's language, "Loading more" in English.
+   * word for it in the `I18nProvider`'s language, or the device's outside
+   * one, "Loading more" in English.
    */
   readonly label?: string
   /**
@@ -680,11 +681,12 @@ function EmptyRow() {
   const theme = useTheme()
   const own = stylesOf(theme)
   const label = useTypeRole('labelLarge')
+  const messages = useMessages()
 
   return (
     <View style={rowStyleOf(theme, { variant: 'menu' })}>
       <NativeText style={composeStyles<TextStyle>(label, own.empty)}>
-        {messagesFor().noResults}
+        {messages.noResults}
       </NativeText>
     </View>
   )
@@ -750,6 +752,7 @@ function LoaderRow({
     style,
     testID,
   } = props
+  const messages = useMessages()
   const top = useRef<null | number>(null)
   const loadedAt = useRef<null | number>(null)
   // The latest props, for a check the viewport runs between renders.
@@ -807,7 +810,7 @@ function LoaderRow({
       testID={testID}
     >
       <ProgressIndicator
-        aria-label={label ?? messagesFor().loadingMore}
+        aria-label={label ?? messages.loadingMore}
         diameter={LOADING_DIAMETER}
         isIndeterminate
         variant="circular"

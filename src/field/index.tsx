@@ -40,6 +40,8 @@ import type { ResolvedTheme } from '../theme/scope'
 
 import { useInsideForm } from '../form'
 import { IconStyleContext } from '../glyphs/icon-style'
+import { useLocaleOf } from '../i18n/provider'
+import { formatCount } from '../number/count'
 import { usePressFeedback } from '../press'
 import { withOpacity } from '../theme/color'
 import { useTheme } from '../theme/scope'
@@ -274,8 +276,6 @@ const OUTSIDE_BOX: BoxControl = {
 const BoxContext = createContext<BoxControl>(OUTSIDE_BOX)
 
 const NO_PARTS: readonly FieldDescriptionPart[] = []
-
-let counterFormat: Intl.NumberFormat | undefined
 
 /**
  * How a field's control is described by the line under it: the error while
@@ -626,6 +626,7 @@ function FieldMessage({
   const ids = idsOf(id)
   const invalid = error !== undefined
   const limit = limitOf(maxLength, characterLimitLabel)
+  const locale = useLocaleOf(undefined)
   const insideForm = useInsideForm()
   const collapsed =
     !invalid && description === undefined && !characterCount && !insideForm
@@ -678,7 +679,7 @@ function FieldMessage({
           aria-hidden
           style={composeStyles<TextStyle>(messageStyle, styles.counter)}
         >
-          {countOf(length, maxLength)}
+          {countOf(length, maxLength, locale)}
         </NativeText>
       ) : null}
     </View>
@@ -942,14 +943,16 @@ function colorOf(color: string): TextStyle {
   return { color }
 }
 
-// The count in the device's digits and grouping, as web writes it in the
-// reader's locale. One formatter, since the count changes on every keystroke.
-function countOf(length: number, maxLength: number | undefined) {
-  counterFormat ??= new Intl.NumberFormat()
-
+// The count in the locale's digits and grouping, as web writes it in the
+// provider's.
+function countOf(
+  length: number,
+  maxLength: number | undefined,
+  locale: string,
+) {
   return maxLength === undefined
-    ? counterFormat.format(length)
-    : `${counterFormat.format(length)}/${counterFormat.format(maxLength)}`
+    ? formatCount(length, locale)
+    : `${formatCount(length, locale)}/${formatCount(maxLength, locale)}`
 }
 
 function descriptionOf(

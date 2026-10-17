@@ -3,6 +3,7 @@ import type { TextProps as NativeTextProps, TextStyle } from 'react-native'
 
 import { Text as NativeText, StyleSheet } from 'react-native'
 
+import { useLocaleOf } from '../../i18n/provider'
 import { useTheme } from '../../theme/scope'
 import { composeStyles, themedStyles } from '../../theme/styles'
 import { useFontFamily } from '../../typography/fonts'
@@ -56,8 +57,8 @@ type CurrencyProps = Omit<NativeTextProps, 'children'> & {
    */
   readonly currency?: string
   /**
-   * BCP 47 locale to format for. Defaults to the device's, which is the one
-   * the runtime formats in when it is handed none.
+   * BCP 47 locale to format for. Defaults to the `I18nProvider`'s, or the
+   * device's outside one.
    */
   readonly locale?: string
   readonly ref?: Ref<ComponentRef<typeof NativeText>>
@@ -137,7 +138,8 @@ function Currency({
   const own = stylesOf(theme)
   const family = familyStyle(useFontFamily(theme.typography.fontFamilyMono))
 
-  const amount = formatCurrency(value, { currency, locale, sign })
+  const writtenIn = useLocaleOf(locale)
+  const amount = formatCurrency(value, { currency, locale: writtenIn, sign })
 
   return (
     <NativeText

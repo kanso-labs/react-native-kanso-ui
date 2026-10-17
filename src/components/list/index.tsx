@@ -35,7 +35,8 @@ import type { ResolvedTheme } from '../../theme/scope'
 import { AutocompleteContext } from '../../autocomplete'
 import { toggleState } from '../../button'
 import { CheckboxBox } from '../../control/checkbox-box'
-import { messagesFor, resultsFor } from '../../i18n'
+import { resultsFor } from '../../i18n'
+import { useLocaleOf, useMessages } from '../../i18n/provider'
 import { hitSlop, usePressFeedback } from '../../press'
 import {
   hasContent,
@@ -176,8 +177,8 @@ type ListLoadMoreProps = {
   readonly isLoading?: boolean
   /**
    * What a screen reader calls the ring, and hears as it appears. Left out,
-   * it is the word for it in the device's language, "Loading more" in
-   * English.
+   * it is the word for it in the `I18nProvider`'s language, or the device's
+   * outside one, "Loading more" in English.
    */
   readonly label?: string
   /**
@@ -227,8 +228,8 @@ type ListProps<T extends object = object> = Omit<
   readonly ref?: Ref<FlatList>
   /**
    * What the list shows when it has no rows and nothing is loading. Left
-   * out, it is a muted row saying "No results" in the device's language, so
-   * the list keeps a row's height.
+   * out, it is a muted row saying "No results" in the `I18nProvider`'s
+   * language, or the device's outside one, so the list keeps a row's height.
    */
   readonly renderEmptyState?: () => ReactNode
   /**
@@ -246,7 +247,8 @@ type ListProps<T extends object = object> = Omit<
    * What selecting a row is called, for a screen reader: the accessibility
    * action each selectable row offers, which is what its checkbox does. The
    * row's own text is what names the row. Left out, it is the word for it in
-   * the device's language, "Select" in English.
+   * the `I18nProvider`'s language, or the device's outside one, "Select" in
+   * English.
    */
   readonly selectLabel?: string
   readonly style?: StyleProp<ViewStyle>
@@ -394,6 +396,7 @@ function List<T extends object = object>({
   // oxlint-disable-next-line typescript/no-unsafe-assignment -- a node carries the props its part was written with, which React Stately types as `any`
   const loadMore: ListLoadMoreProps | undefined = loader?.props
   const isLoading = loadMore?.isLoading ?? false
+  const messages = useMessages()
   // The list's own ground unless `style` gives it another.
   const ground =
     StyleSheet.flatten(style)?.backgroundColor ?? theme.colors.surface
@@ -403,10 +406,18 @@ function List<T extends object = object>({
       loadMore,
       onAction,
       renderEmptyState,
-      selectLabel: selectLabel ?? messagesFor().select,
+      selectLabel: selectLabel ?? messages.select,
       state,
     }),
-    [ground, loadMore, onAction, renderEmptyState, selectLabel, state],
+    [
+      ground,
+      loadMore,
+      messages,
+      onAction,
+      renderEmptyState,
+      selectLabel,
+      state,
+    ],
   )
 
   return (
@@ -526,11 +537,12 @@ function EmptyRow() {
   const theme = useTheme()
   const own = stylesOf(theme)
   const headline = useTypeRole('bodyLarge')
+  const messages = useMessages()
 
   return (
     <View style={rowStyleOf(theme, {})}>
       <NativeText style={composeStyles<TextStyle>(headline, own.empty)}>
-        {messagesFor().noResults}
+        {messages.noResults}
       </NativeText>
     </View>
   )
@@ -777,7 +789,8 @@ function ListRowNode({ node }: { readonly node: Node<unknown> }) {
 function LoaderRow() {
   const own = stylesOf(useTheme())
   const { isLoading = false, label, style, testID } = useList().loadMore ?? IDLE
-  const name = label ?? messagesFor().loadingMore
+  const messages = useMessages()
+  const name = label ?? messages.loadingMore
 
   useLoadingAnnouncement(isLoading, name)
 
@@ -847,7 +860,8 @@ function renderEntry({ item }: ListRenderItemInfo<ListEntry>) {
  */
 function ResultsStatus({ count }: { readonly count: number }) {
   const own = stylesOf(useTheme())
-  const message = resultsFor(count)
+  const locale = useLocaleOf(undefined)
+  const message = resultsFor(count, locale)
 
   useResultsAnnouncement(message)
 

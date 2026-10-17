@@ -73,7 +73,8 @@ type ButtonPending = {
   /**
    * The name of the ring shown while the button is pending, for a screen
    * reader. The content it replaces is hidden while it shows. Left out, it is
-   * the word for it in the device's locale, "Loading" in English.
+   * the word for it in the `I18nProvider`'s locale, or the device's outside
+   * one, "Loading" in English.
    */
   readonly pendingLabel?: string
 }

@@ -8,7 +8,7 @@ import type { IconStyle } from '../glyphs/icon-style'
 
 import { ProgressIndicator } from '../components/progress-indicator'
 import { IconStyleContext } from '../glyphs/icon-style'
-import { messagesFor } from '../i18n'
+import { useMessages } from '../i18n/provider'
 
 // What a pending button draws and says, shared by Button and IconButton as
 // web's ButtonBase draws it for both: the content hidden in place, the ring
@@ -102,7 +102,8 @@ function slotOf(color: ColorValue, size: number): IconStyle {
 
 /**
  * The ring's name, and the announcement a button makes as it goes pending.
- * The name is `pendingLabel`, or the word for loading in the device's locale.
+ * The name is `pendingLabel`, or the word for loading in the locale
+ * `useLocaleOf` resolves.
  *
  * On iOS and Android the change is said through VoiceOver and TalkBack, as
  * web's is said through React Aria's live announcer, since a ring appearing
@@ -113,7 +114,8 @@ function slotOf(color: ColorValue, size: number): IconStyle {
  * has no announcer, so there the ring is read when the button next is.
  */
 function usePending(isPending: boolean, pendingLabel: string | undefined) {
-  const label = pendingLabel ?? messagesFor().loading
+  const messages = useMessages()
+  const label = pendingLabel ?? messages.loading
   const was = useRef(isPending)
 
   useEffect(() => {

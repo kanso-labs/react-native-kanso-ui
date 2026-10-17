@@ -57,13 +57,14 @@ const { NumberFormat } = Intl
 
 let constructions = 0
 
-// Intl.NumberFormat as Hermes has it on both of its platforms at once: no
-// `formatToParts`, which it defines on Android and not on iOS, and no
+// Intl.NumberFormat as Hermes has it on both of its platforms at once:
+// `format` and `resolvedOptions`, which is where the device's locale is read,
+// but no `formatToParts`, which it defines on Android and not on iOS, and no
 // `signDisplay`, which iOS ignores and Android takes only `auto`, `never`,
 // `always` and `exceptZero` of. Asking for either fails here, where on a
 // device the first throws and the second can quietly print the wrong sign.
 // Every case in this file runs against it, so a Currency reaching for more
-// than `format` fails them all, while the expected strings are read off the
+// than those two fails them all, while the expected strings are read off the
 // runtime's own formatter, as web reads them.
 const HermesNumberFormat = Object.assign(
   function HermesNumberFormat(
@@ -75,7 +76,10 @@ const HermesNumberFormat = Object.assign(
       throw new RangeError('signDisplay is not supported')
     }
     const formatter = new NumberFormat(locales, options)
-    return { format: (value: number) => formatter.format(value) }
+    return {
+      format: (value: number) => formatter.format(value),
+      resolvedOptions: () => formatter.resolvedOptions(),
+    }
   },
   {
     supportedLocalesOf: (locales: string) =>

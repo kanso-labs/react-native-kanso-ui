@@ -85,8 +85,8 @@ type AvatarProps = Omit<ViewProps, 'children' | 'style'> & {
  * Reach for ProductIcon when what is drawn is not a person; the two share
  * their sizes, so either fills the same slot in a row or a card.
  *
- * The initials are taken in the device's locale. `style`, `ref` and `testID`
- * land on the disc.
+ * The initials are taken in the `I18nProvider`'s locale, or the device's
+ * outside one. `style`, `ref` and `testID` land on the disc.
  */
 function Avatar({ size = 'md', tone = 'primary', ...props }: AvatarProps) {
   return <Mark {...props} kind="person" size={size} tone={tone} />
