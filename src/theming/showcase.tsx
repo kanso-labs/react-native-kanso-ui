@@ -19,6 +19,7 @@ import { ChipGroup } from '../components/chip-group'
 import { CopyField } from '../components/copy-field'
 import { Currency } from '../components/currency'
 import { Dialog } from '../components/dialog'
+import { Feed } from '../components/feed'
 import { Form } from '../components/form'
 import { IconButton } from '../components/icon-button'
 import { Link } from '../components/link'
@@ -537,6 +538,17 @@ function Showcase({ name }: ShowcaseProps) {
             </Dialog.Content>
           </Dialog>
         </View>
+      </Section>
+
+      <Section
+        description="A grid described by its cell rather than by its columns, which is what lets it reflow with the pane it sits in. It paints nothing, so what a scheme reaches is the gap between the cells."
+        title="Feed"
+      >
+        <Feed minItemWidth={220}>
+          <Placeholder>First item</Placeholder>
+          <Placeholder>Second item</Placeholder>
+          <Placeholder>Third item</Placeholder>
+        </Feed>
       </Section>
 
       <Section
