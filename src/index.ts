@@ -61,6 +61,8 @@ export type {
   DialogProps,
   DialogTitleProps,
 } from './components/dialog'
+export { Feed } from './components/feed'
+export type { FeedProps } from './components/feed'
 export { Form } from './components/form'
 export type { FormHandle, FormProps } from './components/form'
 export { IconButton } from './components/icon-button'
