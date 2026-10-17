@@ -99,6 +99,16 @@ export type {
 } from './components/menu'
 export { Meter } from './components/meter'
 export type { MeterProps, MeterTone } from './components/meter'
+export {
+  NavigationBar,
+  NavigationBarItem,
+  NavigationTabBar,
+} from './components/navigation-bar'
+export type {
+  NavigationBarItemProps,
+  NavigationBarProps,
+  NavigationTabBarProps,
+} from './components/navigation-bar'
 export { NumberField } from './components/number-field'
 export type { NumberFieldProps } from './components/number-field'
 export {

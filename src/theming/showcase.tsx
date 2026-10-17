@@ -24,6 +24,7 @@ import { ListDetail } from '../components/list-detail'
 import { ListItem } from '../components/list-item'
 import { Menu } from '../components/menu'
 import { Meter } from '../components/meter'
+import { NavigationBar } from '../components/navigation-bar'
 import { NumberField } from '../components/number-field'
 import { Popover } from '../components/popover'
 import { ProductIcon } from '../components/product-icon'
@@ -605,6 +606,28 @@ function Showcase({ name }: ShowcaseProps) {
       >
         <Meter label="Label" value={60} />
         <Meter label="Label" tone="negative" value={94} />
+      </Section>
+
+      <Section
+        description="The current destination's pill is the secondary container a scheme sets, its label the secondary role; below 600dp each destination is vertical, and from there each is a horizontal pill."
+        title="NavigationBar"
+      >
+        <NavigationBar selectedRoute="/first">
+          <NavigationBar.Item href="/first" icon={DOT}>
+            First item
+          </NavigationBar.Item>
+          <NavigationBar.Item
+            aria-label="Second item, 3 new"
+            badge={3}
+            href="/second"
+            icon={SEARCH}
+          >
+            Second item
+          </NavigationBar.Item>
+          <NavigationBar.Item href="/third" icon={PLUS}>
+            Third item
+          </NavigationBar.Item>
+        </NavigationBar>
       </Section>
 
       <Section
