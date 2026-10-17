@@ -39,7 +39,7 @@ permissions:
 jobs:
   release-please:
     name: Propose releases
-    uses: kanso-labs/actions/.github/workflows/_release-please.yaml@v4.2.5
+    uses: kanso-labs/actions/.github/workflows/_release-please.yaml@v4.3.0
     with:
       # True only on the scheduled run, which is what batches a day of merges
       # into one release. A push proposes without merging, and so does
@@ -80,7 +80,7 @@ jobs:
       contents: read
       id-token: write
       packages: write
-    uses: kanso-labs/actions/.github/workflows/_publish-npm.yaml@v4.2.5
+    uses: kanso-labs/actions/.github/workflows/_publish-npm.yaml@v4.3.0
     # Refuses to publish unless this run checked out the commit the release
     # was tagged at, so a later run cutting the release cannot ship a later
     # commit's code under the tagged version.
