@@ -70,6 +70,8 @@ describe('the showcase', () => {
   it('names the scheme it is drawn under', async () => {
     await renderPage('dark')
 
-    expect(screen.getAllByRole('heading')[0]).toHaveTextContent('Dark')
+    // The app bar's headline comes first, as it does at the top of a screen,
+    // so the scheme's name is the heading after it.
+    expect(screen.getAllByRole('heading')[1]).toHaveTextContent('Dark')
   })
 })

@@ -5,6 +5,7 @@ import { StyleSheet, View } from 'react-native'
 
 import type { DemoThemeName } from './themes'
 
+import { AppBar } from '../components/app-bar'
 import { Autocomplete } from '../components/autocomplete'
 import { Avatar } from '../components/avatar'
 import { Button } from '../components/button'
@@ -37,7 +38,7 @@ import { Stack } from '../components/stack'
 import { Switch } from '../components/switch'
 import { Text } from '../components/text'
 import { TextField } from '../components/text-field'
-import { CloseGlyph, PlusGlyph, SearchGlyph } from '../glyphs'
+import { ArrowBackGlyph, CloseGlyph, PlusGlyph, SearchGlyph } from '../glyphs'
 import { useIconStyle } from '../glyphs/icon-style'
 import { useTheme } from '../theme/scope'
 import { themedStyles } from '../theme/styles'
@@ -103,6 +104,19 @@ const PLUS = <PlusGlyph />
 // colour and size from the slot it sits in.
 const SEARCH = <SearchGlyph />
 
+// The bar at the top of the page, its leading and trailing icon buttons
+// hoisted for the same reason.
+const BAR_LEADING = (
+  <IconButton aria-label="Back">
+    <ArrowBackGlyph />
+  </IconButton>
+)
+const BAR_TRAILING = (
+  <IconButton aria-label="Search">
+    <SearchGlyph />
+  </IconButton>
+)
+
 // Hoisted so the keys are not a new array on every render, which is what
 // react-perf's no-new-array-as-prop is after.
 const LIST_SELECTION = ['second']
@@ -145,6 +159,13 @@ const SHOWCASE_MESSAGES = new Snackbar.Queue()
 
 const stylesOf = themedStyles(({ colors, radii, spacing }) =>
   StyleSheet.create({
+    // The bar reaches the canvas's edges, past the gutter the canvas draws
+    // around the page, as it reaches the screen's in an app, and its content
+    // inset lines it up with the page beneath.
+    bar: {
+      marginHorizontal: -spacing.lg,
+      marginTop: -spacing.lg,
+    },
     intro: {
       gap: spacing.xxs,
     },
@@ -254,6 +275,16 @@ function Showcase({ name }: ShowcaseProps) {
 
   return (
     <View style={styles.page}>
+      <View style={styles.bar}>
+        <AppBar
+          headline="Headline"
+          leading={BAR_LEADING}
+          size="md"
+          subtitle="Supporting line"
+          trailing={BAR_TRAILING}
+        />
+      </View>
+
       <View style={styles.intro}>
         <Text role="heading" variant="headlineSmall">
           {label}
@@ -262,6 +293,11 @@ function Showcase({ name }: ShowcaseProps) {
           {description}
         </Text>
       </View>
+
+      <Section
+        description="The bar above is this component: a leading and a trailing icon button either side of the headline, on the surface role a scheme sets for the top of a screen. It is drawn there rather than here because it belongs at the top of the page."
+        title="AppBar"
+      />
 
       <Section
         description="A search field wired to a list, so the filtering is the component and the bar and the rows are all it draws. The card is the page's, giving the rows an edge the wrapper itself never sets."

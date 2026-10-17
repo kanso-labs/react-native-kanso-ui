@@ -94,7 +94,10 @@ same.
 
 The insets come from safe-area-context's `SafeAreaProvider`, which Expo Router
 puts around an app already; elsewhere, wrap the app in one. Without it, the
-library keeps to the window's edge.
+library keeps to the window's edge. `AppBar` and the panes of a `ListDetail` are
+the exception: each measures its own insets through safe-area-context's
+`SafeAreaView`, so it clears only the edges it actually meets, and on a device
+it needs no provider. Under React Native Web that view reads the provider too.
 
 Gesture Handler 2 and 3 both satisfy the peer. A `Switch` draws Gesture
 Handler's root view around its own track, so an app need not wrap itself in
