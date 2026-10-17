@@ -1,5 +1,7 @@
 // The package's public surface. Every component, hook and type a consumer
 // imports is exported here by name.
+export { AppBar } from './components/app-bar'
+export type { AppBarProps } from './components/app-bar'
 export { Autocomplete } from './components/autocomplete'
 export type {
   AutocompleteFilter,
@@ -182,6 +184,8 @@ export type { TextFieldProps } from './components/text-field'
 export type { FieldVariant } from './field'
 export { useIconStyle } from './glyphs/icon-style'
 export type { IconStyle } from './glyphs/icon-style'
+export { useAppBarScroll } from './hooks/useAppBarScroll'
+export type { AppBarScroll, AppBarScrollOptions } from './hooks/useAppBarScroll'
 export { useWindowSizeClass } from './hooks/useWindowSizeClass'
 export type { WindowSizeClass } from './hooks/useWindowSizeClass'
 export { RouterProvider } from './router'
