@@ -41,6 +41,7 @@ import { Separator } from '../components/separator'
 import { Sheet } from '../components/sheet'
 import { Snackbar } from '../components/snackbar'
 import { Stack } from '../components/stack'
+import { SupportingPane } from '../components/supporting-pane'
 import { Switch } from '../components/switch'
 import { Tag } from '../components/tag'
 import { Text } from '../components/text'
@@ -186,6 +187,10 @@ const LIST_DETAIL_LIST = (
     </List>
   </Card>
 )
+
+// The SupportingPane section's two panes, hoisted for the same reason.
+const SUPPORTING_PANE_MAIN = <Placeholder>Main</Placeholder>
+const SUPPORTING_PANE_SUPPORTING = <Placeholder>Supporting</Placeholder>
 
 // The queue the page's snackbar shows, which its button adds to.
 const SHOWCASE_MESSAGES = new Snackbar.Queue()
@@ -921,6 +926,16 @@ function Showcase({ name }: ShowcaseProps) {
           <Placeholder>Second item</Placeholder>
           <Placeholder>Third item</Placeholder>
         </Stack>
+      </Section>
+
+      <Section
+        description="The main pane takes what the supporting pane leaves from the expanded window size up, and the whole of the width below that. It paints nothing; the dashed outlines are the page's own."
+        title="SupportingPane"
+      >
+        <SupportingPane
+          main={SUPPORTING_PANE_MAIN}
+          supporting={SUPPORTING_PANE_SUPPORTING}
+        />
       </Section>
 
       <Section
