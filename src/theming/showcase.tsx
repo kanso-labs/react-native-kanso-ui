@@ -9,6 +9,7 @@ import type { DemoThemeName } from './themes'
 import { AppBar } from '../components/app-bar'
 import { Autocomplete } from '../components/autocomplete'
 import { Avatar } from '../components/avatar'
+import { Badge } from '../components/badge'
 import { Button } from '../components/button'
 import { Calendar } from '../components/calendar'
 import { Card } from '../components/card'
@@ -43,7 +44,13 @@ import { Switch } from '../components/switch'
 import { Tag } from '../components/tag'
 import { Text } from '../components/text'
 import { TextField } from '../components/text-field'
-import { ArrowBackGlyph, CloseGlyph, PlusGlyph, SearchGlyph } from '../glyphs'
+import {
+  ArrowBackGlyph,
+  CloseGlyph,
+  PersonGlyph,
+  PlusGlyph,
+  SearchGlyph,
+} from '../glyphs'
 import { useIconStyle } from '../glyphs/icon-style'
 import { useTheme } from '../theme/scope'
 import { themedStyles } from '../theme/styles'
@@ -99,6 +106,20 @@ const LIBRARY_DARK = {
     "The library's own dark theme: the default tokens' dark half, with nothing overridden.",
   label: 'Dark',
 }
+
+// The badges' icon buttons' icons, the library's own person glyph under the
+// small dot and under a count.
+const BADGED = (
+  <Badge>
+    <PersonGlyph />
+  </Badge>
+)
+
+const BADGED_COUNT = (
+  <Badge count={3}>
+    <PersonGlyph />
+  </Badge>
+)
 
 // The dialog's close button's icon, the library's own close glyph.
 const CLOSE = <CloseGlyph />
@@ -347,6 +368,16 @@ function Showcase({ name }: ShowcaseProps) {
           ))}
           <Avatar name="Grace Hopper" size="lg" />
           <Avatar name="" />
+        </View>
+      </Section>
+
+      <Section
+        description="The error pair, which a scheme sets like any other role, on the corner of an icon: the small dot, and the large badge holding a count. Each sits on an icon button whose name carries what the mark says."
+        title="Badge"
+      >
+        <View style={styles.row}>
+          <IconButton aria-label="Label, new">{BADGED}</IconButton>
+          <IconButton aria-label="Label, 3 new">{BADGED_COUNT}</IconButton>
         </View>
       </Section>
 
