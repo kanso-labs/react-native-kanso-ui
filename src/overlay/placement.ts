@@ -89,12 +89,22 @@ function boundsOf(
 // surface lines up along the inline axis, so `start` is the left edge, or the
 // right one in a right-to-left layout; on `left` and `right` it lines up along
 // the block axis, where `start` is the top edge in both.
+//
+// `rtl` is read for its truth rather than compared with a boolean: it comes
+// from `I18nManager.isRTL`, which React Native Web leaves undefined, and an
+// equality with undefined put every `end` at the start there.
 function edgeOf(align: OverlayAlign, inline: boolean, rtl: boolean): Edge {
   if (align === 'center') {
     return 'center'
   }
 
-  return (align === 'start') === (inline && rtl) ? 'far' : 'near'
+  const fromRight = inline && rtl
+
+  if (align === 'start') {
+    return fromRight ? 'far' : 'near'
+  }
+
+  return fromRight ? 'near' : 'far'
 }
 
 function isVertical(side: OverlaySide) {

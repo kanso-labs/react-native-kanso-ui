@@ -24,6 +24,7 @@ import { CopyField } from '../components/copy-field'
 import { Currency } from '../components/currency'
 import { Dialog } from '../components/dialog'
 import { Fab } from '../components/fab'
+import { FabMenu } from '../components/fab-menu'
 import { Feed } from '../components/feed'
 import { Form } from '../components/form'
 import { IconButton } from '../components/icon-button'
@@ -618,6 +619,22 @@ function Showcase({ name }: ShowcaseProps) {
           <Fab label="Label" tone="tertiary">
             {PLUS}
           </Fab>
+        </View>
+      </Section>
+
+      <Section
+        description="Closed, the menu is a FAB on the tone's container a scheme sets; open, its close button takes the tone and its actions the container."
+        title="FabMenu"
+      >
+        <View style={styles.row}>
+          <FabMenu aria-label="Label" icon={PLUS}>
+            <FabMenu.Item id="first">First item</FabMenu.Item>
+            <FabMenu.Item id="second">Second item</FabMenu.Item>
+          </FabMenu>
+          <FabMenu aria-label="Label" icon={PLUS} tone="tertiary">
+            <FabMenu.Item id="first">First item</FabMenu.Item>
+            <FabMenu.Item id="second">Second item</FabMenu.Item>
+          </FabMenu>
         </View>
       </Section>
 

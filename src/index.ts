@@ -72,6 +72,8 @@ export type {
 } from './components/dialog'
 export { Fab } from './components/fab'
 export type { FabProps, FabSize, FabTone, FabVariant } from './components/fab'
+export { FabMenu, FabMenuItem } from './components/fab-menu'
+export type { FabMenuItemProps, FabMenuProps } from './components/fab-menu'
 export { Feed } from './components/feed'
 export type { FeedProps } from './components/feed'
 export { Form } from './components/form'
