@@ -1,5 +1,5 @@
 import type { ComponentRef, Ref } from 'react'
-import type { TextProps as NativeTextProps } from 'react-native'
+import type { TextProps as NativeTextProps, TextStyle } from 'react-native'
 
 import { Text as NativeText, StyleSheet } from 'react-native'
 
@@ -8,6 +8,7 @@ import type { TypeRole } from '../../typography/roles'
 import { useTheme } from '../../theme/scope'
 import { composeStyles, themedStyles } from '../../theme/styles'
 import { useTypeRole } from '../../typography/roles'
+import { TextSizeContext } from '../../typography/size'
 
 // Tone is a separate axis from variant so the two compose freely: any of the
 // fifteen roles in any of these colours, the same set web's Text takes.
@@ -69,6 +70,7 @@ type TextProps = NativeTextProps & {
  * own Text.
  */
 function Text({
+  children,
   style,
   tone = 'neutral',
   variant = 'bodyMedium',
@@ -76,9 +78,21 @@ function Text({
 }: TextProps) {
   const role = useTypeRole(variant)
   const tones = stylesOf(useTheme())
+  const composed = composeStyles<TextStyle>(role, tones[tone], style)
+  // The size the text ends up at, the call site's over the role's, which a
+  // Code inside it sets a share of. Plain text holds no Code, so it goes in
+  // as it is, and a host Text's children stay the string a call site wrote.
+  const size = StyleSheet.flatten(composed)?.fontSize
+  const plain = typeof children === 'string' || typeof children === 'number'
 
   return (
-    <NativeText {...props} style={composeStyles(role, tones[tone], style)} />
+    <NativeText {...props} style={composed}>
+      {plain ? (
+        children
+      ) : (
+        <TextSizeContext value={size}>{children}</TextSizeContext>
+      )}
+    </NativeText>
   )
 }
 
