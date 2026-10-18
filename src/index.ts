@@ -52,6 +52,15 @@ export { Code } from './components/code'
 export type { CodeProps } from './components/code'
 export { ColorSwatch } from './components/color-swatch'
 export type { ColorSwatchProps } from './components/color-swatch'
+export {
+  ColorSwatchPicker,
+  ColorSwatchPickerItem,
+} from './components/color-swatch-picker'
+export type {
+  ColorSwatchPickerItemProps,
+  ColorSwatchPickerLayout,
+  ColorSwatchPickerProps,
+} from './components/color-swatch-picker'
 export { ComboBox } from './components/combo-box'
 export type {
   ComboBoxProps,
