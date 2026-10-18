@@ -66,6 +66,7 @@ import { TextArea } from '../components/text-area'
 import { TextField } from '../components/text-field'
 import { Toolbar } from '../components/toolbar'
 import { Tooltip } from '../components/tooltip'
+import { Tree } from '../components/tree'
 import {
   ArrowBackGlyph,
   CloseGlyph,
@@ -1372,6 +1373,26 @@ function Showcase({ name }: ShowcaseProps) {
             <Button variant="outlined">Hover or press and hold</Button>
           </Tooltip>
         </View>
+      </Section>
+
+      <Section
+        description="The shared row again at two depths, with a caret on the row that opens and the caret's own width of indent under it."
+        title="Tree"
+      >
+        <Card padding="none" variant="outlined">
+          <Tree
+            aria-label="Label"
+            defaultExpandedKeys={LIST_SELECTION}
+            defaultSelectedKeys={LIST_SELECTION}
+            scrollEnabled={false}
+            selectionMode="multiple"
+          >
+            <Tree.Item headline="First item" id="first" />
+            <Tree.Item headline="Second item" id="second">
+              <Tree.Item headline="Third item" id="third" />
+            </Tree.Item>
+          </Tree>
+        </Card>
       </Section>
     </View>
   )
