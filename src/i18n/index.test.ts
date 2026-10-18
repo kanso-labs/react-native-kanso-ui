@@ -1,6 +1,6 @@
 import { describe, expect, it } from '@jest/globals'
 
-import { limitFor, messagesFor, resultsFor } from '.'
+import { limitFor, messagesFor, resultsFor, slideLabelFor } from '.'
 import { localeOf } from '../number/locale'
 import { MESSAGES } from './messages'
 
@@ -163,5 +163,23 @@ describe('how many rows a search leaves', () => {
         Object.defineProperty(Intl, 'PluralRules', rules)
       }
     }
+  })
+})
+
+describe('what a carousel’s item is called', () => {
+  it.each([
+    [2, 6, 'en-US', '2 of 6'],
+    [2, 6, 'de-DE', '2 von 6'],
+    [2, 6, 'ja-JP', '2/6'],
+    [2, 6, 'zh-CN', '第 2 项，共 6 项'],
+  ])('calls item %i of %i in %s', (index, count, locale, words) => {
+    expect(slideLabelFor(index, count, locale)).toBe(words)
+  })
+
+  // Web writes both numbers in the locale's digits, so Egyptian Arabic's
+  // place reads in Arabic-Indic ones.
+  it('writes both numbers in the locale’s digits', () => {
+    expect(slideLabelFor(2, 6, 'ar-EG')).toBe('٢ من ٦')
+    expect(slideLabelFor(1200, 1500, 'en-US')).toBe('1,200 of 1,500')
   })
 })

@@ -15,6 +15,7 @@ import { Button } from '../components/button'
 import { ButtonGroup } from '../components/button-group'
 import { Calendar } from '../components/calendar'
 import { Card } from '../components/card'
+import { Carousel } from '../components/carousel'
 import { Checkbox } from '../components/checkbox'
 import { CheckboxGroup } from '../components/checkbox-group'
 import { Chip } from '../components/chip'
@@ -273,6 +274,22 @@ const LIST_DETAIL_LIST = (
 const SUPPORTING_PANE_MAIN = <Placeholder>Main</Placeholder>
 const SUPPORTING_PANE_SUPPORTING = <Placeholder>Supporting</Placeholder>
 
+// The carousel's items, each a block of a container pair standing in for an
+// image, in turn so neighbouring items read apart.
+const CAROUSEL_ITEMS = [
+  'First item',
+  'Second item',
+  'Third item',
+  'Fourth item',
+  'Fifth item',
+] as const
+
+const CAROUSEL_TONES = [
+  { label: 'onPrimaryContainer', tile: 'primaryContainer' },
+  { label: 'onSecondaryContainer', tile: 'secondaryContainer' },
+  { label: 'onTertiaryContainer', tile: 'tertiaryContainer' },
+] as const
+
 // The queue the page's snackbar shows, which its button adds to.
 const SHOWCASE_MESSAGES = new Snackbar.Queue()
 
@@ -294,6 +311,15 @@ const stylesOf = themedStyles(({ colors, radii, spacing }) =>
       paddingHorizontal: spacing.lg,
       paddingVertical: spacing.md,
     },
+    onPrimaryContainer: {
+      color: colors.onPrimaryContainer,
+    },
+    onSecondaryContainer: {
+      color: colors.onSecondaryContainer,
+    },
+    onTertiaryContainer: {
+      color: colors.onTertiaryContainer,
+    },
     page: {
       gap: spacing.xl,
       paddingBottom: spacing.xxxl,
@@ -314,6 +340,9 @@ const stylesOf = themedStyles(({ colors, radii, spacing }) =>
     plane: {
       width: 200,
     },
+    primaryContainer: {
+      backgroundColor: colors.primaryContainer,
+    },
     // The two rails side by side, as they would sit at a screen's edge.
     rails: {
       flexDirection: 'row',
@@ -325,11 +354,37 @@ const stylesOf = themedStyles(({ colors, radii, spacing }) =>
       flexWrap: 'wrap',
       gap: spacing.sm,
     },
+    secondaryContainer: {
+      backgroundColor: colors.secondaryContainer,
+    },
     section: {
       gap: spacing.lg,
     },
+    tertiaryContainer: {
+      backgroundColor: colors.tertiaryContainer,
+    },
+    // A carousel's item, at web's showcase height.
+    tile: {
+      height: 160,
+      justifyContent: 'flex-end',
+      padding: spacing.lg,
+    },
   }),
 )
+
+function CarouselTile({ index }: { readonly index: number }) {
+  const styles = stylesOf(useTheme())
+  const tone =
+    CAROUSEL_TONES[index % CAROUSEL_TONES.length] ?? CAROUSEL_TONES[0]
+
+  return (
+    <View style={StyleSheet.compose(styles.tile, styles[tone.tile])}>
+      <Text numberOfLines={1} style={styles[tone.label]} variant="titleMedium">
+        {CAROUSEL_ITEMS[index]}
+      </Text>
+    </View>
+  )
+}
 
 function Dot() {
   const { color, size } = useIconStyle()
@@ -567,6 +622,19 @@ function Showcase({ name }: ShowcaseProps) {
             </Stack>
           </Card>
         </Stack>
+      </Section>
+
+      <Section
+        description="Every item is cut to the extra-large corner, the spacing scale sets the gaps between items and the padding at either end, and previous and next are standard icon buttons on the on-surface-variant role."
+        title="Carousel"
+      >
+        <Carousel itemSize={200} label="Label">
+          {CAROUSEL_ITEMS.map((item, index) => (
+            <Carousel.Item key={item}>
+              <CarouselTile index={index} />
+            </Carousel.Item>
+          ))}
+        </Carousel>
       </Section>
 
       <Section

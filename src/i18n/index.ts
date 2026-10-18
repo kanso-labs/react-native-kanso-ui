@@ -108,5 +108,18 @@ function resultsFor(count: number, locale?: string): string {
   return form.replace('{count}', new Intl.NumberFormat(resolved).format(count))
 }
 
-export { limitFor, listFor, messagesFor, resultsFor }
+/**
+ * What a carousel's item is called, "2 of 6" in English, in `locale` or the
+ * device's: its place and how many items there are, both in the locale's
+ * digits, as web's carousel writes them.
+ */
+function slideLabelFor(index: number, count: number, locale?: string): string {
+  const resolved = localeOf(locale)
+
+  return messagesFor(resolved)
+    .slideLabel.replace('{index}', formatCount(index, resolved))
+    .replace('{count}', formatCount(count, resolved))
+}
+
+export { limitFor, listFor, messagesFor, resultsFor, slideLabelFor }
 export type { LibraryMessages }
