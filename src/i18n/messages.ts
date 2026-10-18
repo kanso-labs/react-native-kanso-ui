@@ -6,17 +6,17 @@
 // limit, CopyField's button, the names of SearchField's clear button, a
 // SearchView's back button, Snackbar's close button, a chip's remove button,
 // NumberField's steppers, what opening and closing a tree's row is called, a
-// TimePicker's two headlines and two actions, and what a ColorSwatch of a
-// fully transparent colour is called. Each one a call site might want in other
-// words stands behind a prop that names it otherwise: `pendingLabel` for the
-// ring, `aria-label` for the handle, `label` for the loading-more row,
-// `renderEmptyState` for the empty one, `selectLabel` for the selection,
-// `placeholder` for a Select's empty value, `characterLimitLabel` for the
-// limit, `copyLabel` and `copiedLabel` for CopyField, `clearLabel`,
-// `backLabel`, `closeLabel` and `removeLabel` for the four buttons,
-// `decrementLabel` and `incrementLabel` for the steppers, `selectTimeLabel`,
-// `enterTimeLabel`, `cancelLabel` and `confirmLabel` for the time picker, and
-// `colorName` for the swatch.
+// TimePicker's two headlines and two actions, what a ColorSwatch of a fully
+// transparent colour is called, and a ColorSwatchPicker's name. Each one a
+// call site might want in other words stands behind a prop that names it
+// otherwise: `pendingLabel` for the ring, `aria-label` for the handle and the
+// picker, `label` for the loading-more row, `renderEmptyState` for the empty
+// one, `selectLabel` for the selection, `placeholder` for a Select's empty
+// value, `characterLimitLabel` for the limit, `copyLabel` and `copiedLabel`
+// for CopyField, `clearLabel`, `backLabel`, `closeLabel` and `removeLabel` for
+// the four buttons, `decrementLabel` and `incrementLabel` for the steppers,
+// `selectTimeLabel`, `enterTimeLabel`, `cancelLabel` and `confirmLabel` for
+// the time picker, and `colorName` for the swatch.
 //
 // Copied from kanso-ui's src/i18n/messages.ts, one entry per locale React Aria
 // ships, and kept in step with it by hand: the web library publishes no copy of
@@ -40,11 +40,13 @@
 // `decrease`, `increase` and `remove` are React Aria's as well, from the
 // search field, toast, number field and tag dictionaries its own controls name
 // those buttons from on web, `collapse` and `expand` from its tree dictionary,
-// which names web's Tree chevron, and `transparent` from its colour
-// dictionary, which names web's ColorSwatch when its colour has no alpha left.
-// The others were drafted for kanso-ui's table rather than taken from a
-// translation service, and each one wants a native speaker's eye before it is
-// trusted; a call site can always pass its own words through the prop.
+// which names web's Tree chevron, `transparent` from its colour dictionary,
+// which names web's ColorSwatch when its colour has no alpha left, and
+// `colorSwatches` from its components dictionary, which names web's
+// ColorSwatchPicker. The others were drafted for kanso-ui's table rather than
+// taken from a translation service, and each one wants a native speaker's eye
+// before it is trusted; a call site can always pass its own words through the
+// prop.
 
 type LibraryMessages = {
   /** What a SearchView's back button is called. */
@@ -103,6 +105,8 @@ type LibraryMessages = {
   readonly close: string
   /** What closing a tree's open row is called, for a screen reader. */
   readonly collapse: string
+  /** What a ColorSwatchPicker is called, unless it is named otherwise. */
+  readonly colorSwatches: string
   /** What a TimePicker's modal calls the action that writes its time back. */
   readonly confirm: string
   /** What CopyField's button says, and announces, once it has copied. */
@@ -241,6 +245,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     clearSearch: 'مسح البحث',
     close: 'إغلاق',
     collapse: 'طي',
+    colorSwatches: 'تغييرات الألوان',
     confirm: 'موافق',
     copied: 'تم النسخ',
     copy: 'نسخ',
@@ -310,6 +315,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     clearSearch: 'Изчистване на търсене',
     close: 'Затвори',
     collapse: 'Свиване',
+    colorSwatches: 'Цветови мостри',
     confirm: 'OK',
     copied: 'Копирано',
     copy: 'Копиране',
@@ -379,6 +385,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     clearSearch: 'Vymazat hledání',
     close: 'Zavřít',
     collapse: 'Sbalit',
+    colorSwatches: 'Vzorky barev',
     confirm: 'OK',
     copied: 'Zkopírováno',
     copy: 'Kopírovat',
@@ -445,6 +452,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     clearSearch: 'Ryd søgning',
     close: 'Luk',
     collapse: 'Skjul',
+    colorSwatches: 'Farveprøver',
     confirm: 'OK',
     copied: 'Kopieret',
     copy: 'Kopiér',
@@ -513,6 +521,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     clearSearch: 'Suche zurücksetzen',
     close: 'Schließen',
     collapse: 'Reduzieren',
+    colorSwatches: 'Farbfelder',
     confirm: 'OK',
     copied: 'Kopiert',
     copy: 'Kopieren',
@@ -582,6 +591,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     clearSearch: 'Απαλοιφή αναζήτησης',
     close: 'Κλείσιμο',
     collapse: 'Σύμπτυξη',
+    colorSwatches: 'Χρωματικά δείγματα',
     confirm: 'OK',
     copied: 'Αντιγράφηκε',
     copy: 'Αντιγραφή',
@@ -649,6 +659,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     clearSearch: 'Clear search',
     close: 'Close',
     collapse: 'Collapse',
+    colorSwatches: 'Color swatches',
     confirm: 'OK',
     copied: 'Copied',
     copy: 'Copy',
@@ -718,6 +729,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     clearSearch: 'Borrar búsqueda',
     close: 'Cerrar',
     collapse: 'Contraer',
+    colorSwatches: 'Muestras de colores',
     confirm: 'Aceptar',
     copied: 'Copiado',
     copy: 'Copiar',
@@ -786,6 +798,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     clearSearch: 'Tühjenda otsing',
     close: 'Sule',
     collapse: 'Ahenda',
+    colorSwatches: 'Värvinäidised',
     confirm: 'OK',
     copied: 'Kopeeritud',
     copy: 'Kopeeri',
@@ -855,6 +868,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     clearSearch: 'Tyhjennä haku',
     close: 'Sulje',
     collapse: 'Pienennä',
+    colorSwatches: 'Värimallit',
     confirm: 'OK',
     copied: 'Kopioitu',
     copy: 'Kopioi',
@@ -924,6 +938,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     clearSearch: 'Effacer la recherche',
     close: 'Fermer',
     collapse: 'Réduire',
+    colorSwatches: 'Échantillons de couleurs',
     confirm: 'OK',
     copied: 'Copié',
     copy: 'Copier',
@@ -992,6 +1007,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     clearSearch: 'נקה חיפוש',
     close: 'סגור',
     collapse: 'כווץ',
+    colorSwatches: 'דוגמיות צבע',
     confirm: 'אישור',
     copied: 'הועתק',
     copy: 'העתק',
@@ -1062,6 +1078,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     clearSearch: 'Obriši pretragu',
     close: 'Zatvori',
     collapse: 'Sažmi',
+    colorSwatches: 'Uzorci boja',
     confirm: 'U redu',
     copied: 'Kopirano',
     copy: 'Kopiraj',
@@ -1130,6 +1147,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     clearSearch: 'Keresés törlése',
     close: 'Bezárás',
     collapse: 'Összecsukás',
+    colorSwatches: 'Színtárak',
     confirm: 'OK',
     copied: 'Másolva',
     copy: 'Másolás',
@@ -1199,6 +1217,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     clearSearch: 'Cancella ricerca',
     close: 'Chiudi',
     collapse: 'Comprimi',
+    colorSwatches: 'Campioni di colore',
     confirm: 'OK',
     copied: 'Copiato',
     copy: 'Copia',
@@ -1265,6 +1284,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     clearSearch: '検索をクリア',
     close: '閉じる',
     collapse: '折りたたむ',
+    colorSwatches: 'カラースウォッチ',
     confirm: 'OK',
     copied: 'コピーしました',
     copy: 'コピー',
@@ -1331,6 +1351,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     clearSearch: '검색 지우기',
     close: '닫기',
     collapse: '접기',
+    colorSwatches: '색상 견본',
     confirm: '확인',
     copied: '복사됨',
     copy: '복사',
@@ -1402,6 +1423,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     clearSearch: 'Išvalyti iešką',
     close: 'Uždaryti',
     collapse: 'Sutraukti',
+    colorSwatches: 'Spalvų pavyzdžiai',
     confirm: 'Gerai',
     copied: 'Nukopijuota',
     copy: 'Kopijuoti',
@@ -1472,6 +1494,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     clearSearch: 'Notīrīt meklēšanu',
     close: 'Aizvērt',
     collapse: 'Sakļaut',
+    colorSwatches: 'Krāsu paraugi',
     confirm: 'Labi',
     copied: 'Nokopēts',
     copy: 'Kopēt',
@@ -1538,6 +1561,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     clearSearch: 'Tøm søk',
     close: 'Lukk',
     collapse: 'Skjul',
+    colorSwatches: 'Fargekart',
     confirm: 'OK',
     copied: 'Kopiert',
     copy: 'Kopier',
@@ -1606,6 +1630,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     clearSearch: 'Zoekactie wissen',
     close: 'Sluiten',
     collapse: 'Samenvouwen',
+    colorSwatches: 'kleurstalen',
     confirm: 'OK',
     copied: 'Gekopieerd',
     copy: 'Kopiëren',
@@ -1675,6 +1700,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     clearSearch: 'Wyczyść zawartość wyszukiwania',
     close: 'Zamknij',
     collapse: 'Zwiń',
+    colorSwatches: 'Próbki kolorów',
     confirm: 'OK',
     copied: 'Skopiowano',
     copy: 'Kopiuj',
@@ -1744,6 +1770,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     clearSearch: 'Limpar pesquisa',
     close: 'Fechar',
     collapse: 'Recolher',
+    colorSwatches: 'Amostras de cores',
     confirm: 'OK',
     copied: 'Copiado',
     copy: 'Copiar',
@@ -1813,6 +1840,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     clearSearch: 'Limpar pesquisa',
     close: 'Fechar',
     collapse: 'Colapsar',
+    colorSwatches: 'Amostras de cores',
     confirm: 'OK',
     copied: 'Copiado',
     copy: 'Copiar',
@@ -1883,6 +1911,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     clearSearch: 'Ştergeţi căutarea',
     close: 'Închideţi',
     collapse: 'Restrângeți',
+    colorSwatches: 'Specimene de culoare',
     confirm: 'OK',
     copied: 'Copiat',
     copy: 'Copiați',
@@ -1953,6 +1982,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     clearSearch: 'Очистить поиск',
     close: 'Закрыть',
     collapse: 'Свернуть',
+    colorSwatches: 'Цветовые образцы',
     confirm: 'ОК',
     copied: 'Скопировано',
     copy: 'Копировать',
@@ -2022,6 +2052,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     clearSearch: 'Vymazať vyhľadávanie',
     close: 'Zatvoriť',
     collapse: 'Zbaliť',
+    colorSwatches: 'Vzorkovníky farieb',
     confirm: 'OK',
     copied: 'Skopírované',
     copy: 'Kopírovať',
@@ -2092,6 +2123,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     clearSearch: 'Počisti iskanje',
     close: 'Zapri',
     collapse: 'Strni',
+    colorSwatches: 'Barvne palete',
     confirm: 'V redu',
     copied: 'Kopirano',
     copy: 'Kopiraj',
@@ -2160,6 +2192,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     clearSearch: 'Obriši pretragu',
     close: 'Zatvori',
     collapse: ' Skupi',
+    colorSwatches: 'Uzorci boje',
     confirm: 'U redu',
     copied: 'Kopirano',
     copy: 'Kopiraj',
@@ -2227,6 +2260,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     clearSearch: 'Rensa sökning',
     close: 'Stäng',
     collapse: 'Dölj',
+    colorSwatches: 'Färgrutor',
     confirm: 'OK',
     copied: 'Kopierat',
     copy: 'Kopiera',
@@ -2295,6 +2329,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     clearSearch: 'Aramayı temizle',
     close: 'Kapat',
     collapse: 'Daralt',
+    colorSwatches: 'Renk örnekleri',
     confirm: 'Tamam',
     copied: 'Kopyalandı',
     copy: 'Kopyala',
@@ -2365,6 +2400,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     clearSearch: 'Очистити пошук',
     close: 'Закрити',
     collapse: 'Згорнути',
+    colorSwatches: 'Зразки кольорів',
     confirm: 'Гаразд',
     copied: 'Скопійовано',
     copy: 'Копіювати',
@@ -2431,6 +2467,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     clearSearch: '清除搜索',
     close: '关闭',
     collapse: '折叠',
+    colorSwatches: '颜色色板',
     confirm: '确定',
     copied: '已复制',
     copy: '复制',
@@ -2497,6 +2534,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     clearSearch: '清除搜尋條件',
     close: '關閉',
     collapse: '收合',
+    colorSwatches: '色票',
     confirm: '確定',
     copied: '已複製',
     copy: '複製',

@@ -21,6 +21,7 @@ import { Chip } from '../components/chip'
 import { ChipGroup } from '../components/chip-group'
 import { Code } from '../components/code'
 import { ColorSwatch } from '../components/color-swatch'
+import { ColorSwatchPicker } from '../components/color-swatch-picker'
 import { ComboBox } from '../components/combo-box'
 import { Container } from '../components/container'
 import { CopyField } from '../components/copy-field'
@@ -203,6 +204,7 @@ const BAR_TRAILING = (
 
 // A swatch's colour is its content rather than a role, so these are literal.
 const SWATCH = '#6750A4'
+const SWATCHES = ['#6750A4', '#625B71', '#7D5260', '#386A20']
 const TRANSPARENT_SWATCH = 'hsla(200, 100%, 50%, 0.4)'
 
 // Hoisted so the keys are not a new array on every render, which is what
@@ -631,6 +633,17 @@ function Showcase({ name }: ShowcaseProps) {
           <ColorSwatch color={SWATCH} />
           <ColorSwatch color={TRANSPARENT_SWATCH} />
         </View>
+      </Section>
+
+      <Section
+        description="The chosen swatch takes its ring from the primary role, which is the one part of the picker a scheme moves."
+        title="ColorSwatchPicker"
+      >
+        <ColorSwatchPicker aria-label="Label" defaultValue={SWATCH}>
+          {SWATCHES.map((color) => (
+            <ColorSwatchPicker.Item color={color} key={color} />
+          ))}
+        </ColorSwatchPicker>
       </Section>
 
       <Section

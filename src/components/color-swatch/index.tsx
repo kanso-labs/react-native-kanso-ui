@@ -2,11 +2,12 @@ import type { ComponentRef, Ref } from 'react'
 import type { StyleProp, ViewProps, ViewStyle } from 'react-native'
 import type { Color } from 'react-stately'
 
+import { use } from 'react'
 import { StyleSheet, View } from 'react-native'
-import { parseColor } from 'react-stately'
 
 import { Chequer } from '../../chequer'
 import { useLocaleOf, useMessages } from '../../i18n/provider'
+import { colorNameOf, colorOf, SwatchColorContext } from '../../swatch'
 import { useTheme } from '../../theme/scope'
 import { composeStyles, themedStyles } from '../../theme/styles'
 
@@ -59,8 +60,9 @@ const stylesOf = themedStyles(({ colors, radii }) =>
 type ColorSwatchProps = Omit<ViewProps, 'children' | 'style'> & {
   /**
    * The colour to show: a CSS colour string, or a `Color` from `parseColor`,
-   * which this package re-exports.
-   * @default '#fff0'
+   * which this package re-exports. Left out, the swatch draws the colour of
+   * the `ColorSwatchPicker.Item` it is drawn in.
+   * @default the item's colour, else '#fff0'
    */
   readonly color?: Color | string
   /**
@@ -93,7 +95,7 @@ type ColorSwatchProps = Omit<ViewProps, 'children' | 'style'> & {
  */
 function ColorSwatch({
   'aria-label': label,
-  color = '#fff0',
+  color,
   colorName,
   style,
   ...props
@@ -101,11 +103,10 @@ function ColorSwatch({
   const styles = stylesOf(useTheme())
   const locale = useLocaleOf(undefined)
   const messages = useMessages()
-  const value = typeof color === 'string' ? parseColor(color) : color
+  const itemColor = use(SwatchColorContext)
+  const value = colorOf(color ?? itemColor ?? '#fff0')
   const alpha = value.getChannelValue('alpha')
-  const name =
-    colorName ??
-    (alpha === 0 ? messages.transparent : value.getColorName(locale))
+  const name = colorName ?? colorNameOf(value, locale, messages.transparent)
 
   return (
     <View
