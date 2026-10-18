@@ -1,6 +1,13 @@
 import { describe, expect, it } from '@jest/globals'
 
-import { limitFor, messagesFor, resultsFor, slideLabelFor } from '.'
+import {
+  columnSizeFor,
+  limitFor,
+  messagesFor,
+  resultsFor,
+  slideLabelFor,
+  sortedFor,
+} from '.'
 import { localeOf } from '../number/locale'
 import { MESSAGES } from './messages'
 
@@ -69,6 +76,18 @@ describe('the library’s words', () => {
       expect(decrease).toContain('{label}')
       expect(increase).toContain('{label}')
       expect(characterLimit.other).toContain('{count}')
+    },
+  )
+
+  // A table says which column it sorted by and how wide a column is, so a
+  // phrase losing its placeholder would name every column, or every width,
+  // the same.
+  it.each(Object.entries(MESSAGES))(
+    'leaves room for the column and the width in %s',
+    (_locale, { table }) => {
+      expect(table.ascendingSort).toContain('{columnName}')
+      expect(table.descendingSort).toContain('{columnName}')
+      expect(table.columnSize).toContain('{value}')
     },
   )
 })
@@ -181,5 +200,25 @@ describe('what a carousel’s item is called', () => {
   it('writes both numbers in the locale’s digits', () => {
     expect(slideLabelFor(2, 6, 'ar-EG')).toBe('٢ من ٦')
     expect(slideLabelFor(1200, 1500, 'en-US')).toBe('1,200 of 1,500')
+  })
+})
+
+describe('what a table says of its columns', () => {
+  it.each<['ascending' | 'descending', string, string]>([
+    ['ascending', 'en-US', 'sorted by column Label in ascending order'],
+    ['descending', 'en-US', 'sorted by column Label in descending order'],
+    [
+      'ascending',
+      'de-DE',
+      'sortiert nach Spalte Label in aufsteigender Reihenfolge',
+    ],
+  ])('says it sorted %s in %s', (direction, locale, words) => {
+    expect(sortedFor(direction, 'Label', locale)).toBe(words)
+  })
+
+  it('writes a width in the locale’s digits', () => {
+    expect(columnSizeFor(120, 'en-US')).toBe('120 pixels')
+    expect(columnSizeFor(120, 'de-DE')).toBe('120 Pixel')
+    expect(columnSizeFor(120, 'ar-EG')).toBe('١٢٠ بالبكسل')
   })
 })

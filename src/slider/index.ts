@@ -238,5 +238,6 @@ export {
   percentOf,
   seatPlaceOf,
   seats,
+  SLOP_RANGE,
   useTrackGesture,
 }

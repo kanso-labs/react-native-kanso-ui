@@ -324,6 +324,26 @@ export type { SupportingPaneProps } from './components/supporting-pane'
 export { Switch } from './components/switch'
 export type { SwitchProps } from './components/switch'
 export {
+  Table,
+  TableBody,
+  TableCell,
+  TableColumn,
+  TableFooter,
+  TableHeader,
+  TableLoadMore,
+  TableRow,
+} from './components/table'
+export type {
+  TableBodyProps,
+  TableCellProps,
+  TableColumnProps,
+  TableFooterProps,
+  TableHeaderProps,
+  TableLoadMoreProps,
+  TableProps,
+  TableRowProps,
+} from './components/table'
+export {
   Tabs,
   TabsList,
   TabsPanel,

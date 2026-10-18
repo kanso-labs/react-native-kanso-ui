@@ -7,18 +7,20 @@
 // SearchView's back button, Snackbar's close button, a chip's remove button,
 // NumberField's steppers, what opening and closing a tree's row is called, a
 // TimePicker's two headlines and two actions, what a ColorSwatch of a fully
-// transparent colour is called, a ColorSwatchPicker's name, and what a
-// carousel calls itself, its items and its two buttons. Each one a call site
-// might want in other words stands behind a prop that names it otherwise:
-// `pendingLabel` for the ring, `aria-label` for the handle, the picker and a
-// carousel's item, `label` for the loading-more row, `renderEmptyState` for
-// the empty one, `selectLabel` for the selection, `placeholder` for a Select's
-// empty value, `characterLimitLabel` for the limit, `copyLabel` and
-// `copiedLabel` for CopyField, `clearLabel`, `backLabel`, `closeLabel` and
-// `removeLabel` for the four buttons, `decrementLabel` and `incrementLabel`
-// for the steppers, `selectTimeLabel`, `enterTimeLabel`, `cancelLabel` and
-// `confirmLabel` for the time picker, `colorName` for the swatch, and
-// `previousLabel` and `nextLabel` for the carousel.
+// transparent colour is called, a ColorSwatchPicker's name, what a carousel
+// calls itself, its items and its two buttons, and a table's sorting, resize
+// handles and select-all checkbox. Each one a call site might want in other
+// words stands behind a prop that names it otherwise: `pendingLabel` for the
+// ring, `aria-label` for the handle, the picker and a carousel's item,
+// `label` for the loading-more row, `renderEmptyState` for the empty one,
+// `selectLabel` for the selection, `placeholder` for a Select's empty value,
+// `characterLimitLabel` for the limit, `copyLabel` and `copiedLabel` for
+// CopyField, `clearLabel`, `backLabel`, `closeLabel` and `removeLabel` for the
+// four buttons, `decrementLabel` and `incrementLabel` for the steppers,
+// `selectTimeLabel`, `enterTimeLabel`, `cancelLabel` and `confirmLabel` for
+// the time picker, `colorName` for the swatch, `previousLabel` and
+// `nextLabel` for the carousel, and `resizeLabel` and `selectAllLabel` for a
+// table's handles and its select-all checkbox.
 //
 // Copied from kanso-ui's src/i18n/messages.ts, one entry per locale React Aria
 // ships, and kept in step with it by hand: the web library publishes no copy of
@@ -43,12 +45,14 @@
 // search field, toast, number field and tag dictionaries its own controls name
 // those buttons from on web, `collapse` and `expand` from its tree dictionary,
 // which names web's Tree chevron, `transparent` from its colour dictionary,
-// which names web's ColorSwatch when its colour has no alpha left, and
+// which names web's ColorSwatch when its colour has no alpha left,
 // `colorSwatches` from its components dictionary, which names web's
-// ColorSwatchPicker. The others were drafted for kanso-ui's table rather than
-// taken from a translation service, and each one wants a native speaker's eye
-// before it is trusted; a call site can always pass its own words through the
-// prop.
+// ColorSwatchPicker, and `table` from its table dictionary, which names web's
+// Table's sorting and select-all checkbox, beside the resize handle's name,
+// which React Aria Components' own dictionary gives web's handles. The others
+// were drafted for kanso-ui's table rather than taken from a translation
+// service, and each one wants a native speaker's eye before it is trusted; a
+// call site can always pass its own words through the prop.
 
 type LibraryMessages = {
   /** What a SearchView's back button is called. */
@@ -223,6 +227,31 @@ type LibraryMessages = {
   readonly slideLabel: string
   /** What a ComboBox's list is called, before the field's label. */
   readonly suggestions: string
+  /**
+   * The words a table writes: what a column that sorts is and the two ways
+   * it sorts, what is said once a column is sorted, where `{columnName}` is
+   * the column's name, what a column's resize handle is called and the
+   * width it reads as, where `{value}` is the width, and what the checkbox
+   * selecting every row is called.
+   */
+  readonly table: {
+    /** A sorted column's direction, after its name. */
+    readonly ascending: string
+    /** What is said once the rows are sorted by a column, ascending. */
+    readonly ascendingSort: string
+    /** A column's width, as its resize handle reads it. */
+    readonly columnSize: string
+    /** A sorted column's direction, after its name. */
+    readonly descending: string
+    /** What is said once the rows are sorted by a column, descending. */
+    readonly descendingSort: string
+    /** What a column's resize handle is called, before the column's name. */
+    readonly resizer: string
+    /** What the checkbox selecting every row is called. */
+    readonly selectAll: string
+    /** What a column that sorts is, after its name. */
+    readonly sortable: string
+  }
   /** What a ColorSwatch showing a fully transparent colour is called. */
   readonly transparent: string
 }
@@ -311,6 +340,16 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     slide: 'شريحة',
     slideLabel: '{index} من {count}',
     suggestions: 'مقترحات',
+    table: {
+      ascending: 'تصاعدي',
+      ascendingSort: 'ترتيب حسب العمود {columnName} بترتيب تصاعدي',
+      columnSize: '{value} بالبكسل',
+      descending: 'تنازلي',
+      descendingSort: 'ترتيب حسب العمود {columnName} بترتيب تنازلي',
+      resizer: 'أداة تغيير الحجم',
+      selectAll: 'تحديد الكل',
+      sortable: 'عمود قابل للترتيب',
+    },
     transparent: 'شفاف',
   },
   'bg-BG': {
@@ -386,6 +425,16 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     slide: 'слайд',
     slideLabel: '{index} от {count}',
     suggestions: 'Предложения',
+    table: {
+      ascending: 'възходящ',
+      ascendingSort: 'сортирано по колона {columnName} във възходящ ред',
+      columnSize: '{value} пиксела',
+      descending: 'низходящ',
+      descendingSort: 'сортирано по колона {columnName} в низходящ ред',
+      resizer: 'Преоразмерител',
+      selectAll: 'Изберете всичко',
+      sortable: 'сортираща колона',
+    },
     transparent: 'прозрачен',
   },
   'cs-CZ': {
@@ -461,6 +510,16 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     slide: 'snímek',
     slideLabel: '{index} z {count}',
     suggestions: 'Návrhy',
+    table: {
+      ascending: 'vzestupně',
+      ascendingSort: 'řazeno vzestupně podle sloupce {columnName}',
+      columnSize: '{value} pixelů',
+      descending: 'sestupně',
+      descendingSort: 'řazeno sestupně podle sloupce {columnName}',
+      resizer: 'Změna velikosti',
+      selectAll: 'Vybrat vše',
+      sortable: 'sloupec s možností řazení',
+    },
     transparent: 'průhledný',
   },
   'da-DK': {
@@ -533,6 +592,18 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     slide: 'dias',
     slideLabel: '{index} af {count}',
     suggestions: 'Forslag',
+    table: {
+      ascending: 'stigende',
+      ascendingSort:
+        'sorteret efter kolonne {columnName} i stigende rækkefølge',
+      columnSize: '{value} pixels',
+      descending: 'faldende',
+      descendingSort:
+        'sorteret efter kolonne {columnName} i faldende rækkefølge',
+      resizer: 'Størrelsesændring',
+      selectAll: 'Vælg alle',
+      sortable: 'sorterbar kolonne',
+    },
     transparent: 'gennemsigtig',
   },
   'de-DE': {
@@ -607,6 +678,18 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     slide: 'Folie',
     slideLabel: '{index} von {count}',
     suggestions: 'Empfehlungen',
+    table: {
+      ascending: 'aufsteigend',
+      ascendingSort:
+        'sortiert nach Spalte {columnName} in aufsteigender Reihenfolge',
+      columnSize: '{value} Pixel',
+      descending: 'absteigend',
+      descendingSort:
+        'sortiert nach Spalte {columnName} in absteigender Reihenfolge',
+      resizer: 'Größenanpassung',
+      selectAll: 'Alles auswählen',
+      sortable: 'sortierbare Spalte',
+    },
     transparent: 'transparent',
   },
   'el-GR': {
@@ -682,6 +765,16 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     slide: 'διαφάνεια',
     slideLabel: '{index} από {count}',
     suggestions: 'Προτάσεις',
+    table: {
+      ascending: 'αύξουσα',
+      ascendingSort: 'διαλογή ανά στήλη {columnName} σε αύξουσα σειρά',
+      columnSize: '{value} pixel',
+      descending: 'φθίνουσα',
+      descendingSort: 'διαλογή ανά στήλη {columnName} σε φθίνουσα σειρά',
+      resizer: 'Αλλαγή μεγέθους',
+      selectAll: 'Επιλογή όλων',
+      sortable: 'Στήλη διαλογής',
+    },
     transparent: 'διαφανές',
   },
   'en-US': {
@@ -755,6 +848,16 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     slide: 'slide',
     slideLabel: '{index} of {count}',
     suggestions: 'Suggestions',
+    table: {
+      ascending: 'ascending',
+      ascendingSort: 'sorted by column {columnName} in ascending order',
+      columnSize: '{value} pixels',
+      descending: 'descending',
+      descendingSort: 'sorted by column {columnName} in descending order',
+      resizer: 'Resizer',
+      selectAll: 'Select All',
+      sortable: 'sortable column',
+    },
     transparent: 'transparent',
   },
   'es-ES': {
@@ -830,6 +933,16 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     slide: 'diapositiva',
     slideLabel: '{index} de {count}',
     suggestions: 'Sugerencias',
+    table: {
+      ascending: 'ascendente',
+      ascendingSort: 'ordenado por columna {columnName} en sentido ascendente',
+      columnSize: '{value} píxeles',
+      descending: 'descendente',
+      descendingSort: 'ordenado por columna {columnName} en orden descendente',
+      resizer: 'Cambiador de tamaño',
+      selectAll: 'Seleccionar todos',
+      sortable: 'columna ordenable',
+    },
     transparent: 'transparente',
   },
   'et-EE': {
@@ -904,6 +1017,16 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     slide: 'slaid',
     slideLabel: '{index}/{count}',
     suggestions: 'Soovitused',
+    table: {
+      ascending: 'tõusev järjestus',
+      ascendingSort: 'sorditud veeru järgi {columnName} tõusvas järjestuses',
+      columnSize: '{value} pikslit',
+      descending: 'laskuv järjestus',
+      descendingSort: 'sorditud veeru järgi {columnName} laskuvas järjestuses',
+      resizer: 'Suuruse muutja',
+      selectAll: 'Vali kõik',
+      sortable: 'sorditav veerg',
+    },
     transparent: 'läbipaistev',
   },
   'fi-FI': {
@@ -979,6 +1102,18 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     slide: 'dia',
     slideLabel: '{index}/{count}',
     suggestions: 'Ehdotukset',
+    table: {
+      ascending: 'nouseva',
+      ascendingSort:
+        'lajiteltu sarakkeen {columnName} mukaan nousevassa järjestyksessä',
+      columnSize: '{value} pikseliä',
+      descending: 'laskeva',
+      descendingSort:
+        'lajiteltu sarakkeen {columnName} mukaan laskevassa järjestyksessä',
+      resizer: 'Koon muuttaja',
+      selectAll: 'Valitse kaikki',
+      sortable: 'lajiteltava sarake',
+    },
     transparent: 'läpinäkyvä',
   },
   'fr-FR': {
@@ -1054,6 +1189,18 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     slide: 'diapositive',
     slideLabel: '{index} sur {count}',
     suggestions: 'Suggestions',
+    table: {
+      ascending: 'croissant',
+      ascendingSort:
+        'trié en fonction de la colonne {columnName} par ordre croissant',
+      columnSize: '{value} pixels',
+      descending: 'décroissant',
+      descendingSort:
+        'trié en fonction de la colonne {columnName} par ordre décroissant',
+      resizer: 'Redimensionneur',
+      selectAll: 'Sélectionner tout',
+      sortable: 'colonne triable',
+    },
     transparent: 'Transparent',
   },
   'he-IL': {
@@ -1128,6 +1275,16 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     slide: 'שקופית',
     slideLabel: '{index} מתוך {count}',
     suggestions: 'הצעות',
+    table: {
+      ascending: 'עולה',
+      ascendingSort: 'מוין לפי עמודה {columnName} בסדר עולה',
+      columnSize: '{value} פיקסלים',
+      descending: 'יורד',
+      descendingSort: 'מוין לפי עמודה {columnName} בסדר יורד',
+      resizer: 'שינוי גודל',
+      selectAll: 'בחר הכול',
+      sortable: 'עמודה שניתן למיין',
+    },
     transparent: 'שקוף',
   },
   'hr-HR': {
@@ -1204,6 +1361,18 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     slide: 'slajd',
     slideLabel: '{index} od {count}',
     suggestions: 'Prijedlozi',
+    table: {
+      ascending: 'rastući',
+      ascendingSort:
+        'razvrstano po stupcima {columnName} rastućem redoslijedom',
+      columnSize: '{value} piksela',
+      descending: 'padajući',
+      descendingSort:
+        'razvrstano po stupcima {columnName} padajućim redoslijedom',
+      resizer: 'Promjena veličine',
+      selectAll: 'Odaberite sve',
+      sortable: 'stupac koji se može razvrstati',
+    },
     transparent: 'transparentno',
   },
   'hu-HU': {
@@ -1278,6 +1447,18 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     slide: 'dia',
     slideLabel: '{index}/{count}',
     suggestions: 'Javaslatok',
+    table: {
+      ascending: 'növekvő',
+      ascendingSort:
+        'rendezve a(z) {columnName} oszlop szerint, növekvő sorrendben',
+      columnSize: '{value} képpont',
+      descending: 'csökkenő',
+      descendingSort:
+        'rendezve a(z) {columnName} oszlop szerint, csökkenő sorrendben',
+      resizer: 'Átméretező',
+      selectAll: 'Összes kijelölése',
+      sortable: 'rendezendő oszlop',
+    },
     transparent: 'átlátszó',
   },
   'it-IT': {
@@ -1353,6 +1534,16 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     slide: 'diapositiva',
     slideLabel: '{index} di {count}',
     suggestions: 'Suggerimenti',
+    table: {
+      ascending: 'crescente',
+      ascendingSort: 'in ordine crescente in base alla colonna {columnName}',
+      columnSize: '{value} pixel',
+      descending: 'decrescente',
+      descendingSort: 'in ordine decrescente in base alla colonna {columnName}',
+      resizer: 'Ridimensionamento',
+      selectAll: 'Seleziona tutto',
+      sortable: 'colonna ordinabile',
+    },
     transparent: 'trasparente',
   },
   'ja-JP': {
@@ -1425,6 +1616,16 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     slide: 'スライド',
     slideLabel: '{index}/{count}',
     suggestions: '候補',
+    table: {
+      ascending: '昇順',
+      ascendingSort: '列 {columnName} を昇順で並べ替え',
+      columnSize: '{value} ピクセル',
+      descending: '降順',
+      descendingSort: '列 {columnName} を降順で並べ替え',
+      resizer: 'サイズ変更ツール',
+      selectAll: 'すべて選択',
+      sortable: '並べ替え可能な列',
+    },
     transparent: '透明',
   },
   'ko-KR': {
@@ -1497,6 +1698,16 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     slide: '슬라이드',
     slideLabel: '{index}/{count}',
     suggestions: '제안',
+    table: {
+      ascending: '오름차순',
+      ascendingSort: '{columnName} 열을 기준으로 오름차순으로 정렬됨',
+      columnSize: '{value} 픽셀',
+      descending: '내림차순',
+      descendingSort: '{columnName} 열을 기준으로 내림차순으로 정렬됨',
+      resizer: '크기 조정기',
+      selectAll: '모두 선택',
+      sortable: '정렬 가능한 열',
+    },
     transparent: '투명도',
   },
   'lt-LT': {
@@ -1574,6 +1785,17 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     slide: 'skaidrė',
     slideLabel: '{index} iš {count}',
     suggestions: 'Pasiūlymai',
+    table: {
+      ascending: 'didėjančia tvarka',
+      ascendingSort: 'surikiuota pagal stulpelį {columnName} didėjančia tvarka',
+      columnSize: '{value} piks.',
+      descending: 'mažėjančia tvarka',
+      descendingSort:
+        'surikiuota pagal stulpelį {columnName} mažėjančia tvarka',
+      resizer: 'Dydžio keitiklis',
+      selectAll: 'Pasirinkti viską',
+      sortable: 'rikiuojamas stulpelis',
+    },
     transparent: 'skaidrus',
   },
   'lv-LV': {
@@ -1650,6 +1872,16 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     slide: 'slaids',
     slideLabel: '{index} no {count}',
     suggestions: 'Ieteikumi',
+    table: {
+      ascending: 'augošā secībā',
+      ascendingSort: 'kārtots pēc kolonnas {columnName} augošā secībā',
+      columnSize: '{value} pikseļi',
+      descending: 'dilstošā secībā',
+      descendingSort: 'kārtots pēc kolonnas {columnName} dilstošā secībā',
+      resizer: 'Izmēra mainītājs',
+      selectAll: 'Atlasīt visu',
+      sortable: 'kārtojamā kolonna',
+    },
     transparent: 'caurspīdīgs',
   },
   'nb-NO': {
@@ -1722,6 +1954,17 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     slide: 'lysbilde',
     slideLabel: '{index} av {count}',
     suggestions: 'Forslag',
+    table: {
+      ascending: 'stigende',
+      ascendingSort: 'sortert etter kolonne {columnName} i stigende rekkefølge',
+      columnSize: '{value} piksler',
+      descending: 'synkende',
+      descendingSort:
+        'sortert etter kolonne {columnName} i synkende rekkefølge',
+      resizer: 'Størrelsesendrer',
+      selectAll: 'Velg alle',
+      sortable: 'kolonne som kan sorteres',
+    },
     transparent: 'gjennomsiktig',
   },
   'nl-NL': {
@@ -1796,6 +2039,16 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     slide: 'dia',
     slideLabel: '{index} van {count}',
     suggestions: 'Suggesties',
+    table: {
+      ascending: 'oplopend',
+      ascendingSort: 'gesorteerd in oplopende volgorde in kolom {columnName}',
+      columnSize: '{value} pixels',
+      descending: 'aflopend',
+      descendingSort: 'gesorteerd in aflopende volgorde in kolom {columnName}',
+      resizer: 'Resizer',
+      selectAll: 'Alles selecteren',
+      sortable: 'sorteerbare kolom',
+    },
     transparent: 'transparant',
   },
   'pl-PL': {
@@ -1871,6 +2124,18 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     slide: 'slajd',
     slideLabel: '{index} z {count}',
     suggestions: 'Sugestie',
+    table: {
+      ascending: 'rosnąco',
+      ascendingSort:
+        'posortowano według kolumny {columnName} w porządku rosnącym',
+      columnSize: 'Liczba pikseli: {value}',
+      descending: 'malejąco',
+      descendingSort:
+        'posortowano według kolumny {columnName} w porządku malejącym',
+      resizer: 'Zmiana rozmiaru',
+      selectAll: 'Zaznacz wszystko',
+      sortable: 'kolumna z możliwością sortowania',
+    },
     transparent: 'przezroczysty',
   },
   'pt-BR': {
@@ -1946,6 +2211,17 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     slide: 'slide',
     slideLabel: '{index} de {count}',
     suggestions: 'Sugestões',
+    table: {
+      ascending: 'crescente',
+      ascendingSort: 'classificado pela coluna {columnName} em ordem crescente',
+      columnSize: '{value} pixels',
+      descending: 'decrescente',
+      descendingSort:
+        'classificado pela coluna {columnName} em ordem decrescente',
+      resizer: 'Redimensionador',
+      selectAll: 'Selecionar tudo',
+      sortable: 'coluna classificável',
+    },
     transparent: 'transparente',
   },
   'pt-PT': {
@@ -2021,6 +2297,16 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     slide: 'diapositivo',
     slideLabel: '{index} de {count}',
     suggestions: 'Sugestões',
+    table: {
+      ascending: 'ascendente',
+      ascendingSort: 'Ordenar por coluna {columnName} em ordem ascendente',
+      columnSize: '{value} pixels',
+      descending: 'descendente',
+      descendingSort: 'Ordenar por coluna {columnName} em ordem descendente',
+      resizer: 'Redimensionador',
+      selectAll: 'Selecionar tudo',
+      sortable: 'Coluna ordenável',
+    },
     transparent: 'transparente',
   },
   'ro-RO': {
@@ -2097,6 +2383,17 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     slide: 'diapozitiv',
     slideLabel: '{index} din {count}',
     suggestions: 'Sugestii',
+    table: {
+      ascending: 'crescătoare',
+      ascendingSort: 'sortate după coloana {columnName} în ordine crescătoare',
+      columnSize: '{value} pixeli',
+      descending: 'descrescătoare',
+      descendingSort:
+        'sortate după coloana {columnName} în ordine descrescătoare',
+      resizer: 'Instrument de redimensionare',
+      selectAll: 'Selectare totală',
+      sortable: 'coloană sortabilă',
+    },
     transparent: 'transparent',
   },
   'ru-RU': {
@@ -2173,6 +2470,16 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     slide: 'слайд',
     slideLabel: '{index} из {count}',
     suggestions: 'Предложения',
+    table: {
+      ascending: 'возрастание',
+      ascendingSort: 'сортировать столбец {columnName} в порядке возрастания',
+      columnSize: '{value} пикс.',
+      descending: 'убывание',
+      descendingSort: 'сортировать столбец {columnName} в порядке убывания',
+      resizer: 'Средство изменения размера',
+      selectAll: 'Выбрать все',
+      sortable: 'сортируемый столбец',
+    },
     transparent: 'прозрачный',
   },
   'sk-SK': {
@@ -2248,6 +2555,16 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     slide: 'snímka',
     slideLabel: '{index} z {count}',
     suggestions: 'Návrhy',
+    table: {
+      ascending: 'vzostupne',
+      ascendingSort: 'zoradené zostupne podľa stĺpca {columnName}',
+      columnSize: 'Počet pixelov: {value}',
+      descending: 'zostupne',
+      descendingSort: 'zoradené zostupne podľa stĺpca {columnName}',
+      resizer: 'Nástroj na zmenu veľkosti',
+      selectAll: 'Vybrať všetko',
+      sortable: 'zoraditeľný stĺpec',
+    },
     transparent: 'transparentný',
   },
   'sl-SI': {
@@ -2324,6 +2641,18 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     slide: 'diapozitiv',
     slideLabel: '{index} od {count}',
     suggestions: 'Predlogi',
+    table: {
+      ascending: 'naraščajoče',
+      ascendingSort:
+        'razvrščeno po stolpcu {columnName} v naraščajočem vrstnem redu',
+      columnSize: '{value} slikovnih pik',
+      descending: 'padajoče',
+      descendingSort:
+        'razvrščeno po stolpcu {columnName} v padajočem vrstnem redu',
+      resizer: 'Spreminjanje velikosti',
+      selectAll: 'Izberite vse',
+      sortable: 'razvrstljivi stolpec',
+    },
     transparent: 'prozorno',
   },
   'sr-SP': {
@@ -2398,6 +2727,16 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     slide: 'slajd',
     slideLabel: '{index} od {count}',
     suggestions: 'Predlozi',
+    table: {
+      ascending: 'rastući',
+      ascendingSort: 'sortirano po kolonama {columnName} rastućim redosledom',
+      columnSize: '{value} piksela',
+      descending: 'padajući',
+      descendingSort: 'sortirano po kolonama {columnName} padajućim redosledom',
+      resizer: 'Promena veličine',
+      selectAll: 'Izaberite sve',
+      sortable: 'kolona koja se može sortirati',
+    },
     transparent: 'providno',
   },
   'sv-SE': {
@@ -2471,6 +2810,16 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     slide: 'bild',
     slideLabel: '{index} av {count}',
     suggestions: 'Förslag',
+    table: {
+      ascending: 'stigande',
+      ascendingSort: 'sorterat på kolumn {columnName} i stigande ordning',
+      columnSize: '{value} pixlar',
+      descending: 'fallande',
+      descendingSort: 'sorterat på kolumn {columnName} i fallande ordning',
+      resizer: 'Storleksändrare',
+      selectAll: 'Markera allt',
+      sortable: 'sorterbar kolumn',
+    },
     transparent: 'genomskinlig',
   },
   'tr-TR': {
@@ -2545,6 +2894,16 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     slide: 'slayt',
     slideLabel: '{index}/{count}',
     suggestions: 'Öneriler',
+    table: {
+      ascending: 'artan sırada',
+      ascendingSort: '{columnName} sütuna göre artan düzende sırala',
+      columnSize: '{value} piksel',
+      descending: 'azalan sırada',
+      descendingSort: '{columnName} sütuna göre azalan düzende sırala',
+      resizer: 'Yeniden boyutlandırıcı',
+      selectAll: 'Tümünü Seç',
+      sortable: 'Sıralanabilir sütun',
+    },
     transparent: 'saydam',
   },
   'uk-UA': {
@@ -2621,6 +2980,18 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     slide: 'слайд',
     slideLabel: '{index} з {count}',
     suggestions: 'Пропозиції',
+    table: {
+      ascending: 'висхідний',
+      ascendingSort:
+        'відсортовано за стовпцем {columnName} у висхідному порядку',
+      columnSize: '{value} пікс.',
+      descending: 'низхідний',
+      descendingSort:
+        'відсортовано за стовпцем {columnName} у низхідному порядку',
+      resizer: 'Засіб змінення розміру',
+      selectAll: 'Вибрати все',
+      sortable: 'сортувальний стовпець',
+    },
     transparent: 'прозорий',
   },
   'zh-CN': {
@@ -2693,6 +3064,16 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     slide: '幻灯片',
     slideLabel: '第 {index} 项，共 {count} 项',
     suggestions: '建议',
+    table: {
+      ascending: '升序',
+      ascendingSort: '按列 {columnName} 升序排序',
+      columnSize: '{value} 像素',
+      descending: '降序',
+      descendingSort: '按列 {columnName} 降序排序',
+      resizer: '尺寸调整器',
+      selectAll: '全选',
+      sortable: '可排序的列',
+    },
     transparent: '透明',
   },
   'zh-TW': {
@@ -2765,6 +3146,16 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     slide: '投影片',
     slideLabel: '第 {index} 項，共 {count} 項',
     suggestions: '建議',
+    table: {
+      ascending: '遞增',
+      ascendingSort: '已依據「{columnName}」欄遞增排序',
+      columnSize: '{value} 像素',
+      descending: '遞減',
+      descendingSort: '已依據「{columnName}」欄遞減排序',
+      resizer: '大小調整器',
+      selectAll: '全選',
+      sortable: '可排序的欄',
+    },
     transparent: '透明',
   },
 }
