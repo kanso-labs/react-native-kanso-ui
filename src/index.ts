@@ -50,6 +50,8 @@ export type {
 } from './components/chip-group'
 export { Code } from './components/code'
 export type { CodeProps } from './components/code'
+export { ColorArea } from './components/color-area'
+export type { ColorAreaProps } from './components/color-area'
 export { ColorSlider } from './components/color-slider'
 export type { ColorSliderProps } from './components/color-slider'
 export { ColorSwatch } from './components/color-swatch'
