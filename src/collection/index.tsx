@@ -99,9 +99,9 @@ import { useTypeRole } from '../typography/roles'
 // column of cells, so a section is its header and then its rows, and the
 // header is a heading to a screen reader rather than the name of a group.
 // An open row of a tree is followed by the rows under it, each indented a
-// chevron's width further, so a large tree draws only what is in view. A List's headers stay at the
-// top while their rows scroll under them. A ListBox's scroll with the rows,
-// since it has no ground to cover them with.
+// chevron's width further, so a large tree draws only what is in view. A
+// List's headers stay at the top while their rows scroll under them. A
+// ListBox's scroll with the rows, since it has no ground to cover them with.
 //
 // **A List is drawn on surface,** the lists page's container colour, which
 // web leaves to the page. A sticky header needs a ground to cover the rows
