@@ -80,20 +80,36 @@ import { segmentStylesOf } from './styles'
 type DateSegmentsProps = {
   /** What describes the field after the value it holds: the line under it. */
   readonly described: readonly FieldDescriptionPart[]
+  /**
+   * What the segments are read as holding, after their own names: the date
+   * or the time written out, unless a range picker around them reads its
+   * whole range here instead. `''` reads nothing.
+   */
+  readonly holding?: string
   /** Whether the field shows an error, which every segment then says. */
   readonly isInvalid: boolean
   /** The field's label, which each segment's name ends in. */
   readonly label: string
   /** The locale the field writes in: its `useLocaleOf`. */
   readonly locale: string
+  /**
+   * Called where focus would move back from the first segment, as a
+   * backspace on it does, which a range picker sends on to the start's last.
+   */
+  readonly onBeforeStart?: () => void
   /** Called as focus leaves the segments, once they fill in what they can. */
   readonly onBlur?: () => void
   /** Called after each edit a person makes, typed or stepped. */
   readonly onEdit?: () => void
   /** Called as focus arrives in the segments from outside them. */
   readonly onFocus?: () => void
-  /** What focuses the segments: the one in focus already, or the first. */
-  readonly ref?: Ref<Focusable>
+  /**
+   * Called where focus would move on from the last segment, as a full one
+   * does, which a range picker sends on to the end's first.
+   */
+  readonly onPastEnd?: () => void
+  /** What focuses the segments: the first, or the last. */
+  readonly ref?: Ref<SegmentsHandle>
   readonly state: DateFieldState
 }
 
@@ -122,6 +138,14 @@ type SegmentLineProps = Omit<DateSegmentsProps, 'ref'> & {
   readonly inside: RefObject<boolean>
   readonly nodes: RefObject<Map<DateSegmentType, HostInstance>>
   readonly setActive: Dispatch<SetStateAction<DateSegmentType | null>>
+}
+
+/**
+ * What focuses a field's segments: `focus` the first, unless focus is among
+ * them already, and `focusLast` the last.
+ */
+type SegmentsHandle = Focusable & {
+  readonly focusLast: () => void
 }
 
 // A step a spin button takes, each one a method of the field's state.
@@ -264,6 +288,12 @@ function DateSegments({ ref, ...props }: DateSegmentsProps) {
       const first = state.segments.find((segment) => segment.isEditable)
       if (!inside.current && first !== undefined) {
         focusTo({ entered, input, nodes, setActive, state }, first.type)
+      }
+    },
+    focusLast: () => {
+      const last = state.segments.findLast((segment) => segment.isEditable)
+      if (last !== undefined) {
+        focusTo({ entered, input, nodes, setActive, state }, last.type)
       }
     },
   }))
@@ -452,21 +482,25 @@ function leftOf({
 }
 
 // The segments on either side of the one of `type`, among those a person
-// types into, which a full segment moves on to and a backspace back to.
+// types into, which a full segment moves on to and a backspace back to. Past
+// either end it is the field's to say, as a range picker's focus moves on
+// from one date's segments to the other's.
 function movesFrom(line: SegmentLineProps, type: DateSegmentType): Moves {
   const editable = line.state.segments.filter((segment) => segment.isEditable)
   const at = editable.findIndex((segment) => segment.type === type)
-  const to = (index: number) => () => {
+  const to = (index: number, beyond?: () => void) => () => {
     const segment = index < 0 ? undefined : editable.at(index)
-    if (segment !== undefined) {
+    if (segment === undefined) {
+      beyond?.()
+    } else {
       focusTo(line, segment.type)
     }
   }
 
   return {
     away: to(at > 0 ? at - 1 : at + 1),
-    next: to(at + 1),
-    previous: to(at - 1),
+    next: to(at + 1, line.onPastEnd),
+    previous: to(at - 1, line.onBeforeStart),
   }
 }
 
@@ -520,7 +554,7 @@ function SegmentLine(line: SegmentLineProps) {
   const role = useTypeRole('bodyLarge')
   const words = messagesFor(locale).segments
   const first = state.segments.find((segment) => segment.isEditable)
-  const value = valueOf(state, words)
+  const value = line.holding ?? valueOf(state, words)
   const valueId = `${id}-value`
   const parts =
     value === '' ? described : [{ id: valueId, text: value }, ...described]
@@ -922,4 +956,4 @@ function webStateOf(isInvalid: boolean, state: DateFieldState) {
 }
 
 export { DateSegments }
-export type { DateSegmentsProps }
+export type { DateSegmentsProps, SegmentsHandle }

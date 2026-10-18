@@ -26,6 +26,7 @@ import { CopyField } from '../components/copy-field'
 import { Currency } from '../components/currency'
 import { DateField } from '../components/date-field'
 import { DatePicker } from '../components/date-picker'
+import { DateRangePicker } from '../components/date-range-picker'
 import { Dialog } from '../components/dialog'
 import { Disclosure } from '../components/disclosure'
 import { DisclosureGroup } from '../components/disclosure-group'
@@ -122,7 +123,8 @@ const AVATAR_TONES = [
 // it is opened, and before today, so no outline moves into it.
 const CALENDAR_DATE = new CalendarDate(2026, 9, 15)
 
-// The range calendar's range, the week up to the calendar's date.
+// The range calendar's and the range picker's range, the week up to the
+// calendar's date.
 const CALENDAR_RANGE = {
   end: CALENDAR_DATE,
   start: new CalendarDate(2026, 9, 8),
@@ -669,6 +671,17 @@ function Showcase({ name }: ShowcaseProps) {
         title="DatePicker"
       >
         <DatePicker defaultValue={CALENDAR_DATE} label="Label" locale="en-US" />
+      </Section>
+
+      <Section
+        description="Two sets of segments in one box, with a range calendar on the surface the trigger opens."
+        title="DateRangePicker"
+      >
+        <DateRangePicker
+          defaultValue={CALENDAR_RANGE}
+          label="Label"
+          locale="en-US"
+        />
       </Section>
 
       <Section

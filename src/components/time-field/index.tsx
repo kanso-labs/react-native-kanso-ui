@@ -112,7 +112,9 @@ function TimeField<T extends TimeValue = TimeValue>({
   return (
     <SegmentedField
       {...props}
+      errors={state.realtimeValidation.validationErrors}
       isDisabled={isDisabled}
+      isEmpty={state.value === null}
       isReadOnly={isReadOnly}
       isRequired={isRequired}
       locale={writtenIn}

@@ -24,6 +24,11 @@ const segmentStylesOf = themedStyles(
       segmentFocused: {
         backgroundColor: colors.primary,
       },
+      // The dash between a range's two dates, with the gap web's picker
+      // keeps either side of it.
+      separator: {
+        marginHorizontal: spacing.sm,
+      },
       // A segment holding a value, and the time zone a field shows after its
       // time, which is part of the value rather than punctuation.
       text: {

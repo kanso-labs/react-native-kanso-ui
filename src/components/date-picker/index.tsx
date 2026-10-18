@@ -263,7 +263,9 @@ function DatePicker<T extends DateValue = DateValue>({
       <SegmentedField
         {...props}
         box={box}
+        errors={field.realtimeValidation.validationErrors}
         isDisabled={isDisabled}
+        isEmpty={field.value === null}
         isReadOnly={isReadOnly}
         isRequired={isRequired}
         label={label}
