@@ -1,5 +1,6 @@
 import type { ComponentRef, ReactNode, Ref, RefObject } from 'react'
 import type {
+  HostInstance,
   LayoutChangeEvent,
   StyleProp,
   TextInputProps,
@@ -119,7 +120,7 @@ type FieldBoxProps = {
    * The control the box focuses when it is pressed anywhere, as the whole
    * of a native text field's box takes a press.
    */
-  readonly control: RefObject<ComponentRef<typeof TextInput> | null>
+  readonly control?: RefObject<ComponentRef<typeof TextInput> | null>
   /**
    * What the box holds after the label and the control's column, drawn as
    * it is rather than in an icon's slot, for a part laid out against the
@@ -151,8 +152,19 @@ type FieldBoxProps = {
   readonly label: string
   /** An icon at the start of the box, before the label and the control. */
   readonly leading?: ReactNode
+  /**
+   * The box itself, which a field opening a list from it measures to place
+   * the list.
+   */
+  readonly ref?: Ref<HostInstance>
   /** An icon at the end of the box, after the control. */
   readonly trailing?: ReactNode
+  /**
+   * Makes the box itself the control, for a field holding something chosen
+   * rather than typed: a button a screen reader reads by `aria-label`, which
+   * a press anywhere on the box runs, in place of a `control` to focus.
+   */
+  readonly trigger?: FieldTriggerProps
   /** @default 'filled' */
   readonly variant?: FieldVariant
 }
@@ -254,6 +266,34 @@ type FieldStrokeProps = StrokeMotion & {
 }
 
 /**
+ * What a box that is itself the control is read and pressed as: web's
+ * `FieldTrigger`, which covers the box with one press target.
+ */
+type FieldTriggerProps = {
+  /** Whether what the box opens is open, which a screen reader reads. */
+  readonly 'aria-expanded'?: boolean
+  /** The name a screen reader reads: the label, then the value shown. */
+  readonly 'aria-label': string
+  /** What describes the box, the line under it, as a control is described. */
+  readonly described?: readonly FieldDescriptionPart[]
+  readonly onBlur?: () => void
+  readonly onFocus?: () => void
+  readonly onPress: () => void
+  readonly testID?: string
+}
+
+type FieldValueProps = {
+  /** The value, or the placeholder. */
+  readonly children?: ReactNode
+  /**
+   * Whether nothing has been chosen, so what is drawn is the placeholder,
+   * in the muted role, and under a label at rest on its line not at all.
+   * @default false
+   */
+  readonly isPlaceholder?: boolean
+}
+
+/**
  * The filled box, or the outlined one: no fill, an outline that thickens and
  * takes the primary role while focused, and the label cutting it once it
  * floats, the text fields page's two fields.
@@ -338,8 +378,9 @@ function describedBy(
 
 /**
  * The box a control sits in, filled or outlined, with its label. Pressed
- * anywhere, it focuses its control. The states it draws are handed to it,
- * since the field around it is what knows them.
+ * anywhere, it focuses its control, or runs its `trigger` where the box is
+ * the control itself. The states it draws are handed to it, since the field
+ * around it is what knows them.
  */
 function FieldBox({
   children,
@@ -353,7 +394,9 @@ function FieldBox({
   isRequired = false,
   label,
   leading,
+  ref,
   trailing,
+  trigger,
   variant = 'filled',
 }: FieldBoxProps) {
   const theme = useTheme()
@@ -400,14 +443,15 @@ function FieldBox({
 
   return (
     <Pressable
-      accessible={false}
+      {...(trigger === undefined ? NOT_A_CONTROL : triggerOf(trigger))}
       disabled={isDisabled}
-      focusable={false}
       onHoverIn={feedback.handlers.onHoverIn}
       onHoverOut={feedback.handlers.onHoverOut}
-      onPress={focusOf(control)}
+      onPress={trigger?.onPress ?? focusOf(control)}
+      ref={ref}
       style={composeStyles<ViewStyle>(
         styles.box,
+        trigger === undefined ? undefined : styles.boxTrigger,
         leading === undefined ? undefined : styles.boxLeading,
         trailing === undefined ? undefined : styles.boxTrailing,
         outlined ? styles.boxOutlined : undefined,
@@ -774,6 +818,56 @@ function FieldStates({
 }
 
 /**
+ * A field's value where it was chosen rather than typed, on the value's line
+ * of a {@link FieldBox} whose `trigger` makes the box the control: body
+ * large, one line cut short with an ellipsis, clearing the label at the top
+ * as a control does. Hidden from a screen reader, which reads the value in
+ * the trigger's name.
+ *
+ * `isPlaceholder` says nothing has been chosen, which takes the muted role;
+ * under a floating label at rest it is not drawn until the label floats,
+ * exactly as an input's placeholder is, so the two never overlap.
+ *
+ * On web the value opens with a space, which a browser drops at the start
+ * of the line. It keeps the label and the value two words in the box's text,
+ * which axe reads as one string with nothing between its parts, and holds to
+ * the trigger's name, as WCAG's label in name asks; without it the label
+ * runs into the value's first word.
+ */
+function FieldValue({ children, isPlaceholder = false }: FieldValueProps) {
+  const box = use(BoxContext)
+  const theme = useTheme()
+  const { fontScale } = useWindowDimensions()
+  const role = useTypeRole('bodyLarge')
+  const { colors, stateLayerOpacity, typography } = theme
+  const color =
+    isPlaceholder && !box.floated
+      ? 'transparent'
+      : box.disabled
+        ? withOpacity(colors.onSurface, stateLayerOpacity.disabledContent)
+        : isPlaceholder
+          ? colors.onSurfaceVariant
+          : colors.onSurface
+
+  return (
+    <NativeText
+      aria-hidden
+      numberOfLines={1}
+      style={composeStyles<TextStyle>(
+        role,
+        colorOf(color),
+        box.underLabel
+          ? marginTopOf(typography.bodySmallLineHeight * fontScale)
+          : undefined,
+      )}
+    >
+      {Platform.OS === 'web' ? ' ' : null}
+      {children}
+    </NativeText>
+  )
+}
+
+/**
  * Tracks whether the control has focus, around the handlers the field was
  * given, which are called after.
  */
@@ -812,6 +906,10 @@ const HIDDEN = { 'aria-hidden': true } as const
 // from its label. Null rather than left out, since left out is what it writes
 // `auto` for. React Native's types carry no `dir`.
 const INHERITS_DIRECTION = { dir: null } as const
+
+// A box around a control of its own: the press lands on the box and moves
+// focus to the control, which is what a screen reader and a keyboard reach.
+const NOT_A_CONTROL = { accessible: false, focusable: false } as const
 
 // The limit under React Native Web: in the document for the control to point
 // at, and drawn nowhere.
@@ -1031,9 +1129,11 @@ function descriptionOf(
   return said.length === 0 ? undefined : { accessibilityHint: said.join(' ') }
 }
 
-function focusOf(control: RefObject<ComponentRef<typeof TextInput> | null>) {
+function focusOf(
+  control: RefObject<ComponentRef<typeof TextInput> | null> | undefined,
+) {
   return () => {
-    control.current?.focus()
+    control?.current?.focus()
   }
 }
 
@@ -1163,6 +1263,22 @@ function FieldStroke({ color, sides, style, width }: FieldStrokeProps) {
 }
 
 /**
+ * The box as the control: a button named by the trigger and described by the
+ * line under the field, which a keyboard and a screen reader reach.
+ */
+function triggerOf({
+  described = NO_PARTS,
+  onPress: _onPress,
+  ...trigger
+}: FieldTriggerProps) {
+  return {
+    ...trigger,
+    ...descriptionOf(described),
+    role: 'button' as const,
+  }
+}
+
+/**
  * Says an error on iOS as it arrives, where a live region says nothing. An
  * error the field opened with is not said, and neither is one that has not
  * changed.
@@ -1258,6 +1374,7 @@ export {
   FieldMessage,
   FieldStates,
   FieldStroke,
+  FieldValue,
   useErrorAnnouncement,
   useFieldFocus,
   useStrokeMotion,
@@ -1269,5 +1386,7 @@ export type {
   FieldMessageProps,
   FieldStatesProps,
   FieldStrokeProps,
+  FieldTriggerProps,
+  FieldValueProps,
   FieldVariant,
 }

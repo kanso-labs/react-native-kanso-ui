@@ -85,7 +85,8 @@ function CheckGlyph(props: GlyphProps) {
   )
 }
 
-// Points down at the menu a split button's second half opens.
+// Points down at the menu a split button's second half opens, and at the
+// list a select opens.
 function ChevronDownGlyph(props: GlyphProps) {
   return (
     <Glyph {...props}>

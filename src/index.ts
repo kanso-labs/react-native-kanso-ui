@@ -212,6 +212,8 @@ export type {
   SegmentedButtonProps,
   SegmentedButtonSegmentProps,
 } from './components/segmented-button'
+export { Select } from './components/select'
+export type { SelectProps } from './components/select'
 export { Separator } from './components/separator'
 export type { SeparatorInset, SeparatorProps } from './components/separator'
 export {

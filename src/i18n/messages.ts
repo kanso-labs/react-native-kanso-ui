@@ -1,15 +1,17 @@
 // The words the library writes itself: the pending ring's name, a bottom
 // sheet's drag handle, a collection's loading-more and empty rows, what
-// selecting a list's row is called, how many rows a search leaves, a
-// calendar's, a field's character limit, CopyField's button, the names of
-// SearchField's clear button, Snackbar's close button, a chip's remove button
-// and NumberField's steppers. Each one a call site might want in other words
-// stands behind a prop that names it otherwise: `pendingLabel` for the ring,
-// `aria-label` for the handle, `label` for the loading-more row,
-// `renderEmptyState` for the empty one, `selectLabel` for the selection,
-// `characterLimitLabel` for the limit, `copyLabel` and `copiedLabel` for
-// CopyField, `clearLabel`, `closeLabel` and `removeLabel` for the three
-// buttons, and `decrementLabel` and `incrementLabel` for the steppers.
+// selecting a list's row is called, what a Select shows while nothing is
+// chosen, how many rows a search leaves, a calendar's, a field's character
+// limit, CopyField's button, the names of SearchField's clear button,
+// Snackbar's close button, a chip's remove button and NumberField's
+// steppers. Each one a call site might want in other words stands behind a
+// prop that names it otherwise: `pendingLabel` for the ring, `aria-label`
+// for the handle, `label` for the loading-more row, `renderEmptyState` for
+// the empty one, `selectLabel` for the selection, `placeholder` for a
+// Select's empty value, `characterLimitLabel` for the limit, `copyLabel` and
+// `copiedLabel` for CopyField, `clearLabel`, `closeLabel` and `removeLabel`
+// for the three buttons, and `decrementLabel` and `incrementLabel` for the
+// steppers.
 //
 // Copied from kanso-ui's src/i18n/messages.ts, one entry per locale React
 // Aria ships, and kept in step with it by hand: the web library publishes no
@@ -18,17 +20,19 @@
 // sheet draws its handle as decoration and names nothing. `select` is React
 // Aria's own word for a grid list row's checkbox, which web's List takes
 // from React Aria's tables rather than its own, copied here so the two read
-// the same. `results` is React Aria's too, the count its ComboBox announces,
-// which Autocomplete announces as a search narrows a list. `calendar` is
-// React Aria's calendar dictionary, which web's Calendar reads, beside the
-// names of the month and year fields that web reads from the browser's
-// `Intl.DisplayNames` and Hermes lacks, written here from the same CLDR
-// data. `clearSearch`, `close`, `decrease`, `increase` and `remove` are React
-// Aria's as well, from the search field, toast, number field and tag
-// dictionaries its own controls name those buttons from on web. The others
-// were drafted for kanso-ui's table rather than taken from a translation
-// service, and each one wants a native speaker's eye before it is trusted; a
-// call site can always pass its own words through the prop.
+// the same, and `selectPlaceholder` is what React Aria's Select, and so
+// web's, shows while nothing is chosen. `results` is React Aria's too, the
+// count its ComboBox announces, which Autocomplete announces as a search
+// narrows a list. `calendar` is React Aria's calendar dictionary, which
+// web's Calendar reads, beside the names of the month and year fields that
+// web reads from the browser's `Intl.DisplayNames` and Hermes lacks, written
+// here from the same CLDR data. `clearSearch`, `close`, `decrease`,
+// `increase` and `remove` are React Aria's as well, from the search field,
+// toast, number field and tag dictionaries its own controls name those
+// buttons from on web. The others were drafted for kanso-ui's table rather
+// than taken from a translation service, and each one wants a native
+// speaker's eye before it is trusted; a call site can always pass its own
+// words through the prop.
 
 type LibraryMessages = {
   /**
@@ -102,6 +106,8 @@ type LibraryMessages = {
   }
   /** What selecting a list's row is called, beside its checkbox. */
   readonly select: string
+  /** What a Select shows while nothing is chosen. */
+  readonly selectPlaceholder: string
 }
 
 /**
@@ -149,6 +155,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: '{count} خيارات متاحة.',
     },
     select: 'تحديد',
+    selectPlaceholder: 'حدد عنصرًا',
   },
   'bg-BG': {
     calendar: {
@@ -182,6 +189,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: '{count} опции на разположение.',
     },
     select: 'Изберете',
+    selectPlaceholder: 'Изберете предмет',
   },
   'cs-CZ': {
     calendar: {
@@ -217,6 +225,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: 'K dispozici jsou/je {count} možnosti/-í.',
     },
     select: 'Vybrat',
+    selectPlaceholder: 'Vyberte položku',
   },
   'da-DK': {
     calendar: {
@@ -249,6 +258,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: '{count} muligheder tilgængelige.',
     },
     select: 'Vælg',
+    selectPlaceholder: 'Vælg et element',
   },
   'de-DE': {
     calendar: {
@@ -281,6 +291,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: '{count} Optionen verfügbar.',
     },
     select: 'Auswählen',
+    selectPlaceholder: 'Element wählen',
   },
   'el-GR': {
     calendar: {
@@ -314,6 +325,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: '{count} επιλογές  διαθέσιμες.',
     },
     select: 'Επιλογή',
+    selectPlaceholder: 'Επιλέξτε ένα αντικείμενο',
   },
   'en-US': {
     calendar: {
@@ -347,6 +359,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: '{count} options available.',
     },
     select: 'Select',
+    selectPlaceholder: 'Select an item',
   },
   'es-ES': {
     calendar: {
@@ -380,6 +393,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: '{count} opciones disponible(s).',
     },
     select: 'Seleccionar',
+    selectPlaceholder: 'Seleccionar un artículo',
   },
   'et-EE': {
     calendar: {
@@ -413,6 +427,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: '{count} valikud saadaval.',
     },
     select: 'Vali',
+    selectPlaceholder: 'Valige üksus',
   },
   'fi-FI': {
     calendar: {
@@ -446,6 +461,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: '{count} vaihtoehtoa saatavilla.',
     },
     select: 'Valitse',
+    selectPlaceholder: 'Valitse kohde',
   },
   'fr-FR': {
     calendar: {
@@ -479,6 +495,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: '{count} options disponible(s).',
     },
     select: 'Sélectionner',
+    selectPlaceholder: 'Sélectionner un élément',
   },
   'he-IL': {
     calendar: {
@@ -513,6 +530,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: '{count} אפשרויות במצב זמין.',
     },
     select: 'בחר',
+    selectPlaceholder: 'בחר פריט',
   },
   'hr-HR': {
     calendar: {
@@ -547,6 +565,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: 'Dostupno još: {count} opcije/a.',
     },
     select: 'Odaberite',
+    selectPlaceholder: 'Odaberite stavku',
   },
   'hu-HU': {
     calendar: {
@@ -579,6 +598,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: '{count} lehetőség áll rendelkezésre.',
     },
     select: 'Kijelölés',
+    selectPlaceholder: 'Válasszon ki egy elemet',
   },
   'it-IT': {
     calendar: {
@@ -612,6 +632,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: '{count} opzioni disponibili.',
     },
     select: 'Seleziona',
+    selectPlaceholder: 'Seleziona un elemento',
   },
   'ja-JP': {
     calendar: {
@@ -644,6 +665,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: '{count} 個のオプションを利用できます。',
     },
     select: '選択',
+    selectPlaceholder: '項目を選択',
   },
   'ko-KR': {
     calendar: {
@@ -676,6 +698,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: '{count}개 옵션을 사용할 수 있습니다.',
     },
     select: '선택',
+    selectPlaceholder: '항목 선택',
   },
   'lt-LT': {
     calendar: {
@@ -711,6 +734,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: 'Yra {count} parinktys (-ių).',
     },
     select: 'Pasirinkti',
+    selectPlaceholder: 'Pasirinkite elementą',
   },
   'lv-LV': {
     calendar: {
@@ -745,6 +769,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: 'Pieejamo opciju skaits: {count} opcijas.',
     },
     select: 'Atlasīt',
+    selectPlaceholder: 'Izvēlēties vienumu',
   },
   'nb-NO': {
     calendar: {
@@ -777,6 +802,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: '{count} alternativer finnes.',
     },
     select: 'Velg',
+    selectPlaceholder: 'Velg et element',
   },
   'nl-NL': {
     calendar: {
@@ -810,6 +836,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: '{count} opties beschikbaar.',
     },
     select: 'Selecteren',
+    selectPlaceholder: 'Selecteer een item',
   },
   'pl-PL': {
     calendar: {
@@ -845,6 +872,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: 'dostępna/dostępne(-nych) {count} opcje(-i).',
     },
     select: 'Zaznacz',
+    selectPlaceholder: 'Wybierz element',
   },
   'pt-BR': {
     calendar: {
@@ -878,6 +906,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: '{count} opções disponível.',
     },
     select: 'Selecionar',
+    selectPlaceholder: 'Selecione um item',
   },
   'pt-PT': {
     calendar: {
@@ -911,6 +940,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: '{count} opções disponível.',
     },
     select: 'Selecionar',
+    selectPlaceholder: 'Selecione um item',
   },
   'ro-RO': {
     calendar: {
@@ -945,6 +975,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: '{count} opțiuni disponibile.',
     },
     select: 'Selectare',
+    selectPlaceholder: 'Selectați un element',
   },
   'ru-RU': {
     calendar: {
@@ -980,6 +1011,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: '{count} параметров доступно.',
     },
     select: 'Выбрать',
+    selectPlaceholder: 'Выберите элемент',
   },
   'sk-SK': {
     calendar: {
@@ -1015,6 +1047,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: '{count} možnosti/-í k dispozícii.',
     },
     select: 'Vybrať',
+    selectPlaceholder: 'Vyberte položku',
   },
   'sl-SI': {
     calendar: {
@@ -1050,6 +1083,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: 'Na voljo je {count} opcije.',
     },
     select: 'Izberite',
+    selectPlaceholder: 'Izberite element',
   },
   'sr-SP': {
     calendar: {
@@ -1084,6 +1118,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: 'Dostupno još: {count} opcije/a.',
     },
     select: 'Izaberite',
+    selectPlaceholder: 'Izaberite stavku',
   },
   'sv-SE': {
     calendar: {
@@ -1116,6 +1151,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: '{count} alternativ tillgängliga.',
     },
     select: 'Markera',
+    selectPlaceholder: 'Välj en artikel',
   },
   'tr-TR': {
     calendar: {
@@ -1148,6 +1184,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: '{count} seçenekler kullanılabilir.',
     },
     select: 'Seç',
+    selectPlaceholder: 'Bir öğe seçin',
   },
   'uk-UA': {
     calendar: {
@@ -1183,6 +1220,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: '{count} параметри(-ів) доступно.',
     },
     select: 'Вибрати',
+    selectPlaceholder: 'Виберіть елемент',
   },
   'zh-CN': {
     calendar: {
@@ -1215,6 +1253,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: '有 {count} 个选项可用。',
     },
     select: '选择',
+    selectPlaceholder: '选择一个项目',
   },
   'zh-TW': {
     calendar: {
@@ -1247,6 +1286,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: '{count} 選項 可用。',
     },
     select: '選取',
+    selectPlaceholder: '選取項目',
   },
 }
 

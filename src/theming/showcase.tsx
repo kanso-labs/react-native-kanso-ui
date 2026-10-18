@@ -48,6 +48,7 @@ import { ProgressIndicator } from '../components/progress-indicator'
 import { Radio, RadioGroup } from '../components/radio-group'
 import { SearchField } from '../components/search-field'
 import { SegmentedButton } from '../components/segmented-button'
+import { Select } from '../components/select'
 import { Separator } from '../components/separator'
 import { Sheet } from '../components/sheet'
 import { Slider } from '../components/slider'
@@ -182,6 +183,20 @@ const BAR_TRAILING = (
 // react-perf's no-new-array-as-prop is after.
 const LIST_SELECTION = ['second']
 const SEGMENT_SELECTION = ['second']
+
+// The Select section's options, an array since a select reads its options
+// straight off it, and hoisted for the same reason.
+const SELECT_OPTIONS = [
+  <ListBox.Item id="first" key="first">
+    First item
+  </ListBox.Item>,
+  <ListBox.Item id="second" key="second">
+    Second item
+  </ListBox.Item>,
+  <ListBox.Item id="third" key="third">
+    Third item
+  </ListBox.Item>,
+]
 
 // The ListItem section's rows, web's three people with an amount each, their
 // slots hoisted so no prop is a new element on every render.
@@ -1073,6 +1088,13 @@ function Showcase({ name }: ShowcaseProps) {
             Third item
           </SegmentedButton.Segment>
         </SegmentedButton>
+      </Section>
+
+      <Section
+        description="A control that reads as a field with its options on a popover surface, so it draws both at once."
+        title="Select"
+      >
+        <Select defaultValue="second" label="Label" options={SELECT_OPTIONS} />
       </Section>
 
       <Section
