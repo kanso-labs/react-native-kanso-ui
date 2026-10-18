@@ -14,7 +14,12 @@ import { useColorPickerState } from 'react-stately/useColorPickerState'
 
 import { useLocaleOf, useMessages } from '../../i18n/provider'
 import { hitSlop, usePressFeedback } from '../../press'
-import { colorNameOf, colorOf, SwatchColorContext } from '../../swatch'
+import {
+  colorNameOf,
+  colorOf,
+  SwatchColorContext,
+  usePickedColor,
+} from '../../swatch'
 import { useTheme } from '../../theme/scope'
 import { composeStyles, themedStyles } from '../../theme/styles'
 import { ColorSwatch } from '../color-swatch'
@@ -201,6 +206,9 @@ function chooseThen(
  * named by `aria-label` or `aria-labelledby`, and "Color swatches" in the
  * `I18nProvider`'s locale otherwise. `style`, `ref` and `testID` land on the
  * set as a whole, which is the element a layout positions.
+ *
+ * Inside a `ColorPicker` it takes the picker's colour where it is given no
+ * `value`, and reports a change to the picker before its own `onChange`.
  */
 function ColorSwatchPicker({
   'aria-label': ariaLabel,
@@ -214,7 +222,12 @@ function ColorSwatchPicker({
 }: ColorSwatchPickerProps) {
   const own = stylesOf(useTheme())
   const messages = useMessages()
-  const state = useColorPickerState({ defaultValue, onChange, value })
+  const picked = usePickedColor(value, onChange)
+  const state = useColorPickerState({
+    defaultValue,
+    onChange: picked.onChange,
+    value: picked.value,
+  })
   const label =
     ariaLabel ??
     (props['aria-labelledby'] === undefined

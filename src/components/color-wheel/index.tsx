@@ -22,6 +22,7 @@ import { ColorThumb } from '../../color-thumb'
 import { HIDDEN } from '../../glyphs/hidden'
 import { useLocaleOf } from '../../i18n/provider'
 import { ADJUSTABLE } from '../../slider'
+import { usePickedColor } from '../../swatch'
 import { useTheme } from '../../theme/scope'
 import { composeStyles, themedStyles } from '../../theme/styles'
 
@@ -187,6 +188,9 @@ function adjustOf(state: ColorWheelState, isDisabled: boolean) {
  * wheel, whose size comes from `outerRadius`. With a `testID`, the drag and
  * the press are registered with Gesture Handler as `<testID>-pan` and
  * `<testID>-tap`, which its `getByGestureTestId` finds in a test.
+ *
+ * Inside a `ColorPicker` it takes the picker's colour where it is given no
+ * `value`, and reports a change to the picker before its own `onChange`.
  */
 function ColorWheel({
   'aria-label': ariaLabel,
@@ -203,12 +207,13 @@ function ColorWheel({
 }: ColorWheelProps) {
   const own = stylesOf(useTheme())
   const locale = useLocaleOf(undefined)
+  const picked = usePickedColor(value, onChange)
   const state = useColorWheelState({
     defaultValue,
     isDisabled,
-    onChange,
+    onChange: picked.onChange,
     onChangeEnd,
-    value,
+    value: picked.value,
   })
   const innerRadius = Math.max(0, outerRadius - thickness)
   // The middle of the band, which is where the handle rides.

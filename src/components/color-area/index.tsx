@@ -23,6 +23,7 @@ import { ColorThumb } from '../../color-thumb'
 import { HIDDEN } from '../../glyphs/hidden'
 import { useLocaleOf } from '../../i18n/provider'
 import { ADJUSTABLE, percentOf } from '../../slider'
+import { usePickedColor } from '../../swatch'
 import { useTheme } from '../../theme/scope'
 import { composeStyles, themedStyles } from '../../theme/styles'
 
@@ -253,6 +254,9 @@ function adjustOf(state: ColorAreaState, axis: 'x' | 'y', isDisabled: boolean) {
  * square, whose width `style` sets. With a `testID`, the drag and the press
  * are registered with Gesture Handler as `<testID>-pan` and `<testID>-tap`,
  * which its `getByGestureTestId` finds in a test.
+ *
+ * Inside a `ColorPicker` it takes the picker's colour where it is given no
+ * `value`, and reports a change to the picker before its own `onChange`.
  */
 function ColorArea({
   'aria-label': ariaLabel,
@@ -270,13 +274,14 @@ function ColorArea({
 }: ColorAreaProps) {
   const own = stylesOf(useTheme())
   const locale = useLocaleOf(undefined)
+  const picked = usePickedColor(value, onChange)
   const state = useColorAreaState({
     colorSpace,
     defaultValue,
     isDisabled,
-    onChange,
+    onChange: picked.onChange,
     onChangeEnd,
-    value,
+    value: picked.value,
     xChannel,
     yChannel,
   })

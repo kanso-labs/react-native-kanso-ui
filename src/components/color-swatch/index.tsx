@@ -7,7 +7,12 @@ import { StyleSheet, View } from 'react-native'
 
 import { Chequer } from '../../chequer'
 import { useLocaleOf, useMessages } from '../../i18n/provider'
-import { colorNameOf, colorOf, SwatchColorContext } from '../../swatch'
+import {
+  colorNameOf,
+  colorOf,
+  PickedColorContext,
+  SwatchColorContext,
+} from '../../swatch'
 import { useTheme } from '../../theme/scope'
 import { composeStyles, themedStyles } from '../../theme/styles'
 
@@ -92,6 +97,9 @@ type ColorSwatchProps = Omit<ViewProps, 'children' | 'style'> & {
  * `style`, `ref` and `testID` land on the square, and a `style` there applies
  * over the swatch's own, so a call site sets another size with `width` and
  * `height`. The colour fills whatever square it is given.
+ *
+ * Inside a `ColorPicker` it shows the picker's colour where it is given no
+ * `color` and sits in no `ColorSwatchPicker` item.
  */
 function ColorSwatch({
   'aria-label': label,
@@ -104,7 +112,8 @@ function ColorSwatch({
   const locale = useLocaleOf(undefined)
   const messages = useMessages()
   const itemColor = use(SwatchColorContext)
-  const value = colorOf(color ?? itemColor ?? '#fff0')
+  const pickedColor = use(PickedColorContext)?.value
+  const value = colorOf(color ?? itemColor ?? pickedColor ?? '#fff0')
   const alpha = value.getChannelValue('alpha')
   const name = colorName ?? colorNameOf(value, locale, messages.transparent)
 

@@ -24,6 +24,7 @@ import {
   seats,
   useTrackGesture,
 } from '../../slider'
+import { usePickedColor } from '../../swatch'
 import { useTheme } from '../../theme/scope'
 import { composeStyles, themedStyles } from '../../theme/styles'
 import { useTypeRole } from '../../typography/roles'
@@ -228,6 +229,9 @@ const stylesOf = themedStyles(({ colors, radii, spacing, stateLayerOpacity }) =>
  * `testID`, the drag and the press are registered with Gesture Handler as
  * `<testID>-pan` and `<testID>-tap`, which its `getByGestureTestId` finds in
  * a test.
+ *
+ * Inside a `ColorPicker` it takes the picker's colour where it is given no
+ * `value`, and reports a change to the picker before its own `onChange`.
  */
 function ColorSlider({
   'aria-label': ariaLabel,
@@ -247,16 +251,17 @@ function ColorSlider({
 }: ColorSliderProps) {
   const own = stylesOf(useTheme())
   const locale = useLocaleOf(undefined)
+  const picked = usePickedColor(value, onChange)
   const state = useColorSliderState({
     channel,
     colorSpace,
     defaultValue,
     isDisabled,
     locale,
-    onChange,
+    onChange: picked.onChange,
     onChangeEnd,
     orientation,
-    value,
+    value: picked.value,
   })
   const labelRole = useTypeRole('labelLarge')
   const outputRole = useTypeRole('bodySmall')

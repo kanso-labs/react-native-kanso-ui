@@ -22,6 +22,7 @@ import { ChipGroup } from '../components/chip-group'
 import { Code } from '../components/code'
 import { ColorArea } from '../components/color-area'
 import { ColorField } from '../components/color-field'
+import { ColorPicker } from '../components/color-picker'
 import { ColorSlider } from '../components/color-slider'
 import { ColorSwatch } from '../components/color-swatch'
 import { ColorSwatchPicker } from '../components/color-swatch-picker'
@@ -660,6 +661,13 @@ function Showcase({ name }: ShowcaseProps) {
           label="Label"
           leadingIcon={FIELD_SWATCH}
         />
+      </Section>
+
+      <Section
+        description="The trigger is the one part a scheme reaches: its container and its label take the surface roles, while everything on the surface it opens carries a colour rather than a role."
+        title="ColorPicker"
+      >
+        <ColorPicker defaultValue={SWATCH} label="Label" />
       </Section>
 
       <Section
