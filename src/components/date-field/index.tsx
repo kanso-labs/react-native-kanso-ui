@@ -1,29 +1,24 @@
 import type { ComponentRef, ReactNode, Ref } from 'react'
-import type { StyleProp, ViewStyle } from 'react-native'
+import type { StyleProp, View, ViewStyle } from 'react-native'
 import type {
   DateFieldStateOptions,
   DateValue,
 } from 'react-stately/useDateFieldState'
 
 import { createCalendar } from '@internationalized/date'
-import { useId, useRef, useState } from 'react'
-import { View } from 'react-native'
 import { useDateFieldState } from 'react-stately/useDateFieldState'
 
 import type { FieldVariant } from '../../field'
-import type { Focusable } from '../../form'
 
-import { describedBy, FieldBox, FieldMessage } from '../../field'
-import { useFieldValidation } from '../../form'
 import { useLocaleOf } from '../../i18n/provider'
-import { DateSegments } from '../../segments'
+import { SegmentedField } from '../../segments/field'
 
 // kanso-ui's DateField: a date typed a segment at a time rather than picked
 // from a calendar, which is what the date pickers page means by a date in a
 // text field. The box, the label and the line under it are the field chrome
 // in src/field, shared with every other field, so a date field on a form is
-// the same box as the text field beside it. The segments are src/segments,
-// which a time field and a picker's field draw as well.
+// the same box as the text field beside it. The segments and that chrome
+// around them are src/segments, which TimeField draws as well.
 //
 // The value is React Stately's `useDateFieldState`, which web's React Aria
 // field is built on, over `@internationalized/date`, so the segments, their
@@ -149,19 +144,6 @@ type DateFieldProps<T extends DateValue = DateValue> = Pick<
   readonly variant?: FieldVariant
 }
 
-// The field's own blur handling, then the call site's.
-function blurThen(
-  onBlur: () => void,
-  setFocused: (focused: boolean) => void,
-  then: (() => void) | undefined,
-) {
-  return () => {
-    setFocused(false)
-    onBlur()
-    then?.()
-  }
-}
-
 /**
  * A date typed rather than picked: one segment per part, typed into a digit
  * at a time. The value is an `@internationalized/date` value, as on web:
@@ -187,29 +169,13 @@ function blurThen(
  * whole.
  */
 function DateField<T extends DateValue = DateValue>({
-  description,
-  error,
-  floatingLabel = true,
   isDisabled = false,
   isReadOnly = false,
   isRequired = false,
-  label,
-  leadingIcon,
   locale,
-  name,
-  onBlur,
-  onFocus,
-  ref,
-  style,
-  testID,
-  trailingIcon,
-  variant = 'filled',
   ...props
 }: DateFieldProps<T>) {
-  const id = useId()
-  const control = useRef<Focusable>(null)
   const writtenIn = useLocaleOf(locale)
-  const [focused, setFocused] = useState(false)
   const state = useDateFieldState<T>({
     ...props,
     createCalendar,
@@ -218,70 +184,18 @@ function DateField<T extends DateValue = DateValue>({
     isRequired,
     locale: writtenIn,
   })
-  // What `validate` says, and failing that what the bounds and
-  // `isDateUnavailable` say, in React Stately's order and its words.
-  const { validationErrors } = state.realtimeValidation
-  const validation = useFieldValidation({
-    control,
-    error,
-    isDisabled,
-    isEmpty: state.value === null,
-    isReadOnly,
-    isRequired,
-    name,
-    submitted: state.value?.toString() ?? '',
-    validate: () => validationErrors,
-    value: state.value,
-  })
-  const shownError = validation.error
 
   return (
-    <View
-      aria-label={label}
-      ref={ref}
-      role="group"
-      style={style}
-      testID={testID}
-    >
-      <FieldBox
-        control={control}
-        floatingLabel={floatingLabel}
-        isDisabled={isDisabled}
-        isFocused={focused}
-        isInvalid={shownError !== undefined}
-        isPopulated
-        isRequired={isRequired}
-        label={label}
-        leading={leadingIcon}
-        trailing={trailingIcon}
-        variant={variant}
-      >
-        <DateSegments
-          described={describedBy(id, { description, error: shownError })}
-          isInvalid={shownError !== undefined}
-          label={label}
-          locale={writtenIn}
-          onBlur={blurThen(validation.onBlur, setFocused, onBlur)}
-          onEdit={validation.onEdit}
-          onFocus={focusThen(setFocused, onFocus)}
-          ref={control}
-          state={state}
-        />
-      </FieldBox>
-      <FieldMessage description={description} error={shownError} id={id} />
-    </View>
+    <SegmentedField
+      {...props}
+      isDisabled={isDisabled}
+      isReadOnly={isReadOnly}
+      isRequired={isRequired}
+      locale={writtenIn}
+      state={state}
+      submitted={state.value?.toString() ?? ''}
+    />
   )
-}
-
-// Draws the box focused, then tells the call site.
-function focusThen(
-  setFocused: (focused: boolean) => void,
-  then: (() => void) | undefined,
-) {
-  return () => {
-    setFocused(true)
-    then?.()
-  }
 }
 
 export type { DateFieldProps }
