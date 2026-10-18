@@ -830,20 +830,25 @@ function* loaderNode(props: CollectionLoadMoreProps) {
   yield { hasChildNodes: false, props, rendered: null, type: 'loader' }
 }
 
+// The row the collection's `LoadMore` part draws.
+function LoaderRow() {
+  return <LoadingRow {...(useCollection().loadMore ?? IDLE)} />
+}
+
 /**
- * The row the `LoadMore` part draws: a live region, empty while idle and
+ * The row a `LoadMore` part draws: a live region, empty while idle and
  * holding the ring while loading. Android and React Native Web say what
  * arrives in it; iOS has no live regions, so the ring's name is said there
- * as it appears.
+ * as it appears. A List's and a ListBox's, and a Table's, which draws it
+ * after its rows at a row's own height.
  */
-function LoaderRow() {
+function LoadingRow({
+  isLoading = false,
+  label,
+  style,
+  testID,
+}: CollectionLoadMoreProps) {
   const own = stylesOf(useTheme())
-  const {
-    isLoading = false,
-    label,
-    style,
-    testID,
-  } = useCollection().loadMore ?? IDLE
   const messages = useMessages()
   const name = label ?? messages.loadingMore
 
@@ -944,27 +949,13 @@ function renderEntry({ item }: ListRenderItemInfo<Entry>) {
 
 /**
  * How many rows a search leaves, said to a screen reader as it changes and
- * never drawn: in a polite live region on Android and under React Native
- * Web, and through `AccessibilityInfo` on iOS, which has no live regions,
- * so nothing is drawn there at all. A `count` of `null` says nothing, for a
+ * never drawn, through `Status`. A `count` of `null` says nothing, for a
  * list that is closed, so the count is said again as it opens.
  */
 function ResultsStatus({ count }: { readonly count: null | number }) {
-  const own = stylesOf(useTheme())
   const locale = useLocaleOf(undefined)
-  const message = count === null ? '' : resultsFor(count, locale)
 
-  useResultsAnnouncement(message)
-
-  if (Platform.OS === 'ios') {
-    return null
-  }
-
-  return (
-    <View aria-live="polite" style={styles.status}>
-      <NativeText style={own.status}>{message}</NativeText>
-    </View>
-  )
+  return <Status message={count === null ? '' : resultsFor(count, locale)} />
 }
 
 /**
@@ -1390,6 +1381,29 @@ function SelectBox({
 }
 
 /**
+ * A message said to a screen reader as it changes and never drawn: in a
+ * polite live region on Android and under React Native Web, and through
+ * `AccessibilityInfo` on iOS, which has no live regions, so nothing is drawn
+ * there at all. The message a status mounts with is not said, and an empty
+ * one says nothing. A search's count of rows, and a table's sort.
+ */
+function Status({ message }: { readonly message: string }) {
+  const own = stylesOf(useTheme())
+
+  useAnnouncement(message)
+
+  if (Platform.OS === 'ios') {
+    return null
+  }
+
+  return (
+    <View aria-live="polite" style={styles.status}>
+      <NativeText style={own.status}>{message}</NativeText>
+    </View>
+  )
+}
+
+/**
  * Opens a tree's row, or closes it when it is open. Built by a call rather
  * than written inline, which is what react-perf's
  * no-new-function-as-prop is after.
@@ -1462,6 +1476,20 @@ function treeLead({
   )
 }
 
+// Says a status's message on iOS each time it changes. The message a status
+// mounts with is not said, as a live region does not read what it was mounted
+// holding, and an empty message says nothing.
+function useAnnouncement(message: string) {
+  const was = useRef(message)
+
+  useEffect(() => {
+    if (message !== was.current && message !== '' && Platform.OS === 'ios') {
+      AccessibilityInfo.announceForAccessibility(message)
+    }
+    was.current = message
+  }, [message])
+}
+
 // The collection a cell is drawn in. Every cell is the `FlatList`'s, inside
 // the collection's own provider, so there always is one.
 function useCollection(): CollectionValue {
@@ -1486,20 +1514,6 @@ function useLoadingAnnouncement(isLoading: boolean, label: string) {
   }, [isLoading, label])
 }
 
-// Says how many rows are left on iOS each time the count changes. The count
-// a list mounts with is not said, as a live region does not read what it was
-// mounted holding, and an empty message says nothing.
-function useResultsAnnouncement(message: string) {
-  const was = useRef(message)
-
-  useEffect(() => {
-    if (message !== was.current && message !== '' && Platform.OS === 'ios') {
-      AccessibilityInfo.announceForAccessibility(message)
-    }
-    was.current = message
-  }, [message])
-}
-
 /**
  * The leading slot of a List's row that selects: the checkbox, then whatever
  * the row was given, in a row of their own so the two sit side by side.
@@ -1520,15 +1534,23 @@ function withBox(
 }
 
 export {
+  accessibilityActionOf,
+  childElementsOf,
   Collection,
   CollectionView,
   focusKeyOf,
   loaderNode,
+  LoadingRow,
+  loadMoreOf,
   nestedRowNode,
+  noop,
+  pressThen,
   ResultsStatus,
   rowCountOf,
   rowNode,
   sectionNode,
+  SelectBox,
+  Status,
 }
 export type {
   CollectionKind,

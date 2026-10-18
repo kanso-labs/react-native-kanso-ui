@@ -19,6 +19,19 @@ const TABLE = new Map(Object.entries(MESSAGES))
 const cache = new Map<string, LibraryMessages>()
 
 /**
+ * A column's width as its resize handle reads it, "120 pixels" in English,
+ * in `locale` or the device's, with the width in the locale's digits.
+ */
+function columnSizeFor(value: number, locale?: string): string {
+  const resolved = localeOf(locale)
+
+  return messagesFor(resolved).table.columnSize.replace(
+    '{value}',
+    formatCount(value, resolved),
+  )
+}
+
+/**
  * A field's character limit in words, in `locale` or the device's, for a
  * screen reader: the limit in the locale's digits, in the plural form its
  * rules give it.
@@ -121,5 +134,29 @@ function slideLabelFor(index: number, count: number, locale?: string): string {
     .replace('{count}', formatCount(count, resolved))
 }
 
-export { limitFor, listFor, messagesFor, resultsFor, slideLabelFor }
+/**
+ * What a table says once its rows are sorted, "sorted by column Label in
+ * ascending order" in English, in `locale` or the device's.
+ */
+function sortedFor(
+  direction: 'ascending' | 'descending',
+  columnName: string,
+  locale?: string,
+): string {
+  const { table } = messagesFor(locale)
+  const message =
+    direction === 'ascending' ? table.ascendingSort : table.descendingSort
+
+  return message.replace('{columnName}', columnName)
+}
+
+export {
+  columnSizeFor,
+  limitFor,
+  listFor,
+  messagesFor,
+  resultsFor,
+  slideLabelFor,
+  sortedFor,
+}
 export type { LibraryMessages }
