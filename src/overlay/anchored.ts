@@ -13,6 +13,11 @@ import { boundsOf, place } from './placement'
 
 type AnchoredPlacement = {
   /**
+   * The anchor's width as it was measured, for a surface as wide as what
+   * opened it, and undefined until the surface has been placed.
+   */
+  readonly anchorWidth: number | undefined
+  /**
    * Hand to the surface's own `onLayout`. The surface is placed once it has
    * reported its size, and placed again whenever that size changes.
    */
@@ -141,7 +146,13 @@ function useAnchoredPlacement({
   }
 
   if (measured === null || surface === null) {
-    return { onLayout, placed: false, side, style: HIDDEN }
+    return {
+      anchorWidth: undefined,
+      onLayout,
+      placed: false,
+      side,
+      style: HIDDEN,
+    }
   }
 
   const placement = place({
@@ -157,6 +168,7 @@ function useAnchoredPlacement({
   const x = placement.x - measured.origin.x
 
   return {
+    anchorWidth: measured.anchor.width,
     onLayout,
     placed: true,
     side: placement.side,

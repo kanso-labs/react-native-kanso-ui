@@ -62,6 +62,13 @@ const fieldStylesOf = themedStyles(
       boxTrailing: {
         paddingEnd: spacing.md,
       },
+      // A box that is itself the control draws its focus with its indicator,
+      // as a box around a control does, so a browser's own ring would be a
+      // second treatment for one focus: solid and no width, as the control's.
+      boxTrigger: {
+        outlineStyle: 'solid',
+        outlineWidth: 0,
+      },
       // The label and the control's column, which the label is placed
       // against, so it moves past a leading icon with the text.
       column: {

@@ -4,6 +4,7 @@ import type {
   ColorValue,
   GestureResponderEvent,
   HostInstance,
+  LayoutChangeEvent,
   ListRenderItemInfo,
   PressableProps,
   ScrollViewProps,
@@ -17,7 +18,15 @@ import type {
   ListProps as StatelyListProps,
 } from 'react-stately/useListState'
 
-import { Children, createContext, use, useEffect, useMemo, useRef } from 'react'
+import {
+  Children,
+  createContext,
+  use,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import {
   AccessibilityInfo,
   FlatList,
@@ -39,6 +48,7 @@ import { CheckboxBox } from '../control/checkbox-box'
 import { resultsFor } from '../i18n'
 import { useLocaleOf, useMessages } from '../i18n/provider'
 import { hitSlop, usePressFeedback } from '../press'
+import { refsOf } from '../ref'
 import {
   hasContent,
   RowContent,
@@ -101,6 +111,10 @@ const LOADING_DIAMETER = '24px'
 // How far past the visible end of the list `onLoadMore` is called, as a
 // share of the list's visible height, as web's `scrollOffset` defaults.
 const LOAD_OFFSET = 1
+
+// The rows a `FlatList` draws at first, its own default, which a list grows
+// to reach the row it opens on.
+const INITIAL_ROWS = 10
 
 // What the loading row reads when the collection has no `LoadMore` part,
 // which leaves it nothing to draw.
@@ -315,6 +329,8 @@ type CollectionSectionProps = {
 // What the cells of the `FlatList` read from the collection they are drawn
 // in.
 type CollectionValue = {
+  /** The row whose node goes to `onFocusTarget`. */
+  readonly focusKey: Key | null
   /**
    * The ground a List's sticky header covers the rows under it with, and
    * none for a ListBox, whose headers do not stick.
@@ -324,15 +340,49 @@ type CollectionValue = {
   /** The `LoadMore` part the collection ends in, if it has one. */
   readonly loadMore: CollectionLoadMoreProps | undefined
   readonly onAction: ((key: Key) => void) | undefined
+  readonly onFocusTarget: ((node: HostInstance | null) => void) | undefined
   readonly renderEmptyState: () => ReactNode
   readonly selectLabel: string
   readonly state: ListState<unknown>
+}
+
+type CollectionViewProps<T extends object = object> = Omit<
+  CollectionProps<T>,
+  | 'children'
+  | 'defaultSelectedKeys'
+  | 'disabledKeys'
+  | 'disallowEmptySelection'
+  | 'items'
+  | 'onSelectionChange'
+  | 'selectedKeys'
+  | 'selectionMode'
+> & {
+  /** The row whose node is handed to `onFocusTarget`, if any. */
+  readonly focusKey?: Key | null
+  readonly kind: CollectionKind
+  /** Handed the node of the row `focusKey` names, as it mounts and goes. */
+  readonly onFocusTarget?: (node: HostInstance | null) => void
+  /**
+   * Scrolls the row `focusKey` names into view, once, the first time the
+   * list is laid out while this holds: a panel passes it once it has been
+   * placed, and so has the height it scrolls in.
+   * @default false
+   */
+  readonly revealFocus?: boolean
+  /** The list state the rows are drawn from, and select through. */
+  readonly state: ListState<T>
 }
 
 /** One cell of the `FlatList`: a section's header, or a row. */
 type Entry = {
   readonly kind: 'header' | 'item'
   readonly node: Node<unknown>
+}
+
+/** What a `FlatList` reports when it cannot scroll to a row. */
+type ScrollFailure = {
+  readonly averageItemLength: number
+  readonly index: number
 }
 
 const CollectionContext = createContext<CollectionValue | null>(null)
@@ -345,25 +395,15 @@ const CollectionContext = createContext<CollectionValue | null>(null)
  */
 function Collection<T extends object = object>({
   children,
-  contentContainerStyle,
   defaultSelectedKeys,
   disabledKeys,
   disallowEmptySelection,
   items,
-  keyboardShouldPersistTaps,
-  kind,
-  onAction,
   onSelectionChange,
-  ref,
-  renderEmptyState = emptyState,
   selectedKeys,
   selectionMode = 'none',
-  selectLabel,
-  style,
   ...props
 }: CollectionProps<T> & { readonly kind: CollectionKind }) {
-  const theme = useTheme()
-  const own = stylesOf(theme)
   const autocomplete = use(AutocompleteContext)
   const matches = autocomplete?.matches
   const filter = useMemo(
@@ -385,10 +425,48 @@ function Collection<T extends object = object>({
     selectedKeys,
     selectionMode,
   })
+
+  return <CollectionView<T> {...props} state={state} />
+}
+
+/**
+ * The `FlatList` itself, drawn from a list state built elsewhere: by
+ * `Collection` from its own props, or by a component whose state holds more
+ * than a list's, as a Select's holds whether it is open. `focusKey` names the
+ * row whose node is handed to `onFocusTarget`, for a panel that sends a
+ * screen reader to it as it opens.
+ */
+function CollectionView<T extends object = object>({
+  contentContainerStyle,
+  focusKey = null,
+  keyboardShouldPersistTaps,
+  kind,
+  onAction,
+  onFocusTarget,
+  onLayout,
+  ref,
+  renderEmptyState = emptyState,
+  revealFocus = false,
+  selectLabel,
+  state,
+  style,
+  ...props
+}: CollectionViewProps<T>) {
+  const theme = useTheme()
+  const own = stylesOf(theme)
+  const autocomplete = use(AutocompleteContext)
   const { entries, loader, rows, sticky } = useMemo(
     () => entriesOf(state),
     [state],
   )
+  const [list, setList] = useState<FlatList | null>(null)
+  const [revealed, setRevealed] = useState(false)
+  const focusIndex =
+    focusKey === null
+      ? -1
+      : entries.findIndex(
+          (entry) => entry.kind === 'item' && entry.node.key === focusKey,
+        )
   const isList = kind === 'list'
   const listStyle = composeStyles<ViewStyle>(
     isList ? own.list : undefined,
@@ -404,20 +482,24 @@ function Collection<T extends object = object>({
     : undefined
   const value = useMemo<CollectionValue>(
     () => ({
+      focusKey,
       ground,
       kind,
       loadMore,
       onAction,
+      onFocusTarget,
       renderEmptyState,
       selectLabel: selectLabel ?? messages.select,
       state,
     }),
     [
+      focusKey,
       ground,
       kind,
       loadMore,
       messages,
       onAction,
+      onFocusTarget,
       renderEmptyState,
       selectLabel,
       state,
@@ -433,6 +515,9 @@ function Collection<T extends object = object>({
           contentContainerStyle,
         )}
         data={entries}
+        // Enough rows drawn at first to hold the one a screen reader is sent
+        // to, which has to be there to be sent to.
+        initialNumToRender={Math.max(INITIAL_ROWS, focusIndex + 1)}
         keyboardShouldPersistTaps={
           keyboardShouldPersistTaps ??
           (autocomplete === null ? undefined : 'handled')
@@ -442,7 +527,13 @@ function Collection<T extends object = object>({
         ListFooterComponent={loadMore === undefined ? undefined : LoaderRow}
         onEndReached={loadMore === undefined ? undefined : loadMoreOf(loadMore)}
         onEndReachedThreshold={loadMore?.scrollOffset ?? LOAD_OFFSET}
-        ref={ref}
+        onLayout={revealOnLayout(onLayout, {
+          index: revealFocus && !revealed ? focusIndex : -1,
+          list,
+          setRevealed,
+        })}
+        onScrollToIndexFailed={scrollNear(list)}
+        ref={refsOf(setList, ref)}
         renderItem={renderEntry}
         stickyHeaderIndices={isList ? sticky : undefined}
         style={listStyle}
@@ -666,6 +757,35 @@ function ResultsStatus({ count }: { readonly count: number }) {
   )
 }
 
+/**
+ * The list's layout handler: the call site's own, then a scroll that brings
+ * the row at `index` into view, once, where there is one to reveal. The row
+ * goes to the bottom of the list where it was below the fold, and a row
+ * already in view stays where it is: scrolled to put a row at the bottom, a
+ * list never scrolls past its end, and one that would have to scroll back
+ * above its start stays at the top.
+ */
+function revealOnLayout(
+  onLayout: ((event: LayoutChangeEvent) => void) | undefined,
+  {
+    index,
+    list,
+    setRevealed,
+  }: {
+    readonly index: number
+    readonly list: FlatList | null
+    readonly setRevealed: (revealed: boolean) => void
+  },
+) {
+  return (event: LayoutChangeEvent) => {
+    onLayout?.(event)
+    if (index > 0 && list !== null) {
+      setRevealed(true)
+      list.scrollToIndex({ animated: false, index, viewPosition: 1 })
+    }
+  }
+}
+
 // The entry the collection holds for an `Item` part, as React Stately's own
 // `Item` gives one: keyed by the row's `id`, and carrying the props it is
 // drawn from.
@@ -721,6 +841,8 @@ function RowNode({ node }: { readonly node: Node<unknown> }) {
   const isList = collection.kind === 'list'
   const { selectionManager } = collection.state
   const { key } = node
+  const rowRef =
+    key === collection.focusKey ? refsOf(collection.onFocusTarget, ref) : ref
   // The selection manager reads a row's own `isDisabled` off its entry,
   // beside the list's `disabledKeys`, so it answers for both.
   const disabled = selectionManager.isDisabled(key)
@@ -793,7 +915,7 @@ function RowNode({ node }: { readonly node: Node<unknown> }) {
     return (
       <View
         aria-disabled={disabled || undefined}
-        ref={ref}
+        ref={rowRef}
         style={composeStyles<ViewStyle>(rowStyle, style)}
         testID={props.testID}
       >
@@ -823,7 +945,7 @@ function RowNode({ node }: { readonly node: Node<unknown> }) {
           : onLongPress
       }
       onPress={pressThen(onPress, acts ? action : selectable ? select : noop)}
-      ref={ref}
+      ref={rowRef}
       style={composeStyles<ViewStyle>(
         rowStyle,
         feedback.ring,
@@ -835,6 +957,20 @@ function RowNode({ node }: { readonly node: Node<unknown> }) {
       {lines}
     </Pressable>
   )
+}
+
+/**
+ * Where a row the list has not measured yet is reached: as far down as rows
+ * of the average height would put it, which a `FlatList` asks for in place
+ * of scrolling to a row it cannot place.
+ */
+function scrollNear(list: FlatList | null) {
+  return ({ averageItemLength, index }: ScrollFailure) => {
+    list?.scrollToOffset({
+      animated: false,
+      offset: averageItemLength * index,
+    })
+  }
 }
 
 /**
@@ -999,11 +1135,12 @@ function withBox(
   )
 }
 
-export { Collection, loaderNode, rowNode, sectionNode }
+export { Collection, CollectionView, loaderNode, rowNode, sectionNode }
 export type {
   CollectionKind,
   CollectionLoadMoreProps,
   CollectionProps,
   CollectionRowProps,
   CollectionSectionProps,
+  CollectionViewProps,
 }

@@ -643,6 +643,20 @@ describe('ListBox', () => {
       expect(styleOf(list())).toEqual(CALL_SITE)
     })
 
+    it("keeps the call site's onLayout", async () => {
+      const onLayout = jest.fn()
+      const layout = { height: 168, width: 320, x: 0, y: 0 }
+      await render(
+        <ListBox aria-label="Label" onLayout={onLayout}>
+          {THREE_OPTIONS}
+        </ListBox>,
+      )
+
+      await fireEvent(list(), 'layout', { nativeEvent: { layout } })
+
+      expect(onLayout).toHaveBeenCalledWith({ nativeEvent: { layout } })
+    })
+
     it("lands an option's style and testID on the option", async () => {
       await render(
         <ListBox aria-label="Label" selectionMode="single">
