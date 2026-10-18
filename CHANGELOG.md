@@ -1,5 +1,45 @@
 # Changelog
 
+## [0.10.0](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.9.0...v0.10.0) (2026-10-18)
+
+
+### ⚠ BREAKING CHANGES
+
+* **form:** Form's `onSubmit` values are now `string | readonly string[]` by name, where they were `string`, since a CheckboxGroup with a `name` submits its ticked entries' values as a list under it; narrow a value with `typeof value === 'string'` before reading it as a string.
+
+### Features
+
+* **button-group:** add ButtonGroup component ([#213](https://github.com/kanso-labs/react-native-kanso-ui/issues/213)) ([68f167e](https://github.com/kanso-labs/react-native-kanso-ui/commit/68f167ed180d8e7a08f6e1644dbd3a41d9b5f1fd))
+* **carousel:** add Carousel component ([#245](https://github.com/kanso-labs/react-native-kanso-ui/issues/245)) ([1fedf44](https://github.com/kanso-labs/react-native-kanso-ui/commit/1fedf44449f057c611e47203cf69b15025ace91e))
+* **color-area:** add ColorArea component ([#240](https://github.com/kanso-labs/react-native-kanso-ui/issues/240)) ([07ed07b](https://github.com/kanso-labs/react-native-kanso-ui/commit/07ed07bd43097eba942a3fae033a01f689bf7572))
+* **color-field:** add ColorField component ([#242](https://github.com/kanso-labs/react-native-kanso-ui/issues/242)) ([a8c1a55](https://github.com/kanso-labs/react-native-kanso-ui/commit/a8c1a5523bad6d03d9bfc3e5b0f1580439e8a9bb))
+* **color-picker:** add ColorPicker component ([#243](https://github.com/kanso-labs/react-native-kanso-ui/issues/243)) ([70a148e](https://github.com/kanso-labs/react-native-kanso-ui/commit/70a148e11d21f95158f68944f13d128a04b71421))
+* **color-slider:** add ColorSlider component ([#239](https://github.com/kanso-labs/react-native-kanso-ui/issues/239)) ([37c01a5](https://github.com/kanso-labs/react-native-kanso-ui/commit/37c01a58d40fd37fee7a7a9ffc5bec5c7c793fbd))
+* **color-swatch-picker:** add ColorSwatchPicker component ([#238](https://github.com/kanso-labs/react-native-kanso-ui/issues/238)) ([45f1208](https://github.com/kanso-labs/react-native-kanso-ui/commit/45f120824fe9bd5997b3fddfc5c101a6fb51cf4e))
+* **color-swatch:** add ColorSwatch component ([#237](https://github.com/kanso-labs/react-native-kanso-ui/issues/237)) ([0dc49ed](https://github.com/kanso-labs/react-native-kanso-ui/commit/0dc49eddb07c61e841beaa3d09f6265ca4740327))
+* **color-wheel:** add ColorWheel component ([#241](https://github.com/kanso-labs/react-native-kanso-ui/issues/241)) ([42167d5](https://github.com/kanso-labs/react-native-kanso-ui/commit/42167d5b84a3e32e627fdd1a3a76f87b07aff0d5))
+* **combo-box:** add ComboBox component ([#226](https://github.com/kanso-labs/react-native-kanso-ui/issues/226)) ([ac45c52](https://github.com/kanso-labs/react-native-kanso-ui/commit/ac45c52dfd613bdfb568c68b6d9d90913bd1bbc3))
+* **date-field:** add DateField component ([#230](https://github.com/kanso-labs/react-native-kanso-ui/issues/230)) ([d85b2a5](https://github.com/kanso-labs/react-native-kanso-ui/commit/d85b2a54ea85c4aaf25505c16f9f1c8fd1ae2806))
+* **date-picker:** add DatePicker component ([#233](https://github.com/kanso-labs/react-native-kanso-ui/issues/233)) ([9807400](https://github.com/kanso-labs/react-native-kanso-ui/commit/9807400ed9bd6588ca64285c346e558d6654ceab))
+* **date-range-picker:** add DateRangePicker component ([#234](https://github.com/kanso-labs/react-native-kanso-ui/issues/234)) ([a007691](https://github.com/kanso-labs/react-native-kanso-ui/commit/a00769144812d1a9cfa469e7ccea0010e3caff5e))
+* **disclosure-group:** add DisclosureGroup component ([#219](https://github.com/kanso-labs/react-native-kanso-ui/issues/219)) ([94fc5b4](https://github.com/kanso-labs/react-native-kanso-ui/commit/94fc5b428a8d00baedf864f3af5c8e35b9a524f0))
+* **disclosure:** add Disclosure component ([#218](https://github.com/kanso-labs/react-native-kanso-ui/issues/218)) ([4d0a606](https://github.com/kanso-labs/react-native-kanso-ui/commit/4d0a606a7366158c6359c072b88d051d086f23a4))
+* **drop-zone:** add DropZone and FileTrigger components ([#244](https://github.com/kanso-labs/react-native-kanso-ui/issues/244)) ([c7f6a44](https://github.com/kanso-labs/react-native-kanso-ui/commit/c7f6a4424898796679dca9593138d7c22b9a0815))
+* **form:** submit a checkbox group's selection as a list ([#216](https://github.com/kanso-labs/react-native-kanso-ui/issues/216)) ([552e089](https://github.com/kanso-labs/react-native-kanso-ui/commit/552e089489a93cc48860c87cf3255895fbda9702))
+* **list-box:** add ListBox component ([#224](https://github.com/kanso-labs/react-native-kanso-ui/issues/224)) ([b36a050](https://github.com/kanso-labs/react-native-kanso-ui/commit/b36a05004cb15b61c30cbe5115ec35b67a4b3ae3))
+* **loading-indicator:** add LoadingIndicator component ([#236](https://github.com/kanso-labs/react-native-kanso-ui/issues/236)) ([04e674a](https://github.com/kanso-labs/react-native-kanso-ui/commit/04e674a52bc6199f688db0f88962de1b5b84cd60))
+* **navigation-tree:** add NavigationTree component ([#229](https://github.com/kanso-labs/react-native-kanso-ui/issues/229)) ([037808e](https://github.com/kanso-labs/react-native-kanso-ui/commit/037808ebef7aebf315d0f5e138ff771a04b0e9c3))
+* **range-calendar:** add RangeCalendar component ([#232](https://github.com/kanso-labs/react-native-kanso-ui/issues/232)) ([6bb3a1b](https://github.com/kanso-labs/react-native-kanso-ui/commit/6bb3a1ba77b144c26c40f4b8fe3cabad65c6a463))
+* **search-view:** add SearchView component ([#227](https://github.com/kanso-labs/react-native-kanso-ui/issues/227)) ([e27257a](https://github.com/kanso-labs/react-native-kanso-ui/commit/e27257a76611716194dc8d8fae7c1a7bba568b29))
+* **select:** add Select component ([#225](https://github.com/kanso-labs/react-native-kanso-ui/issues/225)) ([11ad0d2](https://github.com/kanso-labs/react-native-kanso-ui/commit/11ad0d275330cc4278427f2f5d2d57023e98d4fd))
+* **slider:** add Slider component ([#221](https://github.com/kanso-labs/react-native-kanso-ui/issues/221)) ([2b9527b](https://github.com/kanso-labs/react-native-kanso-ui/commit/2b9527bcb9b6b47b69b8f1bfb5fa3b2ddf6b4f6e))
+* **split-button:** add SplitButton component ([#215](https://github.com/kanso-labs/react-native-kanso-ui/issues/215)) ([0d9a002](https://github.com/kanso-labs/react-native-kanso-ui/commit/0d9a00287000ad4251ba2d824a5f64ab0b903075))
+* **tabs:** add Tabs component ([#220](https://github.com/kanso-labs/react-native-kanso-ui/issues/220)) ([f712a0e](https://github.com/kanso-labs/react-native-kanso-ui/commit/f712a0ef90dc2304fa069714282cc5e47bd0469a))
+* **time-field:** add TimeField component ([#231](https://github.com/kanso-labs/react-native-kanso-ui/issues/231)) ([da2f70c](https://github.com/kanso-labs/react-native-kanso-ui/commit/da2f70c87a297c1be705166a75f36ba06a3b5f83))
+* **time-picker:** add TimePicker component ([#235](https://github.com/kanso-labs/react-native-kanso-ui/issues/235)) ([0c5f14c](https://github.com/kanso-labs/react-native-kanso-ui/commit/0c5f14c518161e9e131d33ab15bab742fe939e92))
+* **tooltip:** add Tooltip component ([#217](https://github.com/kanso-labs/react-native-kanso-ui/issues/217)) ([bc68486](https://github.com/kanso-labs/react-native-kanso-ui/commit/bc6848672b8bec847d16bd23fc2f4b55b6aeceb5))
+* **tree:** add Tree component ([#228](https://github.com/kanso-labs/react-native-kanso-ui/issues/228)) ([eea3b1a](https://github.com/kanso-labs/react-native-kanso-ui/commit/eea3b1a6057fe6d1102f8a28c592d42e97e12548))
+
 ## [0.9.0](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.8.0...v0.9.0) (2026-10-17)
 
 
