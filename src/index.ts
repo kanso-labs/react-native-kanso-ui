@@ -50,6 +50,8 @@ export type {
 } from './components/chip-group'
 export { Code } from './components/code'
 export type { CodeProps } from './components/code'
+export { ColorSlider } from './components/color-slider'
+export type { ColorSliderProps } from './components/color-slider'
 export { ColorSwatch } from './components/color-swatch'
 export type { ColorSwatchProps } from './components/color-swatch'
 export {
@@ -364,5 +366,11 @@ export type { KuiTheme, ThemeScopeProps } from './theme-scope'
 export type { ResolvedTheme } from './theme/scope'
 export { useTheme } from './theme/scope'
 export type { TypeRole } from './typography/roles'
-export { parseColor } from 'react-stately'
-export type { Color, Key, Selection } from 'react-stately'
+export { getColorChannels, parseColor } from 'react-stately'
+export type {
+  Color,
+  ColorChannel,
+  ColorSpace,
+  Key,
+  Selection,
+} from 'react-stately'

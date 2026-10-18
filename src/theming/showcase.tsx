@@ -20,6 +20,7 @@ import { CheckboxGroup } from '../components/checkbox-group'
 import { Chip } from '../components/chip'
 import { ChipGroup } from '../components/chip-group'
 import { Code } from '../components/code'
+import { ColorSlider } from '../components/color-slider'
 import { ColorSwatch } from '../components/color-swatch'
 import { ColorSwatchPicker } from '../components/color-swatch-picker'
 import { ComboBox } from '../components/combo-box'
@@ -623,6 +624,23 @@ function Showcase({ name }: ShowcaseProps) {
             A muted line naming <Code>--kui-radius-md</Code>
           </Text>
         </View>
+      </Section>
+
+      <Section
+        description="A hue track and an alpha track. The gradient is the value; the track's corner, and the chequer behind the alpha one, are the scheme's."
+        title="ColorSlider"
+      >
+        <ColorSlider
+          channel="hue"
+          colorSpace="hsl"
+          defaultValue={SWATCH}
+          label="Label"
+        />
+        <ColorSlider
+          channel="alpha"
+          defaultValue={TRANSPARENT_SWATCH}
+          label="Label"
+        />
       </Section>
 
       <Section
