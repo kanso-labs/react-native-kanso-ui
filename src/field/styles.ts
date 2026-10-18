@@ -21,7 +21,7 @@ import { themedStyles } from '../theme/styles'
 const OUTLINE_REACH = 8
 
 const fieldStylesOf = themedStyles(
-  ({ colors, radii, spacing, stateLayerOpacity }) =>
+  ({ colors, radii, sizing, spacing, stateLayerOpacity }) =>
     StyleSheet.create({
       // The control's line, holding the affixes beside it. The 2dp is
       // Compose's padding between the two, since the page gives none.
@@ -245,6 +245,19 @@ const fieldStylesOf = themedStyles(
         alignItems: 'center',
         flexDirection: 'row',
         overflow: 'hidden',
+      },
+      // A token field's pills and its control on the value's line, in a row
+      // that wraps. A line is a pill's height at the least, as web's line is,
+      // so the control after the pills sits on their line rather than above
+      // its middle. 4dp between two on a line, where web has a space, and the
+      // chips' 8dp between lines, which their targets reach halfway into.
+      wrap: {
+        alignItems: 'center',
+        columnGap: spacing.xs,
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        minHeight: sizing.controlXs,
+        rowGap: spacing.sm,
       },
     }),
 )
