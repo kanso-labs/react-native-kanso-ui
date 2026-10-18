@@ -69,6 +69,8 @@ export { DateField } from './components/date-field'
 export type { DateFieldProps } from './components/date-field'
 export { DatePicker } from './components/date-picker'
 export type { DatePickerProps } from './components/date-picker'
+export { DateRangePicker } from './components/date-range-picker'
+export type { DateRangePickerProps } from './components/date-range-picker'
 export {
   Dialog,
   DialogBody,

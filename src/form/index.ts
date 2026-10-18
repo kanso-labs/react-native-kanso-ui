@@ -12,6 +12,12 @@ import { createContext, use, useEffect, useId, useRef, useState } from 'react'
 // focus.
 
 type FieldValidationOptions<T> = {
+  /**
+   * A second name the field submits a value under, beside `name`'s, with
+   * that value, as a date range picker submits its end beside its start.
+   * The form's `validationErrors` reach the field under either name.
+   */
+  readonly alongside?: readonly [name: string | undefined, submitted: string]
   /** The control a failed native submission focuses. */
   readonly control: RefObject<Focusable | null>
   /** The field's own error, which wins over anything the form says. */
@@ -45,8 +51,8 @@ type FormEntry = {
   readonly focus: () => void
   /** Shows the field's own error, once a submission it held back is tried. */
   readonly show: () => void
-  /** The name and value the field submits, where it submits one. */
-  readonly submits: readonly [string, FormValues[string]] | undefined
+  /** The names and values the field submits: none, one, or a range's two. */
+  readonly submits: readonly (readonly [string, FormValues[string]])[]
 }
 
 type FormRegistry = {
@@ -101,6 +107,11 @@ const REQUIRED_ERROR = 'Fill out this field.'
 const NO_ERRORS: ValidationErrors = {}
 
 const NO_MESSAGES: readonly string[] = []
+
+// What a field with no second name submits beside its first: nothing.
+const NO_SUBMISSION = [undefined, undefined] as const
+
+const NO_SUBMISSIONS: FormEntry['submits'] = []
 
 const FormContext = createContext<FormState | null>(null)
 
@@ -172,13 +183,7 @@ function submitOf(
       }
     }
 
-    onSubmit?.(
-      Object.fromEntries(
-        entries.flatMap((entry) =>
-          entry.submits === undefined ? [] : [entry.submits],
-        ),
-      ),
-    )
+    onSubmit?.(Object.fromEntries(entries.flatMap((entry) => entry.submits)))
   }
 }
 
@@ -203,6 +208,7 @@ function submitOf(
  * leaves a disabled input out of what a form submits.
  */
 function useFieldValidation<T>({
+  alongside,
   control,
   error,
   isDisabled,
@@ -228,10 +234,13 @@ function useFieldValidation<T>({
   const edited = useRef(false)
   const native = behavior === 'native'
   const barred = isDisabled || isReadOnly
+  const submissions = [[name, submitted], alongside ?? NO_SUBMISSION] as const
   const server =
-    name === undefined || clearedFrom === serverErrors
+    clearedFrom === serverErrors
       ? NO_MESSAGES
-      : messagesOf(serverErrors[name])
+      : submissions.flatMap(([each]) =>
+          each === undefined ? NO_MESSAGES : messagesOf(serverErrors[each]),
+        )
   const client =
     validate === undefined ? NO_MESSAGES : messagesOf(validate(value))
   const own =
@@ -254,10 +263,11 @@ function useFieldValidation<T>({
     show: () => {
       setShowing(true)
     },
-    submits:
-      isDisabled || name === undefined || submitted === undefined
-        ? undefined
-        : [name, submitted],
+    submits: isDisabled
+      ? NO_SUBMISSIONS
+      : submissions.flatMap(([each, sent]) =>
+          each === undefined || sent === undefined ? [] : [[each, sent]],
+        ),
   }
 
   // Reported after every render, so the form reads what the field shows.

@@ -345,6 +345,11 @@ const OUTSIDE_BOX: BoxControl = {
 
 const BoxContext = createContext<BoxControl>(OUTSIDE_BOX)
 
+// Whether a FieldSegments sits on the line of another, as a date range
+// picker's two dates sit on the one line it draws, which clears the label
+// once for both.
+const SegmentsLineContext = createContext(false)
+
 const NO_PARTS: readonly FieldDescriptionPart[] = []
 
 /**
@@ -820,10 +825,12 @@ function FieldMessage({
 /**
  * A date or a time's segments on the value's line of a {@link FieldBox}, in
  * a row, clearing the label at the top where the box is filled, as a control
- * does: web's `FieldSegments`.
+ * does: web's `FieldSegments`. One inside another is a row on the outer
+ * one's line, which has already cleared the label.
  */
 function FieldSegments({ children }: { readonly children?: ReactNode }) {
   const box = use(BoxContext)
+  const onLine = use(SegmentsLineContext)
   const theme = useTheme()
   const styles = fieldStylesOf(theme)
   const { fontScale } = useWindowDimensions()
@@ -832,12 +839,12 @@ function FieldSegments({ children }: { readonly children?: ReactNode }) {
     <View
       style={composeStyles<ViewStyle>(
         styles.segments,
-        box.underLabel
+        box.underLabel && !onLine
           ? marginTopOf(theme.typography.bodySmallLineHeight * fontScale)
           : undefined,
       )}
     >
-      {children}
+      <SegmentsLineContext value>{children}</SegmentsLineContext>
     </View>
   )
 }
