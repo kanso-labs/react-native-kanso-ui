@@ -174,6 +174,16 @@ export type {
   NavigationRailItemProps,
   NavigationRailProps,
 } from './components/navigation-rail'
+export {
+  NavigationTree,
+  NavigationTreeItem,
+  NavigationTreeSection,
+} from './components/navigation-tree'
+export type {
+  NavigationTreeItemProps,
+  NavigationTreeProps,
+  NavigationTreeSectionProps,
+} from './components/navigation-tree'
 export { NumberField } from './components/number-field'
 export type { NumberFieldProps } from './components/number-field'
 export {

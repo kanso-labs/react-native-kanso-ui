@@ -42,6 +42,7 @@ import { Menu } from '../components/menu'
 import { Meter } from '../components/meter'
 import { NavigationBar } from '../components/navigation-bar'
 import { NavigationRail } from '../components/navigation-rail'
+import { NavigationTree } from '../components/navigation-tree'
 import { NumberField } from '../components/number-field'
 import { Popover } from '../components/popover'
 import { ProductIcon } from '../components/product-icon'
@@ -972,6 +973,28 @@ function Showcase({ name }: ShowcaseProps) {
             </NavigationRail.Item>
           </NavigationRail>
         </View>
+      </Section>
+
+      <Section
+        description="The route you are on sits on a container of its own, and each depth indents by the caret's own width."
+        title="NavigationTree"
+      >
+        <Card padding="none" variant="outlined">
+          <NavigationTree
+            aria-label="Label"
+            scrollEnabled={false}
+            selectedRoute="/second"
+          >
+            <NavigationTree.Item href="/first" id="first" label="First item">
+              <NavigationTree.Item
+                href="/second"
+                id="second"
+                label="Second item"
+              />
+            </NavigationTree.Item>
+            <NavigationTree.Item href="/third" id="third" label="Third item" />
+          </NavigationTree>
+        </Card>
       </Section>
 
       <Section

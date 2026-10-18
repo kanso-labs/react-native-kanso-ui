@@ -12,9 +12,9 @@ import type {
 } from '../../collection'
 
 import {
-  childElementsOf,
   CollectionView,
   loaderNode,
+  nestedRowNode,
   sectionNode,
 } from '../../collection'
 
@@ -195,28 +195,15 @@ function TreeSection(_props: TreeSectionProps): null {
 
 TreeSection.getCollectionNode = sectionNode
 
-// The entry the collection holds for an `Item` part: keyed by the row's
-// `id`, carrying the props it is drawn from, and holding the rows nested in
-// it, which the collection reads only while the row is open.
-function* treeItemNode(props: TreeItemProps) {
-  const children = childElementsOf(props.children)
-
-  yield {
-    'aria-label': props['aria-label'],
-    *childNodes() {
-      for (const element of children) {
-        yield { element }
-      }
-    },
-    hasChildNodes: children.length > 0,
-    key: props.id,
+// The entry the collection holds for an `Item` part, whose first line is its
+// headline.
+function treeItemNode(props: TreeItemProps) {
+  return nestedRowNode(
     props,
-    rendered: props.headline,
-    textValue:
-      props.textValue ??
+    props.headline,
+    props.textValue ??
       (typeof props.headline === 'string' ? props.headline : ''),
-    type: 'item',
-  }
+  )
 }
 
 Tree.Item = TreeItem

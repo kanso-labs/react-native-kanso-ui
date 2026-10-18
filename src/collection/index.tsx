@@ -51,6 +51,7 @@ import { resultsFor } from '../i18n'
 import { useLocaleOf, useMessages } from '../i18n/provider'
 import { hitSlop, usePressFeedback } from '../press'
 import { refsOf } from '../ref'
+import { useOpenLink } from '../router'
 import {
   hasContent,
   RowContent,
@@ -73,7 +74,10 @@ import { useTypeRole } from '../typography/roles'
 // transparent, so the same one sits on a page and inside a popover. A Tree
 // is a List whose state is a tree's, drawn from React Stately's tree state
 // rather than its list state: its rows nest, a row with rows under it opens
-// and closes, and the rows of an open one follow it in the same column.
+// and closes, and the rows of an open one follow it in the same column. A
+// NavigationTree is a Tree drawn as a navigation drawer: its rows are links,
+// the one whose `href` is the route is marked with the drawer's pill, and
+// the rows it sits under with a bold label.
 //
 // Four things differ from web's, each because a screen reader or a touch on
 // a phone works differently from a keyboard in a browser.
@@ -127,6 +131,10 @@ const INITIAL_ROWS = 10
 // which leaves it nothing to draw.
 const IDLE: CollectionLoadMoreProps = {}
 
+// What marks a drawer's current row on the web, where a screen reader reads
+// it, as web's does.
+const CURRENT_PAGE = { 'aria-current': 'page' } as const
+
 const styles = StyleSheet.create({
   box: {
     alignItems: 'center',
@@ -150,55 +158,70 @@ const styles = StyleSheet.create({
   },
 })
 
-const stylesOf = themedStyles(({ colors, sizing, spacing }: ResolvedTheme) =>
-  StyleSheet.create({
-    // The 8dp above the first row and below the last, as web's container
-    // draws them.
-    content: {
-      paddingVertical: spacing.sm,
-    },
-    empty: {
-      color: colors.onSurfaceVariant,
-    },
-    // The lists page's subhead: title small in on surface variant, at the
-    // row's inline padding so it lines up with the headlines under it, with
-    // more room above than below so it reads as belonging to what follows.
-    header: {
-      color: colors.onSurfaceVariant,
-      paddingBottom: spacing.xxs,
-      paddingHorizontal: spacing.lg,
-      paddingTop: spacing.lg,
-    },
-    // The checkbox beside whatever the row's leading slot was given, a
-    // row's own gap apart.
-    lead: {
-      alignItems: 'center',
-      flexDirection: 'row',
-      gap: spacing.lg,
-    },
-    list: {
-      backgroundColor: colors.surface,
-    },
-    // A row's height for the ring, so the list does not jump when the next
-    // items land.
-    loading: {
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: sizing.rowSm,
-    },
-    // Never seen, but in a pair that reads, for a checker that looks.
-    status: {
-      color: colors.onSurface,
-    },
-  }),
+const stylesOf = themedStyles(
+  ({ colors, radii, sizing, spacing }: ResolvedTheme) =>
+    StyleSheet.create({
+      // The 8dp above the first row and below the last, as web's container
+      // draws them.
+      content: {
+        paddingVertical: spacing.sm,
+      },
+      // The navigation drawer page's section heading, in on surface variant,
+      // held 12dp further in than a list's, which lines it up with the labels
+      // inside the rows' pills.
+      drawerHeader: {
+        color: colors.onSurfaceVariant,
+        paddingBottom: spacing.xxs,
+        paddingHorizontal: spacing.lg + spacing.md,
+        paddingTop: spacing.lg,
+      },
+      empty: {
+        color: colors.onSurfaceVariant,
+      },
+      // The lists page's subhead: title small in on surface variant, at the
+      // row's inline padding so it lines up with the headlines under it, with
+      // more room above than below so it reads as belonging to what follows.
+      header: {
+        color: colors.onSurfaceVariant,
+        paddingBottom: spacing.xxs,
+        paddingHorizontal: spacing.lg,
+        paddingTop: spacing.lg,
+      },
+      // The checkbox beside whatever the row's leading slot was given, a
+      // row's own gap apart.
+      lead: {
+        alignItems: 'center',
+        flexDirection: 'row',
+        gap: spacing.lg,
+      },
+      list: {
+        backgroundColor: colors.surface,
+      },
+      // A row's height for the ring, so the list does not jump when the next
+      // items land.
+      loading: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: sizing.rowSm,
+      },
+      // The corners a drawer's row clips its state layer and ripple to.
+      pill: {
+        borderRadius: radii.pill,
+      },
+      // Never seen, but in a pair that reads, for a checker that looks.
+      status: {
+        color: colors.onSurface,
+      },
+    }),
 )
 
 /**
  * Which component draws the collection: a List, whose rows that select carry
- * a checkbox and whose ground is surface, or a ListBox, whose options carry
- * none and which has no ground.
+ * a checkbox and whose ground is surface, a ListBox, whose options carry
+ * none and which has no ground, or a NavigationTree's drawer, whose rows are
+ * links, with the current one marked, and which has no ground either.
  */
-type CollectionKind = 'list' | 'listbox'
+type CollectionKind = 'drawer' | 'list' | 'listbox'
 
 type CollectionLoadMoreProps = {
   /**
@@ -355,6 +378,8 @@ type CollectionValue = {
   readonly onAction: ((key: Key) => void) | undefined
   readonly onFocusTarget: ((node: HostInstance | null) => void) | undefined
   readonly renderEmptyState: () => ReactNode
+  /** Where a drawer's route is among its rows, and nothing for the others. */
+  readonly route: RouteMark | undefined
   readonly selectLabel: string
   readonly state: CollectionState<unknown>
 }
@@ -383,6 +408,11 @@ type CollectionViewProps<T extends object = object> = Omit<
    */
   readonly revealFocus?: boolean
   /**
+   * A drawer's current route, matched against each row's `href`: the row it
+   * matches is the current one, and the rows above it are its trail.
+   */
+  readonly selectedRoute?: string | undefined
+  /**
    * The list state the rows are drawn from, and select through, or a tree
    * state, which opens and closes them too.
    */
@@ -393,6 +423,15 @@ type CollectionViewProps<T extends object = object> = Omit<
 type Entry = {
   readonly kind: 'header' | 'item'
   readonly node: Node<unknown>
+}
+
+/**
+ * The row of a drawer whose `href` is the route, and the rows it sits
+ * under, at every depth.
+ */
+type RouteMark = {
+  readonly current: Key | null
+  readonly trail: ReadonlySet<Key>
 }
 
 /** What a `FlatList` reports when it cannot scroll to a row. */
@@ -508,6 +547,7 @@ function CollectionView<T extends object = object>({
   ref,
   renderEmptyState = emptyState,
   revealFocus = false,
+  selectedRoute,
   selectLabel,
   state,
   style,
@@ -519,6 +559,13 @@ function CollectionView<T extends object = object>({
   const { entries, loader, rows, sticky } = useMemo(
     () => entriesOf(state),
     [state],
+  )
+  const route = useMemo(
+    () =>
+      kind === 'drawer'
+        ? routeMarkOf(state.collection, selectedRoute)
+        : undefined,
+    [kind, selectedRoute, state.collection],
   )
   const [list, setList] = useState<FlatList | null>(null)
   const [revealed, setRevealed] = useState(false)
@@ -550,6 +597,7 @@ function CollectionView<T extends object = object>({
       onAction,
       onFocusTarget,
       renderEmptyState,
+      route,
       selectLabel: selectLabel ?? messages.select,
       state,
     }),
@@ -562,6 +610,7 @@ function CollectionView<T extends object = object>({
       onAction,
       onFocusTarget,
       renderEmptyState,
+      route,
       selectLabel,
       state,
     ],
@@ -602,6 +651,17 @@ function CollectionView<T extends object = object>({
       {autocomplete === null ? null : <ResultsStatus count={rows} />}
     </CollectionContext>
   )
+}
+
+// What a drawer's row reports of being the current one. Native has no
+// counterpart to `aria-current`, so there the current row reports itself
+// selected, as NavigationBar's current destination does, which VoiceOver and
+// TalkBack both read out. Read as the row draws, as Breadcrumbs reads it.
+function currentState(current: boolean) {
+  if (Platform.OS !== 'web') {
+    return { 'aria-selected': current }
+  }
+  return current ? CURRENT_PAGE : undefined
 }
 
 /**
@@ -729,6 +789,13 @@ function focusKeyOf<T>(state: ListState<T>): Key | null {
   return null
 }
 
+// The `href` a drawer's row was written with.
+function hrefOf(node: Node<unknown>): string | undefined {
+  // oxlint-disable-next-line typescript/no-unsafe-assignment -- a node carries the props its row was written with, which React Stately types as `any`
+  const { href }: { readonly href?: string } = node.props
+  return href
+}
+
 function keptOf<T>(
   nodes: Iterable<Node<T>>,
   matches: AutocompleteValue['matches'],
@@ -815,6 +882,38 @@ function loadMoreOf({
   }
 }
 
+// The entry the collection holds for a tree's `Item` part: keyed by the
+// row's `id`, carrying the props it is drawn from, and holding the rows
+// nested in it, which the collection reads only while the row is open. What
+// the row draws as its first line and what that is worth as text are the
+// part's own, a Tree's headline and a NavigationTree's label.
+function* nestedRowNode(
+  props: {
+    readonly 'aria-label'?: string
+    readonly children?: ReactNode
+    readonly id?: Key
+  },
+  rendered: ReactNode,
+  textValue: string,
+) {
+  const children = childElementsOf(props.children)
+
+  yield {
+    'aria-label': props['aria-label'],
+    *childNodes() {
+      for (const element of children) {
+        yield { element }
+      }
+    },
+    hasChildNodes: children.length > 0,
+    key: props.id,
+    props,
+    rendered,
+    textValue,
+    type: 'item',
+  }
+}
+
 function noop() {
   // A press on a row with nothing to do runs the call site's `onPress` alone.
 }
@@ -897,6 +996,38 @@ function revealOnLayout(
   }
 }
 
+// The route's row among a drawer's rows, found through every row, open or
+// not, since a current row closed out of sight still marks its trail.
+function routeMarkOf<T>(
+  nodes: Iterable<Node<T>>,
+  selectedRoute: string | undefined,
+): RouteMark {
+  const trail: Key[] = []
+  const find = (level: Iterable<Node<T>>): Key | null => {
+    for (const node of level) {
+      if (node.type === 'item' && hrefOf(node) === selectedRoute) {
+        return node.key
+      }
+      if (node.type === 'item') {
+        trail.push(node.key)
+      }
+      // oxlint-disable-next-line typescript/no-deprecated -- a tree's collection holds only the rows on show, and the route may be under a closed one
+      const found = find(node.childNodes)
+
+      if (found !== null) {
+        return found
+      }
+      if (node.type === 'item') {
+        trail.pop()
+      }
+    }
+    return null
+  }
+  const current = selectedRoute === undefined ? null : find(nodes)
+
+  return { current, trail: new Set(current === null ? [] : trail) }
+}
+
 // How many rows the list holds, the ones inside sections among them.
 function rowCountOf<T>(state: ListState<T>) {
   return entriesOf(state).rows
@@ -938,8 +1069,10 @@ function RowNode({ node }: { readonly node: Node<unknown> }) {
   const {
     children: _children,
     headline: _headline,
+    href,
     id: _id,
     isDisabled: _isDisabled,
+    label: _label,
     leading,
     onAction,
     onBlur,
@@ -957,8 +1090,14 @@ function RowNode({ node }: { readonly node: Node<unknown> }) {
     textValue: _textValue,
     trailing,
     ...props
-  }: CollectionRowProps & { readonly headline?: ReactNode } = node.props
+  }: CollectionRowProps & {
+    readonly headline?: ReactNode
+    readonly href?: string
+    readonly label?: ReactNode
+  } = node.props
   const isList = collection.kind === 'list'
+  const { route } = collection
+  const openLink = useOpenLink()
   const { selectionManager } = collection.state
   const tree = expansionOf(collection.state)
   const { key } = node
@@ -970,21 +1109,32 @@ function RowNode({ node }: { readonly node: Node<unknown> }) {
   const checks = selectionManager.selectionMode !== 'none'
   const selectable = selectionManager.canSelectItem(key)
   const selected = checks && selectionManager.isSelected(key)
+  // A drawer's row whose `href` is the route, drawn as a selected row is,
+  // and the rows it sits under, whose labels are drawn bold.
+  const current = route?.current === key
+  const onTrail = route?.trail.has(key) === true
+  const marked = selected || current
+  const variant = route === undefined ? undefined : 'drawer'
   // A tree's row with rows under it, which opens and closes.
   const branch = tree !== null && node.hasChildNodes
   const expanded = branch && tree.expandedKeys.has(key)
   const toggle = toggleOf(tree, key)
   const listAction = collection.onAction
-  // React Aria's rule for a tree that neither selects nor acts: a press on a
-  // row with rows under it opens or closes it.
+  // A row with an `href` goes there. Otherwise, React Aria's rule for a tree
+  // that neither selects nor acts: a press on a row with rows under it opens
+  // or closes it.
   const action =
     onAction ??
-    (listAction === undefined
-      ? branch && !checks
-        ? toggle
-        : undefined
+    (href === undefined
+      ? listAction === undefined
+        ? branch && !checks
+          ? toggle
+          : undefined
+        : () => {
+            listAction(key)
+          }
       : () => {
-          listAction(key)
+          openLink(href)
         })
   // React Aria's rule for a touch press on a row that selects: the action
   // while nothing is selected, the selection after.
@@ -1000,10 +1150,12 @@ function RowNode({ node }: { readonly node: Node<unknown> }) {
   }
   const content = rowContentColor(theme, {
     isDisabled: disabled,
-    isSelected: selected,
+    isSelected: marked,
+    variant,
   })
   const feedback = usePressFeedback({
     color: content,
+    corners: route === undefined ? undefined : own.pill,
     disabled,
     onBlur,
     onFocus,
@@ -1033,7 +1185,7 @@ function RowNode({ node }: { readonly node: Node<unknown> }) {
           chevron: branch ? (
             <TreeChevron
               color={
-                disabled || selected ? content : theme.colors.onSurfaceVariant
+                disabled || marked ? content : theme.colors.onSurfaceVariant
               }
               isDisabled={disabled}
               isExpanded={expanded}
@@ -1047,19 +1199,22 @@ function RowNode({ node }: { readonly node: Node<unknown> }) {
   const lines = (
     <RowContent
       isDisabled={disabled}
-      isSelected={selected}
+      isEmphasized={onTrail}
+      isSelected={marked}
       leading={lead}
       overline={overline}
       supporting={supporting}
       trailing={trailing}
+      variant={variant}
     >
       {node.rendered}
     </RowContent>
   )
   const rowStyle = rowStyleOf(theme, {
-    isSelected: selected,
+    isSelected: marked,
     overline,
     supporting,
+    variant,
   })
   const accessibilityActions = [
     ...(offersSelect
@@ -1089,9 +1244,10 @@ function RowNode({ node }: { readonly node: Node<unknown> }) {
 
   return (
     <Pressable
-      role="button"
+      role={href === undefined ? 'button' : 'link'}
       {...props}
       {...(checks ? toggleState(selected) : undefined)}
+      {...(route === undefined ? undefined : currentState(current))}
       {...(branch ? { 'aria-expanded': expanded } : undefined)}
       {...(accessibilityActions.length > 0
         ? {
@@ -1145,8 +1301,11 @@ function scrollNear(list: FlatList | null) {
  */
 function SectionHeader({ node }: { readonly node: Node<unknown> }) {
   const own = stylesOf(useTheme())
-  const title = useTypeRole('titleSmall')
-  const { ground } = useCollection()
+  const { ground, kind } = useCollection()
+  const drawer = kind === 'drawer'
+  // The lists page's subhead is title small, and the drawer page's label
+  // large.
+  const title = useTypeRole(drawer ? 'labelLarge' : 'titleSmall')
 
   return (
     <View
@@ -1158,7 +1317,10 @@ function SectionHeader({ node }: { readonly node: Node<unknown> }) {
     >
       <NativeText
         role="heading"
-        style={composeStyles<TextStyle>(title, own.header)}
+        style={composeStyles<TextStyle>(
+          title,
+          drawer ? own.drawerHeader : own.header,
+        )}
       >
         {node.rendered}
       </NativeText>
@@ -1358,11 +1520,11 @@ function withBox(
 }
 
 export {
-  childElementsOf,
   Collection,
   CollectionView,
   focusKeyOf,
   loaderNode,
+  nestedRowNode,
   ResultsStatus,
   rowCountOf,
   rowNode,
