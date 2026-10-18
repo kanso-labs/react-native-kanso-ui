@@ -50,6 +50,8 @@ export type {
 } from './components/chip-group'
 export { Code } from './components/code'
 export type { CodeProps } from './components/code'
+export { ColorSwatch } from './components/color-swatch'
+export type { ColorSwatchProps } from './components/color-swatch'
 export { ComboBox } from './components/combo-box'
 export type {
   ComboBoxProps,
@@ -353,4 +355,5 @@ export type { KuiTheme, ThemeScopeProps } from './theme-scope'
 export type { ResolvedTheme } from './theme/scope'
 export { useTheme } from './theme/scope'
 export type { TypeRole } from './typography/roles'
-export type { Key, Selection } from 'react-stately'
+export { parseColor } from 'react-stately'
+export type { Color, Key, Selection } from 'react-stately'
