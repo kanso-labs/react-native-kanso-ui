@@ -11,11 +11,18 @@ import type { RowVariant } from './styles'
 import { IconStyleContext } from '../glyphs/icon-style'
 import { useTheme } from '../theme/scope'
 import { composeStyles } from '../theme/styles'
-import { useTypeRole } from '../typography/roles'
+import { nativeWeight, useTypeRole } from '../typography/roles'
 import { rowContentColor, rowStyles, rowStylesOf } from './styles'
 
 // The size an icon in either slot is drawn at, the lists and menus pages'.
 const ICON_SIZE = 24
+
+// The style of each variant's selected container.
+const SELECTED_CONTAINER = {
+  drawer: 'selectedDrawer',
+  list: 'selectedList',
+  menu: 'selectedMenu',
+} as const satisfies Record<RowVariant, string>
 
 type RowContentProps = {
   /** The row's headline, the one thing it is mostly about. */
@@ -26,6 +33,13 @@ type RowContentProps = {
    * @default false
    */
   readonly isDisabled?: boolean
+  /**
+   * Whether the headline is drawn in the bold weight rather than its role's
+   * own, for a row marked without the container a selected one takes. The
+   * navigation drawer's trail to the current row is what asks for it.
+   * @default false
+   */
+  readonly isEmphasized?: boolean
   /**
    * Whether the row is selected. Its headline, slots and lines take the
    * selected container's own on-colour, since the muted role is not
@@ -42,8 +56,8 @@ type RowContentProps = {
   /** Content after the headline, such as an amount or a control. */
   readonly trailing?: ReactNode
   /**
-   * Which spec page's row this is. A list item's headline is body large and
-   * a menu item's label large.
+   * Which spec page's row this is. A list item's headline is body large, and
+   * a menu item's and a navigation drawer row's label large.
    * @default 'list'
    */
   readonly variant?: RowVariant
@@ -65,6 +79,7 @@ function hasContent(node: ReactNode): boolean {
 function RowContent({
   children,
   isDisabled = false,
+  isEmphasized = false,
   isSelected = false,
   leading,
   overline,
@@ -75,7 +90,7 @@ function RowContent({
   const theme = useTheme()
   const own = rowStylesOf(theme)
   const headlineRole = useTypeRole(
-    variant === 'menu' ? 'labelLarge' : 'bodyLarge',
+    variant === 'list' ? 'bodyLarge' : 'labelLarge',
   )
   const overlineRole = useTypeRole('labelSmall')
   const supportingRole = useTypeRole('bodyMedium')
@@ -96,7 +111,15 @@ function RowContent({
             {overline}
           </NativeText>
         ) : null}
-        <NativeText style={composeStyles<TextStyle>(headlineRole, { color })}>
+        <NativeText
+          style={composeStyles<TextStyle>(
+            headlineRole,
+            { color },
+            isEmphasized
+              ? { fontWeight: nativeWeight(theme.typography.weightBold) }
+              : undefined,
+          )}
+        >
           {children}
         </NativeText>
         {hasContent(supporting) ? (
@@ -141,9 +164,7 @@ function rowStyleOf(
     own[variant],
     lines === 1 ? own.twoLine : undefined,
     lines === 2 ? own.threeLine : undefined,
-    isSelected
-      ? own[variant === 'menu' ? 'selectedMenu' : 'selectedList']
-      : undefined,
+    isSelected ? own[SELECTED_CONTAINER[variant]] : undefined,
   )
 }
 
