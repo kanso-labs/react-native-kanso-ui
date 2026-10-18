@@ -20,6 +20,7 @@ import { CheckboxGroup } from '../components/checkbox-group'
 import { Chip } from '../components/chip'
 import { ChipGroup } from '../components/chip-group'
 import { Code } from '../components/code'
+import { ColorSwatch } from '../components/color-swatch'
 import { ComboBox } from '../components/combo-box'
 import { Container } from '../components/container'
 import { CopyField } from '../components/copy-field'
@@ -199,6 +200,10 @@ const BAR_TRAILING = (
     <SearchGlyph />
   </IconButton>
 )
+
+// A swatch's colour is its content rather than a role, so these are literal.
+const SWATCH = '#6750A4'
+const TRANSPARENT_SWATCH = 'hsla(200, 100%, 50%, 0.4)'
 
 // Hoisted so the keys are not a new array on every render, which is what
 // react-perf's no-new-array-as-prop is after.
@@ -615,6 +620,16 @@ function Showcase({ name }: ShowcaseProps) {
           <Text tone="muted" variant="bodyLarge">
             A muted line naming <Code>--kui-radius-md</Code>
           </Text>
+        </View>
+      </Section>
+
+      <Section
+        description="A swatch's colour is its content, so these stay literal on purpose; the chequer behind the transparent one is what follows the theme."
+        title="ColorSwatch"
+      >
+        <View style={styles.row}>
+          <ColorSwatch color={SWATCH} />
+          <ColorSwatch color={TRANSPARENT_SWATCH} />
         </View>
       </Section>
 

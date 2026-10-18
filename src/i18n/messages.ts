@@ -5,17 +5,18 @@
 // rows a search leaves, a calendar's, a date's segments, a field's character
 // limit, CopyField's button, the names of SearchField's clear button, a
 // SearchView's back button, Snackbar's close button, a chip's remove button,
-// NumberField's steppers, what opening and closing a tree's row is called, and
-// a TimePicker's two headlines and two actions. Each one a call site might
-// want in other words stands behind a prop that names it otherwise:
-// `pendingLabel` for the ring, `aria-label` for the handle, `label` for the
-// loading-more row, `renderEmptyState` for the empty one, `selectLabel` for
-// the selection, `placeholder` for a Select's empty value,
-// `characterLimitLabel` for the limit, `copyLabel` and `copiedLabel` for
-// CopyField, `clearLabel`, `backLabel`, `closeLabel` and `removeLabel` for the
-// four buttons, `decrementLabel` and `incrementLabel` for the steppers, and
-// `selectTimeLabel`, `enterTimeLabel`, `cancelLabel` and `confirmLabel` for
-// the time picker.
+// NumberField's steppers, what opening and closing a tree's row is called, a
+// TimePicker's two headlines and two actions, and what a ColorSwatch of a
+// fully transparent colour is called. Each one a call site might want in other
+// words stands behind a prop that names it otherwise: `pendingLabel` for the
+// ring, `aria-label` for the handle, `label` for the loading-more row,
+// `renderEmptyState` for the empty one, `selectLabel` for the selection,
+// `placeholder` for a Select's empty value, `characterLimitLabel` for the
+// limit, `copyLabel` and `copiedLabel` for CopyField, `clearLabel`,
+// `backLabel`, `closeLabel` and `removeLabel` for the four buttons,
+// `decrementLabel` and `incrementLabel` for the steppers, `selectTimeLabel`,
+// `enterTimeLabel`, `cancelLabel` and `confirmLabel` for the time picker, and
+// `colorName` for the swatch.
 //
 // Copied from kanso-ui's src/i18n/messages.ts, one entry per locale React Aria
 // ships, and kept in step with it by hand: the web library publishes no copy of
@@ -38,11 +39,12 @@
 // reads as, from its spin button dictionary. `clearSearch`, `close`,
 // `decrease`, `increase` and `remove` are React Aria's as well, from the
 // search field, toast, number field and tag dictionaries its own controls name
-// those buttons from on web, and `collapse` and `expand` from its tree
-// dictionary, which names web's Tree chevron. The others were drafted for
-// kanso-ui's table rather than taken from a translation service, and each one
-// wants a native speaker's eye before it is trusted; a call site can always
-// pass its own words through the prop.
+// those buttons from on web, `collapse` and `expand` from its tree dictionary,
+// which names web's Tree chevron, and `transparent` from its colour
+// dictionary, which names web's ColorSwatch when its colour has no alpha left.
+// The others were drafted for kanso-ui's table rather than taken from a
+// translation service, and each one wants a native speaker's eye before it is
+// trusted; a call site can always pass its own words through the prop.
 
 type LibraryMessages = {
   /** What a SearchView's back button is called. */
@@ -196,6 +198,8 @@ type LibraryMessages = {
   readonly showSuggestions: string
   /** What a ComboBox's list is called, before the field's label. */
   readonly suggestions: string
+  /** What a ColorSwatch showing a fully transparent colour is called. */
+  readonly transparent: string
 }
 
 /**
@@ -276,6 +280,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectTime: 'اختر الوقت',
     showSuggestions: 'عرض المقترحات',
     suggestions: 'مقترحات',
+    transparent: 'شفاف',
   },
   'bg-BG': {
     back: 'Назад',
@@ -344,6 +349,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectTime: 'Изберете час',
     showSuggestions: 'Покажи предложения',
     suggestions: 'Предложения',
+    transparent: 'прозрачен',
   },
   'cs-CZ': {
     back: 'Zpět',
@@ -412,6 +418,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectTime: 'Vyberte čas',
     showSuggestions: 'Zobrazit doporučení',
     suggestions: 'Návrhy',
+    transparent: 'průhledný',
   },
   'da-DK': {
     back: 'Tilbage',
@@ -477,6 +484,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectTime: 'Vælg tidspunkt',
     showSuggestions: 'Vis forslag',
     suggestions: 'Forslag',
+    transparent: 'gennemsigtig',
   },
   'de-DE': {
     back: 'Zurück',
@@ -544,6 +552,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectTime: 'Uhrzeit auswählen',
     showSuggestions: 'Empfehlungen anzeigen',
     suggestions: 'Empfehlungen',
+    transparent: 'transparent',
   },
   'el-GR': {
     back: 'Πίσω',
@@ -612,6 +621,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectTime: 'Επιλογή ώρας',
     showSuggestions: 'Προβολή προτάσεων',
     suggestions: 'Προτάσεις',
+    transparent: 'διαφανές',
   },
   'en-US': {
     back: 'Back',
@@ -678,6 +688,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectTime: 'Select time',
     showSuggestions: 'Show suggestions',
     suggestions: 'Suggestions',
+    transparent: 'transparent',
   },
   'es-ES': {
     back: 'Atrás',
@@ -746,6 +757,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectTime: 'Seleccionar hora',
     showSuggestions: 'Mostrar sugerencias',
     suggestions: 'Sugerencias',
+    transparent: 'transparente',
   },
   'et-EE': {
     back: 'Tagasi',
@@ -813,6 +825,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectTime: 'Vali kellaaeg',
     showSuggestions: 'Kuva soovitused',
     suggestions: 'Soovitused',
+    transparent: 'läbipaistev',
   },
   'fi-FI': {
     back: 'Takaisin',
@@ -881,6 +894,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectTime: 'Valitse aika',
     showSuggestions: 'Näytä ehdotukset',
     suggestions: 'Ehdotukset',
+    transparent: 'läpinäkyvä',
   },
   'fr-FR': {
     back: 'Retour',
@@ -949,6 +963,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectTime: 'Sélectionner l’heure',
     showSuggestions: 'Afficher les suggestions',
     suggestions: 'Suggestions',
+    transparent: 'Transparent',
   },
   'he-IL': {
     back: 'חזרה',
@@ -1016,6 +1031,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectTime: 'בחירת שעה',
     showSuggestions: 'הצג הצעות',
     suggestions: 'הצעות',
+    transparent: 'שקוף',
   },
   'hr-HR': {
     back: 'Natrag',
@@ -1085,6 +1101,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectTime: 'Odaberite vrijeme',
     showSuggestions: 'Prikaži prijedloge',
     suggestions: 'Prijedlozi',
+    transparent: 'transparentno',
   },
   'hu-HU': {
     back: 'Vissza',
@@ -1152,6 +1169,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectTime: 'Időpont kiválasztása',
     showSuggestions: 'Javaslatok megjelenítése',
     suggestions: 'Javaslatok',
+    transparent: 'átlátszó',
   },
   'it-IT': {
     back: 'Indietro',
@@ -1220,6 +1238,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectTime: 'Seleziona l’ora',
     showSuggestions: 'Mostra suggerimenti',
     suggestions: 'Suggerimenti',
+    transparent: 'trasparente',
   },
   'ja-JP': {
     back: '戻る',
@@ -1285,6 +1304,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectTime: '時刻を選択',
     showSuggestions: '候補を表示',
     suggestions: '候補',
+    transparent: '透明',
   },
   'ko-KR': {
     back: '뒤로',
@@ -1350,6 +1370,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectTime: '시간 선택',
     showSuggestions: '제안 사항 표시',
     suggestions: '제안',
+    transparent: '투명도',
   },
   'lt-LT': {
     back: 'Atgal',
@@ -1420,6 +1441,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectTime: 'Pasirinkite laiką',
     showSuggestions: 'Rodyti pasiūlymus',
     suggestions: 'Pasiūlymai',
+    transparent: 'skaidrus',
   },
   'lv-LV': {
     back: 'Atpakaļ',
@@ -1489,6 +1511,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectTime: 'Izvēlieties laiku',
     showSuggestions: 'Rādīt ieteikumus',
     suggestions: 'Ieteikumi',
+    transparent: 'caurspīdīgs',
   },
   'nb-NO': {
     back: 'Tilbake',
@@ -1554,6 +1577,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectTime: 'Velg klokkeslett',
     showSuggestions: 'Vis forslag',
     suggestions: 'Forslag',
+    transparent: 'gjennomsiktig',
   },
   'nl-NL': {
     back: 'Terug',
@@ -1621,6 +1645,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectTime: 'Tijd selecteren',
     showSuggestions: 'Suggesties weergeven',
     suggestions: 'Suggesties',
+    transparent: 'transparant',
   },
   'pl-PL': {
     back: 'Wstecz',
@@ -1689,6 +1714,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectTime: 'Wybierz godzinę',
     showSuggestions: 'Wyświetlaj sugestie',
     suggestions: 'Sugestie',
+    transparent: 'przezroczysty',
   },
   'pt-BR': {
     back: 'Voltar',
@@ -1757,6 +1783,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectTime: 'Selecione o horário',
     showSuggestions: 'Mostrar sugestões',
     suggestions: 'Sugestões',
+    transparent: 'transparente',
   },
   'pt-PT': {
     back: 'Voltar',
@@ -1825,6 +1852,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectTime: 'Selecionar a hora',
     showSuggestions: 'Apresentar sugestões',
     suggestions: 'Sugestões',
+    transparent: 'transparente',
   },
   'ro-RO': {
     back: 'Înapoi',
@@ -1894,6 +1922,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectTime: 'Selectați ora',
     showSuggestions: 'Afișare sugestii',
     suggestions: 'Sugestii',
+    transparent: 'transparent',
   },
   'ru-RU': {
     back: 'Назад',
@@ -1963,6 +1992,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectTime: 'Выберите время',
     showSuggestions: 'Показать предложения',
     suggestions: 'Предложения',
+    transparent: 'прозрачный',
   },
   'sk-SK': {
     back: 'Späť',
@@ -2031,6 +2061,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectTime: 'Vyberte čas',
     showSuggestions: 'Zobraziť návrhy',
     suggestions: 'Návrhy',
+    transparent: 'transparentný',
   },
   'sl-SI': {
     back: 'Nazaj',
@@ -2100,6 +2131,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectTime: 'Izberite čas',
     showSuggestions: 'Prikaži predloge',
     suggestions: 'Predlogi',
+    transparent: 'prozorno',
   },
   'sr-SP': {
     back: 'Nazad',
@@ -2167,6 +2199,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectTime: 'Izaberite vreme',
     showSuggestions: 'Prikaži predloge',
     suggestions: 'Predlozi',
+    transparent: 'providno',
   },
   'sv-SE': {
     back: 'Tillbaka',
@@ -2233,6 +2266,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectTime: 'Välj tid',
     showSuggestions: 'Visa förslag',
     suggestions: 'Förslag',
+    transparent: 'genomskinlig',
   },
   'tr-TR': {
     back: 'Geri',
@@ -2300,6 +2334,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectTime: 'Saati seçin',
     showSuggestions: 'Önerileri göster',
     suggestions: 'Öneriler',
+    transparent: 'saydam',
   },
   'uk-UA': {
     back: 'Назад',
@@ -2369,6 +2404,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectTime: 'Виберіть час',
     showSuggestions: 'Показати пропозиції',
     suggestions: 'Пропозиції',
+    transparent: 'прозорий',
   },
   'zh-CN': {
     back: '返回',
@@ -2434,6 +2470,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectTime: '选择时间',
     showSuggestions: '显示建议',
     suggestions: '建议',
+    transparent: '透明',
   },
   'zh-TW': {
     back: '返回',
@@ -2499,6 +2536,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectTime: '選取時間',
     showSuggestions: '顯示建議',
     suggestions: '建議',
+    transparent: '透明',
   },
 }
 
