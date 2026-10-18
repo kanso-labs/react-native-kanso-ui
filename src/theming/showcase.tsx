@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import type { ColorValue, ViewStyle } from 'react-native'
 
-import { CalendarDate } from '@internationalized/date'
+import { CalendarDate, Time } from '@internationalized/date'
 import { StyleSheet, View } from 'react-native'
 
 import type { DemoThemeName } from './themes'
@@ -66,6 +66,7 @@ import { Tag } from '../components/tag'
 import { Text } from '../components/text'
 import { TextArea } from '../components/text-area'
 import { TextField } from '../components/text-field'
+import { TimeField } from '../components/time-field'
 import { Toolbar } from '../components/toolbar'
 import { Tooltip } from '../components/tooltip'
 import { Tree } from '../components/tree'
@@ -135,6 +136,9 @@ const DISCLOSURE_GROUP_SELECTION = ['first']
 
 const TABS = ['First item', 'Second item', 'Third item'] as const
 const TAG_TONES = ['primary', 'positive', 'negative', 'neutral'] as const
+
+// The time field's value, fixed so every scheme's page reads the same.
+const TIME = new Time(9, 30)
 
 const LIBRARY_DARK = {
   description:
@@ -1379,6 +1383,13 @@ function Showcase({ name }: ShowcaseProps) {
           />
           <TextField defaultValue="Label" label="Label" variant="outlined" />
         </Stack>
+      </Section>
+
+      <Section
+        description="The date field's segments again on a clock, inside the same box and the same chrome."
+        title="TimeField"
+      >
+        <TimeField defaultValue={TIME} label="Label" locale="en-US" />
       </Section>
 
       <Section
