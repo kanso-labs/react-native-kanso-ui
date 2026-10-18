@@ -3,7 +3,9 @@ import { THICKNESS } from './styles'
 // The paths a progress indicator draws its curves along: an arc of a circle,
 // an arc of a circle with a wave round it, and a wave along a line. Each is
 // built from where it starts and how far it runs, so a curve that moves is a
-// new path each frame rather than a dash pattern that moves.
+// new path each frame rather than a dash pattern that moves. Beside them is
+// the shape a loading indicator morphs through, built the same way from the
+// two shapes it is between and how far it has turned.
 //
 // Web cuts its arcs and waves out of whole curves with `stroke-dasharray`,
 // normalised by `pathLength` so a dash reads as a share of the way round.
@@ -81,6 +83,37 @@ function arcPath(centre: number, radius: number, from: number, sweep: number) {
 }
 
 /**
+ * A loading indicator's shape `share` of the way from `from` to `to`, point by
+ * point, turned `angle` radians clockwise about (`centre`, `centre`), and
+ * closed. Each list holds every point's x and then its y, the two of the same
+ * length, so the nth point of one becomes the nth of the other. A share past
+ * 1, as a spring's overshoot gives, carries the shape on past `to`, as web's
+ * interpolation of one polygon into the next does.
+ */
+function shapePath(
+  from: readonly number[],
+  to: readonly number[],
+  share: number,
+  angle: number,
+  centre: number,
+) {
+  'worklet'
+  const cos = Math.cos(angle)
+  const sin = Math.sin(angle)
+  let path = ''
+  for (let index = 0; index < from.length; index += 2) {
+    const x = from[index] + (to[index] - from[index]) * share - centre
+    const y =
+      from[index + 1] + (to[index + 1] - from[index + 1]) * share - centre
+    const turnedX = centre + x * cos - y * sin
+    const turnedY = centre + x * sin + y * cos
+    path += `${index === 0 ? 'M' : 'L'}${turnedX.toFixed(PLACES)} ${turnedY.toFixed(PLACES)}`
+  }
+
+  return `${path}Z`
+}
+
+/**
  * A stretch of the wave along a line, from `from` to `to` across its row, on a
  * wave `wavelength` long that rises first from `WAVE_ORIGIN`, as web's does.
  * Nothing when the stretch is empty, which is how a bar that has not yet
@@ -145,5 +178,13 @@ function wavyArcPath(
   return `${path}L${point(to)}`
 }
 
-export { arcPath, TURN, WAVE_HEIGHT, WAVE_ORIGIN, wavePath, wavyArcPath }
+export {
+  arcPath,
+  shapePath,
+  TURN,
+  WAVE_HEIGHT,
+  WAVE_ORIGIN,
+  wavePath,
+  wavyArcPath,
+}
 export type { RingWave }

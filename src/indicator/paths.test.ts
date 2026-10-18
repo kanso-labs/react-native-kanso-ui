@@ -1,12 +1,25 @@
 import { describe, expect, it } from '@jest/globals'
 
-import { arcPath, TURN, WAVE_HEIGHT, wavePath, wavyArcPath } from './paths'
+import {
+  arcPath,
+  shapePath,
+  TURN,
+  WAVE_HEIGHT,
+  wavePath,
+  wavyArcPath,
+} from './paths'
 
 // The flat ring's circle, and the wavy ring's wave, as the progress
 // indicator draws them.
 const CENTRE = 20
 const RADIUS = 18
 const WAVE = { amplitude: 1.6, centre: 24, radius: 20.4, waves: 9 }
+
+// Two shapes of three points each about the loading indicator's centre, a
+// triangle and the same triangle twice the size, its points listed x then y.
+const SHAPE_CENTRE = 50
+const SMALL = [60, 50, 50, 60, 40, 50]
+const LARGE = [70, 50, 50, 70, 30, 50]
 
 // How far round from the top a point on a circle about `centre` is,
 // clockwise, in radians from 0 to a full turn.
@@ -148,5 +161,42 @@ describe('wavyArcPath', () => {
 
     expect(points).toHaveLength(2)
     expect(points[0]).not.toEqual(points[1])
+  })
+})
+
+describe('shapePath', () => {
+  it('draws the first shape at the start, and closes it', () => {
+    const d = shapePath(SMALL, LARGE, 0, 0, SHAPE_CENTRE)
+
+    expect(d).toBe('M60.000 50.000L50.000 60.000L40.000 50.000Z')
+  })
+
+  it('moves each point toward its counterpart in the second shape', () => {
+    expect(pointsOf(shapePath(SMALL, LARGE, 0.5, 0, SHAPE_CENTRE))).toEqual([
+      [65, 50],
+      [50, 65],
+      [35, 50],
+    ])
+    expect(pointsOf(shapePath(SMALL, LARGE, 1, 0, SHAPE_CENTRE))).toEqual([
+      [70, 50],
+      [50, 70],
+      [30, 50],
+    ])
+  })
+
+  it('carries on past the second shape for a share past 1', () => {
+    const [first] = pointsOf(shapePath(SMALL, LARGE, 1.1, 0, SHAPE_CENTRE))
+
+    expect(first).toEqual([71, 50])
+  })
+
+  it('turns the shape clockwise about the centre', () => {
+    const points = pointsOf(shapePath(SMALL, LARGE, 0, TURN / 4, SHAPE_CENTRE))
+
+    expect(points).toEqual([
+      [50, 60],
+      [40, 50],
+      [50, 40],
+    ])
   })
 })
