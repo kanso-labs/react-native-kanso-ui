@@ -41,6 +41,7 @@ import { List } from '../components/list'
 import { ListBox } from '../components/list-box'
 import { ListDetail } from '../components/list-detail'
 import { ListItem } from '../components/list-item'
+import { LoadingIndicator } from '../components/loading-indicator'
 import { Menu } from '../components/menu'
 import { Meter } from '../components/meter'
 import { NavigationBar } from '../components/navigation-bar'
@@ -938,6 +939,16 @@ function Showcase({ name }: ShowcaseProps) {
             </View>
           ))}
         </Card>
+      </Section>
+
+      <Section
+        description="The morphing shape in primary on its own, and in on-primary-container on a primary-container circle when contained."
+        title="LoadingIndicator"
+      >
+        <View style={styles.row}>
+          <LoadingIndicator aria-label="Label" />
+          <LoadingIndicator aria-label="Label" contained />
+        </View>
       </Section>
 
       <Section

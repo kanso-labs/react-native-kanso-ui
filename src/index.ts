@@ -139,6 +139,8 @@ export { ListDetail } from './components/list-detail'
 export type { ListDetailProps } from './components/list-detail'
 export { ListItem } from './components/list-item'
 export type { ListItemProps } from './components/list-item'
+export { LoadingIndicator } from './components/loading-indicator'
+export type { LoadingIndicatorProps } from './components/loading-indicator'
 export {
   Menu,
   MenuContent,
