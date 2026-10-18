@@ -371,6 +371,8 @@ export { TimeField } from './components/time-field'
 export type { TimeFieldProps } from './components/time-field'
 export { TimePicker } from './components/time-picker'
 export type { TimePickerMode, TimePickerProps } from './components/time-picker'
+export { TokenField } from './components/token-field'
+export type { TokenFieldProps, TokenSegment } from './components/token-field'
 export { Toolbar } from './components/toolbar'
 export type { ToolbarProps, ToolbarTone } from './components/toolbar'
 export { Tooltip } from './components/tooltip'
@@ -414,7 +416,7 @@ export type { KuiTheme, ThemeScopeProps } from './theme-scope'
 export type { ResolvedTheme } from './theme/scope'
 export { useTheme } from './theme/scope'
 export type { TypeRole } from './typography/roles'
-export { getColorChannels, parseColor } from 'react-stately'
+export { getColorChannels, parseColor, TokenFieldValue } from 'react-stately'
 export type {
   Color,
   ColorChannel,

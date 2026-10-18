@@ -925,6 +925,34 @@ function FieldValue({ children, isPlaceholder = false }: FieldValueProps) {
 }
 
 /**
+ * What a field holds on lines that wrap, on the value's line of a
+ * {@link FieldBox}: a token field's pills, with its control after them. It
+ * clears the label at the top where the box is filled, once for every line,
+ * as a control does, and the control inside takes the box's states without
+ * clearing it again.
+ */
+function FieldWrap({ children }: { readonly children?: ReactNode }) {
+  const box = use(BoxContext)
+  const theme = useTheme()
+  const styles = fieldStylesOf(theme)
+  const { fontScale } = useWindowDimensions()
+  const inside = useMemo(() => ({ ...box, underLabel: false }), [box])
+
+  return (
+    <View
+      style={composeStyles<ViewStyle>(
+        styles.wrap,
+        box.underLabel
+          ? marginTopOf(theme.typography.bodySmallLineHeight * fontScale)
+          : undefined,
+      )}
+    >
+      <BoxContext value={inside}>{children}</BoxContext>
+    </View>
+  )
+}
+
+/**
  * Tracks whether the control has focus, around the handlers the field was
  * given, which are called after.
  */
@@ -1443,6 +1471,7 @@ export {
   FieldStates,
   FieldStroke,
   FieldValue,
+  FieldWrap,
   useErrorAnnouncement,
   useFieldFocus,
   useStrokeMotion,

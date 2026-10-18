@@ -3,6 +3,7 @@ import type { ColorValue, ViewStyle } from 'react-native'
 
 import { CalendarDate, Time } from '@internationalized/date'
 import { StyleSheet, View } from 'react-native'
+import { TokenFieldValue } from 'react-stately'
 
 import type { DemoThemeName } from './themes'
 
@@ -82,6 +83,7 @@ import { TextArea } from '../components/text-area'
 import { TextField } from '../components/text-field'
 import { TimeField } from '../components/time-field'
 import { TimePicker } from '../components/time-picker'
+import { TokenField } from '../components/token-field'
 import { Toolbar } from '../components/toolbar'
 import { Tooltip } from '../components/tooltip'
 import { Tree } from '../components/tree'
@@ -161,6 +163,13 @@ const TAG_TONES = ['primary', 'positive', 'negative', 'neutral'] as const
 
 // The time field's value, fixed so every scheme's page reads the same.
 const TIME = new Time(9, 30)
+
+// Two tokens with text between them, as web's section holds.
+const TOKENS = new TokenFieldValue([
+  { text: 'First item', type: 'token' },
+  { text: ' and ', type: 'text' },
+  { text: 'Second item', type: 'token' },
+])
 
 const LIBRARY_DARK = {
   description:
@@ -1662,6 +1671,13 @@ function Showcase({ name }: ShowcaseProps) {
         title="TimePicker"
       >
         <TimePicker defaultValue={TIME} label="Label" locale="en-US" />
+      </Section>
+
+      <Section
+        description="Tokens sit on a container pair inside the field's own box, so a scheme moves the two independently."
+        title="TokenField"
+      >
+        <TokenField defaultValue={TOKENS} label="Label" />
       </Section>
 
       <Section
