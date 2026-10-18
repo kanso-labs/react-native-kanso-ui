@@ -29,7 +29,7 @@ import { useFieldValidation } from '../../form'
 import { useLocaleOf } from '../../i18n/provider'
 import { keyboardFor } from '../../number/keyboard'
 import { useNumberFieldState } from '../../number/state'
-import { colorOf } from '../../swatch'
+import { colorOf, usePickedColor } from '../../swatch'
 
 // kanso-ui's ColorField: a colour typed rather than picked, in the text
 // fields page's box with nothing added, drawn through the field chrome in
@@ -315,12 +315,22 @@ function ChannelField({
  * React Native's own `TextInput` props, the return key among them, reach the
  * control; `style` and `ref` are the field as a whole, and `inputRef` the
  * control.
+ *
+ * Inside a `ColorPicker` it takes the picker's colour where it is given no
+ * `value`, and reports a change to the picker before its own `onChange`.
  */
-function ColorField({ channel, ...props }: ColorFieldProps) {
+function ColorField({ channel, onChange, value, ...props }: ColorFieldProps) {
+  const picked = usePickedColor(value, onChange)
+
   return channel === undefined ? (
-    <HexField {...props} />
+    <HexField {...props} onChange={picked.onChange} value={picked.value} />
   ) : (
-    <ChannelField {...props} channel={channel} />
+    <ChannelField
+      {...props}
+      channel={channel}
+      onChange={picked.onChange}
+      value={picked.value}
+    />
   )
 }
 
