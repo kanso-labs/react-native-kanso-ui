@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.10.0](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.9.0...v0.10.0) (2026-10-18)
+
+
+### ⚠ BREAKING CHANGES
+
+* **form:** Form's `onSubmit` values are now `string | readonly string[]` by name, where they were `string`, since a CheckboxGroup with a `name` submits its ticked entries' values as a list under it; narrow a value with `typeof value === 'string'` before reading it as a string.
+
+### Features
+
+* **button-group:** add ButtonGroup component ([#213](https://github.com/kanso-labs/react-native-kanso-ui/issues/213)) ([68f167e](https://github.com/kanso-labs/react-native-kanso-ui/commit/68f167ed180d8e7a08f6e1644dbd3a41d9b5f1fd))
+* **combo-box:** add ComboBox component ([#226](https://github.com/kanso-labs/react-native-kanso-ui/issues/226)) ([ac45c52](https://github.com/kanso-labs/react-native-kanso-ui/commit/ac45c52dfd613bdfb568c68b6d9d90913bd1bbc3))
+* **disclosure-group:** add DisclosureGroup component ([#219](https://github.com/kanso-labs/react-native-kanso-ui/issues/219)) ([94fc5b4](https://github.com/kanso-labs/react-native-kanso-ui/commit/94fc5b428a8d00baedf864f3af5c8e35b9a524f0))
+* **disclosure:** add Disclosure component ([#218](https://github.com/kanso-labs/react-native-kanso-ui/issues/218)) ([4d0a606](https://github.com/kanso-labs/react-native-kanso-ui/commit/4d0a606a7366158c6359c072b88d051d086f23a4))
+* **form:** submit a checkbox group's selection as a list ([#216](https://github.com/kanso-labs/react-native-kanso-ui/issues/216)) ([552e089](https://github.com/kanso-labs/react-native-kanso-ui/commit/552e089489a93cc48860c87cf3255895fbda9702))
+* **list-box:** add ListBox component ([#224](https://github.com/kanso-labs/react-native-kanso-ui/issues/224)) ([b36a050](https://github.com/kanso-labs/react-native-kanso-ui/commit/b36a05004cb15b61c30cbe5115ec35b67a4b3ae3))
+* **select:** add Select component ([#225](https://github.com/kanso-labs/react-native-kanso-ui/issues/225)) ([11ad0d2](https://github.com/kanso-labs/react-native-kanso-ui/commit/11ad0d275330cc4278427f2f5d2d57023e98d4fd))
+* **slider:** add Slider component ([#221](https://github.com/kanso-labs/react-native-kanso-ui/issues/221)) ([2b9527b](https://github.com/kanso-labs/react-native-kanso-ui/commit/2b9527bcb9b6b47b69b8f1bfb5fa3b2ddf6b4f6e))
+* **split-button:** add SplitButton component ([#215](https://github.com/kanso-labs/react-native-kanso-ui/issues/215)) ([0d9a002](https://github.com/kanso-labs/react-native-kanso-ui/commit/0d9a00287000ad4251ba2d824a5f64ab0b903075))
+* **tabs:** add Tabs component ([#220](https://github.com/kanso-labs/react-native-kanso-ui/issues/220)) ([f712a0e](https://github.com/kanso-labs/react-native-kanso-ui/commit/f712a0ef90dc2304fa069714282cc5e47bd0469a))
+* **tooltip:** add Tooltip component ([#217](https://github.com/kanso-labs/react-native-kanso-ui/issues/217)) ([bc68486](https://github.com/kanso-labs/react-native-kanso-ui/commit/bc6848672b8bec847d16bd23fc2f4b55b6aeceb5))
+
 ## [0.9.0](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.8.0...v0.9.0) (2026-10-17)
 
 
