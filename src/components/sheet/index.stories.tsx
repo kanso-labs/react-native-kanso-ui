@@ -5,6 +5,7 @@ import { CloseGlyph } from '../../glyphs'
 import { Button } from '../button'
 import { IconButton } from '../icon-button'
 import { Text } from '../text'
+import { TextField } from '../text-field'
 
 // The library's own close glyph, hoisted so it is one stable element per
 // render, which is what react-perf's no-jsx-as-prop is after.
@@ -145,5 +146,38 @@ const LongHeadlineAndActions: Story = {
   ),
 }
 
+// A form taller than half the window, opened at its whole height with
+// `initialHeight="whole"`, so the action it is opened for is in view at once.
+// The handle and a drag still take it down to half.
+const WholeHeight: Story = {
+  globals: COMPACT,
+  render: () => (
+    <Sheet defaultOpen>
+      <Button variant="outlined">Open sheet</Button>
+      <Sheet.Content initialHeight="whole">
+        <Sheet.Handle />
+        <Sheet.Header>
+          <Sheet.Title>Headline</Sheet.Title>
+          <IconButton aria-label="Close" slot="close">
+            {CLOSE}
+          </IconButton>
+        </Sheet.Header>
+        <Sheet.Body>
+          <TextField label="First label" />
+          <TextField label="Second label" />
+          <TextField label="Third label" />
+          <TextField label="Fourth label" />
+        </Sheet.Body>
+        <Sheet.Footer>
+          <Button slot="close">Save</Button>
+          <Button slot="close" variant="outlined">
+            Cancel
+          </Button>
+        </Sheet.Footer>
+      </Sheet.Content>
+    </Sheet>
+  ),
+}
+
 export default meta
-export { BottomSheet, Default, LongBody, LongHeadlineAndActions }
+export { BottomSheet, Default, LongBody, LongHeadlineAndActions, WholeHeight }
