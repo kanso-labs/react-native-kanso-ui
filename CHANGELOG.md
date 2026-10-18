@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.11.0](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.10.0...v0.11.0) (2026-10-18)
+
+
+### Features
+
+* **menu:** open a menu from a chip ([#249](https://github.com/kanso-labs/react-native-kanso-ui/issues/249)) ([4dd6740](https://github.com/kanso-labs/react-native-kanso-ui/commit/4dd674007c51d9f320143be41632a3aa24824135))
+* **sheet:** open a bottom sheet at its whole height ([#250](https://github.com/kanso-labs/react-native-kanso-ui/issues/250)) ([1fde215](https://github.com/kanso-labs/react-native-kanso-ui/commit/1fde21549876f171cb4f7d7c8572c5d0bf25ccc9))
+* **table:** add Table component ([#246](https://github.com/kanso-labs/react-native-kanso-ui/issues/246)) ([229da8a](https://github.com/kanso-labs/react-native-kanso-ui/commit/229da8a13e37e40538989b62a6279748f5ca7d6a))
+* **token-field:** add TokenField component ([#248](https://github.com/kanso-labs/react-native-kanso-ui/issues/248)) ([a648b84](https://github.com/kanso-labs/react-native-kanso-ui/commit/a648b84756a5f4919b7dc5e2aaf341bc42dac9fa))
+
 ## [0.10.0](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.9.0...v0.10.0) (2026-10-18)
 
 
