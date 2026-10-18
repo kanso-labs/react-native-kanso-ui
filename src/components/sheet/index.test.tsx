@@ -744,6 +744,54 @@ describe('Sheet', () => {
       expect(offset()).toBe(TALL - HEIGHT / 2)
     })
 
+    it('opens at its whole height given initialHeight="whole", its actions in view', async () => {
+      await renderSheet({ initialHeight: 'whole' }, { defaultOpen: true })
+      await layOut(TALL)
+      await advance(ENTER)
+
+      expect(offset()).toBe(0)
+      expect(screen.getByTestId('body').props.scrollEnabled).toBe(true)
+      expect(
+        screen.getByRole('button', { expanded: true, name: 'Drag handle' }),
+      ).toBeTruthy()
+
+      await fireEvent.press(screen.getByTestId('handle'))
+      await advance(ENTER)
+
+      expect(offset()).toBe(TALL - HEIGHT / 2)
+    })
+
+    it('drops to half the window on a drag down from a whole opening', async () => {
+      await renderSheet({ initialHeight: 'whole' }, { defaultOpen: true })
+      await layOut(TALL)
+      await advance(ENTER)
+
+      expect(offset()).toBe(0)
+
+      await drag([60, 180])
+      await advance(ENTER)
+
+      expect(offset()).toBe(TALL - HEIGHT / 2)
+    })
+
+    it('opens whole again each time given initialHeight="whole"', async () => {
+      await renderSheet({ initialHeight: 'whole' })
+      await fireEvent.press(screen.getByText('Open'))
+      await layOut(TALL)
+      await fireEvent.press(screen.getByTestId('handle'))
+      await advance(ENTER)
+
+      expect(offset()).toBe(TALL - HEIGHT / 2)
+
+      await fireEvent.press(screen.getByText('Cancel'))
+      await advance(EXIT)
+      await fireEvent.press(screen.getByText('Open'))
+      await layOut(TALL)
+      await advance(ENTER)
+
+      expect(offset()).toBe(0)
+    })
+
     it('closes on a swipe down past half its lower height', async () => {
       const onOpenChange = jest.fn<(isOpen: boolean) => void>()
       await render(<Held onOpenChange={onOpenChange} />)

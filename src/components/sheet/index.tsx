@@ -81,11 +81,14 @@ import { useTypeRole } from '../../typography/roles'
 // records leaving it out as a departure that native need not repeat. A sheet
 // taller than half the window opens at half its height, as Android's modal
 // bottom sheet does, and is dragged up to the whole of it and back; one no
-// taller opens whole. Let go, it settles on the nearest of those heights, or
-// one height on in the direction of a fling, and below the lowest it goes,
-// unless `isDismissable` is false, which holds it at the lowest. The drag is
-// Gesture Handler's pan, through the builder API both its 2.x and its 3
-// export. While the sheet is at half height its body does not scroll, so a
+// taller opens whole. `initialHeight="whole"` opens one with two heights at
+// the higher, as web's sheet always opens, for a sheet whose actions are what
+// it is opened for, such as a form's save; the handle and the drag still take
+// it down to half from there. Let go, it settles on the nearest of those
+// heights, or one height on in the direction of a fling, and below the lowest
+// it goes, unless `isDismissable` is false, which holds it at the lowest. The
+// drag is Gesture Handler's pan, through the builder API both its 2.x and its
+// 3 export. While the sheet is at half height its body does not scroll, so a
 // drag on it raises the sheet; once whole, a body with more than it can show
 // scrolls, and the sheet is dragged by the handle, header and actions. At
 // half height the actions are below the fold, where the drag brings them.
@@ -274,6 +277,14 @@ type SheetBodyProps = ScrollViewProps & {
 type SheetContentProps = Omit<ViewProps, 'children' | 'style'> &
   SheetOpenProps & {
     readonly children?: ReactNode
+    /**
+     * The height a bottom sheet with two heights opens at each time: `half`,
+     * where its content stays in reach of a drag, or `whole`, where its
+     * actions are in view from the start. A sheet with one height, and a side
+     * sheet, open whole whatever this says.
+     * @default 'half'
+     */
+    readonly initialHeight?: 'half' | 'whole'
     /**
      * Whether a press on the scrim, outside the sheet, and a swipe down past
      * its lowest height close it. Android's back gesture is
@@ -531,8 +542,9 @@ function SheetContent({
 /**
  * The sheet's actions, leading and wrapping onto another row when they do not
  * fit on one, over a divider. On a bottom sheet at half height they are below
- * the fold until the sheet is raised. `style`, `ref` and `testID` land on its
- * view.
+ * the fold until the sheet is raised, so a sheet opened for them takes
+ * `initialHeight="whole"` on `Sheet.Content`. `style`, `ref` and `testID`
+ * land on its view.
  */
 function SheetFooter({ style, ...props }: SheetPartProps) {
   useLayout('Sheet.Footer')
@@ -639,6 +651,7 @@ function SheetTitle({ ref, style, ...props }: SheetTitleProps) {
 function SheetWindow({
   children,
   close,
+  initialHeight = 'half',
   isDismissable,
   isKeyboardDismissDisabled,
   isOpen,
@@ -658,7 +671,7 @@ function SheetWindow({
   // The panel's height as laid out, before any drag moves it, and whether a
   // sheet with two heights is at the higher one.
   const [full, setFull] = useState<null | number>(null)
-  const [expanded, setExpanded] = useState(false)
+  const [expanded, setExpanded] = useState(initialHeight === 'whole')
   const stops = stopsOf(bottom, full, height, isDismissable)
   const twoHeights = stops.partial !== null
   const rest = stops.partial !== null && !expanded ? stops.partial : 0
