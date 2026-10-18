@@ -119,6 +119,8 @@ export type {
 } from './components/disclosure'
 export { DisclosureGroup } from './components/disclosure-group'
 export type { DisclosureGroupProps } from './components/disclosure-group'
+export { DropZone, FileTrigger } from './components/drop-zone'
+export type { DropZoneProps, FileTriggerProps } from './components/drop-zone'
 export { Fab } from './components/fab'
 export type { FabProps, FabSize, FabTone, FabVariant } from './components/fab'
 export { FabMenu, FabMenuItem } from './components/fab-menu'
@@ -358,7 +360,19 @@ export type {
   TreeProps,
   TreeSectionProps,
 } from './components/tree'
+export { isFileDropItem, isTextDropItem } from './drop'
+export type {
+  DragTypes,
+  DropEnterEvent,
+  DropEvent,
+  DropExitEvent,
+  DropItem,
+  DropOperation,
+  FileDropItem,
+  TextDropItem,
+} from './drop'
 export type { FieldVariant } from './field'
+export type { PickedFile } from './files'
 export { useIconStyle } from './glyphs/icon-style'
 export type { IconStyle } from './glyphs/icon-style'
 export { useAppBarScroll } from './hooks/useAppBarScroll'
