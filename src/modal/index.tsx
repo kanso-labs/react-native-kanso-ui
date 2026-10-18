@@ -93,6 +93,11 @@ type ModalWindowProps = {
   readonly children?: ReactNode
   /** Whether Android's back gesture and Escape on web leave it open. */
   readonly isKeyboardDismissDisabled: boolean
+  /**
+   * The window's name on web, for a surface with no headline to be
+   * labelled by.
+   */
+  readonly label?: string
   /** The headline's id, which names the window on web. */
   readonly labelledBy: string | undefined
   /** What the back gesture and Escape call. */
@@ -140,6 +145,7 @@ function insetsOf(insets: EdgeInsets): ViewStyle {
 function ModalWindow({
   children,
   isKeyboardDismissDisabled,
+  label,
   labelledBy,
   onClose,
   onScrimPress,
@@ -151,6 +157,7 @@ function ModalWindow({
   return (
     <Modal
       animationType="none"
+      aria-label={Platform.OS === 'web' ? label : undefined}
       aria-labelledby={Platform.OS === 'web' ? labelledBy : undefined}
       navigationBarTranslucent
       onRequestClose={isKeyboardDismissDisabled ? ignore : onClose}

@@ -48,6 +48,7 @@ import { ProductIcon } from '../components/product-icon'
 import { ProgressIndicator } from '../components/progress-indicator'
 import { Radio, RadioGroup } from '../components/radio-group'
 import { SearchField } from '../components/search-field'
+import { SearchView } from '../components/search-view'
 import { SegmentedButton } from '../components/segmented-button'
 import { Select } from '../components/select'
 import { Separator } from '../components/separator'
@@ -185,8 +186,8 @@ const BAR_TRAILING = (
 const LIST_SELECTION = ['second']
 const SEGMENT_SELECTION = ['second']
 
-// The ComboBox and Select sections' options, an array since both read their
-// options straight off it, and hoisted for the same reason.
+// The ComboBox, SearchView and Select sections' options, an array since each
+// reads its options straight off it, and hoisted for the same reason.
 const SELECT_OPTIONS = [
   <ListBox.Item id="first" key="first">
     First item
@@ -1076,6 +1077,18 @@ function Showcase({ name }: ShowcaseProps) {
             placeholder="Supporting text"
           />
         </Stack>
+      </Section>
+
+      <Section
+        description="Opens on the search bar's surface container high, its header over a divider in the outline role and its back and clear icons in the on-surface pair the bar's own take."
+        title="SearchView"
+      >
+        <SearchView>
+          <Button variant="outlined">Open search</Button>
+          <SearchView.Content label="Label" placeholder="Supporting text">
+            <ListBox aria-label="Label">{SELECT_OPTIONS}</ListBox>
+          </SearchView.Content>
+        </SearchView>
       </Section>
 
       <Section
