@@ -96,6 +96,19 @@ const config: StorybookConfig = {
             find: 'expo-clipboard',
             replacement: path.join(import.meta.dirname, 'expo-clipboard.ts'),
           },
+          // Two more, for FileTrigger and DropZone; expo-document-picker.ts
+          // says why.
+          {
+            find: 'expo-document-picker',
+            replacement: path.join(
+              import.meta.dirname,
+              'expo-document-picker.ts',
+            ),
+          },
+          {
+            find: 'expo-image-picker',
+            replacement: path.join(import.meta.dirname, 'expo-image-picker.ts'),
+          },
           // Gesture Handler probes a class Reanimated does not export by its
           // path under src/, which is TypeScript the Babel pass here cannot
           // read, and a second copy of Reanimated beside the one the package

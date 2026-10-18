@@ -37,6 +37,7 @@ import { DateRangePicker } from '../components/date-range-picker'
 import { Dialog } from '../components/dialog'
 import { Disclosure } from '../components/disclosure'
 import { DisclosureGroup } from '../components/disclosure-group'
+import { DropZone, FileTrigger } from '../components/drop-zone'
 import { Fab } from '../components/fab'
 import { FabMenu } from '../components/fab-menu'
 import { Feed } from '../components/feed'
@@ -861,6 +862,17 @@ function Showcase({ name }: ShowcaseProps) {
             </Disclosure>
           </DisclosureGroup>
         </Card>
+      </Section>
+
+      <Section
+        description="The outlined card's rule again, dashed, so a scheme that moves the card's rule moves the drop target with it."
+        title="DropZone"
+      >
+        <DropZone label="Drop a file here">
+          <FileTrigger>
+            <Button variant="outlined">Label</Button>
+          </FileTrigger>
+        </DropZone>
       </Section>
 
       <Section
