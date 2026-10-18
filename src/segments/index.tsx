@@ -11,6 +11,7 @@ import type {
   AccessibilityActionInfo,
   HostInstance,
   PressableProps,
+  StyleProp,
   TextStyle,
   ViewStyle,
 } from 'react-native'
@@ -25,7 +26,14 @@ import {
   DateFormatter,
   toCalendar,
 } from '@internationalized/date'
-import { useId, useImperativeHandle, useRef, useState } from 'react'
+import {
+  useEffect,
+  useEffectEvent,
+  useId,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from 'react'
 import {
   I18nManager,
   Text as NativeText,
@@ -76,10 +84,20 @@ import { segmentStylesOf } from './styles'
 // it: digits and letters, backspace, the arrow keys up and down to step, and
 // left and right to move between segments, which follow the direction the
 // page reads in.
+//
+// **A drawing of their own replaces a field's line**, for segments that are
+// not a field's: a box per part, the text inside it and the punctuation
+// between them, each the caller's, as a time picker's modal draws its hour
+// and minute. It names the parts it draws, and focus passes the others by,
+// so a day period a selector beside the boxes stands for is never typed into.
+// Punctuation is drawn only where it holds something to see, since a
+// locale's literals carry bidirectional marks and spaces beside it.
 
 type DateSegmentsProps = {
   /** What describes the field after the value it holds: the line under it. */
   readonly described: readonly FieldDescriptionPart[]
+  /** How the segments are drawn where they are not a field's line. */
+  readonly drawing?: SegmentDrawing
   /**
    * What the segments are read as holding, after their own names: the date
    * or the time written out, unless a range picker around them reads its
@@ -92,6 +110,11 @@ type DateSegmentsProps = {
   readonly label: string
   /** The locale the field writes in: its `useLocaleOf`. */
   readonly locale: string
+  /**
+   * Called with the segment in focus as it changes, and with `null` as focus
+   * leaves them.
+   */
+  readonly onActiveChange?: (type: DateSegmentType | null) => void
   /**
    * Called where focus would move back from the first segment, as a
    * backspace on it does, which a range picker sends on to the start's last.
@@ -128,6 +151,32 @@ type Moves = {
   readonly previous: () => void
 }
 
+/**
+ * How segments are drawn in place of a field's line of body large text, each
+ * style chosen for whether its part is the one in focus.
+ */
+type SegmentDrawing = {
+  /** The box a part a person types into is drawn in. */
+  readonly box: (
+    type: DateSegmentType,
+    isActive: boolean,
+  ) => StyleProp<ViewStyle>
+  /** The punctuation between two parts. */
+  readonly literal: StyleProp<TextStyle>
+  /** The parts drawn. The rest are left out, and focus passes them by. */
+  readonly parts: ReadonlySet<DateSegmentType>
+  /**
+   * Whether a press on a part raises the keyboard on iOS and Android, as a
+   * field's does, rather than only making it the one in focus.
+   */
+  readonly raisesKeyboard: boolean
+  /** The text inside a part's box. */
+  readonly text: (
+    type: DateSegmentType,
+    isActive: boolean,
+  ) => StyleProp<TextStyle>
+}
+
 // The segments' own props, with what the component around them keeps for
 // them: which one is being typed, what has been typed into it, whether focus
 // is among them, the hidden input and each segment's element.
@@ -142,10 +191,12 @@ type SegmentLineProps = Omit<DateSegmentsProps, 'ref'> & {
 
 /**
  * What focuses a field's segments: `focus` the first, unless focus is among
- * them already, and `focusLast` the last.
+ * them already, `focusLast` the last, and `focusOn` the one of `type`, with
+ * the keyboard raised on iOS and Android or put away.
  */
 type SegmentsHandle = Focusable & {
   readonly focusLast: () => void
+  readonly focusOn: (type: DateSegmentType, keyboard: boolean) => void
 }
 
 // A step a spin button takes, each one a method of the field's state.
@@ -166,6 +217,10 @@ const ADJUSTABLE: readonly AccessibilityActionInfo[] = [
   { name: 'increment' },
   { name: 'decrement' },
 ]
+
+// What a literal holds besides what it is drawn for: the spaces, and the
+// marks a locale sets a direction with.
+const INVISIBLE = /[\s\u061C\u200E\u200F\u202A-\u202E\u2066-\u2069]/gu
 
 // The text the hidden input holds, which a backspace has something to take
 // from and which every key typed lands after.
@@ -270,7 +325,7 @@ function commonPrefixLength(texts: readonly string[]) {
  * one being typed drawn as a filled shape and the empty ones in their
  * placeholders, muted.
  */
-function DateSegments({ ref, ...props }: DateSegmentsProps) {
+function DateSegments({ onActiveChange, ref, ...props }: DateSegmentsProps) {
   const [active, setActive] = useState<DateSegmentType | null>(null)
   // What has been typed into the segment in focus since it took focus, which
   // the next digit is read after.
@@ -281,20 +336,34 @@ function DateSegments({ ref, ...props }: DateSegmentsProps) {
   const input = useRef<ComponentRef<typeof TextInput>>(null)
   // Each segment's element under React Native Web, which focus moves to.
   const nodes = useRef(new Map<DateSegmentType, HostInstance>())
-  const { state } = props
+  const { drawing, state } = props
+  const reportActive = useEffectEvent((type: DateSegmentType | null) => {
+    onActiveChange?.(type)
+  })
+
+  useEffect(() => {
+    reportActive(active)
+  }, [active])
 
   useImperativeHandle(ref, () => ({
     focus: () => {
-      const first = state.segments.find((segment) => segment.isEditable)
+      const first = state.segments.find((segment) =>
+        typedInto(drawing, segment),
+      )
       if (!inside.current && first !== undefined) {
         focusTo({ entered, input, nodes, setActive, state }, first.type)
       }
     },
     focusLast: () => {
-      const last = state.segments.findLast((segment) => segment.isEditable)
+      const last = state.segments.findLast((segment) =>
+        typedInto(drawing, segment),
+      )
       if (last !== undefined) {
         focusTo({ entered, input, nodes, setActive, state }, last.type)
       }
+    },
+    focusOn: (type, keyboard) => {
+      focusTo({ entered, input, nodes, setActive, state }, type, keyboard)
     },
   }))
 
@@ -325,6 +394,19 @@ function dayPeriodsOf(locale: string): readonly [string, string] {
   }
 
   return [periodAt(0), periodAt(12)]
+}
+
+// Whether a segment is drawn: every one on a field's line, and in a drawing
+// of its own the parts it names and the punctuation that holds something to
+// see.
+function drawn(drawing: SegmentDrawing | undefined, segment: DateSegment) {
+  if (drawing === undefined) {
+    return true
+  }
+
+  return segment.type === 'literal'
+    ? segment.text.replaceAll(INVISIBLE, '') !== ''
+    : drawing.parts.has(segment.type)
 }
 
 function edited({ onEdit }: SegmentLineProps, changed: boolean) {
@@ -419,15 +501,24 @@ function erasOf(calendar: Calendar, locale: string) {
 
 // Moves focus to the segment of `type`: the segment's own element under React
 // Native Web, and on iOS and Android the hidden input, with the segment made
-// the one it types into. A read-only field raises no keyboard.
+// the one it types into. A read-only field raises no keyboard, and nor does a
+// move that puts the keyboard away, which makes the segment the one in focus
+// and takes focus off the input.
 function focusTo(
   { entered, input, nodes, setActive, state }: Focusing,
   type: DateSegmentType,
+  keyboard = true,
 ) {
   entered.current = ''
 
   if (Platform.OS === 'web') {
     nodes.current.get(type)?.focus()
+    return
+  }
+
+  if (!keyboard) {
+    setActive(type)
+    input.current?.blur()
     return
   }
 
@@ -450,7 +541,8 @@ function hidesEra(state: DateFieldState, era: string) {
 function inputFocusedOf(line: SegmentLineProps) {
   return () => {
     const first =
-      line.state.segments.find((segment) => segment.isEditable)?.type ?? null
+      line.state.segments.find((segment) => typedInto(line.drawing, segment))
+        ?.type ?? null
     line.setActive((current) => current ?? first)
     arrivedIn(line)
   }
@@ -486,7 +578,9 @@ function leftOf({
 // either end it is the field's to say, as a range picker's focus moves on
 // from one date's segments to the other's.
 function movesFrom(line: SegmentLineProps, type: DateSegmentType): Moves {
-  const editable = line.state.segments.filter((segment) => segment.isEditable)
+  const editable = line.state.segments.filter((segment) =>
+    typedInto(line.drawing, segment),
+  )
   const at = editable.findIndex((segment) => segment.type === type)
   const to = (index: number, beyond?: () => void) => () => {
     const segment = index < 0 ? undefined : editable.at(index)
@@ -531,10 +625,11 @@ function nodeOf({ nodes }: SegmentLineProps, type: DateSegmentType) {
 }
 
 // What a press on a segment does on iOS and Android: makes it the one typed
-// into, and raises the keyboard.
+// into, and raises the keyboard, unless the drawing says a press only makes
+// it the one in focus.
 function pressOf(line: SegmentLineProps, type: DateSegmentType) {
   return () => {
-    focusTo(line, type)
+    focusTo(line, type, line.drawing?.raisesKeyboard ?? true)
   }
 }
 
@@ -547,13 +642,13 @@ function relatedTargetOf(event: unknown): unknown {
 
 // The segments themselves, drawn from the field's state.
 function SegmentLine(line: SegmentLineProps) {
-  const { active, described, isInvalid, label, locale, state } = line
+  const { active, described, drawing, isInvalid, label, locale, state } = line
   const id = useId()
   const theme = useTheme()
   const own = segmentStylesOf(theme)
   const role = useTypeRole('bodyLarge')
   const words = messagesFor(locale).segments
-  const first = state.segments.find((segment) => segment.isEditable)
+  const first = state.segments.find((segment) => typedInto(drawing, segment))
   const value = line.holding ?? valueOf(state, words)
   const valueId = `${id}-value`
   const parts =
@@ -563,6 +658,10 @@ function SegmentLine(line: SegmentLineProps) {
   return (
     <FieldSegments>
       {state.segments.map((segment, index) => {
+        if (!drawn(drawing, segment)) {
+          return null
+        }
+
         if (!segment.isEditable) {
           return (
             <NativeText
@@ -571,15 +670,19 @@ function SegmentLine(line: SegmentLineProps) {
               // a locale can put the same punctuation between several.
               // oxlint-disable-next-line react/no-array-index-key -- see above
               key={`${segment.type}-${index}`}
-              style={composeStyles<TextStyle>(
-                role,
-                segment.type === 'literal' ? undefined : own.segment,
-                state.isDisabled
-                  ? own.textDisabled
-                  : segment.type === 'literal'
-                    ? own.textMuted
-                    : own.text,
-              )}
+              style={
+                drawing === undefined
+                  ? composeStyles<TextStyle>(
+                      role,
+                      segment.type === 'literal' ? undefined : own.segment,
+                      state.isDisabled
+                        ? own.textDisabled
+                        : segment.type === 'literal'
+                          ? own.textMuted
+                          : own.text,
+                    )
+                  : drawing.literal
+              }
             >
               {segment.text}
             </NativeText>
@@ -612,16 +715,24 @@ function SegmentLine(line: SegmentLineProps) {
             }
             ref={nodeOf(line, segment.type)}
             role={Platform.OS === 'web' ? 'spinbutton' : undefined}
-            style={composeStyles<ViewStyle>(
-              own.segment,
-              focused ? own.segmentFocused : undefined,
-            )}
+            style={
+              drawing === undefined
+                ? composeStyles<ViewStyle>(
+                    own.segment,
+                    focused ? own.segmentFocused : undefined,
+                  )
+                : drawing.box(segment.type, focused)
+            }
           >
             <NativeText
-              style={composeStyles<TextStyle>(
-                role,
-                textStyleOf(own, segment, focused, state.isDisabled),
-              )}
+              style={
+                drawing === undefined
+                  ? composeStyles<TextStyle>(
+                      role,
+                      textStyleOf(own, segment, focused, state.isDisabled),
+                    )
+                  : drawing.text(segment.type, focused)
+              }
             >
               {segment.text}
             </NativeText>
@@ -711,6 +822,12 @@ function textStyleOf(
   }
 
   return segment.isPlaceholder ? own.textMuted : own.text
+}
+
+// Whether a person types into `segment`: one they can edit, which the
+// drawing, where there is one, draws.
+function typedInto(drawing: SegmentDrawing | undefined, segment: DateSegment) {
+  return segment.isEditable && drawn(drawing, segment)
 }
 
 // Types `key` into a segment, as React Aria's segment takes a key typed into
@@ -956,4 +1073,4 @@ function webStateOf(isInvalid: boolean, state: DateFieldState) {
 }
 
 export { DateSegments }
-export type { DateSegmentsProps, SegmentsHandle }
+export type { DateSegmentsProps, SegmentDrawing, SegmentsHandle }
