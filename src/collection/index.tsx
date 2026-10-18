@@ -17,6 +17,7 @@ import type {
   ListState,
   ListProps as StatelyListProps,
 } from 'react-stately/useListState'
+import type { TreeState } from 'react-stately/useTreeState'
 
 import {
   Children,
@@ -45,6 +46,7 @@ import { AutocompleteContext } from '../autocomplete'
 import { toggleState } from '../button'
 import { ProgressIndicator } from '../components/progress-indicator'
 import { CheckboxBox } from '../control/checkbox-box'
+import { ExpandChevron } from '../disclosure/chevron'
 import { resultsFor } from '../i18n'
 import { useLocaleOf, useMessages } from '../i18n/provider'
 import { hitSlop, usePressFeedback } from '../press'
@@ -68,7 +70,10 @@ import { useTypeRole } from '../typography/roles'
 // with a `kind`, and differ where their web counterparts do: a List draws a
 // checkbox on a row that selects and paints a ground of its own, while a
 // ListBox marks a selected option with its container alone and is
-// transparent, so the same one sits on a page and inside a popover.
+// transparent, so the same one sits on a page and inside a popover. A Tree
+// is a List whose state is a tree's, drawn from React Stately's tree state
+// rather than its list state: its rows nest, a row with rows under it opens
+// and closes, and the rows of an open one follow it in the same column.
 //
 // Four things differ from web's, each because a screen reader or a touch on
 // a phone works differently from a keyboard in a browser.
@@ -90,11 +95,13 @@ import { useTypeRole } from '../typography/roles'
 // the action while nothing is selected and selects once something is, and a
 // long press selects; a press on a List's checkbox selects either way.
 //
-// **Sections are flattened.** A `FlatList` holds one column of cells, so a
-// section is its header and then its rows, and the header is a heading to a
-// screen reader rather than the name of a group. A List's headers stay at the
-// top while their rows scroll under them. A ListBox's scroll with the rows,
-// since it has no ground to cover them with.
+// **Sections are flattened, and so is a tree.** A `FlatList` holds one
+// column of cells, so a section is its header and then its rows, and the
+// header is a heading to a screen reader rather than the name of a group.
+// An open row of a tree is followed by the rows under it, each indented a
+// chevron's width further, so a large tree draws only what is in view. A
+// List's headers stay at the top while their rows scroll under them. A
+// ListBox's scroll with the rows, since it has no ground to cover them with.
 //
 // **A List is drawn on surface,** the lists page's container colour, which
 // web leaves to the page. A sticky header needs a ground to cover the rows
@@ -326,6 +333,12 @@ type CollectionSectionProps = {
   readonly id?: Key
 }
 
+/**
+ * The state a collection is drawn from: a list's, or a tree's, which holds
+ * which rows are open beside what a list's holds.
+ */
+type CollectionState<T> = ListState<T> | TreeState<T>
+
 // What the cells of the `FlatList` read from the collection they are drawn
 // in.
 type CollectionValue = {
@@ -343,7 +356,7 @@ type CollectionValue = {
   readonly onFocusTarget: ((node: HostInstance | null) => void) | undefined
   readonly renderEmptyState: () => ReactNode
   readonly selectLabel: string
-  readonly state: ListState<unknown>
+  readonly state: CollectionState<unknown>
 }
 
 type CollectionViewProps<T extends object = object> = Omit<
@@ -369,8 +382,11 @@ type CollectionViewProps<T extends object = object> = Omit<
    * @default false
    */
   readonly revealFocus?: boolean
-  /** The list state the rows are drawn from, and select through. */
-  readonly state: ListState<T>
+  /**
+   * The list state the rows are drawn from, and select through, or a tree
+   * state, which opens and closes them too.
+   */
+  readonly state: CollectionState<T>
 }
 
 /** One cell of the `FlatList`: a section's header, or a row. */
@@ -386,6 +402,50 @@ type ScrollFailure = {
 }
 
 const CollectionContext = createContext<CollectionValue | null>(null)
+
+// Runs what a screen reader asks of a row: selecting it, or opening or
+// closing a tree's row, each where the row offers it.
+function accessibilityActionOf(actions: {
+  readonly collapse: (() => void) | undefined
+  readonly expand: (() => void) | undefined
+  readonly select: (() => void) | undefined
+}) {
+  return (event: AccessibilityActionEvent) => {
+    switch (event.nativeEvent.actionName) {
+      case 'collapse': {
+        actions.collapse?.()
+        break
+      }
+      case 'expand': {
+        actions.expand?.()
+        break
+      }
+      case 'select': {
+        actions.select?.()
+        break
+      }
+    }
+  }
+}
+
+/**
+ * The parts nested in a part, a Section's rows or a Tree row's, walked as
+ * React Stately's own Section walks them, which leaves each child its own
+ * key rather than the one `Children.toArray` gives it. A condition left
+ * false is no part: React hands a boolean or an undefined child over as
+ * null.
+ */
+function childElementsOf(children: ReactNode): ReactNode[] {
+  const elements: ReactNode[] = []
+
+  Children.forEach(children, (child) => {
+    if (child !== null) {
+      elements.push(child)
+    }
+  })
+
+  return elements
+}
 
 /**
  * The `FlatList` List and ListBox draw, from parts read off its children by
@@ -432,7 +492,8 @@ function Collection<T extends object = object>({
 /**
  * The `FlatList` itself, drawn from a list state built elsewhere: by
  * `Collection` from its own props, or by a component whose state holds more
- * than a list's, as a Select's holds whether it is open. `focusKey` names the
+ * than a list's, as a Select's holds whether it is open and a Tree's which
+ * rows are. `focusKey` names the
  * row whose node is handed to `onFocusTarget`, for a panel that sends a
  * screen reader to it as it opens.
  */
@@ -575,14 +636,28 @@ function EmptyState() {
 /**
  * The cells the `FlatList` draws, in order, where the headers among them
  * are, and how many rows there are: the rows outside any section, and each
- * section's header followed by its rows. The row that loads more is drawn
- * after them all.
+ * section's header followed by its rows, with the rows under each open row
+ * of a tree after it. The row that loads more is drawn after them all.
  */
-function entriesOf<T>(state: ListState<T>) {
+function entriesOf<T>(state: CollectionState<T>) {
   const entries: Entry[] = []
   const sticky: number[] = []
+  const open = expansionOf(state)?.expandedKeys
   let loader: Node<T> | undefined
   let rows = 0
+
+  const addRow = (row: Node<T>) => {
+    entries.push({ kind: 'item', node: row })
+    rows++
+    if (open?.has(row.key) === true) {
+      // oxlint-disable-next-line typescript/no-deprecated -- a tree's collection has no getChildren, and this is the field it reads a row's rows from itself
+      for (const child of row.childNodes) {
+        if (child.type === 'item') {
+          addRow(child)
+        }
+      }
+    }
+  }
 
   for (const node of state.collection) {
     if (node.type === 'loader') {
@@ -597,16 +672,23 @@ function entriesOf<T>(state: ListState<T>) {
         // oxlint-disable-next-line typescript/no-deprecated -- a fallback for a collection without getChildren
         node.childNodes
       for (const row of children) {
-        entries.push({ kind: 'item', node: row })
-        rows++
+        addRow(row)
       }
     } else {
-      entries.push({ kind: 'item', node })
-      rows++
+      addRow(node)
     }
   }
 
   return { entries, loader, rows, sticky }
+}
+
+/**
+ * The tree state a collection is drawn from, which says which rows are open
+ * and opens and closes them, or null for a list's, as React Aria tells the
+ * two apart.
+ */
+function expansionOf<T>(state: CollectionState<T>): null | TreeState<T> {
+  return 'expandedKeys' in state ? state : null
 }
 
 /**
@@ -840,18 +922,22 @@ function* rowNode(props: CollectionRowProps) {
 /**
  * A row: the state layer, the ripple and the focus ring over the leading
  * slot, the lines and the trailing slot, on primary container while
- * selected, with a List's checkbox before them on a row that selects. A row
- * with nothing to do on a press, in a collection that neither selects nor
- * acts, is a `View` that only presents.
+ * selected, with a List's checkbox before them on a row that selects. A
+ * Tree's row is indented by its depth and starts with its chevron, or a
+ * chevron's space on a row with nothing under it. A row with nothing to do
+ * on a press, in a collection that neither selects nor acts, is a `View`
+ * that only presents.
  */
 function RowNode({ node }: { readonly node: Node<unknown> }) {
   const theme = useTheme()
   const own = stylesOf(theme)
   const collection = useCollection()
+  const messages = useMessages()
 
   // oxlint-disable-next-line typescript/no-unsafe-assignment -- a node carries the props its row was written with, which React Stately types as `any`
   const {
-    children,
+    children: _children,
+    headline: _headline,
     id: _id,
     isDisabled: _isDisabled,
     leading,
@@ -871,9 +957,10 @@ function RowNode({ node }: { readonly node: Node<unknown> }) {
     textValue: _textValue,
     trailing,
     ...props
-  }: CollectionRowProps = node.props
+  }: CollectionRowProps & { readonly headline?: ReactNode } = node.props
   const isList = collection.kind === 'list'
   const { selectionManager } = collection.state
+  const tree = expansionOf(collection.state)
   const { key } = node
   const rowRef =
     key === collection.focusKey ? refsOf(collection.onFocusTarget, ref) : ref
@@ -883,11 +970,19 @@ function RowNode({ node }: { readonly node: Node<unknown> }) {
   const checks = selectionManager.selectionMode !== 'none'
   const selectable = selectionManager.canSelectItem(key)
   const selected = checks && selectionManager.isSelected(key)
+  // A tree's row with rows under it, which opens and closes.
+  const branch = tree !== null && node.hasChildNodes
+  const expanded = branch && tree.expandedKeys.has(key)
+  const toggle = toggleOf(tree, key)
   const listAction = collection.onAction
+  // React Aria's rule for a tree that neither selects nor acts: a press on a
+  // row with rows under it opens or closes it.
   const action =
     onAction ??
     (listAction === undefined
-      ? undefined
+      ? branch && !checks
+        ? toggle
+        : undefined
       : () => {
           listAction(key)
         })
@@ -897,6 +992,9 @@ function RowNode({ node }: { readonly node: Node<unknown> }) {
   // A List's row offers the select action wherever its checkbox does; a
   // ListBox's option only where a press may run its action instead.
   const offersSelect = selectable && (isList || action !== undefined)
+  // A row that opens offers the one of the two it can do, as web names its
+  // chevron, and a disabled one neither.
+  const opens = branch && !disabled
   const select = () => {
     selectionManager.select(key)
   }
@@ -915,18 +1013,37 @@ function RowNode({ node }: { readonly node: Node<unknown> }) {
     onPressOut,
   })
 
+  const box =
+    isList && checks ? (
+      <SelectBox
+        isDisabled={disabled}
+        isSelected={selected}
+        onPress={acts && selectable ? select : undefined}
+      />
+    ) : null
   const lead =
-    isList && checks
-      ? withBox(
-          <SelectBox
-            isDisabled={disabled}
-            isSelected={selected}
-            onPress={acts && selectable ? select : undefined}
-          />,
+    tree === null
+      ? box === null
+        ? leading
+        : withBox(box, leading, own.lead)
+      : treeLead({
+          box,
+          // The muted role at rest, as web draws the chevron, and the row's
+          // own colour where the muted role would not read.
+          chevron: branch ? (
+            <TreeChevron
+              color={
+                disabled || selected ? content : theme.colors.onSurfaceVariant
+              }
+              isDisabled={disabled}
+              isExpanded={expanded}
+              onPress={toggle}
+            />
+          ) : null,
+          indent: node.level * theme.spacing.xl,
           leading,
-          own.lead,
-        )
-      : leading
+          style: own.lead,
+        })
   const lines = (
     <RowContent
       isDisabled={disabled}
@@ -936,7 +1053,7 @@ function RowNode({ node }: { readonly node: Node<unknown> }) {
       supporting={supporting}
       trailing={trailing}
     >
-      {children}
+      {node.rendered}
     </RowContent>
   )
   const rowStyle = rowStyleOf(theme, {
@@ -944,6 +1061,18 @@ function RowNode({ node }: { readonly node: Node<unknown> }) {
     overline,
     supporting,
   })
+  const accessibilityActions = [
+    ...(offersSelect
+      ? [{ label: collection.selectLabel, name: 'select' }]
+      : []),
+    ...(opens
+      ? [
+          expanded
+            ? { label: messages.collapse, name: 'collapse' }
+            : { label: messages.expand, name: 'expand' },
+        ]
+      : []),
+  ]
 
   if (!checks && action === undefined && onPress === undefined) {
     return (
@@ -963,12 +1092,15 @@ function RowNode({ node }: { readonly node: Node<unknown> }) {
       role="button"
       {...props}
       {...(checks ? toggleState(selected) : undefined)}
-      {...(offersSelect
+      {...(branch ? { 'aria-expanded': expanded } : undefined)}
+      {...(accessibilityActions.length > 0
         ? {
-            accessibilityActions: [
-              { label: collection.selectLabel, name: 'select' },
-            ],
-            onAccessibilityAction: selectionActionOf(select),
+            accessibilityActions,
+            onAccessibilityAction: accessibilityActionOf({
+              collapse: opens && expanded ? toggle : undefined,
+              expand: opens && !expanded ? toggle : undefined,
+              select: offersSelect ? select : undefined,
+            }),
           }
         : undefined)}
       {...feedback.handlers}
@@ -1036,15 +1168,7 @@ function SectionHeader({ node }: { readonly node: Node<unknown> }) {
 
 // The entry the collection holds for a `Section` part.
 function* sectionNode(props: CollectionSectionProps) {
-  const children: ReactNode[] = []
-
-  // Walked as React Stately's own Section walks them, which leaves each
-  // child its own key rather than the one `Children.toArray` gives it.
-  Children.forEach(props.children, (child) => {
-    if (child !== null && child !== undefined && child !== false) {
-      children.push(child)
-    }
-  })
+  const children = childElementsOf(props.children)
 
   yield {
     *childNodes() {
@@ -1103,13 +1227,77 @@ function SelectBox({
   )
 }
 
-// Runs the selection when a screen reader asks for the row's select action.
-function selectionActionOf(select: () => void) {
-  return (event: AccessibilityActionEvent) => {
-    if (event.nativeEvent.actionName === 'select') {
-      select()
-    }
+/**
+ * Opens a tree's row, or closes it when it is open. Built by a call rather
+ * than written inline, which is what react-perf's
+ * no-new-function-as-prop is after.
+ */
+function toggleOf(tree: null | TreeState<unknown>, key: Key) {
+  return () => {
+    tree?.toggleKey(key)
   }
+}
+
+/**
+ * The chevron a Tree's row with rows under it draws, which opens and closes
+ * it, for the eye and the finger alone: the row is what a screen reader
+ * hears, and opens or closes through its actions. It takes a press of its
+ * own the size of a 48dp target, and draws no state layer, since the row
+ * around it already carries one.
+ */
+function TreeChevron({
+  color,
+  isDisabled,
+  isExpanded,
+  onPress,
+}: {
+  readonly color: ColorValue
+  readonly isDisabled: boolean
+  readonly isExpanded: boolean
+  readonly onPress: () => void
+}) {
+  return (
+    <Pressable
+      accessible={false}
+      aria-hidden
+      disabled={isDisabled}
+      focusable={false}
+      hitSlop={hitSlop(BOX_SLOT, BOX_SLOT)}
+      onPress={onPress}
+      style={styles.box}
+      tabIndex={-1}
+    >
+      <ExpandChevron color={color} isExpanded={isExpanded} />
+    </Pressable>
+  )
+}
+
+/**
+ * The leading slot of a Tree's row: its chevron, or the chevron's space on a
+ * row with nothing under it so its headline lines up with one that opens,
+ * then the checkbox of a tree that selects, then whatever the row was given,
+ * all set in by the row's depth, a chevron's width a level.
+ */
+function treeLead({
+  box,
+  chevron,
+  indent,
+  leading,
+  style,
+}: {
+  readonly box: ReactNode
+  readonly chevron: ReactNode
+  readonly indent: number
+  readonly leading: ReactNode
+  readonly style: StyleProp<ViewStyle>
+}): ReactNode {
+  return (
+    <View style={composeStyles<ViewStyle>(style, { marginStart: indent })}>
+      {chevron ?? <View style={styles.box} />}
+      {box}
+      {leading}
+    </View>
+  )
 }
 
 // The collection a cell is drawn in. Every cell is the `FlatList`'s, inside
@@ -1170,6 +1358,7 @@ function withBox(
 }
 
 export {
+  childElementsOf,
   Collection,
   CollectionView,
   focusKeyOf,

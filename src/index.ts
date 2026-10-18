@@ -306,6 +306,13 @@ export type {
   TooltipProps,
   TooltipSide,
 } from './components/tooltip'
+export { Tree, TreeItem, TreeLoadMore, TreeSection } from './components/tree'
+export type {
+  TreeItemProps,
+  TreeLoadMoreProps,
+  TreeProps,
+  TreeSectionProps,
+} from './components/tree'
 export type { FieldVariant } from './field'
 export { useIconStyle } from './glyphs/icon-style'
 export type { IconStyle } from './glyphs/icon-style'

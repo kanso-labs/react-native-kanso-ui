@@ -14,7 +14,7 @@ import {
   useMemo,
   useState,
 } from 'react'
-import { I18nManager, Pressable, StyleSheet, View } from 'react-native'
+import { Pressable, StyleSheet, View } from 'react-native'
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -27,7 +27,7 @@ import { useDisclosureState } from 'react-stately/useDisclosureState'
 import type { ResolvedTheme } from '../../theme/scope'
 
 import { DisclosureGroupStateContext } from '../../disclosure'
-import { ChevronEndGlyph } from '../../glyphs'
+import { ExpandChevron } from '../../disclosure/chevron'
 import { usePressFeedback } from '../../press'
 import { RowContent, rowContentColor, rowStyleOf, rowStyles } from '../../row'
 import { useTheme } from '../../theme/scope'
@@ -144,44 +144,11 @@ type DisclosureProps = {
 
 const DisclosureContext = createContext<DisclosureContextValue | null>(null)
 
-// The chevron in the header's trailing slot, pointing at what the section
-// opens and turned a quarter to point down once it is open. The glyph
-// mirrors itself under right-to-left, so the turn goes the other way there
-// to point it down too.
-function Chevron({ isExpanded }: { readonly isExpanded: boolean }) {
-  const { motion } = useTheme()
-  const reduceMotion = useReducedMotion()
-  const turn = isExpanded ? (I18nManager.isRTL ? -90 : 90) : 0
-  const angle = useSharedValue(turn)
-
-  useEffect(() => {
-    angle.set(
-      reduceMotion
-        ? turn
-        : withTiming(turn, {
-            duration: motion.durationShort3,
-            easing: Easing.bezier(...motion.easingStandard),
-          }),
-    )
-  }, [angle, motion, reduceMotion, turn])
-
-  const turned = useAnimatedStyle(() => {
-    'worklet'
-    return { transform: [{ rotate: `${angle.get()}deg` }] }
-  })
-
-  return (
-    <Animated.View style={turned}>
-      <ChevronEndGlyph />
-    </Animated.View>
-  )
-}
-
 // The chevron, turned or not. A call rather than JSX written at the prop,
 // which is what react-perf's jsx-no-jsx-as-prop is after; the React Compiler
 // memoises the result on `isExpanded`.
 function chevronFor(isExpanded: boolean) {
-  return <Chevron isExpanded={isExpanded} />
+  return <ExpandChevron isExpanded={isExpanded} />
 }
 
 /**
