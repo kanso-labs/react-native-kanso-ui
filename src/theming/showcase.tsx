@@ -21,6 +21,7 @@ import { Chip } from '../components/chip'
 import { ChipGroup } from '../components/chip-group'
 import { Code } from '../components/code'
 import { ColorArea } from '../components/color-area'
+import { ColorField } from '../components/color-field'
 import { ColorSlider } from '../components/color-slider'
 import { ColorSwatch } from '../components/color-swatch'
 import { ColorSwatchPicker } from '../components/color-swatch-picker'
@@ -209,6 +210,11 @@ const SWATCH = '#6750A4'
 const SWATCHES = ['#6750A4', '#625B71', '#7D5260', '#386A20']
 const TRANSPARENT_SWATCH = 'hsla(200, 100%, 50%, 0.4)'
 
+// The colour field's swatch, at the leading icon's 24dp, and hoisted for the
+// same reason as the icons above.
+const FIELD_SWATCH_SIZE = { height: 24, width: 24 }
+const FIELD_SWATCH = <ColorSwatch color={SWATCH} style={FIELD_SWATCH_SIZE} />
+
 // Hoisted so the keys are not a new array on every render, which is what
 // react-perf's no-new-array-as-prop is after.
 const LIST_SELECTION = ['second']
@@ -292,6 +298,8 @@ const stylesOf = themedStyles(({ colors, radii, spacing }) =>
     panel: {
       paddingTop: spacing.md,
     },
+    // A dashed box for the layouts, which paint nothing of their own, so
+    // what a scheme reaches in them shows as the space between boxes.
     placeholder: {
       borderColor: colors.outlineVariant,
       borderRadius: radii.md,
@@ -303,8 +311,6 @@ const stylesOf = themedStyles(({ colors, radii, spacing }) =>
     plane: {
       width: 200,
     },
-    // A dashed box for the layouts, which paint nothing of their own, so
-    // what a scheme reaches in them shows as the space between boxes.
     // The two rails side by side, as they would sit at a screen's edge.
     rails: {
       flexDirection: 'row',
@@ -641,6 +647,17 @@ function Showcase({ name }: ShowcaseProps) {
           style={styles.plane}
           xChannel="saturation"
           yChannel="lightness"
+        />
+      </Section>
+
+      <Section
+        description="The text fields page's box holding a colour, so what a scheme reaches is the field chrome — the swatch beside it is the value rather than a role."
+        title="ColorField"
+      >
+        <ColorField
+          defaultValue={SWATCH}
+          label="Label"
+          leadingIcon={FIELD_SWATCH}
         />
       </Section>
 
