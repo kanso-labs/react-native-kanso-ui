@@ -863,6 +863,17 @@ describe('ColorArea', () => {
       ).toHaveAccessibilityValue({ now: 25 })
     })
 
+    it('tells a drag from a press by Gesture Handler’s own distance', async () => {
+      await render(<ColorArea defaultValue={BLUE} testID={TEST_ID} />)
+
+      expect(getByGestureTestId(`${TEST_ID}-pan`).config).toMatchObject({
+        minDist: 10,
+      })
+      expect(getByGestureTestId(`${TEST_ID}-tap`).config).toMatchObject({
+        maxDist: 10,
+      })
+    })
+
     it('takes nothing before the plane has a size', async () => {
       const onChange = jest.fn<(value: Color) => void>()
       await render(
