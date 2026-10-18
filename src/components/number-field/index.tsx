@@ -2,7 +2,6 @@ import type { ComponentRef, ReactNode, Ref } from 'react'
 import type {
   BlurEvent,
   Insets,
-  KeyboardTypeOptions,
   StyleProp,
   TextInput,
   TextInputProps,
@@ -10,7 +9,6 @@ import type {
   ViewStyle,
 } from 'react-native'
 
-import { NumberFormatter } from '@internationalized/number'
 import { useEffect, useId, useImperativeHandle, useRef, useState } from 'react'
 import {
   AccessibilityInfo,
@@ -39,6 +37,7 @@ import { MinusGlyph, PlusGlyph } from '../../glyphs'
 import { IconStyleContext } from '../../glyphs/icon-style'
 import { messagesFor } from '../../i18n'
 import { useLocaleOf } from '../../i18n/provider'
+import { keyboardFor } from '../../number/keyboard'
 import { useNumberFieldState } from '../../number/state'
 import { hitSlop, usePressFeedback } from '../../press'
 import { withOpacity } from '../../theme/color'
@@ -392,22 +391,6 @@ function halfOf(
           2
 }
 
-// The keyboard that types what the field takes. React Aria's own choice of
-// input mode, in React Native's keyboards.
-function keyboardOf(
-  minValue: number | undefined,
-  hasDecimals: boolean,
-): KeyboardTypeOptions {
-  const hasNegative =
-    minValue === undefined || Number.isNaN(minValue) || minValue < 0
-
-  if (hasNegative) {
-    return Platform.OS === 'ios' ? 'numbers-and-punctuation' : 'numeric'
-  }
-
-  return hasDecimals ? 'decimal-pad' : 'number-pad'
-}
-
 // The margin that gives a side-by-side stepper the value's line in the
 // box's height: half the difference between the two, negative where the
 // button is taller.
@@ -496,9 +479,6 @@ function NumberField({
     onBlur: commitBefore<BlurEvent>(state, blurThen(validation.onBlur, onBlur)),
     onFocus,
   })
-  const hasDecimals =
-    (new NumberFormatter(writtenIn, formatOptions).resolvedOptions()
-      .maximumFractionDigits ?? 0) > 0
   const announced = useStepAnnouncement(state.inputValue)
   // The box is focused while focus is anywhere in it, a stepper's included,
   // as web's is through `:focus-within`.
@@ -550,7 +530,7 @@ function NumberField({
           autoCorrect={false}
           described={describedBy(id, { description, error: shownError })}
           editable={!isDisabled && !isReadOnly}
-          keyboardType={keyboardOf(minValue, hasDecimals)}
+          keyboardType={keyboardFor(writtenIn, formatOptions, minValue)}
           numeric={numeric}
           onChangeText={editInto(state, validation.onEdit)}
           onSubmitEditing={commitBefore<TextInputSubmitEditingEvent>(

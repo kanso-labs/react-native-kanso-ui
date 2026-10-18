@@ -448,7 +448,19 @@ describe('NumberField', () => {
     >([
       ['a range below zero, on iOS', 'ios', {}, 'numbers-and-punctuation'],
       ['a range below zero, on Android', 'android', {}, 'numeric'],
+      [
+        'a floor that is not a number',
+        'android',
+        { minValue: Number.NaN },
+        'numeric',
+      ],
       ['a fraction and no negatives', 'ios', { minValue: 0 }, 'decimal-pad'],
+      [
+        'a single fraction digit and no negatives',
+        'ios',
+        { formatOptions: { maximumFractionDigits: 1 }, minValue: 0 },
+        'decimal-pad',
+      ],
       [
         'whole numbers and no negatives',
         'android',
