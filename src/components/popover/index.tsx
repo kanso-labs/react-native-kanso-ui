@@ -285,8 +285,8 @@ const TitleContext = createContext<null | PopoverTitle>(null)
  * and `modal` keeps one inside it. A press outside the panel and a button
  * given `slot="close"` inside it close it, and a press on its trigger
  * toggles it. Composed rather than configured by props, as web's is: a
- * `Button` or `IconButton` placed directly inside `Popover` is its trigger,
- * and the panel is placed beside it.
+ * `Button`, `IconButton` or `Chip` placed directly inside `Popover` is its
+ * trigger, and the panel is placed beside it.
  */
 function Popover({
   children,

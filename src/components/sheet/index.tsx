@@ -407,11 +407,11 @@ function settleOf(at: number, velocity: number, settles: readonly number[]) {
  * </Sheet>
  * ```
  *
- * Composed rather than configured by props, as web's is. A `Button` or
- * `IconButton` inside `Sheet` and outside its content opens it, and one given
- * `slot="close"` anywhere inside the content closes it. A sheet nothing on the
- * screen opens leaves `Sheet` out and passes `isOpen` and `onOpenChange` to
- * `Sheet.Content` instead.
+ * Composed rather than configured by props, as web's is. A `Button`,
+ * `IconButton` or `Chip` inside `Sheet` and outside its content opens it, and
+ * a button given `slot="close"` anywhere inside the content closes it. A
+ * sheet nothing on the screen opens leaves `Sheet` out and passes `isOpen`
+ * and `onOpenChange` to `Sheet.Content` instead.
  */
 function Sheet({ children, defaultOpen, isOpen, onOpenChange }: SheetProps) {
   const { context, slots } = useModalTrigger({

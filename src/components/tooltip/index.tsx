@@ -54,8 +54,8 @@ import { useTypeRole } from '../../typography/roles'
 // accessibility hint instead, read after its name, which is what web's
 // `aria-describedby` gives a reader, and why the label is text.
 //
-// **The trigger is a Button, an IconButton or a FAB placed directly inside
-// it**, which takes the tooltip through src/button's slots.ts, as a
+// **The trigger is a Button, an IconButton, a FAB or a Chip placed directly
+// inside it**, which takes the tooltip through src/button's slots.ts, as a
 // popover's trigger takes the popover. A tooltip and a popover or menu can
 // wrap the same button in either order.
 
@@ -108,7 +108,8 @@ type TooltipProps = {
   readonly alignOffset?: number
   /**
    * The button the tooltip describes, and nothing else: a `Button`,
-   * `IconButton` or `Fab`, or a `Popover` or `Menu` whose trigger is one.
+   * `IconButton`, `Fab` or `Chip`, or a `Popover` or `Menu` whose trigger is
+   * one.
    */
   readonly children?: ReactNode
   /**
