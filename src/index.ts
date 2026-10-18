@@ -65,6 +65,8 @@ export type {
   CurrencySignDisplay,
   CurrencyTone,
 } from './components/currency'
+export { DateField } from './components/date-field'
+export type { DateFieldProps } from './components/date-field'
 export {
   Dialog,
   DialogBody,

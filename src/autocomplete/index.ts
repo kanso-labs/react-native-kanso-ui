@@ -71,5 +71,25 @@ function containsIn(locale: string) {
   }
 }
 
-export { AutocompleteContext, containsIn }
+/**
+ * A match at the start of a text, as React Aria's `useFilter` makes it:
+ * compared as {@link containsIn} compares, so `a` starts `AM` and `ä` starts
+ * `après`. An empty search starts every text.
+ */
+function startsWithIn(locale: string) {
+  const collator = collatorIn(locale)
+
+  return (text: string, search: string) => {
+    if (search.length === 0) {
+      return true
+    }
+
+    const normalized = search.normalize('NFC')
+    const start = text.normalize('NFC').slice(0, normalized.length)
+
+    return collator.compare(normalized, start) === 0
+  }
+}
+
+export { AutocompleteContext, containsIn, startsWithIn }
 export type { AutocompleteValue }

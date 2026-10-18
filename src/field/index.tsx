@@ -36,6 +36,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated'
 
+import type { Focusable } from '../form'
 import type { IconStyle } from '../glyphs/icon-style'
 import type { ResolvedTheme } from '../theme/scope'
 
@@ -120,7 +121,7 @@ type FieldBoxProps = {
    * The control the box focuses when it is pressed anywhere, as the whole
    * of a native text field's box takes a press.
    */
-  readonly control?: RefObject<ComponentRef<typeof TextInput> | null>
+  readonly control?: RefObject<Focusable | null>
   /**
    * What the box holds after the label and the control's column, drawn as
    * it is rather than in an icon's slot, for a part laid out against the
@@ -817,6 +818,31 @@ function FieldMessage({
 }
 
 /**
+ * A date or a time's segments on the value's line of a {@link FieldBox}, in
+ * a row, clearing the label at the top where the box is filled, as a control
+ * does: web's `FieldSegments`.
+ */
+function FieldSegments({ children }: { readonly children?: ReactNode }) {
+  const box = use(BoxContext)
+  const theme = useTheme()
+  const styles = fieldStylesOf(theme)
+  const { fontScale } = useWindowDimensions()
+
+  return (
+    <View
+      style={composeStyles<ViewStyle>(
+        styles.segments,
+        box.underLabel
+          ? marginTopOf(theme.typography.bodySmallLineHeight * fontScale)
+          : undefined,
+      )}
+    >
+      {children}
+    </View>
+  )
+}
+
+/**
  * Hands a control outside a box the states it is drawn in, for a field that
  * draws a container of its own around the control, as SearchField's bar is.
  * The control takes its colours and the state a screen reader reads from
@@ -1143,6 +1169,11 @@ function countOf(
     : `${formatCount(length, locale)}/${formatCount(maxLength, locale)}`
 }
 
+/**
+ * What describes a control by `parts`, as a field's control is described: the
+ * ids of the elements showing them under React Native Web, and their text as
+ * the hint VoiceOver and TalkBack read out on iOS and Android.
+ */
 function descriptionOf(
   parts: readonly FieldDescriptionPart[],
 ): DescribedBy | undefined {
@@ -1157,9 +1188,7 @@ function descriptionOf(
   return said.length === 0 ? undefined : { accessibilityHint: said.join(' ') }
 }
 
-function focusOf(
-  control: RefObject<ComponentRef<typeof TextInput> | null> | undefined,
-) {
+function focusOf(control: RefObject<Focusable | null> | undefined) {
   return () => {
     control?.current?.focus()
   }
@@ -1399,9 +1428,11 @@ export { FieldChevron } from './chevron'
 
 export {
   describedBy,
+  descriptionOf,
   FieldBox,
   FieldInput,
   FieldMessage,
+  FieldSegments,
   FieldStates,
   FieldStroke,
   FieldValue,
