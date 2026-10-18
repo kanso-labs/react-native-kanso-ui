@@ -24,6 +24,7 @@ import { ComboBox } from '../components/combo-box'
 import { Container } from '../components/container'
 import { CopyField } from '../components/copy-field'
 import { Currency } from '../components/currency'
+import { DateField } from '../components/date-field'
 import { Dialog } from '../components/dialog'
 import { Disclosure } from '../components/disclosure'
 import { DisclosureGroup } from '../components/disclosure-group'
@@ -642,6 +643,13 @@ function Showcase({ name }: ShowcaseProps) {
             <Currency locale="en-US" value={0} />
           </Text>
         </View>
+      </Section>
+
+      <Section
+        description="Segments edited one at a time inside the box the text field draws, so the field's own chrome is what a scheme reaches."
+        title="DateField"
+      >
+        <DateField defaultValue={CALENDAR_DATE} label="Label" locale="en-US" />
       </Section>
 
       <Section

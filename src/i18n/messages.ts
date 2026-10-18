@@ -2,17 +2,18 @@
 // sheet's drag handle, a collection's loading-more and empty rows, what
 // selecting a list's row is called, what a Select shows while nothing is
 // chosen, the names of a ComboBox's list and the button opening it, how many
-// rows a search leaves, a calendar's, a field's character limit, CopyField's
-// button, the names of SearchField's clear button, a SearchView's back button,
-// Snackbar's close button, a chip's remove button, NumberField's steppers and
-// what opening and closing a tree's row is called. Each one a call site might
-// want in other words stands behind a prop that names it otherwise:
-// `pendingLabel` for the ring, `aria-label` for the handle, `label` for the
-// loading-more row, `renderEmptyState` for the empty one, `selectLabel` for the
-// selection, `placeholder` for a Select's empty value, `characterLimitLabel`
-// for the limit, `copyLabel` and `copiedLabel` for CopyField, `clearLabel`,
-// `backLabel`, `closeLabel` and `removeLabel` for the four buttons, and
-// `decrementLabel` and `incrementLabel` for the steppers.
+// rows a search leaves, a calendar's, a date's segments, a field's character
+// limit, CopyField's button, the names of SearchField's clear button, a
+// SearchView's back button, Snackbar's close button, a chip's remove button,
+// NumberField's steppers and what opening and closing a tree's row is called.
+// Each one a call site might want in other words stands behind a prop that
+// names it otherwise: `pendingLabel` for the ring, `aria-label` for the
+// handle, `label` for the loading-more row, `renderEmptyState` for the empty
+// one, `selectLabel` for the selection, `placeholder` for a Select's empty
+// value, `characterLimitLabel` for the limit, `copyLabel` and `copiedLabel`
+// for CopyField, `clearLabel`, `backLabel`, `closeLabel` and `removeLabel` for
+// the four buttons, and `decrementLabel` and `incrementLabel` for the
+// steppers.
 //
 // Copied from kanso-ui's src/i18n/messages.ts, one entry per locale React Aria
 // ships, and kept in step with it by hand: the web library publishes no copy of
@@ -29,13 +30,17 @@
 // Aria's calendar dictionary, which web's Calendar reads, beside the names of
 // the month and year fields that web reads from the browser's
 // `Intl.DisplayNames` and Hermes lacks, written here from the same CLDR data.
-// `clearSearch`, `close`, `decrease`, `increase` and `remove` are React Aria's
-// as well, from the search field, toast, number field and tag dictionaries its
-// own controls name those buttons from on web, and `collapse` and `expand`
-// from its tree dictionary, which names web's Tree chevron. The others were
-// drafted for kanso-ui's table rather than taken from a translation service,
-// and each one wants a native speaker's eye before it is trusted; a call site
-// can always pass its own words through the prop.
+// `segments` is the same: the name of each part of a date, which web's date
+// field reads from `Intl.DisplayNames` too, beside the description of the date
+// it holds, from React Aria's date picker dictionary, and what an empty one
+// reads as, from its spin button dictionary. `clearSearch`, `close`,
+// `decrease`, `increase` and `remove` are React Aria's as well, from the
+// search field, toast, number field and tag dictionaries its own controls name
+// those buttons from on web, and `collapse` and `expand` from its tree
+// dictionary, which names web's Tree chevron. The others were drafted for
+// kanso-ui's table rather than taken from a translation service, and each one
+// wants a native speaker's eye before it is trusted; a call site can always
+// pass its own words through the prop.
 
 type LibraryMessages = {
   /** What a SearchView's back button is called. */
@@ -113,6 +118,28 @@ type LibraryMessages = {
     readonly one: string
     readonly other: string
   }
+  /**
+   * What a date's segments are called, each one named for a screen reader
+   * before the field's label, and what describes the date or the time a
+   * field holds, where `{date}` is the date written out.
+   */
+  readonly segments: {
+    readonly day: string
+    readonly dayPeriod: string
+    /** What a segment with nothing in it reads as, for a screen reader. */
+    readonly empty: string
+    readonly era: string
+    readonly hour: string
+    readonly minute: string
+    readonly month: string
+    readonly second: string
+    /** The date a field holds, read after its segments. */
+    readonly selectedDate: string
+    /** The time a field holds, where `{time}` is the time written out. */
+    readonly selectedTime: string
+    readonly timeZoneName: string
+    readonly year: string
+  }
   /** What selecting a list's row is called, beside its checkbox. */
   readonly select: string
   /** What a Select shows while nothing is chosen. */
@@ -170,6 +197,20 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       one: '{count} خيار متاحة.',
       other: '{count} خيارات متاحة.',
     },
+    segments: {
+      day: 'يوم',
+      dayPeriod: 'ص/م',
+      empty: 'فارغ',
+      era: 'العصر',
+      hour: 'الساعات',
+      minute: 'الدقائق',
+      month: 'الشهر',
+      second: 'الثواني',
+      selectedDate: 'تاريخ محدد: {date}',
+      selectedTime: 'الوقت المحدد: {time}',
+      timeZoneName: 'التوقيت',
+      year: 'السنة',
+    },
     select: 'تحديد',
     selectPlaceholder: 'حدد عنصرًا',
     showSuggestions: 'عرض المقترحات',
@@ -208,6 +249,20 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     results: {
       one: '{count} опция на разположение.',
       other: '{count} опции на разположение.',
+    },
+    segments: {
+      day: 'ден',
+      dayPeriod: 'пр.об./сл.об.',
+      empty: 'Изпразни',
+      era: 'ера',
+      hour: 'час',
+      minute: 'минута',
+      month: 'месец',
+      second: 'секунда',
+      selectedDate: 'Избрана дата: {date}',
+      selectedTime: 'Избрано време: {time}',
+      timeZoneName: 'часова зона',
+      year: 'година',
     },
     select: 'Изберете',
     selectPlaceholder: 'Изберете предмет',
@@ -250,6 +305,20 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       one: 'K dispozici je {count} možnost.',
       other: 'K dispozici jsou/je {count} možnosti/-í.',
     },
+    segments: {
+      day: 'den',
+      dayPeriod: 'část dne',
+      empty: 'Prázdné',
+      era: 'letopočet',
+      hour: 'hodina',
+      minute: 'minuta',
+      month: 'měsíc',
+      second: 'sekunda',
+      selectedDate: 'Vybrané datum: {date}',
+      selectedTime: 'Vybraný čas: {time}',
+      timeZoneName: 'časové pásmo',
+      year: 'rok',
+    },
     select: 'Vybrat',
     selectPlaceholder: 'Vyberte položku',
     showSuggestions: 'Zobrazit doporučení',
@@ -288,6 +357,20 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       one: '{count} mulighed tilgængelig.',
       other: '{count} muligheder tilgængelige.',
     },
+    segments: {
+      day: 'dag',
+      dayPeriod: 'AM/PM',
+      empty: 'Tom',
+      era: 'æra',
+      hour: 'time',
+      minute: 'minut',
+      month: 'måned',
+      second: 'sekund',
+      selectedDate: 'Valgt dato: {date}',
+      selectedTime: 'Valgt tidspunkt: {time}',
+      timeZoneName: 'tidszone',
+      year: 'år',
+    },
     select: 'Vælg',
     selectPlaceholder: 'Vælg et element',
     showSuggestions: 'Vis forslag',
@@ -325,6 +408,20 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     results: {
       one: '{count} Option verfügbar.',
       other: '{count} Optionen verfügbar.',
+    },
+    segments: {
+      day: 'Tag',
+      dayPeriod: 'Tageshälfte',
+      empty: 'Leer',
+      era: 'Epoche',
+      hour: 'Stunde',
+      minute: 'Minute',
+      month: 'Monat',
+      second: 'Sekunde',
+      selectedDate: 'Ausgewähltes Datum: {date}',
+      selectedTime: 'Ausgewählte Zeit: {time}',
+      timeZoneName: 'Zeitzone',
+      year: 'Jahr',
     },
     select: 'Auswählen',
     selectPlaceholder: 'Element wählen',
@@ -365,6 +462,20 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       one: '{count} επιλογή διαθέσιμες.',
       other: '{count} επιλογές  διαθέσιμες.',
     },
+    segments: {
+      day: 'ημέρα',
+      dayPeriod: 'π.μ./μ.μ.',
+      empty: 'Άδειο',
+      era: 'περίοδος',
+      hour: 'ώρα',
+      minute: 'λεπτό',
+      month: 'μήνας',
+      second: 'δευτερόλεπτο',
+      selectedDate: 'Επιλεγμένη ημερομηνία: {date}',
+      selectedTime: 'Επιλεγμένη ώρα: {time}',
+      timeZoneName: 'ζώνη ώρας',
+      year: 'έτος',
+    },
     select: 'Επιλογή',
     selectPlaceholder: 'Επιλέξτε ένα αντικείμενο',
     showSuggestions: 'Προβολή προτάσεων',
@@ -403,6 +514,20 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     results: {
       one: '{count} option available.',
       other: '{count} options available.',
+    },
+    segments: {
+      day: 'day',
+      dayPeriod: 'AM/PM',
+      empty: 'Empty',
+      era: 'era',
+      hour: 'hour',
+      minute: 'minute',
+      month: 'month',
+      second: 'second',
+      selectedDate: 'Selected Date: {date}',
+      selectedTime: 'Selected Time: {time}',
+      timeZoneName: 'time zone',
+      year: 'year',
     },
     select: 'Select',
     selectPlaceholder: 'Select an item',
@@ -443,6 +568,20 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       one: '{count} opción disponible(s).',
       other: '{count} opciones disponible(s).',
     },
+    segments: {
+      day: 'día',
+      dayPeriod: 'a. m./p. m.',
+      empty: 'Vacío',
+      era: 'era',
+      hour: 'hora',
+      minute: 'minuto',
+      month: 'mes',
+      second: 'segundo',
+      selectedDate: 'Fecha seleccionada: {date}',
+      selectedTime: 'Hora seleccionada: {time}',
+      timeZoneName: 'zona horaria',
+      year: 'año',
+    },
     select: 'Seleccionar',
     selectPlaceholder: 'Seleccionar un artículo',
     showSuggestions: 'Mostrar sugerencias',
@@ -481,6 +620,20 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     results: {
       one: '{count} valik saadaval.',
       other: '{count} valikud saadaval.',
+    },
+    segments: {
+      day: 'päev',
+      dayPeriod: 'enne/pärast lõunat',
+      empty: 'Tühjenda',
+      era: 'ajastu',
+      hour: 'tund',
+      minute: 'minut',
+      month: 'kuu',
+      second: 'sekund',
+      selectedDate: 'Valitud kuupäev: {date}',
+      selectedTime: 'Valitud aeg: {time}',
+      timeZoneName: 'ajavöönd',
+      year: 'aasta',
     },
     select: 'Vali',
     selectPlaceholder: 'Valige üksus',
@@ -521,6 +674,20 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       one: '{count} vaihtoehto saatavilla.',
       other: '{count} vaihtoehtoa saatavilla.',
     },
+    segments: {
+      day: 'päivä',
+      dayPeriod: 'vuorokaudenaika',
+      empty: 'Tyhjä',
+      era: 'aikakausi',
+      hour: 'tunti',
+      minute: 'minuutti',
+      month: 'kuukausi',
+      second: 'sekunti',
+      selectedDate: 'Valittu päivämäärä: {date}',
+      selectedTime: 'Valittu aika: {time}',
+      timeZoneName: 'aikavyöhyke',
+      year: 'vuosi',
+    },
     select: 'Valitse',
     selectPlaceholder: 'Valitse kohde',
     showSuggestions: 'Näytä ehdotukset',
@@ -559,6 +726,20 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     results: {
       one: '{count} option disponible(s).',
       other: '{count} options disponible(s).',
+    },
+    segments: {
+      day: 'jour',
+      dayPeriod: 'cadran',
+      empty: 'Vide',
+      era: 'ère',
+      hour: 'heure',
+      minute: 'minute',
+      month: 'mois',
+      second: 'seconde',
+      selectedDate: 'Date sélectionnée : {date}',
+      selectedTime: 'Heure choisie : {time}',
+      timeZoneName: 'fuseau horaire',
+      year: 'année',
     },
     select: 'Sélectionner',
     selectPlaceholder: 'Sélectionner un élément',
@@ -600,6 +781,20 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       one: 'אפשרות {count} במצב זמין.',
       other: '{count} אפשרויות במצב זמין.',
     },
+    segments: {
+      day: 'יום',
+      dayPeriod: 'לפנה״צ/אחה״צ',
+      empty: 'ריק',
+      era: 'תקופה',
+      hour: 'שעה',
+      minute: 'דקה',
+      month: 'חודש',
+      second: 'שנייה',
+      selectedDate: 'תאריך נבחר: {date}',
+      selectedTime: 'זמן נבחר: {time}',
+      timeZoneName: 'אזור זמן',
+      year: 'שנה',
+    },
     select: 'בחר',
     selectPlaceholder: 'בחר פריט',
     showSuggestions: 'הצג הצעות',
@@ -640,6 +835,20 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       one: 'Dostupno još: {count} opcija.',
       other: 'Dostupno još: {count} opcije/a.',
     },
+    segments: {
+      day: 'dan',
+      dayPeriod: 'AM/PM',
+      empty: 'Prazno',
+      era: 'era',
+      hour: 'sat',
+      minute: 'minuta',
+      month: 'mjesec',
+      second: 'sekunda',
+      selectedDate: 'Odabrani datum: {date}',
+      selectedTime: 'Odabrano vrijeme: {time}',
+      timeZoneName: 'vremenska zona',
+      year: 'godina',
+    },
     select: 'Odaberite',
     selectPlaceholder: 'Odaberite stavku',
     showSuggestions: 'Prikaži prijedloge',
@@ -677,6 +886,20 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     results: {
       one: '{count} lehetőség áll rendelkezésre.',
       other: '{count} lehetőség áll rendelkezésre.',
+    },
+    segments: {
+      day: 'nap',
+      dayPeriod: 'napszak',
+      empty: 'Üres',
+      era: 'éra',
+      hour: 'óra',
+      minute: 'perc',
+      month: 'hónap',
+      second: 'másodperc',
+      selectedDate: 'Kijelölt dátum: {date}',
+      selectedTime: 'Kijelölt idő: {time}',
+      timeZoneName: 'időzóna',
+      year: 'év',
     },
     select: 'Kijelölés',
     selectPlaceholder: 'Válasszon ki egy elemet',
@@ -717,6 +940,20 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       one: '{count} opzione disponibile.',
       other: '{count} opzioni disponibili.',
     },
+    segments: {
+      day: 'giorno',
+      dayPeriod: 'AM/PM',
+      empty: 'Vuoto',
+      era: 'era',
+      hour: 'ora',
+      minute: 'minuto',
+      month: 'mese',
+      second: 'secondo',
+      selectedDate: 'Data selezionata: {date}',
+      selectedTime: 'Ora selezionata: {time}',
+      timeZoneName: 'fuso orario',
+      year: 'anno',
+    },
     select: 'Seleziona',
     selectPlaceholder: 'Seleziona un elemento',
     showSuggestions: 'Mostra suggerimenti',
@@ -755,6 +992,20 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       one: '{count} 個のオプションを利用できます。',
       other: '{count} 個のオプションを利用できます。',
     },
+    segments: {
+      day: '日',
+      dayPeriod: '午前/午後',
+      empty: '空',
+      era: '時代',
+      hour: '時',
+      minute: '分',
+      month: '月',
+      second: '秒',
+      selectedDate: '選択した日付 : {date}',
+      selectedTime: '選択した時間 : {time}',
+      timeZoneName: 'タイムゾーン',
+      year: '年',
+    },
     select: '選択',
     selectPlaceholder: '項目を選択',
     showSuggestions: '候補を表示',
@@ -792,6 +1043,20 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     results: {
       one: '{count}개 옵션을 사용할 수 있습니다.',
       other: '{count}개 옵션을 사용할 수 있습니다.',
+    },
+    segments: {
+      day: '일',
+      dayPeriod: '오전/오후',
+      empty: '비어 있음',
+      era: '연호',
+      hour: '시',
+      minute: '분',
+      month: '월',
+      second: '초',
+      selectedDate: '선택 일자: {date}',
+      selectedTime: '선택 시간: {time}',
+      timeZoneName: '시간대',
+      year: '년',
     },
     select: '선택',
     selectPlaceholder: '항목 선택',
@@ -834,6 +1099,20 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       one: 'Yra {count} parinktis.',
       other: 'Yra {count} parinktys (-ių).',
     },
+    segments: {
+      day: 'diena',
+      dayPeriod: 'iki pietų / po pietų',
+      empty: 'Tuščias',
+      era: 'era',
+      hour: 'valanda',
+      minute: 'minutė',
+      month: 'mėnuo',
+      second: 'sekundė',
+      selectedDate: 'Pasirinkta data: {date}',
+      selectedTime: 'Pasirinktas laikas: {time}',
+      timeZoneName: 'laiko juosta',
+      year: 'metai',
+    },
     select: 'Pasirinkti',
     selectPlaceholder: 'Pasirinkite elementą',
     showSuggestions: 'Rodyti pasiūlymus',
@@ -874,6 +1153,20 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       one: 'Pieejamo opciju skaits: {count} opcija.',
       other: 'Pieejamo opciju skaits: {count} opcijas.',
     },
+    segments: {
+      day: 'diena',
+      dayPeriod: 'priekšpusdienā/pēcpusdienā',
+      empty: 'Tukšs',
+      era: 'ēra',
+      hour: 'stundas',
+      minute: 'minūtes',
+      month: 'mēnesis',
+      second: 'sekundes',
+      selectedDate: 'Atlasītais datums: {date}',
+      selectedTime: 'Atlasītais laiks: {time}',
+      timeZoneName: 'laika josla',
+      year: 'gads',
+    },
     select: 'Atlasīt',
     selectPlaceholder: 'Izvēlēties vienumu',
     showSuggestions: 'Rādīt ieteikumus',
@@ -911,6 +1204,20 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     results: {
       one: '{count} alternativ finnes.',
       other: '{count} alternativer finnes.',
+    },
+    segments: {
+      day: 'dag',
+      dayPeriod: 'a.m./p.m.',
+      empty: 'Tom',
+      era: 'tidsalder',
+      hour: 'time',
+      minute: 'minutt',
+      month: 'måned',
+      second: 'sekund',
+      selectedDate: 'Valgt dato: {date}',
+      selectedTime: 'Valgt tid: {time}',
+      timeZoneName: 'tidssone',
+      year: 'år',
     },
     select: 'Velg',
     selectPlaceholder: 'Velg et element',
@@ -950,6 +1257,20 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     results: {
       one: '{count} optie beschikbaar.',
       other: '{count} opties beschikbaar.',
+    },
+    segments: {
+      day: 'dag',
+      dayPeriod: 'a.m./p.m.',
+      empty: 'Leeg',
+      era: 'tijdperk',
+      hour: 'uur',
+      minute: 'minuut',
+      month: 'maand',
+      second: 'seconde',
+      selectedDate: 'Geselecteerde datum: {date}',
+      selectedTime: 'Geselecteerde tijd: {time}',
+      timeZoneName: 'tijdzone',
+      year: 'jaar',
     },
     select: 'Selecteren',
     selectPlaceholder: 'Selecteer een item',
@@ -992,6 +1313,20 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       one: 'dostępna/dostępne(-nych) {count} opcja.',
       other: 'dostępna/dostępne(-nych) {count} opcje(-i).',
     },
+    segments: {
+      day: 'dzień',
+      dayPeriod: 'rano / po południu / wieczorem',
+      empty: 'Pusty',
+      era: 'era',
+      hour: 'godzina',
+      minute: 'minuta',
+      month: 'miesiąc',
+      second: 'sekunda',
+      selectedDate: 'Wybrana data: {date}',
+      selectedTime: 'Wybrany czas: {time}',
+      timeZoneName: 'strefa czasowa',
+      year: 'rok',
+    },
     select: 'Zaznacz',
     selectPlaceholder: 'Wybierz element',
     showSuggestions: 'Wyświetlaj sugestie',
@@ -1030,6 +1365,20 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     results: {
       one: '{count} opção disponível.',
       other: '{count} opções disponível.',
+    },
+    segments: {
+      day: 'dia',
+      dayPeriod: 'AM/PM',
+      empty: 'Vazio',
+      era: 'era',
+      hour: 'hora',
+      minute: 'minuto',
+      month: 'mês',
+      second: 'segundo',
+      selectedDate: 'Data selecionada: {date}',
+      selectedTime: 'Hora selecionada: {time}',
+      timeZoneName: 'fuso horário',
+      year: 'ano',
     },
     select: 'Selecionar',
     selectPlaceholder: 'Selecione um item',
@@ -1070,6 +1419,20 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       one: '{count} opção disponível.',
       other: '{count} opções disponível.',
     },
+    segments: {
+      day: 'dia',
+      dayPeriod: 'am/pm',
+      empty: 'Vazio',
+      era: 'era',
+      hour: 'hora',
+      minute: 'minuto',
+      month: 'mês',
+      second: 'segundo',
+      selectedDate: 'Data selecionada: {date}',
+      selectedTime: 'Hora selecionada: {time}',
+      timeZoneName: 'fuso horário',
+      year: 'ano',
+    },
     select: 'Selecionar',
     selectPlaceholder: 'Selecione um item',
     showSuggestions: 'Apresentar sugestões',
@@ -1109,6 +1472,20 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     results: {
       one: '{count} opțiune disponibile.',
       other: '{count} opțiuni disponibile.',
+    },
+    segments: {
+      day: 'zi',
+      dayPeriod: 'a.m./p.m.',
+      empty: 'Gol',
+      era: 'eră',
+      hour: 'oră',
+      minute: 'minut',
+      month: 'lună',
+      second: 'secundă',
+      selectedDate: 'Dată selectată: {date}',
+      selectedTime: 'Ora selectată: {time}',
+      timeZoneName: 'fus orar',
+      year: 'an',
     },
     select: 'Selectare',
     selectPlaceholder: 'Selectați un element',
@@ -1151,6 +1528,20 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       one: '{count} параметр доступно.',
       other: '{count} параметров доступно.',
     },
+    segments: {
+      day: 'день',
+      dayPeriod: 'AM/PM',
+      empty: 'Не заполнено',
+      era: 'эра',
+      hour: 'час',
+      minute: 'минута',
+      month: 'месяц',
+      second: 'секунда',
+      selectedDate: 'Выбранная дата: {date}',
+      selectedTime: 'Выбранное время: {time}',
+      timeZoneName: 'часовой пояс',
+      year: 'год',
+    },
     select: 'Выбрать',
     selectPlaceholder: 'Выберите элемент',
     showSuggestions: 'Показать предложения',
@@ -1191,6 +1582,20 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     results: {
       one: '{count} možnosť k dispozícii.',
       other: '{count} možnosti/-í k dispozícii.',
+    },
+    segments: {
+      day: 'deň',
+      dayPeriod: 'AM/PM',
+      empty: 'Prázdne',
+      era: 'letopočet',
+      hour: 'hodina',
+      minute: 'minúta',
+      month: 'mesiac',
+      second: 'sekunda',
+      selectedDate: 'Vybratý dátum: {date}',
+      selectedTime: 'Vybratý čas: {time}',
+      timeZoneName: 'časové pásmo',
+      year: 'rok',
     },
     select: 'Vybrať',
     selectPlaceholder: 'Vyberte položku',
@@ -1233,6 +1638,20 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       one: 'Na voljo je {count} opcija.',
       other: 'Na voljo je {count} opcije.',
     },
+    segments: {
+      day: 'dan',
+      dayPeriod: 'dop/pop',
+      empty: 'Prazen',
+      era: 'doba',
+      hour: 'ura',
+      minute: 'minuta',
+      month: 'mesec',
+      second: 'sekunda',
+      selectedDate: 'Izbrani datum: {date}',
+      selectedTime: 'Izbrani čas: {time}',
+      timeZoneName: 'časovni pas',
+      year: 'leto',
+    },
     select: 'Izberite',
     selectPlaceholder: 'Izberite element',
     showSuggestions: 'Prikaži predloge',
@@ -1273,6 +1692,20 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       one: 'Dostupno još: {count} opcija.',
       other: 'Dostupno još: {count} opcije/a.',
     },
+    segments: {
+      day: 'дан',
+      dayPeriod: 'AM/PM',
+      empty: 'Prazno',
+      era: 'ера',
+      hour: 'сат',
+      minute: 'минут',
+      month: 'месец',
+      second: 'секунд',
+      selectedDate: 'Izabrani datum: {date}',
+      selectedTime: 'Izabrano vreme: {time}',
+      timeZoneName: 'временска зона',
+      year: 'година',
+    },
     select: 'Izaberite',
     selectPlaceholder: 'Izaberite stavku',
     showSuggestions: 'Prikaži predloge',
@@ -1311,6 +1744,20 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       one: '{count} alternativ tillgängliga.',
       other: '{count} alternativ tillgängliga.',
     },
+    segments: {
+      day: 'dag',
+      dayPeriod: 'fm/em',
+      empty: 'Tomt',
+      era: 'era',
+      hour: 'timme',
+      minute: 'minut',
+      month: 'månad',
+      second: 'sekund',
+      selectedDate: 'Valt datum: {date}',
+      selectedTime: 'Vald tid: {time}',
+      timeZoneName: 'tidszon',
+      year: 'år',
+    },
     select: 'Markera',
     selectPlaceholder: 'Välj en artikel',
     showSuggestions: 'Visa förslag',
@@ -1348,6 +1795,20 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     results: {
       one: '{count} seçenek kullanılabilir.',
       other: '{count} seçenekler kullanılabilir.',
+    },
+    segments: {
+      day: 'gün',
+      dayPeriod: 'ÖÖ/ÖS',
+      empty: 'Boş',
+      era: 'çağ',
+      hour: 'saat',
+      minute: 'dakika',
+      month: 'ay',
+      second: 'saniye',
+      selectedDate: 'Seçilen Tarih: {date}',
+      selectedTime: 'Seçilen Zaman: {time}',
+      timeZoneName: 'saat dilimi',
+      year: 'yıl',
     },
     select: 'Seç',
     selectPlaceholder: 'Bir öğe seçin',
@@ -1390,6 +1851,20 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       one: '{count} параметр доступно.',
       other: '{count} параметри(-ів) доступно.',
     },
+    segments: {
+      day: 'день',
+      dayPeriod: 'дп/пп',
+      empty: 'Пусто',
+      era: 'ера',
+      hour: 'година',
+      minute: 'хвилина',
+      month: 'місяць',
+      second: 'секунда',
+      selectedDate: 'Вибрана дата: {date}',
+      selectedTime: 'Вибраний час: {time}',
+      timeZoneName: 'часовий пояс',
+      year: 'рік',
+    },
     select: 'Вибрати',
     selectPlaceholder: 'Виберіть елемент',
     showSuggestions: 'Показати пропозиції',
@@ -1428,6 +1903,20 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       one: '有 {count} 个选项可用。',
       other: '有 {count} 个选项可用。',
     },
+    segments: {
+      day: '日',
+      dayPeriod: '上午/下午',
+      empty: '空',
+      era: '纪元',
+      hour: '小时',
+      minute: '分钟',
+      month: '月',
+      second: '秒',
+      selectedDate: '选定的日期：{date}',
+      selectedTime: '选定的时间：{time}',
+      timeZoneName: '时区',
+      year: '年',
+    },
     select: '选择',
     selectPlaceholder: '选择一个项目',
     showSuggestions: '显示建议',
@@ -1465,6 +1954,20 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     results: {
       one: '{count} 選項 可用。',
       other: '{count} 選項 可用。',
+    },
+    segments: {
+      day: '日',
+      dayPeriod: '時段',
+      empty: '空白',
+      era: '紀元',
+      hour: '小時',
+      minute: '分鐘',
+      month: '月',
+      second: '秒',
+      selectedDate: '選定的日期：{date}',
+      selectedTime: '選定的時間：{time}',
+      timeZoneName: '時區',
+      year: '年',
     },
     select: '選取',
     selectPlaceholder: '選取項目',

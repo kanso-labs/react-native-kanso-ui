@@ -237,6 +237,15 @@ const fieldStylesOf = themedStyles(
         start: 0,
         top: 0,
       },
+      // A date or a time's segments on the value's line, in a row. Clipped
+      // at the box rather than wrapped, since every segment on the line is
+      // somewhere to type, so none of it can be drawn as though it were not
+      // there.
+      segments: {
+        alignItems: 'center',
+        flexDirection: 'row',
+        overflow: 'hidden',
+      },
     }),
 )
 
