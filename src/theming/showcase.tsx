@@ -20,6 +20,7 @@ import { CheckboxGroup } from '../components/checkbox-group'
 import { Chip } from '../components/chip'
 import { ChipGroup } from '../components/chip-group'
 import { Code } from '../components/code'
+import { ColorArea } from '../components/color-area'
 import { ColorSlider } from '../components/color-slider'
 import { ColorSwatch } from '../components/color-swatch'
 import { ColorSwatchPicker } from '../components/color-swatch-picker'
@@ -297,6 +298,10 @@ const stylesOf = themedStyles(({ colors, radii, spacing }) =>
       borderStyle: 'dashed',
       borderWidth: 1,
       padding: spacing.md,
+    },
+    // The colour area's plane, at web's width.
+    plane: {
+      width: 200,
     },
     // A dashed box for the layouts, which paint nothing of their own, so
     // what a scheme reaches in them shows as the space between boxes.
@@ -624,6 +629,19 @@ function Showcase({ name }: ShowcaseProps) {
             A muted line naming <Code>--kui-radius-md</Code>
           </Text>
         </View>
+      </Section>
+
+      <Section
+        description="The plane's colour is its value rather than a role, so what a scheme reaches is the corner it is cut to and the ring around its thumb."
+        title="ColorArea"
+      >
+        <ColorArea
+          aria-label="Label"
+          defaultValue={TRANSPARENT_SWATCH}
+          style={styles.plane}
+          xChannel="saturation"
+          yChannel="lightness"
+        />
       </Section>
 
       <Section
