@@ -49,6 +49,7 @@ import { Popover } from '../components/popover'
 import { ProductIcon } from '../components/product-icon'
 import { ProgressIndicator } from '../components/progress-indicator'
 import { Radio, RadioGroup } from '../components/radio-group'
+import { RangeCalendar } from '../components/range-calendar'
 import { SearchField } from '../components/search-field'
 import { SearchView } from '../components/search-view'
 import { SegmentedButton } from '../components/segmented-button'
@@ -119,6 +120,12 @@ const AVATAR_TONES = [
 // The calendar's month, fixed so every scheme's page reads the same whenever
 // it is opened, and before today, so no outline moves into it.
 const CALENDAR_DATE = new CalendarDate(2026, 9, 15)
+
+// The range calendar's range, the week up to the calendar's date.
+const CALENDAR_RANGE = {
+  end: CALENDAR_DATE,
+  start: new CalendarDate(2026, 9, 8),
+}
 
 // The button group's selection, the first of its two buttons.
 const BUTTON_GROUP_SELECTION = ['first']
@@ -1099,6 +1106,17 @@ function Showcase({ name }: ShowcaseProps) {
           <Radio value="second">Second item</Radio>
           <Radio value="third">Third item</Radio>
         </RadioGroup>
+      </Section>
+
+      <Section
+        description="The days between the two ends sit on secondary container, with the ends themselves on primary."
+        title="RangeCalendar"
+      >
+        <RangeCalendar
+          aria-label="Label"
+          defaultValue={CALENDAR_RANGE}
+          locale="en-US"
+        />
       </Section>
 
       <Section

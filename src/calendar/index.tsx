@@ -3,15 +3,18 @@ import type { ComponentRef, ReactNode, RefObject } from 'react'
 import type {
   HostInstance,
   ListRenderItemInfo,
+  StyleProp,
   TextStyle,
   ViewStyle,
 } from 'react-native'
 import type { CalendarState } from 'react-stately/useCalendarState'
+import type { RangeCalendarState } from 'react-stately/useRangeCalendarState'
 
 import {
   DateFormatter,
   endOfMonth,
   isSameDay,
+  isSameMonth,
   isSameYear,
   isToday,
   startOfMonth,
@@ -25,6 +28,7 @@ import {
   I18nManager,
   Text as NativeText,
   Pressable,
+  StyleSheet,
   View,
 } from 'react-native'
 import Animated, {
@@ -39,6 +43,7 @@ import type { ResolvedTheme } from '../theme/scope'
 
 import { IconButton } from '../components/icon-button'
 import { ArrowDropDownGlyph, CheckGlyph, ChevronEndGlyph } from '../glyphs'
+import { useWindowSizeClass } from '../hooks/useWindowSizeClass'
 import { messagesFor } from '../i18n'
 import { useFocusOnPlaced, useReturnFocus } from '../overlay/panel'
 import { hitSlop, usePressFeedback } from '../press'
@@ -46,12 +51,20 @@ import { withOpacity } from '../theme/color'
 import { useTheme } from '../theme/scope'
 import { composeStyles } from '../theme/styles'
 import { useTypeRole } from '../typography/roles'
-import { SLIDE_DISTANCE, styles, stylesOf, WEEKS_HELD } from './styles'
+import {
+  rootWidthOf,
+  SLIDE_DISTANCE,
+  styles,
+  stylesOf,
+  WEEKS_HELD,
+} from './styles'
 
-// The parts a calendar draws inside its container: the row that moves the
-// month, the weekday row, the weeks, and the month and year lists that take
-// the grid's place. Apart from src/components/calendar so a calendar is the
-// one thing that directory holds, as kanso-ui keeps its own in src/calendar.
+// The parts Calendar and RangeCalendar both draw inside their container: the
+// row that moves the month, the weekday row, the weeks and the date cell, and
+// the month and year lists that take the grid's place. Apart from either
+// component so the two cannot drift, and so each directory under
+// src/components holds one component, as kanso-ui keeps its own in
+// src/calendar.
 
 /** One entry of a month or year list. */
 type ListEntry = {
@@ -60,12 +73,18 @@ type ListEntry = {
   readonly id: number
 }
 
+/** A month's distance from the first one a calendar shows. */
+type MonthOffset = { readonly months: number }
+
 type OpenList = 'month' | 'year'
 
 type PartProps = {
   readonly locale: string
-  readonly state: CalendarState
+  readonly state: SomeCalendarState
 }
+
+/** The state of either calendar, one date's or a range's. */
+type SomeCalendarState = CalendarState | RangeCalendarState
 
 /** The day a locale's week starts on, where the call site names one. */
 type Weekday = 'fri' | 'mon' | 'sat' | 'sun' | 'thu' | 'tue' | 'wed'
@@ -80,27 +99,52 @@ const LISTED_YEARS = 201
 const ROWS_ABOVE_SHOWN = WEEKS_HELD / 2
 
 /**
- * What a calendar draws inside its container. With `showMonthYearMenus` the
- * header is the date pickers page's docked one, the month and the year as
- * menu buttons, and while either is open its list takes the grid's place.
+ * What a calendar draws inside its container: the header, and a grid for each
+ * month it shows. With `showMonthYearMenus` the header is the date pickers
+ * page's docked one, the month and the year as menu buttons, and while either
+ * is open its list takes the grid's place.
+ *
+ * The menus are for one month. They name and pick the first month alone, so
+ * a second grid beside it would have no month or year of its own; with more
+ * than one the header is the plain one, whose heading names every month
+ * shown, both years where they are two, as web's does.
  */
 function CalendarFrame({
   firstDayOfWeek,
   locale,
+  months,
   showMonthYearMenus,
   state,
 }: PartProps & {
   readonly firstDayOfWeek: undefined | Weekday
+  /** How many months the calendar shows. */
+  readonly months: number
   readonly showMonthYearMenus: boolean
 }) {
-  const grid = (
-    <MonthGrid firstDayOfWeek={firstDayOfWeek} locale={locale} state={state} />
+  const own = stylesOf(useTheme())
+  const sideBySide = useSideBySide(months)
+  const grids = (
+    <View style={sideBySide ? own.monthsSideBySide : own.months}>
+      {offsetsOf(months).map((offset) => (
+        <View
+          key={offset.months}
+          style={sideBySide ? own.monthSideBySide : undefined}
+        >
+          <MonthGrid
+            firstDayOfWeek={firstDayOfWeek}
+            locale={locale}
+            offset={offset}
+            state={state}
+          />
+        </View>
+      ))}
+    </View>
   )
 
-  if (showMonthYearMenus) {
+  if (showMonthYearMenus && months <= 1) {
     return (
       <CalendarMenus locale={locale} state={state}>
-        {grid}
+        {grids}
       </CalendarMenus>
     )
   }
@@ -108,7 +152,7 @@ function CalendarFrame({
   return (
     <>
       <CalendarHeader locale={locale} state={state} />
-      {grid}
+      {grids}
     </>
   )
 }
@@ -126,7 +170,7 @@ function CalendarHeader({ locale, state }: PartProps) {
         role="heading"
         style={composeStyles<TextStyle>(role, own.heading)}
       >
-        {visibleMonthOf(state, locale)}
+        {visibleRangeOf(state, locale)}
       </NativeText>
       <Chevron direction="next" locale={locale} state={state} />
     </View>
@@ -236,7 +280,7 @@ function Chevron({
 // Chooses an entry of the open list and closes it. The entry already shown
 // closes it without moving anything.
 function chooseThen(
-  state: CalendarState,
+  state: SomeCalendarState,
   setOpen: (open: null | OpenList) => void,
   shown: number,
 ) {
@@ -248,40 +292,95 @@ function chooseThen(
   }
 }
 
+// The corners of a date's shape, which its state layer and ripple clip to.
+// The corners alone: the shape's size and margins are the date's, and on the
+// layer, which fills the date, the margins would move it off the circle.
+function cornersOf(shape: StyleProp<ViewStyle>) {
+  const {
+    borderBottomEndRadius,
+    borderBottomStartRadius,
+    borderRadius,
+    borderTopEndRadius,
+    borderTopStartRadius,
+  }: ViewStyle = StyleSheet.flatten(shape) ?? {}
+
+  return {
+    borderBottomEndRadius,
+    borderBottomStartRadius,
+    borderRadius,
+    borderTopEndRadius,
+    borderTopStartRadius,
+  }
+}
+
 /**
  * One date: the page's 40dp circle in its 48dp square, which `hitSlop` makes
  * the press target. Its name is the date in full, with today, the selection
  * and the first or last date the bounds allow said as web says them, and it
- * reports itself disabled where it cannot be picked.
+ * reports itself disabled where it cannot be picked, as a date of the months
+ * either side of its grid's is.
+ *
+ * In a range calendar a selected day is the band instead, as wide as its
+ * column, with the two ends filled and round on their outer side, and the
+ * state layers follow the ground under them: on primary over an end, on
+ * primary container over the band, on surface elsewhere. While a range is
+ * started, a pointer over a date draws the range as far as it, as web's
+ * does; a touch has no such preview, and the second press ends the range.
  */
-function DateCell({ date, locale, state }: PartProps & { date: CalendarDate }) {
+function DateCell({
+  date,
+  locale,
+  month,
+  state,
+}: PartProps & {
+  readonly date: CalendarDate
+  /** The first day of the month the date's grid shows. */
+  readonly month: CalendarDate
+}) {
   const theme = useTheme()
   const { colors, sizing } = theme
   const own = stylesOf(theme)
   const role = useTypeRole('bodyLarge')
-  const isDisabled = state.isCellDisabled(date)
+  const isDisabled = state.isCellDisabled(date) || !isSameMonth(date, month)
   const isUnavailable = state.isCellUnavailable(date)
   const selectable = !isDisabled && !isUnavailable
   const isSelected = selectable && state.isSelected(date)
   const isCurrent = isToday(date, state.timeZone)
+  const range = rangeOf(state, date, isSelected)
+  const isFilled = range === null ? isSelected : range.isEnd
+  const shape = composeStyles<ViewStyle>(
+    own.date,
+    range === null ? undefined : own.dateInRange,
+    range?.isFirst === true ? own.dateRangeStart : undefined,
+    range?.isLast === true ? own.dateRangeEnd : undefined,
+  )
   const feedback = usePressFeedback({
-    color: isSelected ? colors.onPrimary : colors.onSurface,
-    corners: own.date,
+    color: isFilled
+      ? colors.onPrimary
+      : range === null
+        ? colors.onSurface
+        : colors.onPrimaryContainer,
+    corners: cornersOf(shape),
     disabled: !selectable,
+    onHoverIn: highlightThen(state, date),
   })
 
   return (
     <Pressable
+      accessibilityHint={promptOf(state, locale, selectable)}
       aria-label={dateLabelOf(date, state, locale, isCurrent, isSelected)}
-      hitSlop={hitSlop(sizing.controlSm, sizing.controlSm)}
+      hitSlop={hitSlop(
+        sizing.controlSm,
+        range === null ? sizing.controlSm : undefined,
+      )}
       onPress={selectThen(state, date)}
       role="button"
       {...feedback.handlers}
       disabled={!selectable}
       style={composeStyles<ViewStyle>(
-        own.date,
+        shape,
         isCurrent ? own.dateToday : undefined,
-        isSelected ? own.dateSelected : undefined,
+        isFilled ? own.dateSelected : undefined,
         feedback.ring,
       )}
     >
@@ -291,7 +390,8 @@ function DateCell({ date, locale, state }: PartProps & { date: CalendarDate }) {
           role,
           own.dateText,
           isCurrent ? own.dateTextToday : undefined,
-          isSelected ? own.dateTextSelected : undefined,
+          range === null ? undefined : own.dateTextInRange,
+          isFilled ? own.dateTextSelected : undefined,
           isUnavailable ? own.dateTextUnavailable : undefined,
           isDisabled ? own.dateTextDisabled : undefined,
         )}
@@ -304,23 +404,24 @@ function DateCell({ date, locale, state }: PartProps & { date: CalendarDate }) {
 
 // A date's name: the date in full, as today or as the one held where it is
 // either, then as the first or last date the bounds allow where it is that.
-// React Aria's own wording, from its calendar dictionary.
+// A range's two ends open with the whole range, once one is chosen. React
+// Aria's own wording, from its calendar dictionary.
 function dateLabelOf(
   date: CalendarDate,
-  state: CalendarState,
+  state: SomeCalendarState,
   locale: string,
   isCurrent: boolean,
   isSelected: boolean,
 ) {
   const words = messagesFor(locale).calendar
-  const full = new DateFormatter(locale, {
+  const full = `${rangeNameOf(state, date, locale)}${new DateFormatter(locale, {
     day: 'numeric',
     era: eraOf(date),
     month: 'long',
     timeZone: state.timeZone,
     weekday: 'long',
     year: 'numeric',
-  }).format(date.toDate(state.timeZone))
+  }).format(date.toDate(state.timeZone))}`
   const said = isCurrent
     ? (isSelected ? words.todayDateSelected : words.todayDate).replace(
         '{date}',
@@ -344,7 +445,7 @@ function dateLabelOf(
 // The date's number in the grid, in the locale's digits: the day alone out of
 // a formatted date, as React Aria takes it, so a locale that writes a unit
 // after the day, as Japanese does, draws the number alone.
-function dayOf(date: CalendarDate, state: CalendarState, locale: string) {
+function dayOf(date: CalendarDate, state: SomeCalendarState, locale: string) {
   return (
     new DateFormatter(locale, {
       calendar: date.calendar.identifier,
@@ -362,6 +463,19 @@ function eraOf(date: CalendarDate) {
   return date.calendar.identifier === 'gregory' && date.era === 'BC'
     ? ('short' as const)
     : undefined
+}
+
+// Draws a started range as far as the date a pointer is over, as web's does.
+// Nothing in a calendar of one date; before a range is started, React
+// Stately's own `highlightDate` does nothing.
+function highlightThen(state: SomeCalendarState, date: CalendarDate) {
+  if (!('highlightDate' in state)) {
+    return undefined
+  }
+
+  return () => {
+    state.highlightDate(date)
+  }
 }
 
 // The row a list's row occupies, which is every row's 48dp, so the list can
@@ -486,19 +600,24 @@ function MenuList({
 }
 
 /**
- * The weekday row and the month's weeks, held at six weeks of room so the
+ * The weekday row and one month's weeks, held at six weeks of room so the
  * calendar keeps its height from month to month. The weeks slide in from the
  * side the new month comes from.
  */
 function MonthGrid({
   firstDayOfWeek,
   locale,
+  offset,
   state,
-}: PartProps & { readonly firstDayOfWeek: undefined | Weekday }) {
+}: PartProps & {
+  readonly firstDayOfWeek: undefined | Weekday
+  /** How far the month is from the first one the calendar shows. */
+  readonly offset: MonthOffset
+}) {
   const theme = useTheme()
   const own = stylesOf(theme)
   const role = useTypeRole('bodyLarge')
-  const start = state.visibleRange.start
+  const start = state.visibleRange.start.add(offset)
   const slide = useMonthSlide(start, theme)
   const rowStyle = composeStyles<ViewStyle>(styles.row, own.rowHeight)
 
@@ -514,12 +633,17 @@ function MonthGrid({
         ))}
       </View>
       <Animated.View style={slide}>
-        {weeksOf(state).map((week) => (
+        {weeksOf(state, start).map((week) => (
           <View key={week.key} style={rowStyle}>
             {week.days.map((day) => (
               <View key={day.key} style={styles.column}>
                 {day.date === null ? null : (
-                  <DateCell date={day.date} locale={locale} state={state} />
+                  <DateCell
+                    date={day.date}
+                    locale={locale}
+                    month={start}
+                    state={state}
+                  />
                 )}
               </View>
             ))}
@@ -554,7 +678,7 @@ function MonthList({
 // full for the open list. Some calendar systems, such as the Hebrew, have
 // more months in some years than in others.
 function monthsOf(
-  state: CalendarState,
+  state: SomeCalendarState,
   locale: string,
   format: 'long' | 'short',
 ): readonly ListEntry[] {
@@ -580,9 +704,16 @@ function monthsOf(
   )
 }
 
+// One offset per month a calendar shows, the first month's none.
+function offsetsOf(months: number): readonly MonthOffset[] {
+  return Array.from({ length: Math.max(1, months) }, (_unused, index) => ({
+    months: index,
+  }))
+}
+
 // The months the bounds leave no day of.
 function outsideBounds(
-  state: CalendarState,
+  state: SomeCalendarState,
   months: readonly ListEntry[],
 ): ReadonlySet<number> {
   const { maxValue, minValue } = state
@@ -598,7 +729,7 @@ function outsideBounds(
   )
 }
 
-function pageThen(state: CalendarState, direction: 'next' | 'previous') {
+function pageThen(state: SomeCalendarState, direction: 'next' | 'previous') {
   return () => {
     if (direction === 'next') {
       state.focusNextPage()
@@ -612,6 +743,91 @@ function previousGlyphStyle() {
   return I18nManager.isRTL
     ? styles.previousGlyphRightToLeft
     : styles.previousGlyph
+}
+
+// What pressing a date in a range calendar does, as the screen reader's hint
+// on it: start a range, or end the one started. React Aria says it at the date
+// focused, which on a device is the one the screen reader is on. Nothing in a
+// calendar of one date, or where the press would do nothing.
+function promptOf(
+  state: SomeCalendarState,
+  locale: string,
+  selectable: boolean,
+) {
+  if (!('anchorDate' in state) || state.isReadOnly || !selectable) {
+    return undefined
+  }
+
+  const words = messagesFor(locale).calendar
+
+  return state.anchorDate === null
+    ? words.startRangeSelectionPrompt
+    : words.finishRangeSelectionPrompt
+}
+
+// What the two ends of the range a range calendar holds say before the date:
+// the range, or the day where it is one, as React Aria opens their names with
+// it. Nothing while a range is started, which holds nothing yet, or for any
+// other date.
+function rangeNameOf(
+  state: SomeCalendarState,
+  date: CalendarDate,
+  locale: string,
+) {
+  if (
+    !('highlightedRange' in state) ||
+    state.value === null ||
+    state.anchorDate !== null ||
+    state.highlightedRange === null ||
+    (!isSameDay(date, state.value.start) && !isSameDay(date, state.value.end))
+  ) {
+    return ''
+  }
+
+  const { end, start } = state.highlightedRange
+  const { timeZone } = state
+  const words = messagesFor(locale).calendar
+  const formatter = new DateFormatter(locale, {
+    day: 'numeric',
+    era: eraOf(start) ?? eraOf(end),
+    month: 'long',
+    timeZone,
+    weekday: 'long',
+    year: 'numeric',
+  })
+  const said = isSameDay(start, end)
+    ? words.selectedDateDescription.replace(
+        '{date}',
+        formatter.format(start.toDate(timeZone)),
+      )
+    : words.selectedRangeDescription.replace(
+        '{dateRange}',
+        spokenRangeOf(formatter, locale, start, end, timeZone),
+      )
+
+  return `${said}, `
+}
+
+// Where a selected date sits in a range calendar's range: its first or last
+// day, either of which is an end, or between them. Null in a calendar of one
+// date, and for a date outside the range.
+function rangeOf(
+  state: SomeCalendarState,
+  date: CalendarDate,
+  isSelected: boolean,
+) {
+  if (
+    !isSelected ||
+    !('highlightedRange' in state) ||
+    state.highlightedRange === null
+  ) {
+    return null
+  }
+
+  const isFirst = isSameDay(date, state.highlightedRange.start)
+  const isLast = isSameDay(date, state.highlightedRange.end)
+
+  return { isEnd: isFirst || isLast, isFirst, isLast }
 }
 
 /**
@@ -700,11 +916,49 @@ function rowPressThen(onChoose: (entry: ListEntry) => void, entry: ListEntry) {
 
 // Picks a date and moves the calendar's focus to it, as a press on one does
 // on web. A read-only or disabled calendar's state ignores the pick.
-function selectThen(state: CalendarState, date: CalendarDate) {
+function selectThen(state: SomeCalendarState, date: CalendarDate) {
   return () => {
     state.selectDate(date)
     state.setFocusedDate(date)
   }
+}
+
+// Two dates as a range in the calendar's `dateRange` words, each written as
+// much as the other leaves out, "September 8 to 15, 2026". React Aria splits
+// the formatted range at the last literal its two halves share before the
+// end begins, and so does this.
+function spokenRangeOf(
+  formatter: DateFormatter,
+  locale: string,
+  start: CalendarDate,
+  end: CalendarDate,
+  timeZone: string,
+) {
+  const parts = formatter.formatRangeToParts(
+    start.toDate(timeZone),
+    end.toDate(timeZone),
+  )
+  let separator = -1
+
+  for (const [index, part] of parts.entries()) {
+    if (part.source === 'endRange') {
+      break
+    }
+    if (part.source === 'shared' && part.type === 'literal') {
+      separator = index
+    }
+  }
+
+  return messagesFor(locale)
+    .calendar.dateRange.replace(
+      '{startDate}',
+      textOf(parts.slice(0, Math.max(0, separator))),
+    )
+    .replace('{endDate}', textOf(parts.slice(separator + 1)))
+}
+
+function textOf(parts: readonly Intl.DateTimeFormatPart[]) {
+  return parts.map((part) => part.value).join('')
 }
 
 function toggleThen(
@@ -758,24 +1012,64 @@ function useMonthSlide(start: CalendarDate, { motion }: ResolvedTheme) {
   })
 }
 
-// The month and year the grid shows, which the plain header draws between
-// its chevrons.
-function visibleMonthOf(state: CalendarState, locale: string) {
-  const { start } = state.visibleRange
+/**
+ * The container's style for the months a calendar shows: the page's 360dp,
+ * or as wide as its months side by side with the room between them.
+ */
+function useRootStyle(months: number) {
+  const theme = useTheme()
+  const own = stylesOf(theme)
 
-  return new DateFormatter(locale, {
+  return useSideBySide(months)
+    ? composeStyles<ViewStyle>(own.root, {
+        width: rootWidthOf(theme, months),
+      })
+    : own.root
+}
+
+// Whether a calendar's months sit side by side, which they do from the
+// expanded window size up, as web's do; below it they stack.
+function useSideBySide(months: number) {
+  const sizeClass = useWindowSizeClass()
+
+  return months > 1 && sizeClass !== 'compact' && sizeClass !== 'medium'
+}
+
+// The months the calendar shows, which the plain header draws between its
+// chevrons and the calendar's name ends with: one month and its year, or the
+// first and last of several as a range, which `spoken` writes in React Aria's
+// words for a screen reader, as React Aria writes the two.
+function visibleRangeOf(
+  state: SomeCalendarState,
+  locale: string,
+  spoken = false,
+) {
+  const { end, start } = state.visibleRange
+  const { timeZone } = state
+  const formatter = new DateFormatter(locale, {
     calendar: start.calendar.identifier,
-    era: eraOf(start),
+    era: eraOf(start) ?? eraOf(end),
     month: 'long',
-    timeZone: state.timeZone,
+    timeZone,
     year: 'numeric',
-  }).format(start.toDate(state.timeZone))
+  })
+  const first = start.calendar.getFormattableMonth?.(start) ?? start
+
+  if (isSameMonth(start, end)) {
+    return formatter.format(first.toDate(timeZone))
+  }
+
+  const last = end.calendar.getFormattableMonth?.(end) ?? end
+
+  return spoken
+    ? spokenRangeOf(formatter, locale, first, last, timeZone)
+    : formatter.formatRange(first.toDate(timeZone), last.toDate(timeZone))
 }
 
 // The weekday row, in the locale's narrow names from the day its week starts
 // on, or the day `firstDayOfWeek` names.
 function weekdaysOf(
-  state: CalendarState,
+  state: SomeCalendarState,
   locale: string,
   firstDayOfWeek: undefined | Weekday,
 ) {
@@ -795,22 +1089,24 @@ function weekdaysOf(
   })
 }
 
-// The weeks of the month shown, each seven days from the locale's first day
-// of the week. A day a calendar system lacks is a gap.
-function weeksOf(state: CalendarState) {
-  const { start } = state.visibleRange
+// The weeks of the month a grid shows, from the first day of that month, each
+// seven days from the locale's first day of the week. A day a calendar system
+// lacks is a gap.
+function weeksOf(state: SomeCalendarState, start: CalendarDate) {
+  return Array.from(
+    { length: state.getWeeksInMonth(start) },
+    (_unused, week) => {
+      const key = start.add({ weeks: week }).toString()
 
-  return Array.from({ length: state.getWeeksInMonth() }, (_unused, week) => {
-    const key = start.add({ weeks: week }).toString()
-
-    return {
-      days: state.getDatesInWeek(week).map((date, day) => ({
-        date,
-        key: date?.toString() ?? `${key}+${String(day)}`,
-      })),
-      key,
-    }
-  })
+      return {
+        days: state.getDatesInWeek(week, start).map((date, day) => ({
+          date,
+          key: date?.toString() ?? `${key}+${String(day)}`,
+        })),
+        key,
+      }
+    },
+  )
 }
 
 /** The open year list: the years either side of the one shown. */
@@ -833,7 +1129,7 @@ function YearList({
 }
 
 // The year shown, which the header's year button names.
-function yearOf(state: CalendarState, locale: string) {
+function yearOf(state: SomeCalendarState, locale: string) {
   const { focusedDate, timeZone } = state
 
   return new DateFormatter(locale, {
@@ -849,7 +1145,7 @@ function yearOf(state: CalendarState, locale: string) {
 // stay inside `minValue` and `maxValue` and cut short where those are nearer.
 // An entry's id is its place in the list, since in some calendars, such as
 // the Japanese, the era changes as well as the year.
-function yearsOf(state: CalendarState, locale: string) {
+function yearsOf(state: SomeCalendarState, locale: string) {
   const { focusedDate, maxValue, minValue, timeZone } = state
   const formatter = new DateFormatter(locale, {
     calendar: focusedDate.calendar.identifier,
@@ -898,5 +1194,5 @@ function yearsOf(state: CalendarState, locale: string) {
 
 const NONE: ReadonlySet<number> = new Set()
 
-export { CalendarFrame, visibleMonthOf }
+export { CalendarFrame, useRootStyle, visibleRangeOf }
 export type { Weekday }

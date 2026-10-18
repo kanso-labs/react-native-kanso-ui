@@ -86,6 +86,14 @@ const MonthAndYearMenus: Story = {
   },
 }
 
+// Two months at once, for a date that may fall in either: side by side in an
+// expanded window, one under the other below it, and the header naming both.
+const TwoMonths: Story = {
+  args: {
+    visibleDuration: { months: 2 },
+  },
+}
+
 // In a compact window's 328dp, under the page's 360dp docked calendar. The
 // columns share what is left, so the calendar fits rather than running past
 // the window's edge.
@@ -110,6 +118,14 @@ const Locales: Story = {
   ),
 }
 
-export { Bounded, Compact, Default, Locales, MonthAndYearMenus, Today }
+export {
+  Bounded,
+  Compact,
+  Default,
+  Locales,
+  MonthAndYearMenus,
+  Today,
+  TwoMonths,
+}
 
 export default meta

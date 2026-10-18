@@ -219,6 +219,8 @@ export type {
   RadioGroupProps,
   RadioProps,
 } from './components/radio-group'
+export { RangeCalendar } from './components/range-calendar'
+export type { RangeCalendarProps } from './components/range-calendar'
 export { SearchField } from './components/search-field'
 export type { SearchFieldProps } from './components/search-field'
 export { SearchView, SearchViewContent } from './components/search-view'

@@ -45,6 +45,18 @@ describe('the library’s words', () => {
       expect(calendar.dateSelected).toContain('{date}')
       expect(calendar.todayDate).toContain('{date}')
       expect(calendar.todayDateSelected).toContain('{date}')
+      expect(calendar.selectedDateDescription).toContain('{date}')
+    },
+  )
+
+  // A range calendar names a range by its two ends, and says it at each of
+  // them, so one losing a placeholder would drop an end, or the range itself.
+  it.each(Object.entries(MESSAGES))(
+    'leaves room for both ends of a range in %s',
+    (_locale, { calendar }) => {
+      expect(calendar.dateRange).toContain('{startDate}')
+      expect(calendar.dateRange).toContain('{endDate}')
+      expect(calendar.selectedRangeDescription).toContain('{dateRange}')
     },
   )
 
