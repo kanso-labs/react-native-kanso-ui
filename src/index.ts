@@ -65,6 +65,8 @@ export type {
   ColorSwatchPickerLayout,
   ColorSwatchPickerProps,
 } from './components/color-swatch-picker'
+export { ColorWheel } from './components/color-wheel'
+export type { ColorWheelProps } from './components/color-wheel'
 export { ComboBox } from './components/combo-box'
 export type {
   ComboBoxProps,

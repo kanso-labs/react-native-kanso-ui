@@ -24,6 +24,7 @@ import { ColorArea } from '../components/color-area'
 import { ColorSlider } from '../components/color-slider'
 import { ColorSwatch } from '../components/color-swatch'
 import { ColorSwatchPicker } from '../components/color-swatch-picker'
+import { ColorWheel } from '../components/color-wheel'
 import { ComboBox } from '../components/combo-box'
 import { Container } from '../components/container'
 import { CopyField } from '../components/copy-field'
@@ -680,6 +681,13 @@ function Showcase({ name }: ShowcaseProps) {
             <ColorSwatchPicker.Item color={color} key={color} />
           ))}
         </ColorSwatchPicker>
+      </Section>
+
+      <Section
+        description="The hue ring's colour is its value rather than a role, so what a scheme reaches is the ring's own thickness and the ring around its thumb."
+        title="ColorWheel"
+      >
+        <ColorWheel defaultValue={TRANSPARENT_SWATCH} outerRadius={60} />
       </Section>
 
       <Section
