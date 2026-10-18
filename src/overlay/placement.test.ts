@@ -2,7 +2,7 @@ import { describe, expect, it } from '@jest/globals'
 
 import type { OverlayAlign, OverlaySide, PlacementInput } from './placement'
 
-import { boundsOf, place } from './placement'
+import { aboveKeyboard, boundsOf, place } from './placement'
 
 // A 400 by 800 window with 12 to spare on every side, and a 40 dp anchor in
 // the middle of it, with 160 dp of room on either side and 280 above.
@@ -37,6 +37,26 @@ describe('boundsOf', () => {
         12,
       ),
     ).toEqual({ height: 695, width: 312, x: 56, y: 59 })
+  })
+})
+
+describe('aboveKeyboard', () => {
+  const bounds = { height: 768, width: 368, x: 16, y: 16 }
+
+  it('leaves the bounds alone while no keyboard is shown', () => {
+    expect(aboveKeyboard(bounds, null, 16)).toBe(bounds)
+  })
+
+  it('ends the bounds the padding above the keys', () => {
+    expect(aboveKeyboard(bounds, 500, 16)).toEqual({ ...bounds, height: 468 })
+  })
+
+  it('keeps the bounds where the keys sit below them', () => {
+    expect(aboveKeyboard(bounds, 820, 16)).toEqual(bounds)
+  })
+
+  it('leaves no room rather than less than none', () => {
+    expect(aboveKeyboard(bounds, 20, 16)).toEqual({ ...bounds, height: 0 })
   })
 })
 

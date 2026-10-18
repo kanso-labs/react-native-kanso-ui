@@ -619,6 +619,34 @@ function filterOf<T>(matches: AutocompleteValue['matches']) {
   return (nodes: Iterable<Node<T>>) => keptOf(nodes, matches)
 }
 
+/**
+ * The row a screen reader is sent to as a panel holding the list opens: the
+ * first one chosen, or the first that takes a press where none is.
+ */
+function focusKeyOf<T>(state: ListState<T>): Key | null {
+  const chosen = state.selectionManager.firstSelectedKey
+
+  if (chosen !== null) {
+    return chosen
+  }
+
+  for (const node of state.collection) {
+    if (node.type === 'item' && !state.disabledKeys.has(node.key)) {
+      return node.key
+    }
+
+    if (node.type === 'section') {
+      for (const row of state.collection.getChildren?.(node.key) ?? []) {
+        if (!state.disabledKeys.has(row.key)) {
+          return row.key
+        }
+      }
+    }
+  }
+
+  return null
+}
+
 function keptOf<T>(
   nodes: Iterable<Node<T>>,
   matches: AutocompleteValue['matches'],
@@ -737,12 +765,13 @@ function renderEntry({ item }: ListRenderItemInfo<Entry>) {
  * How many rows a search leaves, said to a screen reader as it changes and
  * never drawn: in a polite live region on Android and under React Native
  * Web, and through `AccessibilityInfo` on iOS, which has no live regions,
- * so nothing is drawn there at all.
+ * so nothing is drawn there at all. A `count` of `null` says nothing, for a
+ * list that is closed, so the count is said again as it opens.
  */
-function ResultsStatus({ count }: { readonly count: number }) {
+function ResultsStatus({ count }: { readonly count: null | number }) {
   const own = stylesOf(useTheme())
   const locale = useLocaleOf(undefined)
-  const message = resultsFor(count, locale)
+  const message = count === null ? '' : resultsFor(count, locale)
 
   useResultsAnnouncement(message)
 
@@ -784,6 +813,11 @@ function revealOnLayout(
       list.scrollToIndex({ animated: false, index, viewPosition: 1 })
     }
   }
+}
+
+// How many rows the list holds, the ones inside sections among them.
+function rowCountOf<T>(state: ListState<T>) {
+  return entriesOf(state).rows
 }
 
 // The entry the collection holds for an `Item` part, as React Stately's own
@@ -1104,12 +1138,12 @@ function useLoadingAnnouncement(isLoading: boolean, label: string) {
 
 // Says how many rows are left on iOS each time the count changes. The count
 // a list mounts with is not said, as a live region does not read what it was
-// mounted holding.
+// mounted holding, and an empty message says nothing.
 function useResultsAnnouncement(message: string) {
   const was = useRef(message)
 
   useEffect(() => {
-    if (message !== was.current && Platform.OS === 'ios') {
+    if (message !== was.current && message !== '' && Platform.OS === 'ios') {
       AccessibilityInfo.announceForAccessibility(message)
     }
     was.current = message
@@ -1135,7 +1169,16 @@ function withBox(
   )
 }
 
-export { Collection, CollectionView, loaderNode, rowNode, sectionNode }
+export {
+  Collection,
+  CollectionView,
+  focusKeyOf,
+  loaderNode,
+  ResultsStatus,
+  rowCountOf,
+  rowNode,
+  sectionNode,
+}
 export type {
   CollectionKind,
   CollectionLoadMoreProps,

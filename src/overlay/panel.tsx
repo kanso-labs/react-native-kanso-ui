@@ -1,13 +1,15 @@
 import type { RefObject } from 'react'
-import type { HostInstance } from 'react-native'
+import type { HostInstance, ViewStyle } from 'react-native'
 
 import { useEffect, useRef } from 'react'
 import {
   AccessibilityInfo,
   BackHandler,
+  I18nManager,
   Platform,
   Pressable,
   StyleSheet,
+  View,
 } from 'react-native'
 import {
   Easing,
@@ -17,7 +19,7 @@ import {
   withTiming,
 } from 'react-native-reanimated'
 
-import type { OverlaySide } from './placement'
+import type { OverlaySide, Rect } from './placement'
 
 import { useTheme } from '../theme/scope'
 
@@ -46,26 +48,108 @@ const styles = StyleSheet.create({
     right: 0,
     top: 0,
   },
+  // The same, passing a press through wherever no part of it is drawn.
+  layerAround: {
+    bottom: 0,
+    left: 0,
+    pointerEvents: 'box-none',
+    position: 'absolute',
+    right: 0,
+    top: 0,
+  },
 })
 
 /**
  * The layer a press outside a non-modal panel lands on, drawn just before the
  * panel so it sits under it. The press goes no further, so a press on the
- * trigger closes the panel rather than opening it again, as on web. Nothing
- * but that press reaches it: React Native Web's Pressable is a tab stop
- * unless told otherwise, whatever `focusable` says.
+ * trigger closes the panel rather than opening it again, as on web.
+ *
+ * Given a `hole`, the layer is drawn around that frame rather than over it,
+ * so a press there reaches the screen under it and leaves the panel open: a
+ * combo box's box, where a tap places the caret in the text being typed, as
+ * a click in a combo box's input leaves its list open on web.
  */
-function DismissLayer({ onPress }: { readonly onPress: () => void }) {
+function DismissLayer({
+  hole,
+  onPress,
+}: {
+  readonly hole?: Rect | undefined
+  readonly onPress: () => void
+}) {
+  if (hole === undefined) {
+    return <LayerPart onPress={onPress} style={styles.layer} />
+  }
+
+  const parts = partsAround(hole)
+
+  return (
+    <View style={styles.layerAround}>
+      <LayerPart onPress={onPress} style={parts.above} />
+      <LayerPart onPress={onPress} style={parts.below} />
+      <LayerPart onPress={onPress} style={parts.left} />
+      <LayerPart onPress={onPress} style={parts.right} />
+    </View>
+  )
+}
+
+/**
+ * One piece of the layer. Nothing but a press reaches it: React Native Web's
+ * Pressable is a tab stop unless told otherwise, whatever `focusable` says.
+ */
+function LayerPart({
+  onPress,
+  style,
+}: {
+  readonly onPress: () => void
+  readonly style: ViewStyle
+}) {
   return (
     <Pressable
       accessible={false}
       aria-hidden
       focusable={false}
       onPress={onPress}
-      style={styles.layer}
+      style={style}
       tabIndex={-1}
     />
   )
+}
+
+/**
+ * The four pieces of a layer drawn around a frame: the bands above and below
+ * it, across the whole layer, and the two beside it, as tall as it. The frame
+ * is in physical coordinates, as `measureInWindow` reports it, and React
+ * Native swaps `left` and `right` in a right-to-left layout unless an app
+ * turns that off, so there each side is set through the other's name.
+ */
+function partsAround({ height, width, x, y }: Rect) {
+  const swapped = I18nManager.isRTL && I18nManager.doLeftAndRightSwapInRTL
+  const left = swapped ? 'right' : 'left'
+  const right = swapped ? 'left' : 'right'
+  const beside: ViewStyle = {
+    height,
+    position: 'absolute',
+    top: y,
+  }
+
+  return {
+    above: {
+      height: Math.max(0, y),
+      left: 0,
+      position: 'absolute',
+      right: 0,
+      top: 0,
+    },
+    below: {
+      bottom: 0,
+      left: 0,
+      position: 'absolute',
+      right: 0,
+      top: y + height,
+    },
+    left: { ...beside, [left]: 0, width: Math.max(0, x) },
+    right: { ...beside, [left]: x + width, [right]: 0 },
+  } satisfies Record<string, ViewStyle>
 }
 
 /**

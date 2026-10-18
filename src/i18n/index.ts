@@ -34,6 +34,22 @@ function limitFor(count: number, locale?: string): string {
 // A device's locale can carry a Unicode extension, `pt-PT-u-nu-latn`, which
 // says how numbers are written rather than which words; it is set aside, or
 // `pt-PT` would match no entry and read the first Portuguese one, Brazil's.
+/**
+ * Several values written as one list in the locale's words, "First item and
+ * Second item" in English, as a field holding several chosen options shows
+ * them. Hermes may lack `Intl.ListFormat`, and a comma between them is the
+ * list there.
+ */
+function listFor(values: readonly string[], locale?: string): string {
+  if (typeof Intl.ListFormat === 'function') {
+    return new Intl.ListFormat(localeOf(locale), {
+      type: 'conjunction',
+    }).format(values)
+  }
+
+  return values.join(', ')
+}
+
 function lookUp(locale: string): LibraryMessages {
   const tag = locale.split('-u-')[0]
   const language = tag.split('-')[0]
@@ -92,5 +108,5 @@ function resultsFor(count: number, locale?: string): string {
   return form.replace('{count}', new Intl.NumberFormat(resolved).format(count))
 }
 
-export { limitFor, messagesFor, resultsFor }
+export { limitFor, listFor, messagesFor, resultsFor }
 export type { LibraryMessages }

@@ -10,25 +10,25 @@ import type {
   ValueType,
 } from 'react-stately/useSelectState'
 
-import { useEffect, useId, useRef, useState } from 'react'
+import { useId, useRef, useState } from 'react'
 import { StyleSheet, View } from 'react-native'
-import Animated, {
-  Easing,
-  useAnimatedStyle,
-  useReducedMotion,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated'
+import Animated from 'react-native-reanimated'
 import { useSelectState } from 'react-stately/useSelectState'
 
 import type { FieldTriggerProps, FieldVariant } from '../../field'
 import type { ValidationResult } from '../../form'
 import type { ResolvedTheme } from '../../theme/scope'
 
-import { CollectionView } from '../../collection'
-import { describedBy, FieldBox, FieldMessage, FieldValue } from '../../field'
+import { CollectionView, focusKeyOf } from '../../collection'
+import {
+  describedBy,
+  FieldBox,
+  FieldChevron,
+  FieldMessage,
+  FieldValue,
+} from '../../field'
 import { useFieldValidation } from '../../form'
-import { ChevronDownGlyph } from '../../glyphs'
+import { listFor } from '../../i18n'
 import { useLocaleOf, useMessages } from '../../i18n/provider'
 import { Overlay, useAnchoredPlacement } from '../../overlay'
 import {
@@ -60,10 +60,7 @@ import { composeStyles, themedStyles } from '../../theme/styles'
 //
 // **The chevron turns.** The page's trailing icon points down while the list
 // is closed and up while it is open, turned on the step the list arrives on,
-// short3 on the standard curve, and at once under reduced motion. It is the
-// down chevron turned half a turn rather than web's end chevron turned a
-// quarter either way, which draws the same two states; the down one does not
-// mirror under right-to-left, so the turn needs no second direction.
+// as src/field's chevron turns for every field that opens a list.
 //
 // **The list is the field's width**, under the field, and above it where the
 // window has no room below. It grows from the edge facing the field, as
@@ -218,10 +215,6 @@ type SelectProps<M extends SelectionMode = 'single'> = {
   readonly variant?: FieldVariant
 }
 
-// How far the chevron turns while the list is open: half a turn, against
-// the clock as web's end chevron turns from pointing down to pointing up.
-const OPEN_TURN = -180
-
 // The list never grows past its room, and the rows scroll inside it.
 const SHRINKS: ViewStyle = { flexGrow: 0 }
 
@@ -239,70 +232,11 @@ const stylesOf = themedStyles(({ colors, radii, shadows }: ResolvedTheme) =>
   }),
 )
 
-// The chevron in the box's trailing slot, pointing down at the list it
-// opens and turned to point up while the list is open.
-function Chevron({ isOpen }: { readonly isOpen: boolean }) {
-  const { motion } = useTheme()
-  const reduceMotion = useReducedMotion()
-  const turn = isOpen ? OPEN_TURN : 0
-  const angle = useSharedValue(turn)
-
-  useEffect(() => {
-    angle.set(
-      reduceMotion
-        ? turn
-        : withTiming(turn, {
-            duration: motion.durationShort3,
-            easing: Easing.bezier(...motion.easingStandard),
-          }),
-    )
-  }, [angle, motion, reduceMotion, turn])
-
-  const turned = useAnimatedStyle(() => {
-    'worklet'
-    return { transform: [{ rotate: `${angle.get()}deg` }] }
-  })
-
-  return (
-    <Animated.View style={turned}>
-      <ChevronDownGlyph />
-    </Animated.View>
-  )
-}
-
 // The chevron, turned or not. A call rather than JSX written at the prop,
 // which is what react-perf's jsx-no-jsx-as-prop is after; the React Compiler
 // memoises the result on `isOpen`.
 function chevronFor(isOpen: boolean) {
-  return <Chevron isOpen={isOpen} />
-}
-
-/**
- * The option a screen reader is sent to as the list opens: the first one
- * chosen, or the first that takes a press where none is.
- */
-function focusKeyOf(state: SelectState<object, SelectionMode>): Key | null {
-  const chosen = state.selectionManager.firstSelectedKey
-
-  if (chosen !== null) {
-    return chosen
-  }
-
-  for (const node of state.collection) {
-    if (node.type === 'item' && !state.disabledKeys.has(node.key)) {
-      return node.key
-    }
-
-    if (node.type === 'section') {
-      for (const row of state.collection.getChildren?.(node.key) ?? []) {
-        if (!state.disabledKeys.has(row.key)) {
-          return row.key
-        }
-      }
-    }
-  }
-
-  return null
+  return <FieldChevron isOpen={isOpen} />
 }
 
 // The keys a select's value holds, one or several, as a list.
@@ -409,7 +343,7 @@ function Select<M extends SelectionMode = 'single'>({
   const isPlaceholder = state.selectedItems.length === 0
   const shown = isPlaceholder
     ? (placeholder ?? messages.selectPlaceholder)
-    : textOf(
+    : listFor(
         state.selectedItems.map((item) => item.textValue),
         locale,
       )
@@ -467,7 +401,9 @@ function SelectList({
   const close = state.close
 
   useBackToClose(close, isOpen)
-  useFocusOnPlaced(placement.placed, option ?? panel)
+  // Only while open: a choice moves the focus key to the option just chosen
+  // as the list leaves, and the reader belongs back at the box by then.
+  useFocusOnPlaced(isOpen && placement.placed, option ?? panel)
 
   return (
     <>
@@ -531,20 +467,6 @@ function SelectPopup({
       />
     </Overlay>
   )
-}
-
-/**
- * What the box shows for the chosen options: one option's text as it is, or
- * several joined into a list the locale's way, "First item and Second item"
- * in English. Hermes may lack `Intl.ListFormat`, and a comma between them is
- * the list there.
- */
-function textOf(texts: readonly string[], locale: string) {
-  if (typeof Intl.ListFormat === 'function') {
-    return new Intl.ListFormat(locale, { type: 'conjunction' }).format(texts)
-  }
-
-  return texts.join(', ')
 }
 
 /**

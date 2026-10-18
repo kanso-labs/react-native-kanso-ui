@@ -9,9 +9,16 @@ import type { OverlayAlign, OverlaySide, Rect, Size } from './placement'
 
 import { useTheme } from '../theme/scope'
 import { OverlayHostContext } from './host'
-import { boundsOf, place } from './placement'
+import { useKeyboardTop, watchKeyboard } from './keyboard'
+import { aboveKeyboard, boundsOf, place } from './placement'
 
 type AnchoredPlacement = {
+  /**
+   * Where the anchor sits in the overlay layer, in physical coordinates, for
+   * a layer drawn around it, and undefined until the surface has been
+   * placed.
+   */
+  readonly anchorFrame: Rect | undefined
   /**
    * The anchor's width as it was measured, for a surface as wide as what
    * opened it, and undefined until the surface has been placed.
@@ -82,11 +89,12 @@ const NO_INSETS = { bottom: 0, left: 0, right: 0, top: 0 }
  * web's anchored overlays are placed: on `side`, lined up by `align`, flipped
  * to the opposite side at the edge of the window, and kept inside the safe
  * area's insets with `spacing.md` to spare, the padding React Aria keeps from
- * the edge of the viewport. On `top` and `bottom`, `start` and `end` follow
- * `I18nManager.isRTL`.
+ * the edge of the viewport. The software keyboard is an edge too while it is
+ * shown, so a list opened from a field being typed in stays above the keys.
+ * On `top` and `bottom`, `start` and `end` follow `I18nManager.isRTL`.
  *
  * The anchor is measured with `measureInWindow` whenever the surface reports
- * a new size or the window changes size.
+ * a new size, the window changes size or the keyboard moves.
  */
 function useAnchoredPlacement({
   align = 'center',
@@ -99,6 +107,7 @@ function useAnchoredPlacement({
   const { spacing } = useTheme()
   const window = useWindowDimensions()
   const insets = use(SafeAreaInsetsContext) ?? NO_INSETS
+  const keyboardTop = useKeyboardTop()
   const [measured, setMeasured] = useState<Measured | null>(null)
   const [surface, setSurface] = useState<null | Size>(null)
 
@@ -127,11 +136,16 @@ function useAnchoredPlacement({
     measure()
 
     // A rotation or a resized window can move the anchor without the
-    // surface changing size.
+    // surface changing size, and so can a keyboard arriving, as a screen
+    // makes room for the field being typed in.
     const subscription = Dimensions.addEventListener('change', measure)
+    const unwatch = watchKeyboard(() => {
+      measure()
+    })
 
     return () => {
       subscription.remove()
+      unwatch()
     }
   }, [anchor, store, surface])
 
@@ -147,6 +161,7 @@ function useAnchoredPlacement({
 
   if (measured === null || surface === null) {
     return {
+      anchorFrame: undefined,
       anchorWidth: undefined,
       onLayout,
       placed: false,
@@ -159,7 +174,11 @@ function useAnchoredPlacement({
     align,
     alignOffset,
     anchor: measured.anchor,
-    bounds: boundsOf(window, insets, spacing.md),
+    bounds: aboveKeyboard(
+      boundsOf(window, insets, spacing.md),
+      keyboardTop,
+      spacing.md,
+    ),
     rtl: I18nManager.isRTL,
     side,
     sideOffset: sideOffset ?? spacing.sm,
@@ -168,6 +187,12 @@ function useAnchoredPlacement({
   const x = placement.x - measured.origin.x
 
   return {
+    anchorFrame: {
+      height: measured.anchor.height,
+      width: measured.anchor.width,
+      x: measured.anchor.x - measured.origin.x,
+      y: measured.anchor.y - measured.origin.y,
+    },
     anchorWidth: measured.anchor.width,
     onLayout,
     placed: true,

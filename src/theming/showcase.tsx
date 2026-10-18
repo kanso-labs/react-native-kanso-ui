@@ -20,6 +20,7 @@ import { CheckboxGroup } from '../components/checkbox-group'
 import { Chip } from '../components/chip'
 import { ChipGroup } from '../components/chip-group'
 import { Code } from '../components/code'
+import { ComboBox } from '../components/combo-box'
 import { Container } from '../components/container'
 import { CopyField } from '../components/copy-field'
 import { Currency } from '../components/currency'
@@ -184,8 +185,8 @@ const BAR_TRAILING = (
 const LIST_SELECTION = ['second']
 const SEGMENT_SELECTION = ['second']
 
-// The Select section's options, an array since a select reads its options
-// straight off it, and hoisted for the same reason.
+// The ComboBox and Select sections' options, an array since both read their
+// options straight off it, and hoisted for the same reason.
 const SELECT_OPTIONS = [
   <ListBox.Item id="first" key="first">
     First item
@@ -595,6 +596,13 @@ function Showcase({ name }: ShowcaseProps) {
             A muted line naming <Code>--kui-radius-md</Code>
           </Text>
         </View>
+      </Section>
+
+      <Section
+        description="A text field that filters a list box, so it draws the field chrome and the popover surface at once."
+        title="ComboBox"
+      >
+        <ComboBox label="Label" options={SELECT_OPTIONS} />
       </Section>
 
       <Section
