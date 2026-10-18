@@ -309,5 +309,5 @@ function useFocusOnceReady(ready: boolean, target: HostInstance | null) {
   }, [ready])
 }
 
-export { PickerPopup, PickerTrigger }
+export { PickerPopup, PickerTrigger, roomOf }
 export type { PickerPopupProps, PickerTriggerProps }
