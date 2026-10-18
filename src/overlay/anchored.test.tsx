@@ -17,10 +17,19 @@ import {
 } from '@jest/globals'
 import { act, fireEvent, render, screen } from '@testing-library/react-native'
 import { useRef } from 'react'
-import { Dimensions, I18nManager, StyleSheet, View } from 'react-native'
+import {
+  DeviceEventEmitter,
+  Dimensions,
+  I18nManager,
+  Keyboard,
+  Platform,
+  StyleSheet,
+  View,
+} from 'react-native'
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context'
 
 import type { AnchoredPlacementOptions } from './anchored'
+import type { Rect } from './placement'
 
 import { ThemeScope } from '../theme-scope'
 import { useAnchoredPlacement } from './anchored'
@@ -46,6 +55,7 @@ const frames: { anchor: Frame; layer: Frame } = {
 // A notched phone in landscape: the notch on the left, the status bar above.
 const NOTCHED = { bottom: 0, left: 44, right: 0, top: 47 }
 
+const anchorFrames: (Rect | undefined)[] = []
 const sides: string[] = []
 const placements: boolean[] = []
 const widths: (number | undefined)[] = []
@@ -73,6 +83,15 @@ function isMockedView(value: unknown): value is MockedView {
   )
 }
 
+// What iOS and Android report of a keyboard, in the window's coordinates.
+function keyboardAt(screenY: number, height = 800 - screenY) {
+  return {
+    duration: 0,
+    easing: 'keyboard',
+    endCoordinates: { height, screenX: 0, screenY, width: 400 },
+  }
+}
+
 async function laidOut(width = 120, height = 60) {
   await fireEvent(screen.getByTestId('surface'), 'layout', {
     nativeEvent: { layout: { height, width, x: 0, y: 0 } },
@@ -97,6 +116,7 @@ function styleOf(element: {
 
 function Surface(props: SurfaceProps) {
   const {
+    anchorFrame,
     anchorWidth,
     onLayout,
     placed: isPlaced,
@@ -104,6 +124,7 @@ function Surface(props: SurfaceProps) {
     style,
   } = useAnchoredPlacement(props)
 
+  anchorFrames.push(anchorFrame)
   placements.push(isPlaced)
   sides.push(side)
   widths.push(anchorWidth)
@@ -114,6 +135,7 @@ function Surface(props: SurfaceProps) {
 beforeEach(() => {
   frames.anchor = [180, 300, 40, 40]
   frames.layer = [0, 0, 400, 800]
+  anchorFrames.length = 0
   placements.length = 0
   sides.length = 0
   widths.length = 0
@@ -195,6 +217,22 @@ describe('useAnchoredPlacement', () => {
     expect(sides.at(-1)).toBe('top')
   })
 
+  it('reports where the anchor sits in the layer once the surface is placed', async () => {
+    frames.layer = [10, 24, 390, 776]
+    await render(<Anchored />)
+
+    expect(anchorFrames.at(-1)).toBeUndefined()
+
+    await laidOut()
+
+    expect(anchorFrames.at(-1)).toEqual({
+      height: 40,
+      width: 40,
+      x: 170,
+      y: 276,
+    })
+  })
+
   it('places the surface in the layer, wherever the layer starts', async () => {
     frames.layer = [10, 24, 390, 776]
 
@@ -237,6 +275,134 @@ describe('useAnchoredPlacement', () => {
     })
 
     expect(placed()).toMatchObject({ left: 340, maxHeight: 240, top: 148 })
+  })
+
+  describe('while a keyboard is shown', () => {
+    it('keeps the surface above the keys, flipping it where it must', async () => {
+      frames.anchor = [180, 420, 40, 40]
+      await render(<Anchored />)
+      await laidOut()
+
+      expect(placed()).toMatchObject({ top: 468 })
+
+      await act(() => {
+        DeviceEventEmitter.emit('keyboardWillChangeFrame', keyboardAt(500))
+      })
+
+      // spacing.md above the keys leaves 16 dp below the anchor, so the
+      // surface opens above it instead.
+      expect(placed()).toMatchObject({ top: 352 })
+      expect(sides.at(-1)).toBe('top')
+    })
+
+    it('takes the height above the keys', async () => {
+      await render(<Anchored />)
+      await laidOut()
+      await act(() => {
+        DeviceEventEmitter.emit('keyboardWillChangeFrame', keyboardAt(500))
+      })
+
+      expect(placed()).toMatchObject({ maxHeight: 140, top: 348 })
+    })
+
+    it('measures the anchor again as the keyboard moves', async () => {
+      await render(<Anchored />)
+      await laidOut()
+
+      frames.anchor = [180, 100, 40, 40]
+      await act(() => {
+        DeviceEventEmitter.emit('keyboardWillChangeFrame', keyboardAt(500))
+      })
+
+      expect(placed()).toMatchObject({ top: 148 })
+    })
+
+    it('gives the room back once the keyboard has gone', async () => {
+      await render(<Anchored />)
+      await laidOut()
+      await act(() => {
+        DeviceEventEmitter.emit('keyboardWillChangeFrame', keyboardAt(500))
+      })
+      await act(() => {
+        DeviceEventEmitter.emit('keyboardWillHide', keyboardAt(800, 0))
+      })
+
+      expect(placed()).toMatchObject({ maxHeight: 440 })
+    })
+
+    it('ignores a keyboard reported with no height', async () => {
+      await render(<Anchored />)
+      await laidOut()
+      await act(() => {
+        DeviceEventEmitter.emit('keyboardWillChangeFrame', keyboardAt(500, 0))
+      })
+
+      expect(placed()).toMatchObject({ maxHeight: 440 })
+    })
+
+    it('starts above a keyboard already shown', async () => {
+      jest
+        .spyOn(Keyboard, 'metrics')
+        .mockReturnValue(keyboardAt(500).endCoordinates)
+
+      await render(<Anchored />)
+      await laidOut()
+
+      expect(placed()).toMatchObject({ maxHeight: 140 })
+    })
+
+    it("follows Android's keyboard, which reports once it has moved", async () => {
+      jest.replaceProperty(Platform, 'OS', 'android')
+
+      await render(<Anchored />)
+      await laidOut()
+      await act(() => {
+        DeviceEventEmitter.emit('keyboardWillChangeFrame', keyboardAt(500))
+      })
+
+      expect(placed()).toMatchObject({ maxHeight: 440 })
+
+      await act(() => {
+        DeviceEventEmitter.emit('keyboardDidShow', keyboardAt(500))
+      })
+
+      expect(placed()).toMatchObject({ maxHeight: 140 })
+
+      await act(() => {
+        DeviceEventEmitter.emit('keyboardDidHide', keyboardAt(800, 0))
+      })
+
+      expect(placed()).toMatchObject({ maxHeight: 440 })
+    })
+
+    it('stops watching the keyboard once it has gone', async () => {
+      const before = DeviceEventEmitter.listenerCount('keyboardWillChangeFrame')
+
+      await render(<Anchored />)
+
+      expect(
+        DeviceEventEmitter.listenerCount('keyboardWillChangeFrame'),
+      ).toBeGreaterThan(before)
+
+      await screen.unmount()
+
+      expect(DeviceEventEmitter.listenerCount('keyboardWillChangeFrame')).toBe(
+        before,
+      )
+    })
+
+    it('asks nothing of the keyboard under React Native Web', async () => {
+      jest.replaceProperty(Platform, 'OS', 'web')
+      // React Native Web's Keyboard has no `metrics` at all.
+      jest.spyOn(Keyboard, 'metrics').mockImplementation(() => {
+        throw new TypeError('Keyboard.metrics is not a function')
+      })
+
+      await render(<Anchored />)
+      await laidOut()
+
+      expect(placed()).toMatchObject({ maxHeight: 440 })
+    })
   })
 
   it('lines end up with the right edge where the direction is unset', async () => {

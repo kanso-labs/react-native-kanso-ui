@@ -197,6 +197,14 @@ type FieldInputProps = Omit<
    * @default true
    */
   readonly autosize?: boolean
+  /**
+   * The options a field holding several has chosen, written as one list,
+   * drawn before the control on its line in the value's own role and cut
+   * short with an ellipsis where the line runs out. The control keeps three
+   * characters' width beside them at the least, so there is always
+   * somewhere to type, and is described by them first.
+   */
+  readonly chosen?: string
   /** What describes the control, after its prefix and suffix. */
   readonly described?: readonly FieldDescriptionPart[]
   /**
@@ -581,9 +589,10 @@ function FieldBox({
  * error role for its caret while the field has an error, and draws a
  * placeholder in the muted role.
  *
- * It is described by its prefix and suffix, ahead of what the field hands it
- * in `described`, so a reader hears the unit the value is read against as a
- * sighted one sees it beside the value: on iOS and Android as its hint, and
+ * It is described by what it holds chosen, its prefix and its suffix, ahead
+ * of what the field hands it in `described`, so a reader hears the options
+ * chosen beside the text and the unit the value is read against as a sighted
+ * one sees them on the value's line: on iOS and Android as its hint, and
  * under React Native Web through `aria-describedby`, which drops the hint.
  *
  * `multiline` makes it a text area, `rows` lines of body large tall at the
@@ -597,6 +606,7 @@ function FieldBox({
  */
 function FieldInput({
   autosize = true,
+  chosen = '',
   described = NO_PARTS,
   multiline = false,
   numeric = false,
@@ -621,6 +631,7 @@ function FieldInput({
     ? withOpacity(colors.onSurface, stateLayerOpacity.disabledContent)
     : colors.onSurfaceVariant
   const affixed = prefix !== undefined || suffix !== undefined
+  const holdsChosen = chosen !== ''
   const clearance = box.underLabel
     ? marginTopOf(typography.bodySmallLineHeight * fontScale)
     : undefined
@@ -635,6 +646,7 @@ function FieldInput({
       {...(Platform.OS === 'web' ? INHERITS_DIRECTION : undefined)}
       {...props}
       {...descriptionOf([
+        ...affixPart(`${id}-chosen`, holdsChosen ? chosen : undefined),
         ...affixPart(`${id}-prefix`, prefix),
         ...affixPart(`${id}-suffix`, suffix),
         ...described,
@@ -652,7 +664,10 @@ function FieldInput({
         numeric ? numericOf(mono) : undefined,
         multiline ? styles.inputMultiline : undefined,
         copied ? styles.inputOverCopy : extent,
-        affixed || copied ? undefined : clearance,
+        holdsChosen
+          ? minWidthOf(CHOSEN_ROOM * typography.bodyLargeSize * fontScale)
+          : undefined,
+        affixed || copied || holdsChosen ? undefined : clearance,
       )}
       underlineColorAndroid="transparent"
     />
@@ -674,12 +689,21 @@ function FieldInput({
     )
   }
 
-  if (!affixed) {
+  if (!affixed && !holdsChosen) {
     return control
   }
 
   return (
     <View style={composeStyles<ViewStyle>(styles.affixLine, clearance)}>
+      {holdsChosen ? (
+        <NativeText
+          id={`${id}-chosen`}
+          numberOfLines={1}
+          style={composeStyles<TextStyle>(role, colorOf(content), SHRINKS)}
+        >
+          {chosen}
+        </NativeText>
+      ) : null}
       {prefix === undefined ? null : (
         <Affix floated={box.floated} id={`${id}-prefix`} style={affixStyle}>
           {prefix}
@@ -919,6 +943,10 @@ const NOT_DRAWN: TextStyle = { display: 'none' }
 const OUT_OF_FLOW: ViewStyle = { position: 'absolute' }
 
 const SHRINKS: TextStyle = { flexShrink: 1 }
+
+// How many characters' width a control holding chosen options keeps beside
+// them, in its own type's size, web's 3em.
+const CHOSEN_ROOM = 3
 
 /**
  * A prefix or a suffix, faded in once the label has floated and out when it
@@ -1366,6 +1394,8 @@ function widthTo(onMeasure: (width: number) => void) {
     onMeasure(event.nativeEvent.layout.width)
   }
 }
+
+export { FieldChevron } from './chevron'
 
 export {
   describedBy,

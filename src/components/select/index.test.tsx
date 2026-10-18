@@ -904,6 +904,21 @@ describe('Select', () => {
       expect(send.mock.calls.at(0)?.[1]).toBe('focus')
     })
 
+    it('is sent back to the box alone once another option is chosen', async () => {
+      const send = jest.spyOn(AccessibilityInfo, 'sendAccessibilityEvent')
+      await renderSelect({ defaultValue: 'second' })
+
+      await fireEvent.press(box())
+      await laidOut()
+      send.mockClear()
+      await choose('First item')
+      await advance(motion.durationShort2)
+
+      expect(
+        send.mock.calls.map(([view, event]) => [testIdOf(view), event]),
+      ).toEqual([['select', 'focus']])
+    })
+
     it('is sent back to the box once the list has gone', async () => {
       const send = jest.spyOn(AccessibilityInfo, 'sendAccessibilityEvent')
       await renderSelect()

@@ -1,38 +1,39 @@
 // The words the library writes itself: the pending ring's name, a bottom
 // sheet's drag handle, a collection's loading-more and empty rows, what
 // selecting a list's row is called, what a Select shows while nothing is
-// chosen, how many rows a search leaves, a calendar's, a field's character
-// limit, CopyField's button, the names of SearchField's clear button,
-// Snackbar's close button, a chip's remove button and NumberField's
-// steppers. Each one a call site might want in other words stands behind a
-// prop that names it otherwise: `pendingLabel` for the ring, `aria-label`
-// for the handle, `label` for the loading-more row, `renderEmptyState` for
-// the empty one, `selectLabel` for the selection, `placeholder` for a
-// Select's empty value, `characterLimitLabel` for the limit, `copyLabel` and
-// `copiedLabel` for CopyField, `clearLabel`, `closeLabel` and `removeLabel`
-// for the three buttons, and `decrementLabel` and `incrementLabel` for the
-// steppers.
+// chosen, the names of a ComboBox's list and the button opening it, how many
+// rows a search leaves, a calendar's, a field's character limit, CopyField's
+// button, the names of SearchField's clear button, Snackbar's close button, a
+// chip's remove button and NumberField's steppers. Each one a call site might
+// want in other words stands behind a prop that names it otherwise:
+// `pendingLabel` for the ring, `aria-label` for the handle, `label` for the
+// loading-more row, `renderEmptyState` for the empty one, `selectLabel` for the
+// selection, `placeholder` for a Select's empty value, `characterLimitLabel`
+// for the limit, `copyLabel` and `copiedLabel` for CopyField, `clearLabel`,
+// `closeLabel` and `removeLabel` for the three buttons, and `decrementLabel`
+// and `incrementLabel` for the steppers.
 //
-// Copied from kanso-ui's src/i18n/messages.ts, one entry per locale React
-// Aria ships, and kept in step with it by hand: the web library publishes no
-// copy of its table, and a word that differs between the two would name the
-// same ring two ways. The handle's name is this table's alone, since web's
-// sheet draws its handle as decoration and names nothing. `select` is React
-// Aria's own word for a grid list row's checkbox, which web's List takes
-// from React Aria's tables rather than its own, copied here so the two read
-// the same, and `selectPlaceholder` is what React Aria's Select, and so
-// web's, shows while nothing is chosen. `results` is React Aria's too, the
-// count its ComboBox announces, which Autocomplete announces as a search
-// narrows a list. `calendar` is React Aria's calendar dictionary, which
-// web's Calendar reads, beside the names of the month and year fields that
-// web reads from the browser's `Intl.DisplayNames` and Hermes lacks, written
-// here from the same CLDR data. `clearSearch`, `close`, `decrease`,
-// `increase` and `remove` are React Aria's as well, from the search field,
-// toast, number field and tag dictionaries its own controls name those
-// buttons from on web. The others were drafted for kanso-ui's table rather
-// than taken from a translation service, and each one wants a native
-// speaker's eye before it is trusted; a call site can always pass its own
-// words through the prop.
+// Copied from kanso-ui's src/i18n/messages.ts, one entry per locale React Aria
+// ships, and kept in step with it by hand: the web library publishes no copy of
+// its table, and a word that differs between the two would name the same ring
+// two ways. The handle's name is this table's alone, since web's sheet draws
+// its handle as decoration and names nothing. `select` is React Aria's own word
+// for a grid list row's checkbox, which web's List takes from React Aria's
+// tables rather than its own, copied here so the two read the same, and
+// `selectPlaceholder` is what React Aria's Select, and so web's, shows while
+// nothing is chosen. `results` is React Aria's too, the count its ComboBox
+// announces, which Autocomplete and ComboBox announce as a search narrows a
+// list, and `showSuggestions` and `suggestions` are the names its ComboBox
+// gives the button that opens the list and the list itself. `calendar` is React
+// Aria's calendar dictionary, which web's Calendar reads, beside the names of
+// the month and year fields that web reads from the browser's
+// `Intl.DisplayNames` and Hermes lacks, written here from the same CLDR data.
+// `clearSearch`, `close`, `decrease`, `increase` and `remove` are React Aria's
+// as well, from the search field, toast, number field and tag dictionaries its
+// own controls name those buttons from on web. The others were drafted for
+// kanso-ui's table rather than taken from a translation service, and each one
+// wants a native speaker's eye before it is trusted; a call site can always
+// pass its own words through the prop.
 
 type LibraryMessages = {
   /**
@@ -108,6 +109,10 @@ type LibraryMessages = {
   readonly select: string
   /** What a Select shows while nothing is chosen. */
   readonly selectPlaceholder: string
+  /** What the button opening a ComboBox's list is called, before its label. */
+  readonly showSuggestions: string
+  /** What a ComboBox's list is called, before the field's label. */
+  readonly suggestions: string
 }
 
 /**
@@ -156,6 +161,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     },
     select: 'تحديد',
     selectPlaceholder: 'حدد عنصرًا',
+    showSuggestions: 'عرض المقترحات',
+    suggestions: 'مقترحات',
   },
   'bg-BG': {
     calendar: {
@@ -190,6 +197,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     },
     select: 'Изберете',
     selectPlaceholder: 'Изберете предмет',
+    showSuggestions: 'Покажи предложения',
+    suggestions: 'Предложения',
   },
   'cs-CZ': {
     calendar: {
@@ -226,6 +235,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     },
     select: 'Vybrat',
     selectPlaceholder: 'Vyberte položku',
+    showSuggestions: 'Zobrazit doporučení',
+    suggestions: 'Návrhy',
   },
   'da-DK': {
     calendar: {
@@ -259,6 +270,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     },
     select: 'Vælg',
     selectPlaceholder: 'Vælg et element',
+    showSuggestions: 'Vis forslag',
+    suggestions: 'Forslag',
   },
   'de-DE': {
     calendar: {
@@ -292,6 +305,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     },
     select: 'Auswählen',
     selectPlaceholder: 'Element wählen',
+    showSuggestions: 'Empfehlungen anzeigen',
+    suggestions: 'Empfehlungen',
   },
   'el-GR': {
     calendar: {
@@ -326,6 +341,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     },
     select: 'Επιλογή',
     selectPlaceholder: 'Επιλέξτε ένα αντικείμενο',
+    showSuggestions: 'Προβολή προτάσεων',
+    suggestions: 'Προτάσεις',
   },
   'en-US': {
     calendar: {
@@ -360,6 +377,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     },
     select: 'Select',
     selectPlaceholder: 'Select an item',
+    showSuggestions: 'Show suggestions',
+    suggestions: 'Suggestions',
   },
   'es-ES': {
     calendar: {
@@ -394,6 +413,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     },
     select: 'Seleccionar',
     selectPlaceholder: 'Seleccionar un artículo',
+    showSuggestions: 'Mostrar sugerencias',
+    suggestions: 'Sugerencias',
   },
   'et-EE': {
     calendar: {
@@ -428,6 +449,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     },
     select: 'Vali',
     selectPlaceholder: 'Valige üksus',
+    showSuggestions: 'Kuva soovitused',
+    suggestions: 'Soovitused',
   },
   'fi-FI': {
     calendar: {
@@ -462,6 +485,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     },
     select: 'Valitse',
     selectPlaceholder: 'Valitse kohde',
+    showSuggestions: 'Näytä ehdotukset',
+    suggestions: 'Ehdotukset',
   },
   'fr-FR': {
     calendar: {
@@ -496,6 +521,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     },
     select: 'Sélectionner',
     selectPlaceholder: 'Sélectionner un élément',
+    showSuggestions: 'Afficher les suggestions',
+    suggestions: 'Suggestions',
   },
   'he-IL': {
     calendar: {
@@ -531,6 +558,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     },
     select: 'בחר',
     selectPlaceholder: 'בחר פריט',
+    showSuggestions: 'הצג הצעות',
+    suggestions: 'הצעות',
   },
   'hr-HR': {
     calendar: {
@@ -566,6 +595,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     },
     select: 'Odaberite',
     selectPlaceholder: 'Odaberite stavku',
+    showSuggestions: 'Prikaži prijedloge',
+    suggestions: 'Prijedlozi',
   },
   'hu-HU': {
     calendar: {
@@ -599,6 +630,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     },
     select: 'Kijelölés',
     selectPlaceholder: 'Válasszon ki egy elemet',
+    showSuggestions: 'Javaslatok megjelenítése',
+    suggestions: 'Javaslatok',
   },
   'it-IT': {
     calendar: {
@@ -633,6 +666,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     },
     select: 'Seleziona',
     selectPlaceholder: 'Seleziona un elemento',
+    showSuggestions: 'Mostra suggerimenti',
+    suggestions: 'Suggerimenti',
   },
   'ja-JP': {
     calendar: {
@@ -666,6 +701,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     },
     select: '選択',
     selectPlaceholder: '項目を選択',
+    showSuggestions: '候補を表示',
+    suggestions: '候補',
   },
   'ko-KR': {
     calendar: {
@@ -699,6 +736,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     },
     select: '선택',
     selectPlaceholder: '항목 선택',
+    showSuggestions: '제안 사항 표시',
+    suggestions: '제안',
   },
   'lt-LT': {
     calendar: {
@@ -735,6 +774,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     },
     select: 'Pasirinkti',
     selectPlaceholder: 'Pasirinkite elementą',
+    showSuggestions: 'Rodyti pasiūlymus',
+    suggestions: 'Pasiūlymai',
   },
   'lv-LV': {
     calendar: {
@@ -770,6 +811,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     },
     select: 'Atlasīt',
     selectPlaceholder: 'Izvēlēties vienumu',
+    showSuggestions: 'Rādīt ieteikumus',
+    suggestions: 'Ieteikumi',
   },
   'nb-NO': {
     calendar: {
@@ -803,6 +846,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     },
     select: 'Velg',
     selectPlaceholder: 'Velg et element',
+    showSuggestions: 'Vis forslag',
+    suggestions: 'Forslag',
   },
   'nl-NL': {
     calendar: {
@@ -837,6 +882,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     },
     select: 'Selecteren',
     selectPlaceholder: 'Selecteer een item',
+    showSuggestions: 'Suggesties weergeven',
+    suggestions: 'Suggesties',
   },
   'pl-PL': {
     calendar: {
@@ -873,6 +920,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     },
     select: 'Zaznacz',
     selectPlaceholder: 'Wybierz element',
+    showSuggestions: 'Wyświetlaj sugestie',
+    suggestions: 'Sugestie',
   },
   'pt-BR': {
     calendar: {
@@ -907,6 +956,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     },
     select: 'Selecionar',
     selectPlaceholder: 'Selecione um item',
+    showSuggestions: 'Mostrar sugestões',
+    suggestions: 'Sugestões',
   },
   'pt-PT': {
     calendar: {
@@ -941,6 +992,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     },
     select: 'Selecionar',
     selectPlaceholder: 'Selecione um item',
+    showSuggestions: 'Apresentar sugestões',
+    suggestions: 'Sugestões',
   },
   'ro-RO': {
     calendar: {
@@ -976,6 +1029,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     },
     select: 'Selectare',
     selectPlaceholder: 'Selectați un element',
+    showSuggestions: 'Afișare sugestii',
+    suggestions: 'Sugestii',
   },
   'ru-RU': {
     calendar: {
@@ -1012,6 +1067,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     },
     select: 'Выбрать',
     selectPlaceholder: 'Выберите элемент',
+    showSuggestions: 'Показать предложения',
+    suggestions: 'Предложения',
   },
   'sk-SK': {
     calendar: {
@@ -1048,6 +1105,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     },
     select: 'Vybrať',
     selectPlaceholder: 'Vyberte položku',
+    showSuggestions: 'Zobraziť návrhy',
+    suggestions: 'Návrhy',
   },
   'sl-SI': {
     calendar: {
@@ -1084,6 +1143,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     },
     select: 'Izberite',
     selectPlaceholder: 'Izberite element',
+    showSuggestions: 'Prikaži predloge',
+    suggestions: 'Predlogi',
   },
   'sr-SP': {
     calendar: {
@@ -1119,6 +1180,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     },
     select: 'Izaberite',
     selectPlaceholder: 'Izaberite stavku',
+    showSuggestions: 'Prikaži predloge',
+    suggestions: 'Predlozi',
   },
   'sv-SE': {
     calendar: {
@@ -1152,6 +1215,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     },
     select: 'Markera',
     selectPlaceholder: 'Välj en artikel',
+    showSuggestions: 'Visa förslag',
+    suggestions: 'Förslag',
   },
   'tr-TR': {
     calendar: {
@@ -1185,6 +1250,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     },
     select: 'Seç',
     selectPlaceholder: 'Bir öğe seçin',
+    showSuggestions: 'Önerileri göster',
+    suggestions: 'Öneriler',
   },
   'uk-UA': {
     calendar: {
@@ -1221,6 +1288,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     },
     select: 'Вибрати',
     selectPlaceholder: 'Виберіть елемент',
+    showSuggestions: 'Показати пропозиції',
+    suggestions: 'Пропозиції',
   },
   'zh-CN': {
     calendar: {
@@ -1254,6 +1323,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     },
     select: '选择',
     selectPlaceholder: '选择一个项目',
+    showSuggestions: '显示建议',
+    suggestions: '建议',
   },
   'zh-TW': {
     calendar: {
@@ -1287,6 +1358,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     },
     select: '選取',
     selectPlaceholder: '選取項目',
+    showSuggestions: '顯示建議',
+    suggestions: '建議',
   },
 }
 

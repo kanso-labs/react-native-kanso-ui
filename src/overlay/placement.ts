@@ -47,6 +47,24 @@ const OPPOSITE = {
 } as const satisfies Record<OverlaySide, OverlaySide>
 
 /**
+ * Bounds that end above the software keyboard, with the same padding above
+ * it, where one is shown: its top edge in the window, or null.
+ */
+function aboveKeyboard(
+  bounds: Rect,
+  keyboardTop: null | number,
+  padding: number,
+): Rect {
+  if (keyboardTop === null) {
+    return bounds
+  }
+
+  const bottom = Math.min(bounds.y + bounds.height, keyboardTop - padding)
+
+  return { ...bounds, height: Math.max(0, bottom - bounds.y) }
+}
+
+/**
  * Where a surface of a given length starts along the anchor, for an edge,
  * moved by the offset. However far the offset moves it, it keeps overlapping
  * the anchor, as React Aria's placement does on web.
@@ -217,4 +235,4 @@ function within(position: number, start: number, length: number, size: number) {
 
 export type { OverlayAlign, OverlaySide, Placement, PlacementInput, Rect, Size }
 
-export { boundsOf, place }
+export { aboveKeyboard, boundsOf, place }
