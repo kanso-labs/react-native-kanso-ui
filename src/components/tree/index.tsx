@@ -65,21 +65,21 @@ type TreeItemProps = Omit<
     readonly children?: ReactNode
   }
 
-// What the row is worth as text, which names it and what a search matches
-// it on: a string headline is taken as the value, and anything else has to
-// say what it is worth, which is what makes the compiler ask rather than
-// leaving a row unnamed.
+// What the row is worth as text, which the collection keeps beside the row
+// as web's does: a string headline is taken as the value, and anything else
+// has to say what it is worth, so the compiler asks for it where web's types
+// do.
 type TreeItemText =
   | {
       /** The row's headline, as something other than a plain string. */
       readonly headline?: ReactNode
-      /** What names the row. */
+      /** The row's text, which a headline that is not a string cannot give. */
       readonly textValue: string
     }
   | {
       /** The row's headline, the one thing it is mostly about. */
       readonly headline: string
-      /** What names the row. Defaults to the headline. */
+      /** The row's text. Defaults to the headline. */
       readonly textValue?: string
     }
 

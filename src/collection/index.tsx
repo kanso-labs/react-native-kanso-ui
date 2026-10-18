@@ -431,13 +431,15 @@ function accessibilityActionOf(actions: {
 /**
  * The parts nested in a part, a Section's rows or a Tree row's, walked as
  * React Stately's own Section walks them, which leaves each child its own
- * key rather than the one `Children.toArray` gives it.
+ * key rather than the one `Children.toArray` gives it. A condition left
+ * false is no part: React hands a boolean or an undefined child over as
+ * null.
  */
 function childElementsOf(children: ReactNode): ReactNode[] {
   const elements: ReactNode[] = []
 
   Children.forEach(children, (child) => {
-    if (child !== null && child !== undefined && child !== false) {
+    if (child !== null) {
       elements.push(child)
     }
   })

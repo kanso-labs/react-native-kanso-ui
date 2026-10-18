@@ -365,6 +365,9 @@ describe('Tree', () => {
       await fireEvent(rowOf('First item'), 'accessibilityAction', COLLAPSE)
 
       expect(headlines()).not.toContain('Second item')
+
+      await fireEvent(rowOf('First item'), 'accessibilityAction', COLLAPSE)
+      expect(headlines()).not.toContain('Second item')
     })
 
     it('names the two actions in the language around it', async () => {
@@ -442,7 +445,7 @@ describe('Tree', () => {
       })
     })
 
-    it('draws the chevron in the muted role, hidden from a screen reader', async () => {
+    it('draws the chevron in the muted role, for the eye and the finger alone', async () => {
       await render(
         <Tree
           aria-label="Label"
@@ -456,7 +459,16 @@ describe('Tree', () => {
         </Tree>,
       )
 
-      expect(chevronIn(rowOf('Sixth item')).props['aria-hidden']).toBe(true)
+      const chevron = chevronIn(rowOf('Sixth item'))
+
+      expect(chevron.props['aria-hidden']).toBe(true)
+      // Kept out of the focus order, where the row stands for it, and grown
+      // to a 48dp target for a finger.
+      expect(chevron.props).toMatchObject({
+        focusable: false,
+        hitSlop: { bottom: 12, left: 12, right: 12, top: 12 },
+        tabIndex: -1,
+      })
       expect(chevronColourIn(rowOf('Sixth item'))).toBe(colors.onSurfaceVariant)
       // The muted role is not guaranteed to read over the selected
       // container, so a selected row's chevron takes the row's own colour.
@@ -505,6 +517,20 @@ describe('Tree', () => {
       expect(screen.queryByRole('button', { name: 'Fifth item' })).toBe(null)
     })
 
+    it('draws no chevron on a row whose children are conditions left false', async () => {
+      await render(
+        <Tree aria-label="Label">
+          <Tree.Item headline="First item" id="first">
+            {false}
+            {null}
+            {undefined}
+          </Tree.Item>
+        </Tree>,
+      )
+
+      expect(chevronsIn(rowOf('First item'))).toHaveLength(0)
+    })
+
     it("lands a row's style and testID on the row", async () => {
       await render(
         <Tree aria-label="Label" onAction={jest.fn()}>
@@ -521,6 +547,8 @@ describe('Tree', () => {
         marginTop: 4,
         minHeight: sizing.rowSm,
       })
+      // The headline is drawn inside the row rather than handed to it.
+      expect(screen.getByTestId('row').props).not.toHaveProperty('headline')
     })
   })
 
