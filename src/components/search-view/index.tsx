@@ -300,8 +300,9 @@ function resultsOf(windowHeight: number, header: number): ViewStyle {
  * </SearchView>
  * ```
  *
- * Composed as Popover is: a `Button` or `IconButton` placed directly inside
- * `SearchView` opens the view, and `SearchView.Content` is the view itself.
+ * Composed as Popover is: a `Button`, `IconButton` or `Chip` placed directly
+ * inside `SearchView` opens the view, and `SearchView.Content` is the view
+ * itself.
  */
 function SearchView({
   children,

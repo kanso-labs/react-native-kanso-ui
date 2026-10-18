@@ -327,11 +327,11 @@ function bodyPaddingOf(
  * ```
  *
  * Composed rather than configured by props, as web's is, since a dialog's
- * header, body and actions all take arbitrary content. A `Button` or
- * `IconButton` inside `Dialog` and outside its content opens it, and one
- * given `slot="close"` anywhere inside the content closes it. A dialog nothing on
- * the screen opens leaves `Dialog` out and passes `isOpen` and
- * `onOpenChange` to `Dialog.Content` instead.
+ * header, body and actions all take arbitrary content. A `Button`,
+ * `IconButton` or `Chip` inside `Dialog` and outside its content opens it,
+ * and a button given `slot="close"` anywhere inside the content closes it. A
+ * dialog nothing on the screen opens leaves `Dialog` out and passes `isOpen`
+ * and `onOpenChange` to `Dialog.Content` instead.
  */
 function Dialog({ children, defaultOpen, isOpen, onOpenChange }: DialogProps) {
   const { context, slots } = useModalTrigger({

@@ -66,8 +66,8 @@ import { useTypeRole } from '../../typography/roles'
 // content opacity, over the surface, so a dashed rule at full strength stops
 // reading as somewhere to aim at, and nothing is taken.
 //
-// FileTrigger renders nothing of its own. The Button, IconButton or Fab it
-// wraps opens the chooser through src/button's default slot, the way a
+// FileTrigger renders nothing of its own. The Button, IconButton, Fab or Chip
+// it wraps opens the chooser through src/button's default slot, the way a
 // button opens the overlay around it, as web's React Aria hands its
 // FileTrigger's press to whatever it wraps.
 
@@ -179,7 +179,7 @@ type FileTriggerProps = {
   readonly acceptedFileTypes?: readonly string[]
   /** Whether more than one file can be picked. @default false */
   readonly allowsMultiple?: boolean
-  /** The Button, IconButton or Fab that opens the chooser. */
+  /** The Button, IconButton, Fab or Chip that opens the chooser. */
   readonly children?: ReactNode
   /**
    * Opens the camera rather than the chooser, facing away from the person
@@ -338,8 +338,8 @@ function DropZone({
  * ```
  *
  * It renders nothing of its own, so it takes no `style`: what is seen is the
- * Button, IconButton or Fab it wraps, which opens the chooser after its own
- * `onPress`. `allowsMultiple` takes more than one file, and `defaultCamera`
+ * Button, IconButton, Fab or Chip it wraps, which opens the chooser after its
+ * own `onPress`. `allowsMultiple` takes more than one file, and `defaultCamera`
  * opens the camera instead. kanso-ui's `acceptDirectory` is not here, since
  * neither iOS's chooser nor Android's picks a folder.
  *

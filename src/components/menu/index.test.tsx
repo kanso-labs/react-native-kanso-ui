@@ -40,6 +40,7 @@ import { ThemeScope } from '../../theme-scope'
 import { withOpacity } from '../../theme/color'
 import { scopeFor } from '../../theme/scope'
 import { Button } from '../button'
+import { Chip } from '../chip'
 
 // What the next menu the device draws is told about reduced motion.
 let mockReducedMotion = false
@@ -199,6 +200,27 @@ function onlyHost(predicate: (node: TestInstance) => boolean) {
 
 function panel() {
   return screen.getByTestId('panel')
+}
+
+// A menu of two choices opened from an assist chip, the shape a chip that
+// picks a value draws.
+async function renderChipMenu(
+  props: Partial<MenuProps> = {},
+  onAction?: MenuContentProps['onAction'],
+) {
+  return render(
+    withScope(
+      <Menu {...props}>
+        <Chip testID="trigger" variant="assist">
+          Label
+        </Chip>
+        <Menu.Content onAction={onAction} testID="panel">
+          <Menu.Item id="first">First item</Menu.Item>
+          <Menu.Item id="second">Second item</Menu.Item>
+        </Menu.Content>
+      </Menu>,
+    ),
+  )
 }
 
 // Renders a menu with a trigger and three items, the shape a call site draws.
@@ -451,6 +473,98 @@ describe('Menu', () => {
           ),
         ),
       ).rejects.toThrow('Menu.Content is drawn inside Menu or Menu.Submenu.')
+    })
+  })
+
+  describe('a chip trigger', () => {
+    it('opens from a press on the chip, and closes once an item is chosen', async () => {
+      const onAction = jest.fn()
+      await renderChipMenu({}, onAction)
+
+      expect(screen.queryByTestId('panel')).toBe(null)
+
+      await fireEvent.press(trigger())
+      await choose('Second item')
+      await advance(motion.durationShort2)
+
+      expect(onAction).toHaveBeenCalledWith('second')
+      expect(screen.queryByTestId('panel')).toBe(null)
+    })
+
+    it('closes from a second press on the chip', async () => {
+      const onOpenChange = jest.fn()
+      await renderChipMenu({ onOpenChange })
+
+      await fireEvent.press(trigger())
+      await fireEvent.press(trigger())
+
+      expect(onOpenChange.mock.calls).toEqual([[true], [false]])
+    })
+
+    it('says on the chip whether it is open', async () => {
+      await renderChipMenu()
+
+      expect(screen.getByRole('button', { expanded: false })).toBeTruthy()
+
+      await fireEvent.press(trigger())
+
+      expect(screen.getByRole('button', { expanded: true })).toBeTruthy()
+    })
+
+    it('sits below the chip, lined up with its start', async () => {
+      await renderChipMenu({ defaultOpen: true })
+      await laidOut()
+
+      expect(styleOf(panel())).toMatchObject({
+        left: 100,
+        top: 340 + spacing.sm,
+      })
+    })
+
+    it('opens from a press held on the chip with trigger="longPress"', async () => {
+      const onPress = jest.fn()
+      await render(
+        withScope(
+          <Menu trigger="longPress">
+            <Chip onPress={onPress} testID="trigger" variant="assist">
+              Label
+            </Chip>
+            <Menu.Content testID="panel">
+              <Menu.Item>First item</Menu.Item>
+            </Menu.Content>
+          </Menu>,
+        ),
+      )
+
+      await fireEvent.press(trigger())
+
+      expect(onPress).toHaveBeenCalledTimes(1)
+      expect(screen.queryByTestId('panel')).toBe(null)
+
+      await fireEvent(trigger(), 'longPress')
+
+      expect(panel()).toBeTruthy()
+    })
+
+    it('changes a filter chip as it opens, as a toggle does on web', async () => {
+      const onChange = jest.fn()
+      await render(
+        withScope(
+          <Menu>
+            <Chip onChange={onChange} testID="trigger">
+              Label
+            </Chip>
+            <Menu.Content testID="panel">
+              <Menu.Item>First item</Menu.Item>
+            </Menu.Content>
+          </Menu>,
+        ),
+      )
+
+      await fireEvent.press(trigger())
+
+      expect(onChange).toHaveBeenCalledWith(true)
+      expect(panel()).toBeTruthy()
     })
   })
 

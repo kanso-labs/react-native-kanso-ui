@@ -4,7 +4,12 @@ import type { AnimatedStyle } from 'react-native-reanimated'
 
 import { useState } from 'react'
 
-import { AnimatedPressable, toggleState, useButtonAction } from '../../button'
+import {
+  AnimatedPressable,
+  toggleState,
+  useButtonAction,
+  useSlotTrigger,
+} from '../../button'
 import {
   ChipGlyph,
   ChipLabel,
@@ -29,6 +34,14 @@ import { composeStyles } from '../../theme/styles'
 //   selected and nothing ever is. The two differ in the label alone: on
 //   surface on an assist chip, on surface variant on a suggestion chip as on
 //   a filter one.
+//
+// **A chip placed directly inside an overlay is its trigger**, as a Button
+// is, and as any React Aria pressable is on web: it fills the default slot
+// src/button's slots.ts sets out, so a press inside `Menu`, `Popover`,
+// `Dialog` or `Sheet` opens it, a menu's `trigger="longPress"` opens from a
+// held press, the chip says whether what it opens is open, and an anchored
+// overlay is placed against it. A filter chip there still changes its state
+// with each press, as web's toggle does.
 
 /** An assist or suggestion chip: an action, drawn as a plain button. */
 type ChipActionProps = ChipBaseProps & {
@@ -109,12 +122,17 @@ type ChipVariant = 'assist' | 'filter' | 'suggestion'
  * `variant="assist"` and `variant="suggestion"` draw the page's two action
  * chips instead: plain buttons, pressed with `onPress`, never selected.
  *
+ * A chip placed directly inside `Menu`, `Popover`, `Dialog` or `Sheet` is its
+ * trigger, as a `Button` is, and a press on it opens what it is placed in.
+ *
  * A column stretches a chip across it, as it does any view; a row of chips is
  * a row that wraps. `style`, `ref` and `testID` land on the `Pressable`.
  */
 function Chip({
+  accessibilityHint,
   children,
   defaultSelected,
+  delayLongPress,
   elevated = false,
   hitSlop,
   icon,
@@ -126,9 +144,11 @@ function Chip({
   onHoverIn,
   onHoverOut,
   onLayout,
+  onLongPress,
   onPress,
   onPressIn,
   onPressOut,
+  ref,
   style,
   variant = 'filter',
   ...props
@@ -146,7 +166,27 @@ function Chip({
     isToggle,
     onChange,
     onPress,
+    slot: 'default',
     type: undefined,
+  })
+  const {
+    onHoverIn: hoverIn,
+    onHoverOut: hoverOut,
+    onLongPress: longPress,
+    onPressIn: pressIn,
+    onPressOut: pressOut,
+    ...triggerProps
+  } = useSlotTrigger({
+    accessibilityHint,
+    delayLongPress,
+    href: undefined,
+    onHoverIn,
+    onHoverOut,
+    onLongPress,
+    onPressIn,
+    onPressOut,
+    ref,
+    slot: undefined,
   })
   const paint = paintOf(theme, {
     assist: variant === 'assist',
@@ -162,10 +202,10 @@ function Chip({
     disabled: isDisabled,
     onBlur,
     onFocus,
-    onHoverIn,
-    onHoverOut,
-    onPressIn,
-    onPressOut,
+    onHoverIn: hoverIn,
+    onHoverOut: hoverOut,
+    onPressIn: pressIn,
+    onPressOut: pressOut,
   })
 
   return (
@@ -173,10 +213,12 @@ function Chip({
       role="button"
       {...(isToggle ? toggleState(action.selected) : undefined)}
       {...props}
+      {...triggerProps}
       {...feedback.handlers}
       disabled={isDisabled}
       hitSlop={hitSlop ?? targetOf(width, theme)}
       onLayout={measureThen(setWidth, onLayout)}
+      onLongPress={longPress}
       onPress={action.onPress}
       style={composeStyles<AnimatedStyle<ViewStyle>>(
         stylesOf(theme).pill,
