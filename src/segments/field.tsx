@@ -1,5 +1,5 @@
 import type { ComponentRef, ReactNode, Ref } from 'react'
-import type { StyleProp, ViewStyle } from 'react-native'
+import type { HostInstance, StyleProp, ViewStyle } from 'react-native'
 import type { DateFieldState } from 'react-stately/useDateFieldState'
 
 import { useId, useRef, useState } from 'react'
@@ -19,6 +19,8 @@ import { useFieldValidation } from '../form'
 // Aria's DateInput.
 
 type SegmentedFieldProps = {
+  /** The box, which a picker measures to place its calendar under. */
+  readonly box?: Ref<HostInstance>
   readonly description?: string
   readonly error?: string
   readonly floatingLabel?: boolean
@@ -73,6 +75,7 @@ function focusThen(
  * validation says, in React Stately's order and its words.
  */
 function SegmentedField({
+  box,
   description,
   error,
   floatingLabel = true,
@@ -131,6 +134,7 @@ function SegmentedField({
         isRequired={isRequired}
         label={label}
         leading={leadingIcon}
+        ref={box}
         trailing={trailingIcon}
         variant={variant}
       >

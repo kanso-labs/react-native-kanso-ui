@@ -22,7 +22,7 @@ import {
   toCalendarDate,
   today,
 } from '@internationalized/date'
-import { useLayoutEffect, useRef, useState } from 'react'
+import { createContext, use, useLayoutEffect, useRef, useState } from 'react'
 import {
   FlatList,
   I18nManager,
@@ -77,6 +77,17 @@ type ListEntry = {
 type MonthOffset = { readonly months: number }
 
 type OpenList = 'month' | 'year'
+
+/**
+ * Where a calendar hands over the cell of the date it is on, the one held or
+ * else the one it opened on, for a surface that sends a screen reader to that
+ * date as it opens, as a date picker's does. The cell hands itself over as it
+ * becomes that date and `null` as it stops being it. Outside such a surface
+ * it is `null`, and no cell hands anything over.
+ */
+const CalendarFocusContext = createContext<
+  ((cell: HostInstance | null) => void) | null
+>(null)
 
 type PartProps = {
   readonly locale: string
@@ -348,6 +359,11 @@ function DateCell({
   const isCurrent = isToday(date, state.timeZone)
   const range = rangeOf(state, date, isSelected)
   const isFilled = range === null ? isSelected : range.isEnd
+  // The date the calendar is on, in its own month's grid rather than as the
+  // spill of the month beside it, is the cell a picker sends a reader to.
+  const report = use(CalendarFocusContext)
+  const isFocused =
+    isSameMonth(date, month) && isSameDay(date, state.focusedDate)
   const shape = composeStyles<ViewStyle>(
     own.date,
     range === null ? undefined : own.dateInRange,
@@ -374,6 +390,7 @@ function DateCell({
         range === null ? sizing.controlSm : undefined,
       )}
       onPress={selectThen(state, date)}
+      ref={isFocused && report !== null ? report : undefined}
       role="button"
       {...feedback.handlers}
       disabled={!selectable}
@@ -1194,5 +1211,5 @@ function yearsOf(state: SomeCalendarState, locale: string) {
 
 const NONE: ReadonlySet<number> = new Set()
 
-export { CalendarFrame, useRootStyle, visibleRangeOf }
+export { CalendarFocusContext, CalendarFrame, useRootStyle, visibleRangeOf }
 export type { Weekday }

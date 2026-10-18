@@ -25,6 +25,7 @@ import { Container } from '../components/container'
 import { CopyField } from '../components/copy-field'
 import { Currency } from '../components/currency'
 import { DateField } from '../components/date-field'
+import { DatePicker } from '../components/date-picker'
 import { Dialog } from '../components/dialog'
 import { Disclosure } from '../components/disclosure'
 import { DisclosureGroup } from '../components/disclosure-group'
@@ -661,6 +662,13 @@ function Showcase({ name }: ShowcaseProps) {
         title="DateField"
       >
         <DateField defaultValue={CALENDAR_DATE} label="Label" locale="en-US" />
+      </Section>
+
+      <Section
+        description="The same segments with a calendar behind a trigger, so the field chrome and the popover surface are drawn together."
+        title="DatePicker"
+      >
+        <DatePicker defaultValue={CALENDAR_DATE} label="Label" locale="en-US" />
       </Section>
 
       <Section
