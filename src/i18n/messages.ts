@@ -7,16 +7,18 @@
 // SearchView's back button, Snackbar's close button, a chip's remove button,
 // NumberField's steppers, what opening and closing a tree's row is called, a
 // TimePicker's two headlines and two actions, what a ColorSwatch of a fully
-// transparent colour is called, and a ColorSwatchPicker's name. Each one a
-// call site might want in other words stands behind a prop that names it
-// otherwise: `pendingLabel` for the ring, `aria-label` for the handle and the
-// picker, `label` for the loading-more row, `renderEmptyState` for the empty
-// one, `selectLabel` for the selection, `placeholder` for a Select's empty
-// value, `characterLimitLabel` for the limit, `copyLabel` and `copiedLabel`
-// for CopyField, `clearLabel`, `backLabel`, `closeLabel` and `removeLabel` for
-// the four buttons, `decrementLabel` and `incrementLabel` for the steppers,
-// `selectTimeLabel`, `enterTimeLabel`, `cancelLabel` and `confirmLabel` for
-// the time picker, and `colorName` for the swatch.
+// transparent colour is called, a ColorSwatchPicker's name, and what a
+// carousel calls itself, its items and its two buttons. Each one a call site
+// might want in other words stands behind a prop that names it otherwise:
+// `pendingLabel` for the ring, `aria-label` for the handle, the picker and a
+// carousel's item, `label` for the loading-more row, `renderEmptyState` for
+// the empty one, `selectLabel` for the selection, `placeholder` for a Select's
+// empty value, `characterLimitLabel` for the limit, `copyLabel` and
+// `copiedLabel` for CopyField, `clearLabel`, `backLabel`, `closeLabel` and
+// `removeLabel` for the four buttons, `decrementLabel` and `incrementLabel`
+// for the steppers, `selectTimeLabel`, `enterTimeLabel`, `cancelLabel` and
+// `confirmLabel` for the time picker, `colorName` for the swatch, and
+// `previousLabel` and `nextLabel` for the carousel.
 //
 // Copied from kanso-ui's src/i18n/messages.ts, one entry per locale React Aria
 // ships, and kept in step with it by hand: the web library publishes no copy of
@@ -95,6 +97,11 @@ type LibraryMessages = {
   /** What a TimePicker's modal calls the action that leaves it unchanged. */
   readonly cancel: string
   /**
+   * What a carousel is, beside its name, which React Native Web sets as the
+   * region's role description, as web does.
+   */
+  readonly carousel: string
+  /**
    * What a field's character limit says, for a screen reader, in the plural
    * forms the locale's rules give it; `{count}` is the limit.
    */
@@ -136,8 +143,12 @@ type LibraryMessages = {
   readonly loading: string
   /** What a collection's row says while more items are on their way. */
   readonly loadingMore: string
+  /** What a carousel's button moving to the next rest is called. */
+  readonly nextSlide: string
   /** What a collection with nothing in it says. */
   readonly noResults: string
+  /** What a carousel's button moving to the previous rest is called. */
+  readonly previousSlide: string
   /**
    * What a removable chip's remove button is called, before the chip's own
    * text.
@@ -200,6 +211,16 @@ type LibraryMessages = {
   readonly selectTime: string
   /** What the button opening a ComboBox's list is called, before its label. */
   readonly showSuggestions: string
+  /**
+   * What a carousel's item is, beside its name, which React Native Web sets
+   * as the item's role description, as web does.
+   */
+  readonly slide: string
+  /**
+   * What a carousel's item is called: `{index}` is its place and `{count}`
+   * how many items there are, each in the locale's digits.
+   */
+  readonly slideLabel: string
   /** What a ComboBox's list is called, before the field's label. */
   readonly suggestions: string
   /** What a ColorSwatch showing a fully transparent colour is called. */
@@ -234,6 +255,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'السنة',
     },
     cancel: 'إلغاء',
+    carousel: 'عرض دوّار',
     characterLimit: {
       few: 'حتى {count} أحرف',
       many: 'حتى {count} حرفًا',
@@ -256,7 +278,9 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     increase: 'زيادة {label}',
     loading: 'جارٍ التحميل',
     loadingMore: 'جارٍ تحميل المزيد',
+    nextSlide: 'الشريحة التالية',
     noResults: 'لا توجد نتائج',
+    previousSlide: 'الشريحة السابقة',
     remove: 'إزالة',
     results: {
       one: '{count} خيار متاحة.',
@@ -284,6 +308,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectPlaceholder: 'حدد عنصرًا',
     selectTime: 'اختر الوقت',
     showSuggestions: 'عرض المقترحات',
+    slide: 'شريحة',
+    slideLabel: '{index} من {count}',
     suggestions: 'مقترحات',
     transparent: 'شفاف',
   },
@@ -308,6 +334,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'година',
     },
     cancel: 'Отказ',
+    carousel: 'въртележка',
     characterLimit: {
       one: 'До {count} знак',
       other: 'До {count} знака',
@@ -326,7 +353,9 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     increase: 'Усилване {label}',
     loading: 'Зареждане',
     loadingMore: 'Зареждане на още',
+    nextSlide: 'Следващ слайд',
     noResults: 'Няма резултати',
+    previousSlide: 'Предишен слайд',
     remove: 'Премахване',
     results: {
       one: '{count} опция на разположение.',
@@ -354,6 +383,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectPlaceholder: 'Изберете предмет',
     selectTime: 'Изберете час',
     showSuggestions: 'Покажи предложения',
+    slide: 'слайд',
+    slideLabel: '{index} от {count}',
     suggestions: 'Предложения',
     transparent: 'прозрачен',
   },
@@ -376,6 +407,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'rok',
     },
     cancel: 'Zrušit',
+    carousel: 'karusel',
     characterLimit: {
       few: 'Nejvýše {count} znaky',
       many: 'Nejvýše {count} znaku',
@@ -396,7 +428,9 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     increase: 'Zvýšit {label}',
     loading: 'Načítání',
     loadingMore: 'Načítání dalších',
+    nextSlide: 'Další snímek',
     noResults: 'Žádné výsledky',
+    previousSlide: 'Předchozí snímek',
     remove: 'Odebrat',
     results: {
       one: 'K dispozici je {count} možnost.',
@@ -424,6 +458,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectPlaceholder: 'Vyberte položku',
     selectTime: 'Vyberte čas',
     showSuggestions: 'Zobrazit doporučení',
+    slide: 'snímek',
+    slideLabel: '{index} z {count}',
     suggestions: 'Návrhy',
     transparent: 'průhledný',
   },
@@ -446,6 +482,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'år',
     },
     cancel: 'Annuller',
+    carousel: 'karrusel',
     characterLimit: {
       other: 'Op til {count} tegn',
     },
@@ -463,7 +500,9 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     increase: 'Øg {label}',
     loading: 'Indlæser',
     loadingMore: 'Indlæser flere',
+    nextSlide: 'Næste dias',
     noResults: 'Ingen resultater',
+    previousSlide: 'Forrige dias',
     remove: 'Fjern',
     results: {
       one: '{count} mulighed tilgængelig.',
@@ -491,6 +530,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectPlaceholder: 'Vælg et element',
     selectTime: 'Vælg tidspunkt',
     showSuggestions: 'Vis forslag',
+    slide: 'dias',
+    slideLabel: '{index} af {count}',
     suggestions: 'Forslag',
     transparent: 'gennemsigtig',
   },
@@ -515,6 +556,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'Jahr',
     },
     cancel: 'Abbrechen',
+    carousel: 'Karussell',
     characterLimit: {
       other: 'Bis zu {count} Zeichen',
     },
@@ -532,7 +574,9 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     increase: '{label} erhöhen',
     loading: 'Wird geladen',
     loadingMore: 'Weitere werden geladen',
+    nextSlide: 'Nächste Folie',
     noResults: 'Keine Ergebnisse',
+    previousSlide: 'Vorherige Folie',
     remove: 'Entfernen',
     results: {
       one: '{count} Option verfügbar.',
@@ -560,6 +604,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectPlaceholder: 'Element wählen',
     selectTime: 'Uhrzeit auswählen',
     showSuggestions: 'Empfehlungen anzeigen',
+    slide: 'Folie',
+    slideLabel: '{index} von {count}',
     suggestions: 'Empfehlungen',
     transparent: 'transparent',
   },
@@ -584,6 +630,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'έτος',
     },
     cancel: 'Ακύρωση',
+    carousel: 'καρουζέλ',
     characterLimit: {
       one: 'Έως {count} χαρακτήρας',
       other: 'Έως {count} χαρακτήρες',
@@ -602,7 +649,9 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     increase: 'Αύξηση {label}',
     loading: 'Φόρτωση',
     loadingMore: 'Φόρτωση περισσότερων',
+    nextSlide: 'Επόμενη διαφάνεια',
     noResults: 'Δεν υπάρχουν αποτελέσματα',
+    previousSlide: 'Προηγούμενη διαφάνεια',
     remove: 'Κατάργηση',
     results: {
       one: '{count} επιλογή διαθέσιμες.',
@@ -630,6 +679,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectPlaceholder: 'Επιλέξτε ένα αντικείμενο',
     selectTime: 'Επιλογή ώρας',
     showSuggestions: 'Προβολή προτάσεων',
+    slide: 'διαφάνεια',
+    slideLabel: '{index} από {count}',
     suggestions: 'Προτάσεις',
     transparent: 'διαφανές',
   },
@@ -652,6 +703,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'year',
     },
     cancel: 'Cancel',
+    carousel: 'carousel',
     characterLimit: {
       one: 'Up to {count} character',
       other: 'Up to {count} characters',
@@ -670,7 +722,9 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     increase: 'Increase {label}',
     loading: 'Loading',
     loadingMore: 'Loading more',
+    nextSlide: 'Next slide',
     noResults: 'No results',
+    previousSlide: 'Previous slide',
     remove: 'Remove',
     results: {
       one: '{count} option available.',
@@ -698,6 +752,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectPlaceholder: 'Select an item',
     selectTime: 'Select time',
     showSuggestions: 'Show suggestions',
+    slide: 'slide',
+    slideLabel: '{index} of {count}',
     suggestions: 'Suggestions',
     transparent: 'transparent',
   },
@@ -722,6 +778,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'año',
     },
     cancel: 'Cancelar',
+    carousel: 'carrusel',
     characterLimit: {
       one: 'Hasta {count} carácter',
       other: 'Hasta {count} caracteres',
@@ -740,7 +797,9 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     increase: 'Aumentar {label}',
     loading: 'Cargando',
     loadingMore: 'Cargando más',
+    nextSlide: 'Diapositiva siguiente',
     noResults: 'No hay resultados',
+    previousSlide: 'Diapositiva anterior',
     remove: 'Quitar',
     results: {
       one: '{count} opción disponible(s).',
@@ -768,6 +827,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectPlaceholder: 'Seleccionar un artículo',
     selectTime: 'Seleccionar hora',
     showSuggestions: 'Mostrar sugerencias',
+    slide: 'diapositiva',
+    slideLabel: '{index} de {count}',
     suggestions: 'Sugerencias',
     transparent: 'transparente',
   },
@@ -791,6 +852,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'aasta',
     },
     cancel: 'Tühista',
+    carousel: 'karussell',
     characterLimit: {
       one: 'Kuni {count} märk',
       other: 'Kuni {count} märki',
@@ -809,7 +871,9 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     increase: 'Suurenda {label}',
     loading: 'Laadimine',
     loadingMore: 'Laaditakse veel',
+    nextSlide: 'Järgmine slaid',
     noResults: 'Tulemusi pole',
+    previousSlide: 'Eelmine slaid',
     remove: 'Eemalda',
     results: {
       one: '{count} valik saadaval.',
@@ -837,6 +901,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectPlaceholder: 'Valige üksus',
     selectTime: 'Vali kellaaeg',
     showSuggestions: 'Kuva soovitused',
+    slide: 'slaid',
+    slideLabel: '{index}/{count}',
     suggestions: 'Soovitused',
     transparent: 'läbipaistev',
   },
@@ -861,6 +927,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'vuosi',
     },
     cancel: 'Peruuta',
+    carousel: 'karuselli',
     characterLimit: {
       one: 'Enintään {count} merkki',
       other: 'Enintään {count} merkkiä',
@@ -879,7 +946,9 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     increase: 'Lisää {label}',
     loading: 'Ladataan',
     loadingMore: 'Ladataan lisää',
+    nextSlide: 'Seuraava dia',
     noResults: 'Ei tuloksia',
+    previousSlide: 'Edellinen dia',
     remove: 'Poista',
     results: {
       one: '{count} vaihtoehto saatavilla.',
@@ -907,6 +976,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectPlaceholder: 'Valitse kohde',
     selectTime: 'Valitse aika',
     showSuggestions: 'Näytä ehdotukset',
+    slide: 'dia',
+    slideLabel: '{index}/{count}',
     suggestions: 'Ehdotukset',
     transparent: 'läpinäkyvä',
   },
@@ -931,6 +1002,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'année',
     },
     cancel: 'Annuler',
+    carousel: 'carrousel',
     characterLimit: {
       one: 'Jusqu’à {count} caractère',
       other: 'Jusqu’à {count} caractères',
@@ -949,7 +1021,9 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     increase: 'Augmenter {label}',
     loading: 'Chargement',
     loadingMore: 'Chargement de la suite',
+    nextSlide: 'Diapositive suivante',
     noResults: 'Aucun résultat',
+    previousSlide: 'Diapositive précédente',
     remove: 'Supprimer',
     results: {
       one: '{count} option disponible(s).',
@@ -977,6 +1051,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectPlaceholder: 'Sélectionner un élément',
     selectTime: 'Sélectionner l’heure',
     showSuggestions: 'Afficher les suggestions',
+    slide: 'diapositive',
+    slideLabel: '{index} sur {count}',
     suggestions: 'Suggestions',
     transparent: 'Transparent',
   },
@@ -999,6 +1075,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'שנה',
     },
     cancel: 'ביטול',
+    carousel: 'קרוסלה',
     characterLimit: {
       one: 'עד תו אחד',
       other: 'עד {count} תווים',
@@ -1018,7 +1095,9 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     increase: 'הגדל {label}',
     loading: 'טוען',
     loadingMore: 'טוען עוד',
+    nextSlide: 'השקופית הבאה',
     noResults: 'אין תוצאות',
+    previousSlide: 'השקופית הקודמת',
     remove: 'הסר',
     results: {
       one: 'אפשרות {count} במצב זמין.',
@@ -1046,6 +1125,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectPlaceholder: 'בחר פריט',
     selectTime: 'בחירת שעה',
     showSuggestions: 'הצג הצעות',
+    slide: 'שקופית',
+    slideLabel: '{index} מתוך {count}',
     suggestions: 'הצעות',
     transparent: 'שקוף',
   },
@@ -1070,6 +1151,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'godina',
     },
     cancel: 'Odustani',
+    carousel: 'vrtuljak',
     characterLimit: {
       few: 'Najviše {count} znaka',
       one: 'Najviše {count} znak',
@@ -1089,7 +1171,9 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     increase: 'Povećaj {label}',
     loading: 'Učitavanje',
     loadingMore: 'Učitava se još',
+    nextSlide: 'Sljedeći slajd',
     noResults: 'Nema rezultata',
+    previousSlide: 'Prethodni slajd',
     remove: 'Ukloni',
     results: {
       one: 'Dostupno još: {count} opcija.',
@@ -1117,6 +1201,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectPlaceholder: 'Odaberite stavku',
     selectTime: 'Odaberite vrijeme',
     showSuggestions: 'Prikaži prijedloge',
+    slide: 'slajd',
+    slideLabel: '{index} od {count}',
     suggestions: 'Prijedlozi',
     transparent: 'transparentno',
   },
@@ -1141,6 +1227,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'év',
     },
     cancel: 'Mégse',
+    carousel: 'körhinta',
     characterLimit: {
       other: 'Legfeljebb {count} karakter',
     },
@@ -1158,7 +1245,9 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     increase: '{label} növelése',
     loading: 'Betöltés',
     loadingMore: 'Továbbiak betöltése',
+    nextSlide: 'Következő dia',
     noResults: 'Nincs találat',
+    previousSlide: 'Előző dia',
     remove: 'Eltávolítás',
     results: {
       one: '{count} lehetőség áll rendelkezésre.',
@@ -1186,6 +1275,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectPlaceholder: 'Válasszon ki egy elemet',
     selectTime: 'Időpont kiválasztása',
     showSuggestions: 'Javaslatok megjelenítése',
+    slide: 'dia',
+    slideLabel: '{index}/{count}',
     suggestions: 'Javaslatok',
     transparent: 'átlátszó',
   },
@@ -1210,6 +1301,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'anno',
     },
     cancel: 'Annulla',
+    carousel: 'carosello',
     characterLimit: {
       one: 'Fino a {count} carattere',
       other: 'Fino a {count} caratteri',
@@ -1228,7 +1320,9 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     increase: 'Aumenta {label}',
     loading: 'Caricamento',
     loadingMore: 'Caricamento di altri elementi',
+    nextSlide: 'Diapositiva successiva',
     noResults: 'Nessun risultato',
+    previousSlide: 'Diapositiva precedente',
     remove: 'Rimuovi',
     results: {
       one: '{count} opzione disponibile.',
@@ -1256,6 +1350,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectPlaceholder: 'Seleziona un elemento',
     selectTime: 'Seleziona l’ora',
     showSuggestions: 'Mostra suggerimenti',
+    slide: 'diapositiva',
+    slideLabel: '{index} di {count}',
     suggestions: 'Suggerimenti',
     transparent: 'trasparente',
   },
@@ -1278,6 +1374,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: '年',
     },
     cancel: 'キャンセル',
+    carousel: 'カルーセル',
     characterLimit: {
       other: '最大 {count} 文字',
     },
@@ -1295,7 +1392,9 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     increase: '{label}を拡大',
     loading: '読み込み中',
     loadingMore: 'さらに読み込み中',
+    nextSlide: '次のスライド',
     noResults: '結果がありません',
+    previousSlide: '前のスライド',
     remove: '削除',
     results: {
       one: '{count} 個のオプションを利用できます。',
@@ -1323,6 +1422,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectPlaceholder: '項目を選択',
     selectTime: '時刻を選択',
     showSuggestions: '候補を表示',
+    slide: 'スライド',
+    slideLabel: '{index}/{count}',
     suggestions: '候補',
     transparent: '透明',
   },
@@ -1345,6 +1446,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: '년',
     },
     cancel: '취소',
+    carousel: '캐러셀',
     characterLimit: {
       other: '최대 {count}자',
     },
@@ -1362,7 +1464,9 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     increase: '{label} 증가',
     loading: '로드 중',
     loadingMore: '더 로드하는 중',
+    nextSlide: '다음 슬라이드',
     noResults: '결과 없음',
+    previousSlide: '이전 슬라이드',
     remove: '제거',
     results: {
       one: '{count}개 옵션을 사용할 수 있습니다.',
@@ -1390,6 +1494,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectPlaceholder: '항목 선택',
     selectTime: '시간 선택',
     showSuggestions: '제안 사항 표시',
+    slide: '슬라이드',
+    slideLabel: '{index}/{count}',
     suggestions: '제안',
     transparent: '투명도',
   },
@@ -1414,6 +1520,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'metai',
     },
     cancel: 'Atšaukti',
+    carousel: 'karuselė',
     characterLimit: {
       few: 'Ne daugiau kaip {count} simboliai',
       many: 'Ne daugiau kaip {count} simbolio',
@@ -1434,7 +1541,9 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     increase: 'Padidinti {label}',
     loading: 'Įkeliama',
     loadingMore: 'Įkeliama daugiau',
+    nextSlide: 'Kita skaidrė',
     noResults: 'Rezultatų nėra',
+    previousSlide: 'Ankstesnė skaidrė',
     remove: 'Pašalinti',
     results: {
       one: 'Yra {count} parinktis.',
@@ -1462,6 +1571,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectPlaceholder: 'Pasirinkite elementą',
     selectTime: 'Pasirinkite laiką',
     showSuggestions: 'Rodyti pasiūlymus',
+    slide: 'skaidrė',
+    slideLabel: '{index} iš {count}',
     suggestions: 'Pasiūlymai',
     transparent: 'skaidrus',
   },
@@ -1486,6 +1597,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'gads',
     },
     cancel: 'Atcelt',
+    carousel: 'karuselis',
     characterLimit: {
       one: 'Līdz {count} rakstzīmei',
       other: 'Līdz {count} rakstzīmēm',
@@ -1505,7 +1617,9 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     increase: 'Palielināšana {label}',
     loading: 'Notiek ielāde',
     loadingMore: 'Notiek papildu ielāde',
+    nextSlide: 'Nākamais slaids',
     noResults: 'Nav rezultātu',
+    previousSlide: 'Iepriekšējais slaids',
     remove: 'Noņemt',
     results: {
       one: 'Pieejamo opciju skaits: {count} opcija.',
@@ -1533,6 +1647,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectPlaceholder: 'Izvēlēties vienumu',
     selectTime: 'Izvēlieties laiku',
     showSuggestions: 'Rādīt ieteikumus',
+    slide: 'slaids',
+    slideLabel: '{index} no {count}',
     suggestions: 'Ieteikumi',
     transparent: 'caurspīdīgs',
   },
@@ -1555,6 +1671,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'år',
     },
     cancel: 'Avbryt',
+    carousel: 'karusell',
     characterLimit: {
       other: 'Opptil {count} tegn',
     },
@@ -1572,7 +1689,9 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     increase: 'Øk {label}',
     loading: 'Laster inn',
     loadingMore: 'Laster inn flere',
+    nextSlide: 'Neste lysbilde',
     noResults: 'Ingen resultater',
+    previousSlide: 'Forrige lysbilde',
     remove: 'Fjern',
     results: {
       one: '{count} alternativ finnes.',
@@ -1600,6 +1719,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectPlaceholder: 'Velg et element',
     selectTime: 'Velg klokkeslett',
     showSuggestions: 'Vis forslag',
+    slide: 'lysbilde',
+    slideLabel: '{index} av {count}',
     suggestions: 'Forslag',
     transparent: 'gjennomsiktig',
   },
@@ -1623,6 +1744,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'jaar',
     },
     cancel: 'Annuleren',
+    carousel: 'carrousel',
     characterLimit: {
       one: 'Maximaal {count} teken',
       other: 'Maximaal {count} tekens',
@@ -1641,7 +1763,9 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     increase: '{label} verhogen',
     loading: 'Laden',
     loadingMore: 'Meer laden',
+    nextSlide: 'Volgende dia',
     noResults: 'Geen resultaten',
+    previousSlide: 'Vorige dia',
     remove: 'Verwijderen',
     results: {
       one: '{count} optie beschikbaar.',
@@ -1669,6 +1793,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectPlaceholder: 'Selecteer een item',
     selectTime: 'Tijd selecteren',
     showSuggestions: 'Suggesties weergeven',
+    slide: 'dia',
+    slideLabel: '{index} van {count}',
     suggestions: 'Suggesties',
     transparent: 'transparant',
   },
@@ -1691,6 +1817,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'rok',
     },
     cancel: 'Anuluj',
+    carousel: 'karuzela',
     characterLimit: {
       few: 'Maksymalnie {count} znaki',
       many: 'Maksymalnie {count} znaków',
@@ -1711,7 +1838,9 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     increase: 'Zwiększ {label}',
     loading: 'Ładowanie',
     loadingMore: 'Ładowanie kolejnych',
+    nextSlide: 'Następny slajd',
     noResults: 'Brak wyników',
+    previousSlide: 'Poprzedni slajd',
     remove: 'Usuń',
     results: {
       one: 'dostępna/dostępne(-nych) {count} opcja.',
@@ -1739,6 +1868,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectPlaceholder: 'Wybierz element',
     selectTime: 'Wybierz godzinę',
     showSuggestions: 'Wyświetlaj sugestie',
+    slide: 'slajd',
+    slideLabel: '{index} z {count}',
     suggestions: 'Sugestie',
     transparent: 'przezroczysty',
   },
@@ -1763,6 +1894,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'ano',
     },
     cancel: 'Cancelar',
+    carousel: 'carrossel',
     characterLimit: {
       one: 'Até {count} caractere',
       other: 'Até {count} caracteres',
@@ -1781,7 +1913,9 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     increase: 'Aumentar {label}',
     loading: 'Carregando',
     loadingMore: 'Carregando mais',
+    nextSlide: 'Próximo slide',
     noResults: 'Nenhum resultado',
+    previousSlide: 'Slide anterior',
     remove: 'Remover',
     results: {
       one: '{count} opção disponível.',
@@ -1809,6 +1943,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectPlaceholder: 'Selecione um item',
     selectTime: 'Selecione o horário',
     showSuggestions: 'Mostrar sugestões',
+    slide: 'slide',
+    slideLabel: '{index} de {count}',
     suggestions: 'Sugestões',
     transparent: 'transparente',
   },
@@ -1833,6 +1969,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'ano',
     },
     cancel: 'Cancelar',
+    carousel: 'carrossel',
     characterLimit: {
       one: 'Até {count} carácter',
       other: 'Até {count} caracteres',
@@ -1851,7 +1988,9 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     increase: 'Aumentar {label}',
     loading: 'A carregar',
     loadingMore: 'A carregar mais',
+    nextSlide: 'Diapositivo seguinte',
     noResults: 'Nenhum resultado',
+    previousSlide: 'Diapositivo anterior',
     remove: 'Eliminar',
     results: {
       one: '{count} opção disponível.',
@@ -1879,6 +2018,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectPlaceholder: 'Selecione um item',
     selectTime: 'Selecionar a hora',
     showSuggestions: 'Apresentar sugestões',
+    slide: 'diapositivo',
+    slideLabel: '{index} de {count}',
     suggestions: 'Sugestões',
     transparent: 'transparente',
   },
@@ -1903,6 +2044,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'an',
     },
     cancel: 'Anulați',
+    carousel: 'carusel',
     characterLimit: {
       few: 'Maximum {count} caractere',
       one: 'Maximum {count} caracter',
@@ -1922,7 +2064,9 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     increase: 'Creștere {label}',
     loading: 'Se încarcă',
     loadingMore: 'Se încarcă mai multe',
+    nextSlide: 'Diapozitivul următor',
     noResults: 'Niciun rezultat',
+    previousSlide: 'Diapozitivul anterior',
     remove: 'Îndepărtaţi',
     results: {
       one: '{count} opțiune disponibile.',
@@ -1950,6 +2094,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectPlaceholder: 'Selectați un element',
     selectTime: 'Selectați ora',
     showSuggestions: 'Afișare sugestii',
+    slide: 'diapozitiv',
+    slideLabel: '{index} din {count}',
     suggestions: 'Sugestii',
     transparent: 'transparent',
   },
@@ -1973,6 +2119,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'год',
     },
     cancel: 'Отмена',
+    carousel: 'карусель',
     characterLimit: {
       few: 'Не более {count} символов',
       many: 'Не более {count} символов',
@@ -1993,7 +2140,9 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     increase: 'Увеличение {label}',
     loading: 'Загрузка',
     loadingMore: 'Загрузка ещё',
+    nextSlide: 'Следующий слайд',
     noResults: 'Нет результатов',
+    previousSlide: 'Предыдущий слайд',
     remove: 'Удалить',
     results: {
       one: '{count} параметр доступно.',
@@ -2021,6 +2170,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectPlaceholder: 'Выберите элемент',
     selectTime: 'Выберите время',
     showSuggestions: 'Показать предложения',
+    slide: 'слайд',
+    slideLabel: '{index} из {count}',
     suggestions: 'Предложения',
     transparent: 'прозрачный',
   },
@@ -2043,6 +2194,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'rok',
     },
     cancel: 'Zrušiť',
+    carousel: 'karusel',
     characterLimit: {
       few: 'Najviac {count} znaky',
       many: 'Najviac {count} znaku',
@@ -2063,7 +2215,9 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     increase: 'Zvýšiť {label}',
     loading: 'Načítava sa',
     loadingMore: 'Načítavajú sa ďalšie',
+    nextSlide: 'Nasledujúca snímka',
     noResults: 'Žiadne výsledky',
+    previousSlide: 'Predchádzajúca snímka',
     remove: 'Odstrániť',
     results: {
       one: '{count} možnosť k dispozícii.',
@@ -2091,6 +2245,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectPlaceholder: 'Vyberte položku',
     selectTime: 'Vyberte čas',
     showSuggestions: 'Zobraziť návrhy',
+    slide: 'snímka',
+    slideLabel: '{index} z {count}',
     suggestions: 'Návrhy',
     transparent: 'transparentný',
   },
@@ -2114,6 +2270,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'leto',
     },
     cancel: 'Prekliči',
+    carousel: 'vrtiljak',
     characterLimit: {
       few: 'Največ {count} znaki',
       one: 'Največ {count} znak',
@@ -2134,7 +2291,9 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     increase: 'Povečajte {label}',
     loading: 'Nalaganje',
     loadingMore: 'Nalaganje več',
+    nextSlide: 'Naslednji diapozitiv',
     noResults: 'Ni rezultatov',
+    previousSlide: 'Prejšnji diapozitiv',
     remove: 'Odstrani',
     results: {
       one: 'Na voljo je {count} opcija.',
@@ -2162,6 +2321,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectPlaceholder: 'Izberite element',
     selectTime: 'Izberite čas',
     showSuggestions: 'Prikaži predloge',
+    slide: 'diapozitiv',
+    slideLabel: '{index} od {count}',
     suggestions: 'Predlogi',
     transparent: 'prozorno',
   },
@@ -2184,6 +2345,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'година',
     },
     cancel: 'Otkaži',
+    carousel: 'vrteška',
     characterLimit: {
       few: 'Najviše {count} znaka',
       one: 'Najviše {count} znak',
@@ -2203,7 +2365,9 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     increase: 'Povećaj {label}',
     loading: 'Učitavanje',
     loadingMore: 'Učitavanje još',
+    nextSlide: 'Sledeći slajd',
     noResults: 'Nema rezultata',
+    previousSlide: 'Prethodni slajd',
     remove: 'Ukloni',
     results: {
       one: 'Dostupno još: {count} opcija.',
@@ -2231,6 +2395,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectPlaceholder: 'Izaberite stavku',
     selectTime: 'Izaberite vreme',
     showSuggestions: 'Prikaži predloge',
+    slide: 'slajd',
+    slideLabel: '{index} od {count}',
     suggestions: 'Predlozi',
     transparent: 'providno',
   },
@@ -2254,6 +2420,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'år',
     },
     cancel: 'Avbryt',
+    carousel: 'karusell',
     characterLimit: {
       other: 'Högst {count} tecken',
     },
@@ -2271,7 +2438,9 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     increase: 'Öka {label}',
     loading: 'Läser in',
     loadingMore: 'Läser in fler',
+    nextSlide: 'Nästa bild',
     noResults: 'Inga resultat',
+    previousSlide: 'Föregående bild',
     remove: 'Ta bort',
     results: {
       one: '{count} alternativ tillgängliga.',
@@ -2299,6 +2468,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectPlaceholder: 'Välj en artikel',
     selectTime: 'Välj tid',
     showSuggestions: 'Visa förslag',
+    slide: 'bild',
+    slideLabel: '{index} av {count}',
     suggestions: 'Förslag',
     transparent: 'genomskinlig',
   },
@@ -2323,6 +2494,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'yıl',
     },
     cancel: 'İptal',
+    carousel: 'karusel',
     characterLimit: {
       other: 'En fazla {count} karakter',
     },
@@ -2340,7 +2512,9 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     increase: '{label} arttır',
     loading: 'Yükleniyor',
     loadingMore: 'Daha fazlası yükleniyor',
+    nextSlide: 'Sonraki slayt',
     noResults: 'Sonuç yok',
+    previousSlide: 'Önceki slayt',
     remove: 'Kaldır',
     results: {
       one: '{count} seçenek kullanılabilir.',
@@ -2368,6 +2542,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectPlaceholder: 'Bir öğe seçin',
     selectTime: 'Saati seçin',
     showSuggestions: 'Önerileri göster',
+    slide: 'slayt',
+    slideLabel: '{index}/{count}',
     suggestions: 'Öneriler',
     transparent: 'saydam',
   },
@@ -2391,6 +2567,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'рік',
     },
     cancel: 'Скасувати',
+    carousel: 'карусель',
     characterLimit: {
       few: 'Не більше {count} символів',
       many: 'Не більше {count} символів',
@@ -2411,7 +2588,9 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     increase: 'Збільшити {label}',
     loading: 'Завантаження',
     loadingMore: 'Завантаження ще',
+    nextSlide: 'Наступний слайд',
     noResults: 'Немає результатів',
+    previousSlide: 'Попередній слайд',
     remove: 'Вилучити',
     results: {
       one: '{count} параметр доступно.',
@@ -2439,6 +2618,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectPlaceholder: 'Виберіть елемент',
     selectTime: 'Виберіть час',
     showSuggestions: 'Показати пропозиції',
+    slide: 'слайд',
+    slideLabel: '{index} з {count}',
     suggestions: 'Пропозиції',
     transparent: 'прозорий',
   },
@@ -2461,6 +2642,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: '年',
     },
     cancel: '取消',
+    carousel: '轮播',
     characterLimit: {
       other: '最多 {count} 个字符',
     },
@@ -2478,7 +2660,9 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     increase: '提高 {label}',
     loading: '正在加载',
     loadingMore: '正在加载更多',
+    nextSlide: '下一张',
     noResults: '没有结果',
+    previousSlide: '上一张',
     remove: '删除',
     results: {
       one: '有 {count} 个选项可用。',
@@ -2506,6 +2690,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectPlaceholder: '选择一个项目',
     selectTime: '选择时间',
     showSuggestions: '显示建议',
+    slide: '幻灯片',
+    slideLabel: '第 {index} 项，共 {count} 项',
     suggestions: '建议',
     transparent: '透明',
   },
@@ -2528,6 +2714,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: '年',
     },
     cancel: '取消',
+    carousel: '輪播',
     characterLimit: {
       other: '最多 {count} 個字元',
     },
@@ -2545,7 +2732,9 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     increase: '放大 {label}',
     loading: '正在載入',
     loadingMore: '正在載入更多',
+    nextSlide: '下一張',
     noResults: '沒有結果',
+    previousSlide: '上一張',
     remove: '移除',
     results: {
       one: '{count} 選項 可用。',
@@ -2573,6 +2762,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     selectPlaceholder: '選取項目',
     selectTime: '選取時間',
     showSuggestions: '顯示建議',
+    slide: '投影片',
+    slideLabel: '第 {index} 項，共 {count} 項',
     suggestions: '建議',
     transparent: '透明',
   },

@@ -32,6 +32,12 @@ export { Calendar } from './components/calendar'
 export type { CalendarProps } from './components/calendar'
 export { Card } from './components/card'
 export type { CardProps, CardVariant } from './components/card'
+export { Carousel, CarouselItem } from './components/carousel'
+export type {
+  CarouselItemProps,
+  CarouselLayout,
+  CarouselProps,
+} from './components/carousel'
 export { Checkbox } from './components/checkbox'
 export type { CheckboxProps } from './components/checkbox'
 export { CheckboxGroup } from './components/checkbox-group'
