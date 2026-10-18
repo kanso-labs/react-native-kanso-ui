@@ -209,6 +209,11 @@ export type {
 } from './components/radio-group'
 export { SearchField } from './components/search-field'
 export type { SearchFieldProps } from './components/search-field'
+export { SearchView, SearchViewContent } from './components/search-view'
+export type {
+  SearchViewContentProps,
+  SearchViewProps,
+} from './components/search-view'
 export {
   SegmentedButton,
   SegmentedButtonSegment,

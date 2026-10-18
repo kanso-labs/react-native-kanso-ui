@@ -3,15 +3,15 @@
 // selecting a list's row is called, what a Select shows while nothing is
 // chosen, the names of a ComboBox's list and the button opening it, how many
 // rows a search leaves, a calendar's, a field's character limit, CopyField's
-// button, the names of SearchField's clear button, Snackbar's close button, a
-// chip's remove button and NumberField's steppers. Each one a call site might
-// want in other words stands behind a prop that names it otherwise:
-// `pendingLabel` for the ring, `aria-label` for the handle, `label` for the
-// loading-more row, `renderEmptyState` for the empty one, `selectLabel` for the
-// selection, `placeholder` for a Select's empty value, `characterLimitLabel`
-// for the limit, `copyLabel` and `copiedLabel` for CopyField, `clearLabel`,
-// `closeLabel` and `removeLabel` for the three buttons, and `decrementLabel`
-// and `incrementLabel` for the steppers.
+// button, the names of SearchField's clear button, a SearchView's back button,
+// Snackbar's close button, a chip's remove button and NumberField's steppers.
+// Each one a call site might want in other words stands behind a prop that
+// names it otherwise: `pendingLabel` for the ring, `aria-label` for the handle,
+// `label` for the loading-more row, `renderEmptyState` for the empty one,
+// `selectLabel` for the selection, `placeholder` for a Select's empty value,
+// `characterLimitLabel` for the limit, `copyLabel` and `copiedLabel` for
+// CopyField, `clearLabel`, `backLabel`, `closeLabel` and `removeLabel` for the
+// four buttons, and `decrementLabel` and `incrementLabel` for the steppers.
 //
 // Copied from kanso-ui's src/i18n/messages.ts, one entry per locale React Aria
 // ships, and kept in step with it by hand: the web library publishes no copy of
@@ -36,6 +36,8 @@
 // pass its own words through the prop.
 
 type LibraryMessages = {
+  /** What a SearchView's back button is called. */
+  readonly back: string
   /**
    * The words a calendar writes: its two chevrons, the names its dates
    * take, where `{date}` is the date written out in full, and the fields
@@ -125,6 +127,7 @@ type PluralForms = Partial<Record<Intl.LDMLPluralRule, string>> & {
 
 const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
   'ar-AE': {
+    back: 'رجوع',
     calendar: {
       dateSelected: '{date} المحدد',
       maximumDate: 'آخر تاريخ متاح',
@@ -165,6 +168,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     suggestions: 'مقترحات',
   },
   'bg-BG': {
+    back: 'Назад',
     calendar: {
       dateSelected: 'Избрано е {date}',
       maximumDate: 'Последна налична дата',
@@ -201,6 +205,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     suggestions: 'Предложения',
   },
   'cs-CZ': {
+    back: 'Zpět',
     calendar: {
       dateSelected: 'Vybráno {date}',
       maximumDate: 'Poslední dostupné datum',
@@ -239,6 +244,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     suggestions: 'Návrhy',
   },
   'da-DK': {
+    back: 'Tilbage',
     calendar: {
       dateSelected: '{date} valgt',
       maximumDate: 'Sidste ledige dato',
@@ -274,6 +280,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     suggestions: 'Forslag',
   },
   'de-DE': {
+    back: 'Zurück',
     calendar: {
       dateSelected: '{date} ausgewählt',
       maximumDate: 'Letztes verfügbares Datum',
@@ -309,6 +316,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     suggestions: 'Empfehlungen',
   },
   'el-GR': {
+    back: 'Πίσω',
     calendar: {
       dateSelected: 'Επιλέχθηκε {date}',
       maximumDate: 'Τελευταία διαθέσιμη ημερομηνία',
@@ -345,6 +353,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     suggestions: 'Προτάσεις',
   },
   'en-US': {
+    back: 'Back',
     calendar: {
       dateSelected: '{date} selected',
       maximumDate: 'Last available date',
@@ -381,6 +390,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     suggestions: 'Suggestions',
   },
   'es-ES': {
+    back: 'Atrás',
     calendar: {
       dateSelected: '{date} seleccionado',
       maximumDate: 'Última fecha disponible',
@@ -417,6 +427,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     suggestions: 'Sugerencias',
   },
   'et-EE': {
+    back: 'Tagasi',
     calendar: {
       dateSelected: '{date} valitud',
       maximumDate: 'Viimane saadaolev kuupäev',
@@ -453,6 +464,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     suggestions: 'Soovitused',
   },
   'fi-FI': {
+    back: 'Takaisin',
     calendar: {
       dateSelected: '{date} valittu',
       maximumDate: 'Viimeinen varattavissa oleva päivämäärä',
@@ -489,6 +501,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     suggestions: 'Ehdotukset',
   },
   'fr-FR': {
+    back: 'Retour',
     calendar: {
       dateSelected: '{date} sélectionné',
       maximumDate: 'Dernière date disponible',
@@ -525,6 +538,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     suggestions: 'Suggestions',
   },
   'he-IL': {
+    back: 'חזרה',
     calendar: {
       dateSelected: '{date} נבחר',
       maximumDate: 'תאריך פנוי אחרון',
@@ -562,6 +576,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     suggestions: 'הצעות',
   },
   'hr-HR': {
+    back: 'Natrag',
     calendar: {
       dateSelected: '{date} odabran',
       maximumDate: 'Posljednji raspoloživi datum',
@@ -599,6 +614,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     suggestions: 'Prijedlozi',
   },
   'hu-HU': {
+    back: 'Vissza',
     calendar: {
       dateSelected: '{date} kiválasztva',
       maximumDate: 'Utolsó elérhető dátum',
@@ -634,6 +650,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     suggestions: 'Javaslatok',
   },
   'it-IT': {
+    back: 'Indietro',
     calendar: {
       dateSelected: '{date} selezionata',
       maximumDate: 'Ultima data disponibile',
@@ -670,6 +687,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     suggestions: 'Suggerimenti',
   },
   'ja-JP': {
+    back: '戻る',
     calendar: {
       dateSelected: '{date} を選択',
       maximumDate: '最終利用可能日',
@@ -705,6 +723,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     suggestions: '候補',
   },
   'ko-KR': {
+    back: '뒤로',
     calendar: {
       dateSelected: '{date} 선택됨',
       maximumDate: '마지막으로 사용 가능한 일자',
@@ -740,6 +759,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     suggestions: '제안',
   },
   'lt-LT': {
+    back: 'Atgal',
     calendar: {
       dateSelected: 'Pasirinkta {date}',
       maximumDate: 'Paskutinė galima data',
@@ -778,6 +798,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     suggestions: 'Pasiūlymai',
   },
   'lv-LV': {
+    back: 'Atpakaļ',
     calendar: {
       dateSelected: 'Atlasīts: {date}',
       maximumDate: 'Pēdējais pieejamais datums',
@@ -815,6 +836,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     suggestions: 'Ieteikumi',
   },
   'nb-NO': {
+    back: 'Tilbake',
     calendar: {
       dateSelected: '{date} valgt',
       maximumDate: 'Siste tilgjengelige dato',
@@ -850,6 +872,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     suggestions: 'Forslag',
   },
   'nl-NL': {
+    back: 'Terug',
     calendar: {
       dateSelected: '{date} geselecteerd',
       maximumDate: 'Laatste beschikbare datum',
@@ -886,6 +909,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     suggestions: 'Suggesties',
   },
   'pl-PL': {
+    back: 'Wstecz',
     calendar: {
       dateSelected: 'Wybrano {date}',
       maximumDate: 'Ostatnia dostępna data',
@@ -924,6 +948,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     suggestions: 'Sugestie',
   },
   'pt-BR': {
+    back: 'Voltar',
     calendar: {
       dateSelected: '{date} selecionado',
       maximumDate: 'Última data disponível',
@@ -960,6 +985,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     suggestions: 'Sugestões',
   },
   'pt-PT': {
+    back: 'Voltar',
     calendar: {
       dateSelected: '{date} selecionado',
       maximumDate: 'Última data disponível',
@@ -996,6 +1022,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     suggestions: 'Sugestões',
   },
   'ro-RO': {
+    back: 'Înapoi',
     calendar: {
       dateSelected: '{date} selectată',
       maximumDate: 'Ultima dată disponibilă',
@@ -1033,6 +1060,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     suggestions: 'Sugestii',
   },
   'ru-RU': {
+    back: 'Назад',
     calendar: {
       dateSelected: 'Выбрано {date}',
       maximumDate: 'Последняя доступная дата',
@@ -1071,6 +1099,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     suggestions: 'Предложения',
   },
   'sk-SK': {
+    back: 'Späť',
     calendar: {
       dateSelected: 'Vybratý dátum {date}',
       maximumDate: 'Posledný dostupný dátum',
@@ -1109,6 +1138,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     suggestions: 'Návrhy',
   },
   'sl-SI': {
+    back: 'Nazaj',
     calendar: {
       dateSelected: '{date} izbrano',
       maximumDate: 'Zadnji razpoložljivi datum',
@@ -1147,6 +1177,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     suggestions: 'Predlogi',
   },
   'sr-SP': {
+    back: 'Nazad',
     calendar: {
       dateSelected: '{date} izabran',
       maximumDate: 'Zadnji raspoloživi datum',
@@ -1184,6 +1215,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     suggestions: 'Predlozi',
   },
   'sv-SE': {
+    back: 'Tillbaka',
     calendar: {
       dateSelected: '{date} har valts',
       maximumDate: 'Sista tillgängliga datum',
@@ -1219,6 +1251,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     suggestions: 'Förslag',
   },
   'tr-TR': {
+    back: 'Geri',
     calendar: {
       dateSelected: '{date} seçildi',
       maximumDate: 'Son müsait tarih',
@@ -1254,6 +1287,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     suggestions: 'Öneriler',
   },
   'uk-UA': {
+    back: 'Назад',
     calendar: {
       dateSelected: 'Вибрано {date}',
       maximumDate: 'Остання доступна дата',
@@ -1292,6 +1326,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     suggestions: 'Пропозиції',
   },
   'zh-CN': {
+    back: '返回',
     calendar: {
       dateSelected: '已选择 {date}',
       maximumDate: '最后一个可用日期',
@@ -1327,6 +1362,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     suggestions: '建议',
   },
   'zh-TW': {
+    back: '返回',
     calendar: {
       dateSelected: '已選取 {date}',
       maximumDate: '最後一個可用日期',
