@@ -1,5 +1,6 @@
 import type { RefObject } from 'react'
 import type { HostInstance, ViewStyle } from 'react-native'
+import type { SharedValue } from 'react-native-reanimated'
 
 import { useEffect, useRef } from 'react'
 import {
@@ -205,6 +206,19 @@ function usePanelMotion(
   placed: boolean,
   setPresent: (present: boolean) => void,
 ) {
+  return usePanelStyle(usePanelShown(isOpen, placed, setPresent))
+}
+
+/**
+ * How far a panel has arrived, from 0 to 1, on `usePanelMotion`'s timing,
+ * for a panel that moves something besides itself with it, as a picker's
+ * scrim fades with the surface it is cast by.
+ */
+function usePanelShown(
+  isOpen: boolean,
+  placed: boolean,
+  setPresent: (present: boolean) => void,
+) {
   const { motion } = useTheme()
   const reduceMotion = useReducedMotion()
   const shown = useSharedValue(0)
@@ -247,6 +261,11 @@ function usePanelMotion(
     }
   }, [isOpen, motion, placed, reduceMotion, setPresent, shown])
 
+  return shown
+}
+
+/** The panel's fade and scale, for how far it has arrived. */
+function usePanelStyle(shown: SharedValue<number>) {
   return useAnimatedStyle(() => {
     'worklet'
     const progress = shown.get()
@@ -288,5 +307,7 @@ export {
   useBackToClose,
   useFocusOnPlaced,
   usePanelMotion,
+  usePanelShown,
+  usePanelStyle,
   useReturnFocus,
 }

@@ -67,6 +67,8 @@ export type {
 } from './components/currency'
 export { DateField } from './components/date-field'
 export type { DateFieldProps } from './components/date-field'
+export { DatePicker } from './components/date-picker'
+export type { DatePickerProps } from './components/date-picker'
 export {
   Dialog,
   DialogBody,

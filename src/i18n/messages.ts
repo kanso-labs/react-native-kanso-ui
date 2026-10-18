@@ -136,10 +136,16 @@ type LibraryMessages = {
   }
   /**
    * What a date's segments are called, each one named for a screen reader
-   * before the field's label, and what describes the date or the time a
-   * field holds, where `{date}` is the date written out.
+   * before the field's label, what describes the date or the time a field
+   * holds, where `{date}` is the date written out, and what the button
+   * opening a date picker's calendar is called.
    */
   readonly segments: {
+    /**
+     * What the button opening a date picker's calendar is called, before the
+     * field's label.
+     */
+    readonly calendar: string
     readonly day: string
     readonly dayPeriod: string
     /** What a segment with nothing in it reads as, for a screen reader. */
@@ -219,6 +225,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: '{count} خيارات متاحة.',
     },
     segments: {
+      calendar: 'التقويم',
       day: 'يوم',
       dayPeriod: 'ص/م',
       empty: 'فارغ',
@@ -279,6 +286,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: '{count} опции на разположение.',
     },
     segments: {
+      calendar: 'Календар',
       day: 'ден',
       dayPeriod: 'пр.об./сл.об.',
       empty: 'Изпразни',
@@ -339,6 +347,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: 'K dispozici jsou/je {count} možnosti/-í.',
     },
     segments: {
+      calendar: 'Kalendář',
       day: 'den',
       dayPeriod: 'část dne',
       empty: 'Prázdné',
@@ -396,6 +405,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: '{count} muligheder tilgængelige.',
     },
     segments: {
+      calendar: 'Kalender',
       day: 'dag',
       dayPeriod: 'AM/PM',
       empty: 'Tom',
@@ -455,6 +465,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: '{count} Optionen verfügbar.',
     },
     segments: {
+      calendar: 'Kalender',
       day: 'Tag',
       dayPeriod: 'Tageshälfte',
       empty: 'Leer',
@@ -515,6 +526,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: '{count} επιλογές  διαθέσιμες.',
     },
     segments: {
+      calendar: 'Ημερολόγιο',
       day: 'ημέρα',
       dayPeriod: 'π.μ./μ.μ.',
       empty: 'Άδειο',
@@ -573,6 +585,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: '{count} options available.',
     },
     segments: {
+      calendar: 'Calendar',
       day: 'day',
       dayPeriod: 'AM/PM',
       empty: 'Empty',
@@ -633,6 +646,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: '{count} opciones disponible(s).',
     },
     segments: {
+      calendar: 'Calendario',
       day: 'día',
       dayPeriod: 'a. m./p. m.',
       empty: 'Vacío',
@@ -692,6 +706,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: '{count} valikud saadaval.',
     },
     segments: {
+      calendar: 'Kalender',
       day: 'päev',
       dayPeriod: 'enne/pärast lõunat',
       empty: 'Tühjenda',
@@ -752,6 +767,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: '{count} vaihtoehtoa saatavilla.',
     },
     segments: {
+      calendar: 'Kalenteri',
       day: 'päivä',
       dayPeriod: 'vuorokaudenaika',
       empty: 'Tyhjä',
@@ -812,6 +828,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: '{count} options disponible(s).',
     },
     segments: {
+      calendar: 'Calendrier',
       day: 'jour',
       dayPeriod: 'cadran',
       empty: 'Vide',
@@ -871,6 +888,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: '{count} אפשרויות במצב זמין.',
     },
     segments: {
+      calendar: 'לוח שנה',
       day: 'יום',
       dayPeriod: 'לפנה״צ/אחה״צ',
       empty: 'ריק',
@@ -932,6 +950,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: 'Dostupno još: {count} opcije/a.',
     },
     segments: {
+      calendar: 'Kalendar',
       day: 'dan',
       dayPeriod: 'AM/PM',
       empty: 'Prazno',
@@ -991,6 +1010,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: '{count} lehetőség áll rendelkezésre.',
     },
     segments: {
+      calendar: 'Naptár',
       day: 'nap',
       dayPeriod: 'napszak',
       empty: 'Üres',
@@ -1051,6 +1071,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: '{count} opzioni disponibili.',
     },
     segments: {
+      calendar: 'Calendario',
       day: 'giorno',
       dayPeriod: 'AM/PM',
       empty: 'Vuoto',
@@ -1108,6 +1129,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: '{count} 個のオプションを利用できます。',
     },
     segments: {
+      calendar: 'カレンダー',
       day: '日',
       dayPeriod: '午前/午後',
       empty: '空',
@@ -1165,6 +1187,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: '{count}개 옵션을 사용할 수 있습니다.',
     },
     segments: {
+      calendar: '달력',
       day: '일',
       dayPeriod: '오전/오후',
       empty: '비어 있음',
@@ -1227,6 +1250,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: 'Yra {count} parinktys (-ių).',
     },
     segments: {
+      calendar: 'Kalendorius',
       day: 'diena',
       dayPeriod: 'iki pietų / po pietų',
       empty: 'Tuščias',
@@ -1288,6 +1312,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: 'Pieejamo opciju skaits: {count} opcijas.',
     },
     segments: {
+      calendar: 'Kalendārs',
       day: 'diena',
       dayPeriod: 'priekšpusdienā/pēcpusdienā',
       empty: 'Tukšs',
@@ -1345,6 +1370,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: '{count} alternativer finnes.',
     },
     segments: {
+      calendar: 'Kalender',
       day: 'dag',
       dayPeriod: 'a.m./p.m.',
       empty: 'Tom',
@@ -1404,6 +1430,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: '{count} opties beschikbaar.',
     },
     segments: {
+      calendar: 'Kalender',
       day: 'dag',
       dayPeriod: 'a.m./p.m.',
       empty: 'Leeg',
@@ -1464,6 +1491,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: 'dostępna/dostępne(-nych) {count} opcje(-i).',
     },
     segments: {
+      calendar: 'Kalendarz',
       day: 'dzień',
       dayPeriod: 'rano / po południu / wieczorem',
       empty: 'Pusty',
@@ -1524,6 +1552,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: '{count} opções disponível.',
     },
     segments: {
+      calendar: 'Calendário',
       day: 'dia',
       dayPeriod: 'AM/PM',
       empty: 'Vazio',
@@ -1584,6 +1613,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: '{count} opções disponível.',
     },
     segments: {
+      calendar: 'Calendário',
       day: 'dia',
       dayPeriod: 'am/pm',
       empty: 'Vazio',
@@ -1645,6 +1675,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: '{count} opțiuni disponibile.',
     },
     segments: {
+      calendar: 'Calendar',
       day: 'zi',
       dayPeriod: 'a.m./p.m.',
       empty: 'Gol',
@@ -1706,6 +1737,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: '{count} параметров доступно.',
     },
     segments: {
+      calendar: 'Календарь',
       day: 'день',
       dayPeriod: 'AM/PM',
       empty: 'Не заполнено',
@@ -1766,6 +1798,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: '{count} možnosti/-í k dispozícii.',
     },
     segments: {
+      calendar: 'Kalendár',
       day: 'deň',
       dayPeriod: 'AM/PM',
       empty: 'Prázdne',
@@ -1827,6 +1860,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: 'Na voljo je {count} opcije.',
     },
     segments: {
+      calendar: 'Koledar',
       day: 'dan',
       dayPeriod: 'dop/pop',
       empty: 'Prazen',
@@ -1886,6 +1920,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: 'Dostupno još: {count} opcije/a.',
     },
     segments: {
+      calendar: 'Kalendar',
       day: 'дан',
       dayPeriod: 'AM/PM',
       empty: 'Prazno',
@@ -1944,6 +1979,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: '{count} alternativ tillgängliga.',
     },
     segments: {
+      calendar: 'Kalender',
       day: 'dag',
       dayPeriod: 'fm/em',
       empty: 'Tomt',
@@ -2003,6 +2039,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: '{count} seçenekler kullanılabilir.',
     },
     segments: {
+      calendar: 'Takvim',
       day: 'gün',
       dayPeriod: 'ÖÖ/ÖS',
       empty: 'Boş',
@@ -2064,6 +2101,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: '{count} параметри(-ів) доступно.',
     },
     segments: {
+      calendar: 'Календар',
       day: 'день',
       dayPeriod: 'дп/пп',
       empty: 'Пусто',
@@ -2121,6 +2159,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: '有 {count} 个选项可用。',
     },
     segments: {
+      calendar: '日历',
       day: '日',
       dayPeriod: '上午/下午',
       empty: '空',
@@ -2178,6 +2217,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       other: '{count} 選項 可用。',
     },
     segments: {
+      calendar: '日曆',
       day: '日',
       dayPeriod: '時段',
       empty: '空白',
