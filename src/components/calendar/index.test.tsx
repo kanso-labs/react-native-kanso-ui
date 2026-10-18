@@ -48,6 +48,12 @@ const MIN = new CalendarDate(2026, 9, 8)
 // outline it did not ask for.
 const NOW = new Date(2026, 9, 17, 12)
 
+// How many months the cases showing more than one show.
+const TWO_MONTHS = { months: 2 }
+
+// A duration under a month, which shows one.
+const NO_MONTHS = { months: 0 }
+
 const CALL_SITE = StyleSheet.create({ calendar: { marginTop: 4 } }).calendar
 
 async function advance(milliseconds: number) {
@@ -496,6 +502,73 @@ describe('Calendar', () => {
     })
   })
 
+  describe('more than one month', () => {
+    it('shows one month for a duration under one', async () => {
+      await render(
+        <Calendar
+          aria-label="Label"
+          defaultValue={SEPTEMBER}
+          locale="en-US"
+          visibleDuration={NO_MONTHS}
+        />,
+      )
+
+      expect(calendarOf().props['aria-label']).toBe('Label, September 2026')
+      expect(screen.getByRole('heading')).toHaveTextContent('September 2026')
+    })
+
+    it('shows as many months as visibleDuration asks, its heading naming them', async () => {
+      await render(
+        <Calendar
+          aria-label="Label"
+          defaultValue={SEPTEMBER}
+          locale="en-US"
+          visibleDuration={TWO_MONTHS}
+        />,
+      )
+
+      expect(screen.getByRole('heading')).toHaveTextContent(
+        'September – October 2026',
+      )
+      expect(calendarOf().props['aria-label']).toBe(
+        'Label, September to October 2026',
+      )
+      expect(dateNamed('Friday, October 16, 2026')).toBeEnabled()
+    })
+
+    it('moves by as many months as it shows', async () => {
+      await render(
+        <Calendar
+          defaultValue={SEPTEMBER}
+          locale="en-US"
+          visibleDuration={TWO_MONTHS}
+        />,
+      )
+
+      await fireEvent.press(screen.getByRole('button', { name: 'Previous' }))
+
+      expect(screen.getByRole('heading')).toHaveTextContent(
+        'July – August 2026',
+      )
+    })
+
+    it('draws the plain header whatever showMonthYearMenus says', async () => {
+      await render(
+        <Calendar
+          defaultValue={SEPTEMBER}
+          locale="en-US"
+          showMonthYearMenus
+          visibleDuration={TWO_MONTHS}
+        />,
+      )
+
+      expect(screen.getByRole('heading')).toBeOnTheScreen()
+      expect(
+        screen.queryByRole('button', { name: 'Sep month' }),
+      ).not.toBeOnTheScreen()
+    })
+  })
+
   describe('the month and year menus', () => {
     it('draws the month and the year as menu buttons between the chevrons', async () => {
       await render(
@@ -789,6 +862,18 @@ describe('Calendar', () => {
         color: colors.onSurface,
         fontSize: typography.bodyLargeSize,
       })
+    })
+
+    it('clips a date’s state layer to its circle, which the date’s room does not move', async () => {
+      await render(<Calendar defaultValue={SEPTEMBER} locale="en-US" />)
+
+      const surface = styleOf(
+        child(dateNamed('Wednesday, September 16, 2026').children.at(0)),
+      )
+
+      expect(surface.borderRadius).toBe(radii.circle)
+      expect(surface).not.toHaveProperty('marginVertical')
+      expect(surface).not.toHaveProperty('height')
     })
 
     it('fills the date it holds in primary, its number in on primary', async () => {

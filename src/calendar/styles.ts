@@ -1,5 +1,7 @@
 import { StyleSheet } from 'react-native'
 
+import type { ResolvedTheme } from '../theme/scope'
+
 import { withOpacity } from '../theme/color'
 import { themedStyles } from '../theme/styles'
 
@@ -16,6 +18,20 @@ const WEEKS_HELD = 6
 // How far a month slides in from the side it comes from as it arrives,
 // Material Design's shared axis distance.
 const SLIDE_DISTANCE = 30
+
+/**
+ * The container's width for the months it holds side by side: the page's
+ * 360dp for one, which is seven 48dp columns inside its padding, and for more
+ * each month's seven columns with the room between them.
+ */
+function rootWidthOf(
+  { sizing, spacing }: Pick<ResolvedTheme, 'sizing' | 'spacing'>,
+  across: number,
+) {
+  return (
+    sizing.controlMd * 7 * across + spacing.xl * (across - 1) + spacing.md * 2
+  )
+}
 
 const styles = StyleSheet.create({
   // A column of the grid: a seventh of its width, the date's circle centred
@@ -84,7 +100,32 @@ const stylesOf = themedStyles(
         marginVertical: (row - date) / 2,
         width: date,
       },
-      // The date the calendar holds: a filled circle in the primary role.
+      // The days of a range, in the modal date picker's range-selection
+      // tokens, since the docked token set this calendar otherwise follows
+      // stops at the selected date: the secondary container, one step down
+      // from the primary its two ends take. Square rather than round, and as
+      // wide as its column rather than the 40dp circle, so one day's band
+      // meets the next one's and a run of days reads as one shape. The two
+      // ends round their outer side back, which is what makes the band start
+      // and stop at a circle.
+      dateInRange: {
+        backgroundColor: colors.secondaryContainer,
+        borderRadius: 0,
+        width: '100%',
+      },
+      // A range's last day, round on the side the band stops at. Logical
+      // corners, so a right-to-left layout turns them to the left.
+      dateRangeEnd: {
+        borderBottomEndRadius: radii.circle,
+        borderTopEndRadius: radii.circle,
+      },
+      // A range's first day, round on the side the band starts from.
+      dateRangeStart: {
+        borderBottomStartRadius: radii.circle,
+        borderTopStartRadius: radii.circle,
+      },
+      // The date the calendar holds, or either end of a range: filled in the
+      // primary role.
       dateSelected: {
         backgroundColor: colors.primary,
       },
@@ -98,6 +139,11 @@ const stylesOf = themedStyles(
       // content role.
       dateTextDisabled: {
         color: disabled,
+      },
+      // A day between a range's two ends, in the label role the band's
+      // container pairs with.
+      dateTextInRange: {
+        color: colors.onSecondaryContainer,
       },
       dateTextSelected: {
         color: colors.onPrimary,
@@ -117,7 +163,7 @@ const stylesOf = themedStyles(
         borderColor: colors.primary,
         borderWidth: 1,
       },
-      // The room the grid is held at: the weekday row and six weeks.
+      // The room a month's grid is held at: the weekday row and six weeks.
       grid: {
         height: row * (WEEKS_HELD + 1),
       },
@@ -197,6 +243,23 @@ const stylesOf = themedStyles(
       menuButtonText: {
         color: colors.onSurfaceVariant,
       },
+      // The months of a calendar showing more than one, one under another,
+      // as they sit below the expanded window size: two side by side come to
+      // 720dp with the container's padding, wider than a compact window and
+      // most of a medium one.
+      months: {
+        gap: spacing.xl,
+      },
+      // A month's grid among several, seven 48dp columns wide.
+      monthSideBySide: {
+        width: row * 7,
+      },
+      // The same months side by side, from the expanded window size up, as
+      // web's sit.
+      monthsSideBySide: {
+        flexDirection: 'row',
+        gap: spacing.xl,
+      },
       // The page's docked container: 360dp on the high surface container, or
       // the width of its container where that is narrower, the columns
       // sharing what is left.
@@ -206,7 +269,7 @@ const stylesOf = themedStyles(
         gap: spacing.md,
         maxWidth: '100%',
         padding: spacing.md,
-        width: row * 7 + spacing.md * 2,
+        width: rootWidthOf({ sizing, spacing }, 1),
       },
       // A row of the grid, the page's 48dp.
       rowHeight: {
@@ -221,4 +284,4 @@ const stylesOf = themedStyles(
   },
 )
 
-export { SLIDE_DISTANCE, styles, stylesOf, WEEKS_HELD }
+export { rootWidthOf, SLIDE_DISTANCE, styles, stylesOf, WEEKS_HELD }

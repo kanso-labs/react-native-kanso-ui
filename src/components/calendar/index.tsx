@@ -1,3 +1,4 @@
+import type { DateDuration } from '@internationalized/date'
 import type { ComponentRef, Ref } from 'react'
 import type { StyleProp, ViewStyle } from 'react-native'
 import type {
@@ -9,10 +10,8 @@ import { createCalendar } from '@internationalized/date'
 import { View } from 'react-native'
 import { useCalendarState } from 'react-stately/useCalendarState'
 
-import { CalendarFrame, visibleMonthOf } from '../../calendar'
-import { stylesOf } from '../../calendar/styles'
+import { CalendarFrame, useRootStyle, visibleRangeOf } from '../../calendar'
 import { useLocaleOf } from '../../i18n/provider'
-import { useTheme } from '../../theme/scope'
 import { composeStyles } from '../../theme/styles'
 
 // kanso-ui's Calendar, the date pickers page's docked calendar: a month grid
@@ -66,6 +65,14 @@ import { composeStyles } from '../../theme/styles'
 // an outline and the primary label; selected gives it a filled circle and
 // the on-primary label. A selected today takes the fill.
 //
+// **`visibleDuration` shows more than one month**, each in a grid of its own,
+// side by side from the expanded window size up and one under another below
+// it, as web's sit, since two side by side come to 720dp with the padding.
+// The container widens to hold them. Only its `months` is read, as web draws
+// whole months alone, and with more than one the header is the plain one
+// whatever `showMonthYearMenus` says, since the menus name the first month
+// alone.
+//
 // Web's month changes at once. Here **the weeks slide in** from the side the
 // new month comes from, Material Design's shared axis transition, and change
 // at once under reduced motion.
@@ -91,8 +98,8 @@ type CalendarProps<T extends DateValue = DateValue> = Pick<
   | 'value'
 > & {
   /**
-   * The calendar's name. The month shown is added to it, as React Aria adds
-   * it on web.
+   * The calendar's name. The month shown, or the months, is added to it, as
+   * React Aria adds it on web.
    */
   readonly 'aria-label'?: string
   /**
@@ -114,6 +121,13 @@ type CalendarProps<T extends DateValue = DateValue> = Pick<
   readonly showMonthYearMenus?: boolean
   readonly style?: StyleProp<ViewStyle>
   readonly testID?: string
+  /**
+   * How many months the calendar shows at once, and moves by: side by side
+   * from the expanded window size up, one under another below it. Only
+   * `months` is read.
+   * @default { months: 1 }
+   */
+  readonly visibleDuration?: DateDuration
 }
 
 /**
@@ -140,28 +154,32 @@ function Calendar<T extends DateValue = DateValue>({
   showMonthYearMenus = false,
   style,
   testID,
+  visibleDuration,
   ...props
 }: CalendarProps<T>) {
   const writtenIn = useLocaleOf(locale)
-  const own = stylesOf(useTheme())
+  const months = Math.max(1, visibleDuration?.months ?? 1)
+  const rootStyle = useRootStyle(months)
   const state = useCalendarState<T>({
     ...props,
     createCalendar,
     locale: writtenIn,
+    visibleDuration: { months },
   })
-  const month = visibleMonthOf(state, writtenIn)
+  const month = visibleRangeOf(state, writtenIn, true)
 
   return (
     <View
       aria-label={ariaLabel === undefined ? month : `${ariaLabel}, ${month}`}
       ref={ref}
       role="group"
-      style={composeStyles<ViewStyle>(own.root, style)}
+      style={composeStyles<ViewStyle>(rootStyle, style)}
       testID={testID}
     >
       <CalendarFrame
         firstDayOfWeek={props.firstDayOfWeek}
         locale={writtenIn}
+        months={months}
         showMonthYearMenus={showMonthYearMenus}
         state={state}
       />

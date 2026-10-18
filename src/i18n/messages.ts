@@ -51,8 +51,15 @@ type LibraryMessages = {
    * its month and year menus are named by.
    */
   readonly calendar: {
+    /**
+     * Two dates as a range, where `{startDate}` and `{endDate}` are each
+     * written as much as the other leaves out.
+     */
+    readonly dateRange: string
     /** A date the calendar holds. */
     readonly dateSelected: string
+    /** What pressing a date does once a range is started. */
+    readonly finishRangeSelectionPrompt: string
     /** Added after the latest date `maxValue` allows. */
     readonly maximumDate: string
     /** Added after the earliest date `minValue` allows. */
@@ -63,6 +70,15 @@ type LibraryMessages = {
     readonly next: string
     /** The chevron that moves to the previous month. */
     readonly previous: string
+    /** A range calendar's one-day range, said at its date. */
+    readonly selectedDateDescription: string
+    /**
+     * A range calendar's range, said at its two ends, where `{dateRange}` is
+     * the range as `dateRange` writes it.
+     */
+    readonly selectedRangeDescription: string
+    /** What pressing a date does while no range is started. */
+    readonly startRangeSelectionPrompt: string
     /** Today, when the calendar does not hold it. */
     readonly todayDate: string
     /** Today, when the calendar holds it. */
@@ -162,12 +178,17 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
   'ar-AE': {
     back: 'رجوع',
     calendar: {
+      dateRange: '{startDate} إلى {endDate}',
       dateSelected: '{date} المحدد',
+      finishRangeSelectionPrompt: 'انقر لإنهاء عملية تحديد نطاق التاريخ',
       maximumDate: 'آخر تاريخ متاح',
       minimumDate: 'أول تاريخ متاح',
       month: 'الشهر',
       next: 'التالي',
       previous: 'السابق',
+      selectedDateDescription: 'تاريخ محدد: {date}',
+      selectedRangeDescription: 'المدى الزمني المحدد: {dateRange}',
+      startRangeSelectionPrompt: 'انقر لبدء عملية تحديد نطاق التاريخ',
       todayDate: 'اليوم، {date}',
       todayDateSelected: 'اليوم، {date} محدد',
       year: 'السنة',
@@ -219,12 +240,19 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
   'bg-BG': {
     back: 'Назад',
     calendar: {
+      dateRange: '{startDate} до {endDate}',
       dateSelected: 'Избрано е {date}',
+      finishRangeSelectionPrompt:
+        'Натиснете, за да довършите избора на времеви интервал',
       maximumDate: 'Последна налична дата',
       minimumDate: 'Първа налична дата',
       month: 'месец',
       next: 'Напред',
       previous: 'Назад',
+      selectedDateDescription: 'Избрана дата: {date}',
+      selectedRangeDescription: 'Избран диапазон: {dateRange}',
+      startRangeSelectionPrompt:
+        'Натиснете, за да пристъпите към избора на времеви интервал',
       todayDate: 'Днес, {date}',
       todayDateSelected: 'Днес, {date} са избрани',
       year: 'година',
@@ -272,12 +300,17 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
   'cs-CZ': {
     back: 'Zpět',
     calendar: {
+      dateRange: '{startDate} až {endDate}',
       dateSelected: 'Vybráno {date}',
+      finishRangeSelectionPrompt: 'Kliknutím dokončíte výběr rozsahu dat',
       maximumDate: 'Poslední dostupné datum',
       minimumDate: 'První dostupné datum',
       month: 'měsíc',
       next: 'Další',
       previous: 'Předchozí',
+      selectedDateDescription: 'Vybrané datum: {date}',
+      selectedRangeDescription: 'Vybrané období: {dateRange}',
+      startRangeSelectionPrompt: 'Kliknutím zahájíte výběr rozsahu dat',
       todayDate: 'Dnes, {date}',
       todayDateSelected: 'Dnes, vybráno {date}',
       year: 'rok',
@@ -327,12 +360,17 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
   'da-DK': {
     back: 'Tilbage',
     calendar: {
+      dateRange: '{startDate} til {endDate}',
       dateSelected: '{date} valgt',
+      finishRangeSelectionPrompt: 'Klik for at fuldføre valg af datoområde',
       maximumDate: 'Sidste ledige dato',
       minimumDate: 'Første ledige dato',
       month: 'måned',
       next: 'Næste',
       previous: 'Forrige',
+      selectedDateDescription: 'Valgt dato: {date}',
+      selectedRangeDescription: 'Valgt interval: {dateRange}',
+      startRangeSelectionPrompt: 'Klik for at starte valg af datoområde',
       todayDate: 'I dag, {date}',
       todayDateSelected: 'I dag, {date} valgt',
       year: 'år',
@@ -379,12 +417,19 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
   'de-DE': {
     back: 'Zurück',
     calendar: {
+      dateRange: '{startDate} bis {endDate}',
       dateSelected: '{date} ausgewählt',
+      finishRangeSelectionPrompt:
+        'Klicken, um die Auswahl des Datumsbereichs zu beenden',
       maximumDate: 'Letztes verfügbares Datum',
       minimumDate: 'Erstes verfügbares Datum',
       month: 'Monat',
       next: 'Weiter',
       previous: 'Zurück',
+      selectedDateDescription: 'Ausgewähltes Datum: {date}',
+      selectedRangeDescription: 'Ausgewählter Bereich: {dateRange}',
+      startRangeSelectionPrompt:
+        'Klicken, um die Auswahl des Datumsbereichs zu beginnen',
       todayDate: 'Heute, {date}',
       todayDateSelected: 'Heute, {date} ausgewählt',
       year: 'Jahr',
@@ -431,12 +476,19 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
   'el-GR': {
     back: 'Πίσω',
     calendar: {
+      dateRange: '{startDate} έως {endDate}',
       dateSelected: 'Επιλέχθηκε {date}',
+      finishRangeSelectionPrompt:
+        'Κάντε κλικ για να ολοκληρώσετε την επιλογή εύρους ημερομηνιών',
       maximumDate: 'Τελευταία διαθέσιμη ημερομηνία',
       minimumDate: 'Πρώτη διαθέσιμη ημερομηνία',
       month: 'μήνας',
       next: 'Επόμενο',
       previous: 'Προηγούμενο',
+      selectedDateDescription: 'Επιλεγμένη ημερομηνία: {date}',
+      selectedRangeDescription: 'Επιλεγμένο εύρος: {dateRange}',
+      startRangeSelectionPrompt:
+        'Κάντε κλικ για να ξεκινήσετε την επιλογή εύρους ημερομηνιών',
       todayDate: 'Σήμερα, {date}',
       todayDateSelected: 'Σήμερα, επιλέχτηκε {date}',
       year: 'έτος',
@@ -484,12 +536,17 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
   'en-US': {
     back: 'Back',
     calendar: {
+      dateRange: '{startDate} to {endDate}',
       dateSelected: '{date} selected',
+      finishRangeSelectionPrompt: 'Click to finish selecting date range',
       maximumDate: 'Last available date',
       minimumDate: 'First available date',
       month: 'month',
       next: 'Next',
       previous: 'Previous',
+      selectedDateDescription: 'Selected Date: {date}',
+      selectedRangeDescription: 'Selected Range: {dateRange}',
+      startRangeSelectionPrompt: 'Click to start selecting date range',
       todayDate: 'Today, {date}',
       todayDateSelected: 'Today, {date} selected',
       year: 'year',
@@ -537,12 +594,19 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
   'es-ES': {
     back: 'Atrás',
     calendar: {
+      dateRange: '{startDate} a {endDate}',
       dateSelected: '{date} seleccionado',
+      finishRangeSelectionPrompt:
+        'Haga clic para terminar de seleccionar rango de fechas',
       maximumDate: 'Última fecha disponible',
       minimumDate: 'Primera fecha disponible',
       month: 'mes',
       next: 'Siguiente',
       previous: 'Anterior',
+      selectedDateDescription: 'Fecha seleccionada: {date}',
+      selectedRangeDescription: 'Intervalo seleccionado: {dateRange}',
+      startRangeSelectionPrompt:
+        'Haga clic para comenzar a seleccionar un rango de fechas',
       todayDate: 'Hoy, {date}',
       todayDateSelected: 'Hoy, {date} seleccionado',
       year: 'año',
@@ -590,12 +654,18 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
   'et-EE': {
     back: 'Tagasi',
     calendar: {
+      dateRange: '{startDate} kuni {endDate}',
       dateSelected: '{date} valitud',
+      finishRangeSelectionPrompt:
+        'Klõpsake kuupäevavahemiku valimise lõpetamiseks',
       maximumDate: 'Viimane saadaolev kuupäev',
       minimumDate: 'Esimene saadaolev kuupäev',
       month: 'kuu',
       next: 'Järgmine',
       previous: 'Eelmine',
+      selectedDateDescription: 'Valitud kuupäev: {date}',
+      selectedRangeDescription: 'Valitud vahemik: {dateRange}',
+      startRangeSelectionPrompt: 'Klõpsake kuupäevavahemiku valimiseks',
       todayDate: 'Täna, {date}',
       todayDateSelected: 'Täna, {date} valitud',
       year: 'aasta',
@@ -643,12 +713,19 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
   'fi-FI': {
     back: 'Takaisin',
     calendar: {
+      dateRange: '{startDate} – {endDate}',
       dateSelected: '{date} valittu',
+      finishRangeSelectionPrompt:
+        'Lopeta päivämääräalueen valinta napsauttamalla tätä.',
       maximumDate: 'Viimeinen varattavissa oleva päivämäärä',
       minimumDate: 'Ensimmäinen varattavissa oleva päivämäärä',
       month: 'kuukausi',
       next: 'Seuraava',
       previous: 'Edellinen',
+      selectedDateDescription: 'Valittu päivämäärä: {date}',
+      selectedRangeDescription: 'Valittu aikaväli: {dateRange}',
+      startRangeSelectionPrompt:
+        'Aloita päivämääräalueen valinta napsauttamalla tätä.',
       todayDate: 'Tänään, {date}',
       todayDateSelected: 'Tänään, {date} valittu',
       year: 'vuosi',
@@ -696,12 +773,19 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
   'fr-FR': {
     back: 'Retour',
     calendar: {
+      dateRange: '{startDate} à {endDate}',
       dateSelected: '{date} sélectionné',
+      finishRangeSelectionPrompt:
+        'Cliquer pour finir de sélectionner la plage de dates',
       maximumDate: 'Dernière date disponible',
       minimumDate: 'Première date disponible',
       month: 'mois',
       next: 'Suivant',
       previous: 'Précédent',
+      selectedDateDescription: 'Date sélectionnée : {date}',
+      selectedRangeDescription: 'Plage sélectionnée : {dateRange}',
+      startRangeSelectionPrompt:
+        'Cliquer pour commencer à sélectionner la plage de dates',
       todayDate: "Aujourd'hui, {date}",
       todayDateSelected: 'Aujourd’hui, {date} sélectionné',
       year: 'année',
@@ -749,12 +833,17 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
   'he-IL': {
     back: 'חזרה',
     calendar: {
+      dateRange: '{startDate} עד {endDate}',
       dateSelected: '{date} נבחר',
+      finishRangeSelectionPrompt: 'חץ כדי לסיים את בחירת טווח התאריכים',
       maximumDate: 'תאריך פנוי אחרון',
       minimumDate: 'תאריך פנוי ראשון',
       month: 'חודש',
       next: 'הבא',
       previous: 'הקודם',
+      selectedDateDescription: 'תאריך נבחר: {date}',
+      selectedRangeDescription: 'טווח נבחר: {dateRange}',
+      startRangeSelectionPrompt: 'לחץ כדי להתחיל בבחירת טווח התאריכים',
       todayDate: 'היום, {date}',
       todayDateSelected: 'היום, {date} נבחר',
       year: 'שנה',
@@ -803,12 +892,19 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
   'hr-HR': {
     back: 'Natrag',
     calendar: {
+      dateRange: '{startDate} do {endDate}',
       dateSelected: '{date} odabran',
+      finishRangeSelectionPrompt:
+        'Kliknite da dovršite raspon odabranih datuma',
       maximumDate: 'Posljednji raspoloživi datum',
       minimumDate: 'Prvi raspoloživi datum',
       month: 'mjesec',
       next: 'Sljedeći',
       previous: 'Prethodni',
+      selectedDateDescription: 'Odabrani datum: {date}',
+      selectedRangeDescription: 'Odabrani raspon: {dateRange}',
+      startRangeSelectionPrompt:
+        'Kliknite da započnete raspon odabranih datuma',
       todayDate: 'Danas, {date}',
       todayDateSelected: 'Danas, odabran {date}',
       year: 'godina',
@@ -857,12 +953,19 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
   'hu-HU': {
     back: 'Vissza',
     calendar: {
+      dateRange: '{startDate}–{endDate}',
       dateSelected: '{date} kiválasztva',
+      finishRangeSelectionPrompt:
+        'Kattintson a dátumtartomány kijelölésének befejezéséhez',
       maximumDate: 'Utolsó elérhető dátum',
       minimumDate: 'Az első elérhető dátum',
       month: 'hónap',
       next: 'Következő',
       previous: 'Előző',
+      selectedDateDescription: 'Kijelölt dátum: {date}',
+      selectedRangeDescription: 'Kijelölt tartomány: {dateRange}',
+      startRangeSelectionPrompt:
+        'Kattintson a dátumtartomány kijelölésének indításához',
       todayDate: 'Ma, {date}',
       todayDateSelected: 'Ma, {date} kijelölve',
       year: 'év',
@@ -909,12 +1012,19 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
   'it-IT': {
     back: 'Indietro',
     calendar: {
+      dateRange: 'Da {startDate} a {endDate}',
       dateSelected: '{date} selezionata',
+      finishRangeSelectionPrompt:
+        'Fai clic per completare la selezione dell’intervallo di date',
       maximumDate: 'Ultima data disponibile',
       minimumDate: 'Prima data disponibile',
       month: 'mese',
       next: 'Successivo',
       previous: 'Precedente',
+      selectedDateDescription: 'Data selezionata: {date}',
+      selectedRangeDescription: 'Intervallo selezionato: {dateRange}',
+      startRangeSelectionPrompt:
+        'Fai clic per selezionare l’intervallo di date',
       todayDate: 'Oggi, {date}',
       todayDateSelected: 'Oggi, {date} selezionata',
       year: 'anno',
@@ -962,12 +1072,17 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
   'ja-JP': {
     back: '戻る',
     calendar: {
+      dateRange: '{startDate} から {endDate}',
       dateSelected: '{date} を選択',
+      finishRangeSelectionPrompt: 'クリックして日付範囲の選択を終了',
       maximumDate: '最終利用可能日',
       minimumDate: '最初の利用可能日',
       month: '月',
       next: '次へ',
       previous: '前へ',
+      selectedDateDescription: '選択した日付 : {date}',
+      selectedRangeDescription: '選択範囲 : {dateRange}',
+      startRangeSelectionPrompt: 'クリックして日付範囲の選択を開始',
       todayDate: '本日、{date}',
       todayDateSelected: '本日、{date} を選択',
       year: '年',
@@ -1014,12 +1129,17 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
   'ko-KR': {
     back: '뒤로',
     calendar: {
+      dateRange: '{startDate} ~ {endDate}',
       dateSelected: '{date} 선택됨',
+      finishRangeSelectionPrompt: '날짜 범위 선택을 완료하려면 클릭하십시오.',
       maximumDate: '마지막으로 사용 가능한 일자',
       minimumDate: '처음으로 사용 가능한 일자',
       month: '월',
       next: '다음',
       previous: '이전',
+      selectedDateDescription: '선택 일자: {date}',
+      selectedRangeDescription: '선택 범위: {dateRange}',
+      startRangeSelectionPrompt: '날짜 범위 선택을 시작하려면 클릭하십시오.',
       todayDate: '오늘, {date}',
       todayDateSelected: '오늘, {date} 선택됨',
       year: '년',
@@ -1066,12 +1186,19 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
   'lt-LT': {
     back: 'Atgal',
     calendar: {
+      dateRange: 'Nuo {startDate} iki {endDate}',
       dateSelected: 'Pasirinkta {date}',
+      finishRangeSelectionPrompt:
+        'Spustelėkite, kad baigtumėte pasirinkti datų intervalą',
       maximumDate: 'Paskutinė galima data',
       minimumDate: 'Pirmoji galima data',
       month: 'mėnuo',
       next: 'Paskesnis',
       previous: 'Ankstesnis',
+      selectedDateDescription: 'Pasirinkta data: {date}',
+      selectedRangeDescription: 'Pasirinktas intervalas: {dateRange}',
+      startRangeSelectionPrompt:
+        'Spustelėkite, kad pradėtumėte pasirinkti datų intervalą',
       todayDate: 'Šiandien, {date}',
       todayDateSelected: 'Šiandien, pasirinkta {date}',
       year: 'metai',
@@ -1121,12 +1248,19 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
   'lv-LV': {
     back: 'Atpakaļ',
     calendar: {
+      dateRange: 'No {startDate} līdz {endDate}',
       dateSelected: 'Atlasīts: {date}',
+      finishRangeSelectionPrompt:
+        'Noklikšķiniet, lai pabeigtu datumu diapazona atlasi',
       maximumDate: 'Pēdējais pieejamais datums',
       minimumDate: 'Pirmais pieejamais datums',
       month: 'mēnesis',
       next: 'Tālāk',
       previous: 'Atpakaļ',
+      selectedDateDescription: 'Atlasītais datums: {date}',
+      selectedRangeDescription: 'Atlasītais diapazons: {dateRange}',
+      startRangeSelectionPrompt:
+        'Noklikšķiniet, lai sāktu datumu diapazona atlasi',
       todayDate: 'Šodien, {date}',
       todayDateSelected: 'Atlasīta šodiena, {date}',
       year: 'gads',
@@ -1175,12 +1309,17 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
   'nb-NO': {
     back: 'Tilbake',
     calendar: {
+      dateRange: '{startDate} til {endDate}',
       dateSelected: '{date} valgt',
+      finishRangeSelectionPrompt: 'Klikk for å fullføre valg av datoområde',
       maximumDate: 'Siste tilgjengelige dato',
       minimumDate: 'Første tilgjengelige dato',
       month: 'måned',
       next: 'Neste',
       previous: 'Forrige',
+      selectedDateDescription: 'Valgt dato: {date}',
+      selectedRangeDescription: 'Valgt område: {dateRange}',
+      startRangeSelectionPrompt: 'Klikk for å starte valg av datoområde',
       todayDate: 'I dag, {date}',
       todayDateSelected: 'I dag, {date} valgt',
       year: 'år',
@@ -1227,12 +1366,18 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
   'nl-NL': {
     back: 'Terug',
     calendar: {
+      dateRange: '{startDate} tot {endDate}',
       dateSelected: '{date} geselecteerd',
+      finishRangeSelectionPrompt:
+        'Klik om de selectie van het datumbereik te voltooien',
       maximumDate: 'Laatste beschikbare datum',
       minimumDate: 'Eerste beschikbare datum',
       month: 'maand',
       next: 'Volgende',
       previous: 'Vorige',
+      selectedDateDescription: 'Geselecteerde datum: {date}',
+      selectedRangeDescription: 'Geselecteerd bereik: {dateRange}',
+      startRangeSelectionPrompt: 'Klik om het datumbereik te selecteren',
       todayDate: 'Vandaag, {date}',
       todayDateSelected: 'Vandaag, {date} geselecteerd',
       year: 'jaar',
@@ -1280,12 +1425,17 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
   'pl-PL': {
     back: 'Wstecz',
     calendar: {
+      dateRange: '{startDate} do {endDate}',
       dateSelected: 'Wybrano {date}',
+      finishRangeSelectionPrompt: 'Kliknij, aby zakończyć wybór zakresu dat',
       maximumDate: 'Ostatnia dostępna data',
       minimumDate: 'Pierwsza dostępna data',
       month: 'miesiąc',
       next: 'Dalej',
       previous: 'Wstecz',
+      selectedDateDescription: 'Wybrana data: {date}',
+      selectedRangeDescription: 'Wybrany zakres: {dateRange}',
+      startRangeSelectionPrompt: 'Kliknij, aby rozpocząć wybór zakresu dat',
       todayDate: 'Dzisiaj, {date}',
       todayDateSelected: 'Dzisiaj wybrano {date}',
       year: 'rok',
@@ -1335,12 +1485,19 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
   'pt-BR': {
     back: 'Voltar',
     calendar: {
+      dateRange: '{startDate} a {endDate}',
       dateSelected: '{date} selecionado',
+      finishRangeSelectionPrompt:
+        'Clique para concluir a seleção do intervalo de datas',
       maximumDate: 'Última data disponível',
       minimumDate: 'Primeira data disponível',
       month: 'mês',
       next: 'Próximo',
       previous: 'Anterior',
+      selectedDateDescription: 'Data selecionada: {date}',
+      selectedRangeDescription: 'Intervalo selecionado: {dateRange}',
+      startRangeSelectionPrompt:
+        'Clique para iniciar a seleção do intervalo de datas',
       todayDate: 'Hoje, {date}',
       todayDateSelected: 'Hoje, {date} selecionado',
       year: 'ano',
@@ -1388,12 +1545,19 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
   'pt-PT': {
     back: 'Voltar',
     calendar: {
+      dateRange: '{startDate} a {endDate}',
       dateSelected: '{date} selecionado',
+      finishRangeSelectionPrompt:
+        'Clique para terminar de selecionar o intervalo de datas',
       maximumDate: 'Última data disponível',
       minimumDate: 'Primeira data disponível',
       month: 'mês',
       next: 'Próximo',
       previous: 'Anterior',
+      selectedDateDescription: 'Data selecionada: {date}',
+      selectedRangeDescription: 'Intervalo selecionado: {dateRange}',
+      startRangeSelectionPrompt:
+        'Clique para começar a selecionar o intervalo de datas',
       todayDate: 'Hoje, {date}',
       todayDateSelected: 'Hoje, {date} selecionado',
       year: 'ano',
@@ -1441,12 +1605,19 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
   'ro-RO': {
     back: 'Înapoi',
     calendar: {
+      dateRange: 'De la {startDate} până la {endDate}',
       dateSelected: '{date} selectată',
+      finishRangeSelectionPrompt:
+        'Apăsaţi pentru a finaliza selecţia razei pentru dată',
       maximumDate: 'Ultima dată disponibilă',
       minimumDate: 'Prima dată disponibilă',
       month: 'lună',
       next: 'Următorul',
       previous: 'Înainte',
+      selectedDateDescription: 'Dată selectată: {date}',
+      selectedRangeDescription: 'Interval selectat: {dateRange}',
+      startRangeSelectionPrompt:
+        'Apăsaţi pentru a începe selecţia razei pentru dată',
       todayDate: 'Astăzi, {date}',
       todayDateSelected: 'Azi, {date} selectată',
       year: 'an',
@@ -1495,12 +1666,18 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
   'ru-RU': {
     back: 'Назад',
     calendar: {
+      dateRange: 'С {startDate} по {endDate}',
       dateSelected: 'Выбрано {date}',
+      finishRangeSelectionPrompt:
+        'Щелкните, чтобы завершить выбор диапазона дат',
       maximumDate: 'Последняя доступная дата',
       minimumDate: 'Первая доступная дата',
       month: 'месяц',
       next: 'Далее',
       previous: 'Назад',
+      selectedDateDescription: 'Выбранная дата: {date}',
+      selectedRangeDescription: 'Выбранный диапазон: {dateRange}',
+      startRangeSelectionPrompt: 'Щелкните, чтобы начать выбор диапазона дат',
       todayDate: 'Сегодня, {date}',
       todayDateSelected: 'Сегодня, выбрано {date}',
       year: 'год',
@@ -1550,12 +1727,17 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
   'sk-SK': {
     back: 'Späť',
     calendar: {
+      dateRange: 'Od {startDate} do {endDate}',
       dateSelected: 'Vybratý dátum {date}',
+      finishRangeSelectionPrompt: 'Kliknutím dokončíte výber rozsahu dátumov',
       maximumDate: 'Posledný dostupný dátum',
       minimumDate: 'Prvý dostupný dátum',
       month: 'mesiac',
       next: 'Nasledujúce',
       previous: 'Predchádzajúce',
+      selectedDateDescription: 'Vybratý dátum: {date}',
+      selectedRangeDescription: 'Vybratý rozsah: {dateRange}',
+      startRangeSelectionPrompt: 'Kliknutím spustíte výber rozsahu dátumov',
       todayDate: 'Dnes {date}',
       todayDateSelected: 'Vybratý dnešný dátum {date}',
       year: 'rok',
@@ -1605,12 +1787,18 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
   'sl-SI': {
     back: 'Nazaj',
     calendar: {
+      dateRange: '{startDate} do {endDate}',
       dateSelected: '{date} izbrano',
+      finishRangeSelectionPrompt:
+        'Kliknite za dokončanje izbire datumskega obsega',
       maximumDate: 'Zadnji razpoložljivi datum',
       minimumDate: 'Prvi razpoložljivi datum',
       month: 'mesec',
       next: 'Naprej',
       previous: 'Nazaj',
+      selectedDateDescription: 'Izbrani datum: {date}',
+      selectedRangeDescription: 'Izbrano območje: {dateRange}',
+      startRangeSelectionPrompt: 'Kliknite za začetek izbire datumskega obsega',
       todayDate: 'Danes, {date}',
       todayDateSelected: 'Danes, {date} izbrano',
       year: 'leto',
@@ -1660,12 +1848,17 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
   'sr-SP': {
     back: 'Nazad',
     calendar: {
+      dateRange: '{startDate} do {endDate}',
       dateSelected: '{date} izabran',
+      finishRangeSelectionPrompt: 'Kliknite da dovršite opseg izabranih datuma',
       maximumDate: 'Zadnji raspoloživi datum',
       minimumDate: 'Prvi raspoloživi datum',
       month: 'месец',
       next: 'Sledeći',
       previous: 'Prethodni',
+      selectedDateDescription: 'Izabrani datum: {date}',
+      selectedRangeDescription: 'Izabrani period: {dateRange}',
+      startRangeSelectionPrompt: 'Kliknite da započnete opseg izabranih datuma',
       todayDate: 'Danas, {date}',
       todayDateSelected: 'Danas, izabran {date}',
       year: 'година',
@@ -1714,12 +1907,18 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
   'sv-SE': {
     back: 'Tillbaka',
     calendar: {
+      dateRange: '{startDate} till {endDate}',
       dateSelected: '{date} har valts',
+      finishRangeSelectionPrompt:
+        'Klicka för att avsluta val av datumintervall',
       maximumDate: 'Sista tillgängliga datum',
       minimumDate: 'Första tillgängliga datum',
       month: 'månad',
       next: 'Nästa',
       previous: 'Föregående',
+      selectedDateDescription: 'Valt datum: {date}',
+      selectedRangeDescription: 'Valt intervall: {dateRange}',
+      startRangeSelectionPrompt: 'Klicka för att välja datumintervall',
       todayDate: 'Idag, {date}',
       todayDateSelected: 'Idag, {date} har valts',
       year: 'år',
@@ -1766,12 +1965,19 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
   'tr-TR': {
     back: 'Geri',
     calendar: {
+      dateRange: '{startDate} - {endDate}',
       dateSelected: '{date} seçildi',
+      finishRangeSelectionPrompt:
+        'Tarih aralığı seçimini tamamlamak için tıklayın',
       maximumDate: 'Son müsait tarih',
       minimumDate: 'İlk müsait tarih',
       month: 'ay',
       next: 'Sonraki',
       previous: 'Önceki',
+      selectedDateDescription: 'Seçilen Tarih: {date}',
+      selectedRangeDescription: 'Seçilen Aralık: {dateRange}',
+      startRangeSelectionPrompt:
+        'Tarih aralığı seçimini başlatmak için tıklayın',
       todayDate: 'Bugün, {date}',
       todayDateSelected: 'Bugün, {date} seçildi',
       year: 'yıl',
@@ -1818,12 +2024,18 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
   'uk-UA': {
     back: 'Назад',
     calendar: {
+      dateRange: '{startDate} — {endDate}',
       dateSelected: 'Вибрано {date}',
+      finishRangeSelectionPrompt:
+        'Натисніть, щоб завершити вибір діапазону дат',
       maximumDate: 'Остання доступна дата',
       minimumDate: 'Перша доступна дата',
       month: 'місяць',
       next: 'Наступний',
       previous: 'Попередній',
+      selectedDateDescription: 'Вибрана дата: {date}',
+      selectedRangeDescription: 'Вибраний діапазон: {dateRange}',
+      startRangeSelectionPrompt: 'Натисніть, щоб почати вибір діапазону дат',
       todayDate: 'Сьогодні, {date}',
       todayDateSelected: 'Сьогодні, вибрано {date}',
       year: 'рік',
@@ -1873,12 +2085,17 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
   'zh-CN': {
     back: '返回',
     calendar: {
+      dateRange: '{startDate} 至 {endDate}',
       dateSelected: '已选择 {date}',
+      finishRangeSelectionPrompt: '单击以完成选择日期范围',
       maximumDate: '最后一个可用日期',
       minimumDate: '第一个可用日期',
       month: '月',
       next: '下一页',
       previous: '上一页',
+      selectedDateDescription: '选定的日期：{date}',
+      selectedRangeDescription: '选定的范围：{dateRange}',
+      startRangeSelectionPrompt: '单击以开始选择日期范围',
       todayDate: '今天，即 {date}',
       todayDateSelected: '已选择今天，即 {date}',
       year: '年',
@@ -1925,12 +2142,17 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
   'zh-TW': {
     back: '返回',
     calendar: {
+      dateRange: '{startDate} 至 {endDate}',
       dateSelected: '已選取 {date}',
+      finishRangeSelectionPrompt: '按一下以完成選取日期範圍',
       maximumDate: '最後一個可用日期',
       minimumDate: '第一個可用日期',
       month: '月',
       next: '下一頁',
       previous: '上一頁',
+      selectedDateDescription: '選定的日期：{date}',
+      selectedRangeDescription: '選定的範圍：{dateRange}',
+      startRangeSelectionPrompt: '按一下以開始選取日期範圍',
       todayDate: '今天，{date}',
       todayDateSelected: '已選取今天，{date}',
       year: '年',
