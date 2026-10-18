@@ -27,6 +27,7 @@ import { isFileDropItem } from '../../drop'
 import { withOpacity } from '../../theme/color'
 import { scopeFor } from '../../theme/scope'
 import { Button } from '../button'
+import { Chip } from '../chip'
 import { IconButton } from '../icon-button'
 
 type Asset = {
@@ -741,6 +742,19 @@ describe('FileTrigger', () => {
       multiple: true,
       type: [...IMAGES],
     })
+  })
+
+  it('opens the chooser from a chip it wraps', async () => {
+    await render(
+      <FileTrigger>
+        <Chip variant="assist">Label</Chip>
+      </FileTrigger>,
+    )
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Label' }))
+    await settle()
+
+    expect(mockGetDocument).toHaveBeenCalledTimes(1)
   })
 
   it('takes one file of any type unless told otherwise', async () => {

@@ -5,6 +5,7 @@ import { StyleSheet, View } from 'react-native'
 import { Menu } from '.'
 import { PersonGlyph, PlusGlyph } from '../../glyphs'
 import { Button } from '../button'
+import { Chip } from '../chip'
 
 // Hoisted so neither the keys nor the slots are new values on every render,
 // which is what react-perf's array and JSX rules are after.
@@ -33,6 +34,24 @@ const meta = {
 } satisfies Meta<typeof Menu>
 
 type Story = StoryObj<typeof meta>
+
+// An assist chip opening a menu of choices, as a chip that picks a value
+// does: the chip says the menu is open, and the menu is placed below it,
+// lined up with its start, with the current choice selected.
+const ChipTrigger: Story = {
+  render: (args) => (
+    <View style={styles.frame}>
+      <Menu {...args} defaultOpen>
+        <Chip variant="assist">Label</Chip>
+        <Menu.Content defaultSelectedKeys={SECOND} selectionMode="single">
+          <Menu.Item id="first">First item</Menu.Item>
+          <Menu.Item id="second">Second item</Menu.Item>
+          <Menu.Item id="third">Third item</Menu.Item>
+        </Menu.Content>
+      </Menu>
+    </View>
+  ),
+}
 
 // Open on load, since a closed menu draws nothing but its trigger. Below the
 // button that opened it, lined up with its start, with a rule between the
@@ -180,6 +199,7 @@ const WithLink: Story = {
 }
 
 export {
+  ChipTrigger,
   Default,
   Leading,
   Loading,

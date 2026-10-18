@@ -33,6 +33,7 @@ import { PlusGlyph } from '../../glyphs'
 import { ThemeScope } from '../../theme-scope'
 import { scopeFor } from '../../theme/scope'
 import { Button } from '../button'
+import { Chip } from '../chip'
 import { Fab } from '../fab'
 import { IconButton } from '../icon-button'
 import { Popover } from '../popover'
@@ -584,12 +585,79 @@ describe('Tooltip', () => {
           {PLUS}
         </Fab>,
       ],
+      [
+        'a Chip',
+        <Chip accessibilityHint="Own hint" key="trigger" testID="trigger">
+          Label
+        </Chip>,
+      ],
     ])("keeps a hint of %s's own", async (_, button) => {
       await render(
         withScope(<Tooltip label="Supporting text">{button}</Tooltip>),
       )
 
       expect(hint()).toBe('Own hint')
+    })
+
+    it('describes a Chip, opening on a pointer resting on it and closing on its press', async () => {
+      const onOpenChange = jest.fn()
+      await render(
+        withScope(
+          <Tooltip
+            delay={100}
+            label="Supporting text"
+            onOpenChange={onOpenChange}
+          >
+            <Chip testID="trigger" variant="assist">
+              Label
+            </Chip>
+          </Tooltip>,
+        ),
+      )
+
+      expect(hint()).toBe('Supporting text')
+
+      await fireEvent(trigger(), 'hoverIn')
+      await advance(100)
+      await fireEvent(trigger(), 'pressIn', PRESS)
+
+      expect(onOpenChange.mock.calls).toEqual([[true], [false]])
+    })
+
+    it("closes a Chip's tooltip once the pointer leaves it, and once a held press ends", async () => {
+      const onOpenChange = jest.fn()
+      await render(
+        withScope(
+          <Tooltip
+            closeDelay={100}
+            delay={100}
+            label="Supporting text"
+            onOpenChange={onOpenChange}
+          >
+            <Chip testID="trigger" variant="assist">
+              Label
+            </Chip>
+          </Tooltip>,
+        ),
+      )
+
+      await fireEvent(trigger(), 'hoverIn')
+      await advance(100)
+      await fireEvent(trigger(), 'hoverOut')
+      await advance(100)
+
+      expect(onOpenChange.mock.calls).toEqual([[true], [false]])
+
+      await fireEvent(trigger(), 'longPress')
+      await fireEvent(trigger(), 'pressOut')
+      await advance(100)
+
+      expect(onOpenChange.mock.calls).toEqual([
+        [true],
+        [false],
+        [true],
+        [false],
+      ])
     })
 
     it('gives no hint while disabled', async () => {

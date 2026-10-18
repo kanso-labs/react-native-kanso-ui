@@ -1,4 +1,4 @@
-import type { ComponentRef } from 'react'
+import type { ComponentRef, ReactElement } from 'react'
 import type { StyleProp, TextStyle, ViewStyle } from 'react-native'
 import type { TestInstance, TestNode } from 'test-renderer'
 
@@ -10,7 +10,13 @@ import {
   it,
   jest,
 } from '@jest/globals'
-import { act, fireEvent, render, screen } from '@testing-library/react-native'
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  userEvent,
+} from '@testing-library/react-native'
 import { createRef } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 import { getAnimatedStyle } from 'react-native-reanimated'
@@ -19,8 +25,12 @@ import type { ChipProps } from '.'
 
 import { Chip } from '.'
 import { useIconStyle } from '../../glyphs/icon-style'
+import { ThemeScope } from '../../theme-scope'
 import { withOpacity } from '../../theme/color'
 import { scopeFor } from '../../theme/scope'
+import { Dialog } from '../dialog'
+import { Popover } from '../popover'
+import { Sheet } from '../sheet'
 
 // What the next chip the device draws is told about reduced motion.
 let mockReducedMotion = false
@@ -365,6 +375,62 @@ describe('Chip', () => {
     )
 
     expect(screen.getByRole('button', { name: 'Name' })).toBe(chip())
+  })
+})
+
+describe('the trigger', () => {
+  it.each([
+    [
+      'Dialog',
+      (trigger: ReactElement) => (
+        <Dialog>
+          {trigger}
+          <Dialog.Content testID="panel">
+            <Dialog.Body>Supporting text</Dialog.Body>
+          </Dialog.Content>
+        </Dialog>
+      ),
+    ],
+    [
+      'Popover',
+      (trigger: ReactElement) => (
+        <Popover>
+          {trigger}
+          <Popover.Content testID="panel">
+            <Popover.Title>Headline</Popover.Title>
+          </Popover.Content>
+        </Popover>
+      ),
+    ],
+    [
+      'Sheet',
+      (trigger: ReactElement) => (
+        <Sheet>
+          {trigger}
+          <Sheet.Content testID="panel">
+            <Sheet.Body>Supporting text</Sheet.Body>
+          </Sheet.Content>
+        </Sheet>
+      ),
+    ],
+  ])('opens the %s it is placed in, as a Button does', async (_, around) => {
+    const onPress = jest.fn()
+    await render(
+      <ThemeScope>
+        {around(
+          <Chip onPress={onPress} variant="assist">
+            Label
+          </Chip>,
+        )}
+      </ThemeScope>,
+    )
+
+    expect(screen.queryByTestId('panel')).toBe(null)
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Label' }))
+
+    expect(onPress).toHaveBeenCalledTimes(1)
+    expect(screen.getByTestId('panel')).toBeTruthy()
   })
 })
 
@@ -810,17 +876,62 @@ describe('the press feedback', () => {
 
   it('calls the handlers it takes over', async () => {
     const onHoverIn = jest.fn()
+    const onHoverOut = jest.fn()
+    const onLongPress = jest.fn()
     const onPressIn = jest.fn()
+    const onPressOut = jest.fn()
     await render(
-      <Chip onHoverIn={onHoverIn} onPressIn={onPressIn} testID="chip">
+      <Chip
+        onHoverIn={onHoverIn}
+        onHoverOut={onHoverOut}
+        onLongPress={onLongPress}
+        onPressIn={onPressIn}
+        onPressOut={onPressOut}
+        testID="chip"
+      >
         Label
       </Chip>,
     )
 
     await fireEvent(chip(), 'hoverIn', {})
+    await fireEvent(chip(), 'hoverOut', {})
     await fireEvent(chip(), 'pressIn', PRESS)
+    await fireEvent(chip(), 'longPress')
+    await fireEvent(chip(), 'pressOut', PRESS)
 
     expect(onHoverIn).toHaveBeenCalledTimes(1)
+    expect(onHoverOut).toHaveBeenCalledTimes(1)
+    expect(onLongPress).toHaveBeenCalledTimes(1)
     expect(onPressIn).toHaveBeenCalledTimes(1)
+    expect(onPressOut).toHaveBeenCalledTimes(1)
+  })
+
+  it('keeps its own hint and long press delay', async () => {
+    const user = userEvent.setup({
+      advanceTimers: (delay) => {
+        jest.advanceTimersByTime(delay)
+      },
+    })
+    const onLongPress = jest.fn()
+    await render(
+      <Chip
+        accessibilityHint="Own hint"
+        delayLongPress={800}
+        onLongPress={onLongPress}
+        testID="chip"
+      >
+        Label
+      </Chip>,
+    )
+
+    expect(chip().props.accessibilityHint).toBe('Own hint')
+
+    await user.longPress(chip(), { duration: 700 })
+
+    expect(onLongPress).not.toHaveBeenCalled()
+
+    await user.longPress(chip(), { duration: 800 })
+
+    expect(onLongPress).toHaveBeenCalledTimes(1)
   })
 })

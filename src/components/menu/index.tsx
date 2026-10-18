@@ -79,9 +79,10 @@ import { Separator } from '../separator'
 // for a reader who cannot tell the two apart.
 //
 // Six parts, as on web: `Menu.Content`, `Menu.Item`, `Menu.Section`,
-// `Menu.Separator`, `Menu.Submenu` and `Menu.LoadMore`. A `Button` or
-// `IconButton` placed directly inside `Menu` is its trigger, wired through
-// the button's slots as Popover's is.
+// `Menu.Separator`, `Menu.Submenu` and `Menu.LoadMore`. A `Button`,
+// `IconButton` or `Chip` placed directly inside `Menu` is its trigger, wired
+// through the button's slots as Popover's is, so an assist chip opens a menu
+// of choices as it does on web.
 //
 // **A menu's children are a collection**, built by React Stately's tree
 // state as React Aria builds web's: each part hands the collection an entry
@@ -456,9 +457,9 @@ const LevelContext = createContext<MenuLevel | null>(null)
  * </Menu>
  * ```
  *
- * A `Button` or `IconButton` placed directly inside `Menu` is its trigger,
- * and a press on it toggles the menu. Everything the menu shows goes in
- * `Menu.Content`, since the trigger lives in the screen while the menu is
+ * A `Button`, `IconButton` or `Chip` placed directly inside `Menu` is its
+ * trigger, and a press on it toggles the menu. Everything the menu shows goes
+ * in `Menu.Content`, since the trigger lives in the screen while the menu is
  * drawn above it.
  */
 function Menu({
