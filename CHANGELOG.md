@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.11.1](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.11.0...v0.11.1) (2026-10-19)
+
+
+### Dependencies
+
+* update commitlint to v21.2.4 ([#253](https://github.com/kanso-labs/react-native-kanso-ui/issues/253)) ([3158e46](https://github.com/kanso-labs/react-native-kanso-ui/commit/3158e4607ce9d5ac8a50817688b0e9a6cbce16cd))
+* update dependency @kanso-labs/kanso-ui to v0.43.7 ([#254](https://github.com/kanso-labs/react-native-kanso-ui/issues/254)) ([6beeea6](https://github.com/kanso-labs/react-native-kanso-ui/commit/6beeea6fe0bd0af09385fca40918a2b4db1ad457))
+* update dependency expo to v58.0.16 ([#256](https://github.com/kanso-labs/react-native-kanso-ui/issues/256)) ([cf27b35](https://github.com/kanso-labs/react-native-kanso-ui/commit/cf27b35ed5592f5d26371031cdc83071fe9bef51))
+* update dependency oxfmt to v0.74.0 ([#257](https://github.com/kanso-labs/react-native-kanso-ui/issues/257)) ([04666fe](https://github.com/kanso-labs/react-native-kanso-ui/commit/04666fedc10e44887f5144ae65052bb7b87a6e0b))
+* update dependency typescript-eslint to v8.72.0 ([#258](https://github.com/kanso-labs/react-native-kanso-ui/issues/258)) ([b66e016](https://github.com/kanso-labs/react-native-kanso-ui/commit/b66e016aa7d348fc7c5a7f4decf4efc79e39b808))
+
 ## [0.11.0](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.10.0...v0.11.0) (2026-10-18)
 
 
