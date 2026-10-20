@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.11.2](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.11.1...v0.11.2) (2026-10-20)
+
+
+### Dependencies
+
+* update dependency @kanso-labs/unplugin-style-dictionary to v0.10.35 ([#255](https://github.com/kanso-labs/react-native-kanso-ui/issues/255)) ([22ca629](https://github.com/kanso-labs/react-native-kanso-ui/commit/22ca629093e220df6d94b3566d92f0a6e3146cfe))
+* update dependency @kanso-labs/unplugin-style-dictionary to v0.10.36 ([#263](https://github.com/kanso-labs/react-native-kanso-ui/issues/263)) ([311e186](https://github.com/kanso-labs/react-native-kanso-ui/commit/311e186f5a04a928064e276e6e2ba5c7dd066be8))
+* update dependency eslint-plugin-perfectionist to v5.13.0 ([#262](https://github.com/kanso-labs/react-native-kanso-ui/issues/262)) ([6c3df53](https://github.com/kanso-labs/react-native-kanso-ui/commit/6c3df53696451d4cb9970dad5cdd71cc787dfde3))
+* update oxlint to v1.89.0 ([#259](https://github.com/kanso-labs/react-native-kanso-ui/issues/259)) ([ef76053](https://github.com/kanso-labs/react-native-kanso-ui/commit/ef76053a0e38dff6b64344233765db39614ce467))
+* update storybook to v10.6.3 ([#264](https://github.com/kanso-labs/react-native-kanso-ui/issues/264)) ([180b910](https://github.com/kanso-labs/react-native-kanso-ui/commit/180b9107a6e24d2da506fc0b53248af5cc6895cd))
+
 ## [0.11.1](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.11.0...v0.11.1) (2026-10-19)
 
 
