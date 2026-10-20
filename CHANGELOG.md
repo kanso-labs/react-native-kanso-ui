@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.11.3](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.11.2...v0.11.3) (2026-10-20)
+
+
+### Dependencies
+
+* update dependency @kanso-labs/kanso-ui to v0.44.0 ([#266](https://github.com/kanso-labs/react-native-kanso-ui/issues/266)) ([0d91b76](https://github.com/kanso-labs/react-native-kanso-ui/commit/0d91b769b105748c8b82331a5a4c31fa054b56a9))
+* update storybook to v10.6.3 ([#265](https://github.com/kanso-labs/react-native-kanso-ui/issues/265)) ([2c3c738](https://github.com/kanso-labs/react-native-kanso-ui/commit/2c3c738121e831c5f3d41e2cd577866563939089))
+
 ## [0.11.2](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.11.1...v0.11.2) (2026-10-20)
 
 
