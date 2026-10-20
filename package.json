@@ -79,7 +79,7 @@
     "babel-plugin-react-compiler": "1.0.0",
     "eslint": "10.13.0",
     "eslint-plugin-oxlint": "1.89.0",
-    "eslint-plugin-perfectionist": "5.12.1",
+    "eslint-plugin-perfectionist": "5.13.0",
     "eslint-plugin-react-hooks": "7.1.1",
     "globals": "17.13.0",
     "husky": "9.1.7",
