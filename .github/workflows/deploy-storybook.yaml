@@ -53,12 +53,9 @@ jobs:
         with:
           ignore-scripts: true
 
-      # The web Storybook writes the token defaults it imports itself, through
-      # the Style Dictionary plugin in .storybook/main.ts, so nothing runs
-      # tokens:build first. No base path is set: Storybook's output references
-      # every asset relatively, so one artifact serves from a custom domain's
-      # root and from the /react-native-kanso-ui/ subpath Pages uses without
-      # one.
+      # No base path is set: Storybook's output references every asset
+      # relatively, so one artifact serves from a custom domain's root and from
+      # the /react-native-kanso-ui/ subpath Pages uses without one.
       - name: Run Storybook build
         run: npm run build-storybook
 

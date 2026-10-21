@@ -51,7 +51,7 @@
       "matchPackageNames": ["eslint-plugin-oxlint", "oxlint"]
     },
     {
-      "description": "react-native peers @react-native/jest-preset at its own exact version and react from the release it was built against, react-dom peers react at its own version, and Reanimated and worklets each peer a span of React Native minors, Reanimated a worklets minor besides, so they move as one pull request or not at all. react-dom is here only to satisfy @kanso-labs/kanso-ui's peer.",
+      "description": "react-native peers @react-native/jest-preset at its own exact version and react from the release it was built against, react-dom peers react at its own version, and Reanimated and worklets each peer a span of React Native minors, Reanimated a worklets minor besides, so they move as one pull request or not at all. react-dom is here because react-native-web and Storybook peer it.",
       "groupName": "react-native",
       "matchPackageNames": [
         "@react-native/**",

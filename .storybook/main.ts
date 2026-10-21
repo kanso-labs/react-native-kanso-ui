@@ -1,13 +1,7 @@
 import type { StorybookConfig } from '@storybook/react-native-web-vite'
 
-import styleDictionary from '@kanso-labs/unplugin-style-dictionary/vite'
 import path from 'node:path'
 import { mergeConfig } from 'vite'
-
-import {
-  registerFormats,
-  styleDictionaryConfig,
-} from '../scripts/build-tokens.mjs'
 
 // The web Storybook: the library rendered by React Native Web, which is what
 // the published Storybook, the a11y checks and Chromatic all read. It is a
@@ -67,19 +61,7 @@ const config: StorybookConfig = {
   viteFinal: (vite) =>
     mergeConfig(vite, {
       optimizeDeps: { rolldownOptions: { plugins: [svgSoundModule] } },
-      plugins: [
-        svgSoundModule,
-        // src/tokens/defaults.ts is generated and not committed, so the
-        // running Storybook writes it on start and again whenever the token
-        // source changes, which a bump of @kanso-labs/kanso-ui does. The
-        // configuration is the one `npm run tokens:build` runs.
-        styleDictionary({
-          config: () => {
-            registerFormats()
-            return styleDictionaryConfig
-          },
-        }),
-      ],
+      plugins: [svgSoundModule],
       resolve: {
         alias: [
           // React Native SVG's web renderer reads its assets through

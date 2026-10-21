@@ -56,8 +56,8 @@ type ThemeProperties = Readonly<Partial<Record<`--kui-${string}`, string>>>
 
 type Value = Easing | number | readonly string[] | string
 
-// The segment each group takes in a property's name, as kanso-ui's
-// build-tokens.mjs writes it: singular where the group's own name is plural.
+// The segment each group takes in a property's name, as kanso-ui-core's
+// tokens.css writes it: singular where the group's own name is plural.
 const CATEGORIES: readonly (readonly [string, Group])[] = [
   ['color', 'colors'],
   ['motion', 'motion'],

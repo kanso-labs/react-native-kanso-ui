@@ -2,10 +2,25 @@ import { codecovRollupPlugin } from '@codecov/rollup-plugin'
 import babel from '@rolldown/plugin-babel'
 import { defineConfig } from 'tsdown'
 
+// Where an unbundled build would put a module of @kanso-labs/kanso-ui-core.
+const CORE_MODULES = 'node_modules/@kanso-labs/kanso-ui-core/dist/'
+
 export default defineConfig({
   dts: true,
   entry: ['src/index.ts'],
   format: ['esm'],
+  // The token defaults come from @kanso-labs/kanso-ui-core, a devDependency
+  // no app installs, so the build writes its modules into dist. Unbundled, a
+  // module from node_modules keeps its path, and `dist/kanso-ui-core/` is the
+  // same file under a path that reads as this package's own rather than as a
+  // dependency nested inside it — the name kanso-ui gives the same modules.
+  outputOptions: (options) => ({
+    ...options,
+    entryFileNames: (chunk) =>
+      chunk.name.startsWith(CORE_MODULES)
+        ? `kanso-ui-core/${chunk.name.slice(CORE_MODULES.length)}.js`
+        : '[name].js',
+  }),
   platform: 'neutral',
   plugins: [
     // The library ships compiled by the React Compiler, because Expo and the
