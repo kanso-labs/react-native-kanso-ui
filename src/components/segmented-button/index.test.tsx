@@ -10,6 +10,7 @@ import {
   it,
   jest,
 } from '@jest/globals'
+import { checkPath } from '@kanso-labs/kanso-ui-core/glyphs'
 import { act, fireEvent, render, screen } from '@testing-library/react-native'
 import { createRef, useState } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
@@ -49,9 +50,6 @@ const DISABLED_CONTENT = withOpacity(
 const GLYPH = 18
 const RESERVE = GLYPH + spacing.sm
 const GIVE = spacing.md - spacing.sm
-
-// kanso-ui's path, copied rather than read from the glyph under test.
-const CHECK = 'M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'
 
 const FIRST = ['first']
 const SECOND = ['second']
@@ -638,7 +636,7 @@ describe('SegmentedButton', () => {
         </SegmentedButton>,
       )
 
-      expect(glyphOf('First item')).toBe(CHECK)
+      expect(glyphOf('First item')).toBe(checkPath)
       expect(glyphOf('Second item')).toBe(
         `${colors.onSurface} ${String(GLYPH)}`,
       )
@@ -650,7 +648,7 @@ describe('SegmentedButton', () => {
       await fireEvent.press(segment('Third item'), PRESS)
 
       expect(glyphOf('First item')).toBeUndefined()
-      expect(glyphOf('Third item')).toBe(CHECK)
+      expect(glyphOf('Third item')).toBe(checkPath)
     })
 
     it('keeps the icon of a chosen segment when the check is off', async () => {

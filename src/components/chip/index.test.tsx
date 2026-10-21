@@ -10,6 +10,7 @@ import {
   it,
   jest,
 } from '@jest/globals'
+import { checkPath } from '@kanso-labs/kanso-ui-core/glyphs'
 import {
   act,
   fireEvent,
@@ -66,9 +67,6 @@ const DISABLED_CONTENT = withOpacity(
 // and the outline variant at no opacity.
 const NO_FILL = withOpacity(colors.secondaryContainer, 0)
 const NO_RULE = withOpacity(colors.outlineVariant, 0)
-
-// kanso-ui's path, copied rather than read from the glyph under test.
-const CHECK = 'M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'
 
 const CALL_SITE = { marginTop: 4 }
 
@@ -500,7 +498,7 @@ describe('the filter chip', () => {
 
     await fireEvent.press(chip())
 
-    expect(pathsIn(glyph())).toEqual([CHECK])
+    expect(pathsIn(glyph())).toEqual([checkPath])
   })
 
   it('draws the check in place of its icon, in the label colour', async () => {
@@ -511,7 +509,7 @@ describe('the filter chip', () => {
     )
 
     expect(screen.queryByTestId('icon')).toBeNull()
-    expect(pathsIn(glyph())).toEqual([CHECK])
+    expect(pathsIn(glyph())).toEqual([checkPath])
     const check = child(glyph().children.at(0))
     expect(check.props).toMatchObject({
       color: colors.onSecondaryContainer,

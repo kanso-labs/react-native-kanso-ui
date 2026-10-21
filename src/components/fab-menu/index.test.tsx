@@ -17,6 +17,7 @@ import {
   it,
   jest,
 } from '@jest/globals'
+import { closePath } from '@kanso-labs/kanso-ui-core/glyphs'
 import { act, fireEvent, render, screen } from '@testing-library/react-native'
 import { createRef } from 'react'
 import {
@@ -77,10 +78,6 @@ const LAYER: Frame = [0, 0, 400, 800]
 let fabFrame: Frame = [328, 728, 56, 56]
 
 const BACK_PRESS = { timeStamp: 0, type: 'hardwareBackPress' }
-
-// The path the close mark draws.
-const CLOSE =
-  'M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z'
 
 // A press with no point on the page, on a control that measures nothing, so
 // the ripple waits and the press is all a case sees.
@@ -159,7 +156,7 @@ function closeMark() {
     (node) =>
       node.type === 'RNSVGSvgView' &&
       node.queryAll(
-        (path) => path.type === 'RNSVGPath' && path.props.d === CLOSE,
+        (path) => path.type === 'RNSVGPath' && path.props.d === closePath,
       ).length > 0,
   )
 

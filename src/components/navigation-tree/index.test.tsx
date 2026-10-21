@@ -4,6 +4,7 @@ import type { Key } from 'react-stately'
 import type { TestInstance, TestNode } from 'test-renderer'
 
 import { afterEach, describe, expect, it, jest } from '@jest/globals'
+import { chevronEndPath } from '@kanso-labs/kanso-ui-core/glyphs'
 import { fireEvent, render, screen } from '@testing-library/react-native'
 import { createRef } from 'react'
 import { FlatList, Linking, Platform, StyleSheet, Text } from 'react-native'
@@ -23,9 +24,6 @@ const { colors, radii, sizing, spacing, stateLayerOpacity, typography } = theme
 const FADED = withOpacity(colors.onSurface, stateLayerOpacity.disabledContent)
 const BOLD = nativeWeight(typography.weightBold)
 const OS = Platform.OS
-
-// kanso-ui's chevron glyph, copied rather than read from the glyph under test.
-const CHEVRON = 'M10 6 8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z'
 
 // A press with no point on the page, on a row that measures nothing, so the
 // ripple waits and the press is all a case sees.
@@ -98,7 +96,8 @@ function chevronIn(element: TestInstance) {
         typeof node.props.onClick === 'function' &&
         node
           .queryAll(
-            (each) => each.type === 'RNSVGPath' && each.props.d === CHEVRON,
+            (each) =>
+              each.type === 'RNSVGPath' && each.props.d === chevronEndPath,
           )
           .at(0) !== undefined,
     )

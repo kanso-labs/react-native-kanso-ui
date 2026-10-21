@@ -18,6 +18,7 @@ import {
   it,
   jest,
 } from '@jest/globals'
+import { checkPath, chevronEndPath } from '@kanso-labs/kanso-ui-core/glyphs'
 import { act, fireEvent, render, screen } from '@testing-library/react-native'
 import {
   AccessibilityInfo,
@@ -79,11 +80,6 @@ const FRAMES: Readonly<Record<string, Frame>> = {
   trigger: [100, 300, 40, 40],
 }
 const LAYER: Frame = [0, 0, 400, 800]
-
-// The paths the check and the chevron draw, which is how a test tells the
-// two glyphs apart in what the renderer holds.
-const CHECK = 'M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'
-const CHEVRON = 'M10 6 8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z'
 
 // Hoisted so no prop below is a new value on every render, which is what
 // react-perf's array, object and JSX rules are after.
@@ -775,8 +771,8 @@ describe('Menu', () => {
       expect(textStyleOf(screen.getByText('First item')).color).toBe(
         colors.onTertiaryContainer,
       )
-      expect(glyphsOf(CHECK)).toHaveLength(1)
-      expect(glyphsOf(CHECK, screen.getByTestId('first'))).toHaveLength(1)
+      expect(glyphsOf(checkPath)).toHaveLength(1)
+      expect(glyphsOf(checkPath, screen.getByTestId('first'))).toHaveLength(1)
     })
 
     it('draws the check in place of the leading content', async () => {
@@ -804,7 +800,7 @@ describe('Menu', () => {
       expect(
         screen.getByTestId('other', { includeHiddenElements: true }),
       ).toBeTruthy()
-      expect(glyphsOf(CHECK)).toHaveLength(1)
+      expect(glyphsOf(checkPath)).toHaveLength(1)
     })
   })
 
@@ -950,8 +946,8 @@ describe('Menu', () => {
     it('draws the chevron on its item only', async () => {
       await renderSubmenu({ defaultOpen: true })
 
-      expect(glyphsOf(CHEVRON)).toHaveLength(1)
-      expect(glyphsOf(CHEVRON, item('Send to'))).toHaveLength(1)
+      expect(glyphsOf(chevronEndPath)).toHaveLength(1)
+      expect(glyphsOf(chevronEndPath, item('Send to'))).toHaveLength(1)
     })
   })
 

@@ -10,6 +10,7 @@ import {
   it,
   jest,
 } from '@jest/globals'
+import { checkPath, closePath } from '@kanso-labs/kanso-ui-core/glyphs'
 import { act, fireEvent, render, screen } from '@testing-library/react-native'
 import { createRef, useState } from 'react'
 import { Platform, StyleSheet, Text, View } from 'react-native'
@@ -30,11 +31,6 @@ const DISABLED_CONTENT = withOpacity(
   colors.onSurface,
   stateLayerOpacity.disabledContent,
 )
-
-// kanso-ui's paths, copied rather than read from the glyphs under test.
-const CHECK = 'M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'
-const CLOSE =
-  'M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z'
 
 const SECOND = ['second']
 const FIRST_AND_THIRD = ['first', 'third']
@@ -641,12 +637,12 @@ describe('ChipGroup', () => {
         <Group defaultSelectedKeys={SECOND} selectionMode="single" />,
       )
 
-      expect(pathsIn(child(glyphOf('Second item')))).toEqual([CHECK])
+      expect(pathsIn(child(glyphOf('Second item')))).toEqual([checkPath])
       expect(glyphOf('First item')).toBeUndefined()
 
       await fireEvent.press(chip('First item'), PRESS)
 
-      expect(pathsIn(child(glyphOf('First item')))).toEqual([CHECK])
+      expect(pathsIn(child(glyphOf('First item')))).toEqual([checkPath])
       expect(glyphOf('Second item')).toBeUndefined()
     })
 
@@ -670,7 +666,7 @@ describe('ChipGroup', () => {
       expect(screen.getByTestId('icon')).toHaveTextContent(
         `${colors.primary} 18`,
       )
-      expect(pathsIn(child(glyphOf('Second item')))).toEqual([CHECK])
+      expect(pathsIn(child(glyphOf('Second item')))).toEqual([checkPath])
     })
 
     it('draws the page pill, and its label in label-large on one line', async () => {
@@ -743,7 +739,7 @@ describe('ChipGroup', () => {
       )
 
       const glyph = child(closeOf('First item').children.at(1))
-      expect(pathsIn(glyph)).toEqual([CLOSE])
+      expect(pathsIn(glyph)).toEqual([closePath])
       expect(glyph.props).toMatchObject({ height: 18, width: 18 })
       expect(glyph.props.color).toBe(colors.onSurfaceVariant)
       expect(child(closeOf('Second item').children.at(1)).props.color).toBe(
