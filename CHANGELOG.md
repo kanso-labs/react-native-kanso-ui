@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.11.4](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.11.3...v0.11.4) (2026-10-21)
+
+
+### Dependencies
+
+* update dependency @kanso-labs/kanso-ui to v0.44.1 ([#268](https://github.com/kanso-labs/react-native-kanso-ui/issues/268)) ([4702e74](https://github.com/kanso-labs/react-native-kanso-ui/commit/4702e7467cd1232dc8e477ef000ca1ff6882a010))
+* update dependency vite to v8.3.5 ([#270](https://github.com/kanso-labs/react-native-kanso-ui/issues/270)) ([a707028](https://github.com/kanso-labs/react-native-kanso-ui/commit/a7070282679f843bc5fd09263260f4fbf0b5cc7a))
+
 ## [0.11.3](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.11.2...v0.11.3) (2026-10-20)
 
 
