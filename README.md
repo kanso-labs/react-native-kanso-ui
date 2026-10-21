@@ -1,5 +1,7 @@
 # react-native-kanso-ui
 
+[![npm version][npm-version-shield]][npm]
+[![npm downloads][npm-downloads-shield]][npm]
 [![License][license-shield]][license] [![Build][build-shield]][build-workflow]
 [![Test][test-shield]][test-workflow] [![Coverage][coverage-shield]][codecov]
 
@@ -11,7 +13,14 @@ A theme is the web library's: a set of `--kui-*` custom properties with values
 in CSS syntax, as kanso-ui's `tokens.css` declares them, so one theme object
 serves a web app and a native app alike.
 
-The package has not been released yet.
+## Installation
+
+```bash
+npm install @kanso-labs/react-native-kanso-ui
+```
+
+It needs a handful of React Native libraries beside it, listed under
+[Peer dependencies](#peer-dependencies).
 
 ## Theming
 
@@ -240,6 +249,11 @@ pages, which each render in their own.
 [license]: ./LICENSE.md
 [license-shield]:
   https://img.shields.io/github/license/kanso-labs/react-native-kanso-ui
+[npm]: https://www.npmjs.com/package/@kanso-labs/react-native-kanso-ui
+[npm-downloads-shield]:
+  https://img.shields.io/npm/dm/@kanso-labs/react-native-kanso-ui
+[npm-version-shield]:
+  https://img.shields.io/npm/v/@kanso-labs/react-native-kanso-ui
 [test-shield]:
   https://img.shields.io/github/actions/workflow/status/kanso-labs/react-native-kanso-ui/test.yaml?branch=main&label=Test
 [test-workflow]:
