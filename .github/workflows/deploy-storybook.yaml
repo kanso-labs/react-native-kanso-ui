@@ -49,7 +49,7 @@ jobs:
 
       # Skips the prepare script, which only installs husky's git hooks.
       - name: Set up Node
-        uses: kanso-labs/actions/setup-node@v4.3.0
+        uses: kanso-labs/actions/setup-node@v4.3.1
         with:
           ignore-scripts: true
 
