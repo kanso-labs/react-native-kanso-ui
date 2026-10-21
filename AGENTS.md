@@ -24,28 +24,25 @@ default and is listed by name among the resolver's problems rather than dropped.
 
 **No token value is written by hand here.** The
 [Kanso UI design system artifact](https://claude.ai/artifact/TJSpYMBeBEMx1agnDVuZdv)
-is the design system's source of truth, and kanso-ui's
-`src/tokens/design.tokens.json` is the copy every package builds from: a daily
-routine in kanso-ui opens a pull request carrying what was edited in the
-artifact, and kanso-ui publishes the file as `@kanso-labs/kanso-ui/tokens.json`.
-That export is the only place this repository takes a token value from. A token
-change therefore starts in the artifact or in a kanso-ui pull request, never
-here, and reaches this repository as the Renovate bump of `@kanso-labs/kanso-ui`
-that follows the release carrying it. `.design-sync/artifact/README.md` in
-kanso-ui describes the sync.
+is the design system's source of truth, and
+[`@kanso-labs/kanso-ui-core`](https://github.com/kanso-labs/kanso-ui-core) holds
+the copy of the tokens both libraries build from. That package is the only place
+this repository takes a token value from, so a token change starts in the
+artifact or in a kanso-ui-core pull request, never here, and reaches this
+repository as the Renovate bump of `@kanso-labs/kanso-ui-core` that follows the
+release carrying it.
 
-**`src/tokens/defaults.ts` is generated and not committed.**
-`scripts/build-tokens.mjs` writes it from the pinned package's `tokens.json`
-through Style Dictionary: every `--kui-*` property at its light and its dark
-value, each exactly as kanso-ui's `tokens.css` writes it, the `KuiTheme` type,
-and the window size class breakpoints. `build`, `lint` and `test` run
-`npm run tokens:build` first, so a Renovate bump of `@kanso-labs/kanso-ui` is
-the whole of a token change: CI builds and tests the new values with nothing to
-regenerate by hand, and the bump can merge itself. A committed copy would go
-stale with every bump and fail the tests that compare it with the new
-`tokens.css`. `src/tokens/defaults.test.ts` is that comparison, and it also pins
-that the resolver reads every default and that `KuiTheme` is the web library's
-type.
+**`src/tokens/defaults.ts` re-exports the package**: `light` and `dark`, every
+`--kui-*` property at its value in each scheme exactly as the package's
+`tokens.css` writes it, the `KuiTheme` type, and the window size class
+`breakpoints`. The package is a pinned devDependency, so tsdown bundles those
+modules into `dist/kanso-ui-core/` and an app never installs it;
+`scripts/check-package.mjs`, the last step of `npm run package:check`, fails a
+build in which anything under `dist` still imports it. Jest transforms the
+package, since it ships ES modules, and the example app lists it, since Metro
+resolves from the app's own `node_modules`. `src/tokens/defaults.test.ts`
+compares the defaults with the package's `tokens.css` and `tokens.json`, and
+pins that the resolver reads every one of them.
 
 ## Commands
 
@@ -58,8 +55,7 @@ type.
 | Lint      | `npm run lint`           | oxlint, then ESLint, then oxfmt formatting check               |
 | Build     | `npm run build`          | Type-checks (`tsc -b`) then builds ESM into `dist/`            |
 | Format    | `npm run format`         | oxfmt; `npm run format:check` is the check `lint` already runs |
-| Verify    | `npm run package:check`  | publint, then attw; reads `dist/`, so build first              |
-| Tokens    | `npm run tokens:build`   | Writes `src/tokens/defaults.ts`; build, lint and test run it   |
+| Verify    | `npm run package:check`  | publint, attw, then a check for kanso-ui-core in `dist/`       |
 
 **Install with the Node version in `.tool-versions`.** CI resolves it from that
 file, and an older npm rewrites `package-lock.json` in a way no check here can
@@ -231,10 +227,7 @@ The web Storybook's toolbar sets the `theme` global, which the canvas in
 scheme, and one of the demo schemes below as its `theme`. It defaults to light
 rather than following the machine, and `&globals=theme:dark` on a story's URL
 opens it dark. The device has no toolbar, so its canvas pins the scheme the
-device's appearance asks for, unless the story pins a theme of its own. Its
-token defaults are written by `@kanso-labs/unplugin-style-dictionary` when the
-server starts and again when the token source changes, so a bump of
-`@kanso-labs/kanso-ui` reaches a running Storybook without a restart.
+device's appearance asks for, unless the story pins a theme of its own.
 
 **Every story is checked twice.** `src/stories.test.tsx` renders each one in
 `npm test`, in both schemes, or in the one it pins, through Storybook's portable
@@ -305,21 +298,19 @@ its Expo SDK bundles, so `npx expo install --check` there says whether one has
 drifted, and an SDK upgrade is `npx expo install expo@<version> --fix` rather
 than a bump at a time.
 
-Install the root first: the app's scripts run the root's `tokens:build`, since
-the library's token defaults are generated rather than committed. Metro watches
-`../src` and resolves everything from the app's own `node_modules`, so the
-bundle carries one React. That also means a runtime dependency the library takes
-is one the app has to list too, at the same version, or Metro cannot resolve the
-import that needs it; CI never bundles the app, so only `npm run export` there
-says so. `tsconfig.json` maps the React and React Native types the same way,
-since two copies of a type never match. Those `paths` point at type
-declarations, so `experiments.tsconfigPaths` in `app.json` is off: Expo would
-otherwise hand them to Metro, and `react` would resolve to `@types/react`.
-`npm run export` in `example/` bundles the app for iOS and Android without a
-device, which is the quickest check that a story still resolves under Metro.
-`app.json` names those two platforms: Expo would otherwise bundle for the web as
-well, which the root's Storybook does instead, and fail on the React Native Web
-the app does not install.
+Metro watches `../src` and resolves everything from the app's own
+`node_modules`, so the bundle carries one React. That also means a runtime
+dependency the library takes is one the app has to list too, at the same
+version, or Metro cannot resolve the import that needs it; CI never bundles the
+app, so only `npm run export` there says so. `tsconfig.json` maps the React and
+React Native types the same way, since two copies of a type never match. Those
+`paths` point at type declarations, so `experiments.tsconfigPaths` in `app.json`
+is off: Expo would otherwise hand them to Metro, and `react` would resolve to
+`@types/react`. `npm run export` in `example/` bundles the app for iOS and
+Android without a device, which is the quickest check that a story still
+resolves under Metro. `app.json` names those two platforms: Expo would otherwise
+bundle for the web as well, which the root's Storybook does instead, and fail on
+the React Native Web the app does not install.
 
 ## Workflows and checks
 

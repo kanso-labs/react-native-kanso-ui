@@ -19,7 +19,6 @@ export default defineConfig([
     'example/.expo',
     'example/.rnstorybook/storybook.requires.ts',
     'example/dist',
-    'src/tokens/defaults.ts',
     'storybook-static',
   ]),
   {

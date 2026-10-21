@@ -209,7 +209,6 @@ mise exec node@"$(awk '/^nodejs/{print $2}' .tool-versions)" -- npm install
 | Lint      | `npm run lint`           |
 | Build     | `npm run build`          |
 | Verify    | `npm run package:check`  |
-| Tokens    | `npm run tokens:build`   |
 
 `npm run storybook` serves the components through React Native Web. Its Theme
 control offers kanso-ui's seven demo schemes beside light and dark, and the
