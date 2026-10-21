@@ -252,11 +252,12 @@ fails to parse before it runs.
 ### The Theming pages
 
 **The toolbar offers more than light and dark.** The other entries are the seven
-demo schemes in `src/theming/themes.ts`, which the `Theming` section is built
-from and which the canvas applies to any story, so a component's own stories can
-be read in one. They are kanso-ui's seven, value for value, each written as the
-`--kui-*` map a consumer would hand either library's `ThemeScope`. kanso-ui
-publishes no copy of them, so this one is kept in step by hand. They are
+demo schemes `src/theming/themes.ts` re-exports from
+`@kanso-labs/kanso-ui-core`, which the `Theming` section is built from and which
+the canvas applies to any story, so a component's own stories can be read in
+one. They are the seven kanso-ui's Storybook renders, each the `--kui-*` map a
+consumer would hand either library's `ThemeScope`, so a scheme changes in
+kanso-ui-core and reaches both showcases through the Renovate bump. They are
 Storybook material rather than library API: nothing under `src/index.ts` reaches
 them, and coverage leaves them out.
 
