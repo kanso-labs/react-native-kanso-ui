@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.11.5](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.11.4...v0.11.5) (2026-10-21)
+
+
+### Dependencies
+
+* update dependency @kanso-labs/kanso-ui-core to v0.1.1 ([#282](https://github.com/kanso-labs/react-native-kanso-ui/issues/282)) ([9c86edf](https://github.com/kanso-labs/react-native-kanso-ui/commit/9c86edf230753a4ddcf70f1b999e50a4b0a1bb46))
+* update dependency @kanso-labs/unplugin-style-dictionary to v0.10.37 ([#271](https://github.com/kanso-labs/react-native-kanso-ui/issues/271)) ([7140933](https://github.com/kanso-labs/react-native-kanso-ui/commit/71409333f142614311ae6a296a9ff2b08837eb98))
+* update dependency expo-clipboard to v58.0.4 ([#278](https://github.com/kanso-labs/react-native-kanso-ui/issues/278)) ([a149ec3](https://github.com/kanso-labs/react-native-kanso-ui/commit/a149ec3d4e3d5a324eba4f7f204dcaf58d587235))
+* update example app ([#283](https://github.com/kanso-labs/react-native-kanso-ui/issues/283)) ([b658d19](https://github.com/kanso-labs/react-native-kanso-ui/commit/b658d19c4f3c657a5d061c5f788422184f9045bd))
+* update kanso-labs/actions action to v4.3.1 ([#279](https://github.com/kanso-labs/react-native-kanso-ui/issues/279)) ([3cbc87b](https://github.com/kanso-labs/react-native-kanso-ui/commit/3cbc87bd84af95ab0b98e888d12fdd83d9392a98))
+* update node.js to v24.22.1 ([#272](https://github.com/kanso-labs/react-native-kanso-ui/issues/272)) ([1efa5bb](https://github.com/kanso-labs/react-native-kanso-ui/commit/1efa5bb3b2774f6507236ccf509f5c62d93a5150))
+
 ## [0.11.4](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.11.3...v0.11.4) (2026-10-21)
 
 
