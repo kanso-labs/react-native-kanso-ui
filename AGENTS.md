@@ -42,7 +42,9 @@ build in which anything under `dist` still imports it. Jest transforms the
 package, since it ships ES modules, and the example app lists it, since Metro
 resolves from the app's own `node_modules`. `src/tokens/defaults.test.ts`
 compares the defaults with the package's `tokens.css` and `tokens.json`, and
-pins that the resolver reads every one of them.
+pins that the resolver reads every one of them. `src/glyphs` draws the package's
+glyph paths the same way, and its tests read the paths they expect from the
+package too.
 
 ## Commands
 

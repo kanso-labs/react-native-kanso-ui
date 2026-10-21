@@ -10,6 +10,7 @@ import {
   it,
   jest,
 } from '@jest/globals'
+import { checkPath, minusPath } from '@kanso-labs/kanso-ui-core/glyphs'
 import { act, fireEvent, render, screen } from '@testing-library/react-native'
 import { createRef } from 'react'
 import { Platform, StyleSheet, View } from 'react-native'
@@ -36,10 +37,6 @@ const DISABLED = withOpacity(
   colors.onSurface,
   stateLayerOpacity.disabledContent,
 )
-
-// kanso-ui's paths, copied rather than read from the glyphs under test.
-const CHECK = 'M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'
-const DASH = 'M19 13H5v-2h14v2z'
 
 // The state layer's colour over each kind of box, hovered and pressed, from
 // the page: the two swap once pressed, and error is error throughout.
@@ -343,7 +340,7 @@ describe('Checkbox', () => {
         fill: same(colors.primary),
         rule: same(withOpacity(colors.primary, 0)),
       })
-      expect(glyphPath()).toBe(CHECK)
+      expect(glyphPath()).toBe(checkPath)
       expect(parts().glyph?.props).toMatchObject({
         color: colors.onPrimary,
         height: 18,
@@ -355,7 +352,7 @@ describe('Checkbox', () => {
       await render(<Checkbox isIndeterminate>Label</Checkbox>)
 
       expect((await boxColors()).fill).toBe(same(colors.primary))
-      expect(glyphPath()).toBe(DASH)
+      expect(glyphPath()).toBe(minusPath)
       expect(parts().glyph?.props.color).toBe(colors.onPrimary)
     })
 

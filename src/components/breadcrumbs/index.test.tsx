@@ -3,6 +3,7 @@ import type { StyleProp, TextStyle, ViewStyle } from 'react-native'
 import type { TestInstance } from 'test-renderer'
 
 import { afterEach, describe, expect, it, jest } from '@jest/globals'
+import { chevronEndPath } from '@kanso-labs/kanso-ui-core/glyphs'
 import { fireEvent, render, screen } from '@testing-library/react-native'
 import { createRef } from 'react'
 import { I18nManager, Platform, StyleSheet, View } from 'react-native'
@@ -14,9 +15,6 @@ import { scopeFor } from '../../theme/scope'
 
 const { theme } = scopeFor('light', {})
 const { colors, spacing, stateLayerOpacity, typography } = theme
-
-// The path ChevronEndGlyph draws, which tells its svg apart from any other.
-const CHEVRON = 'M10 6 8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z'
 
 const CALL_SITE = { marginTop: 4 }
 
@@ -44,7 +42,7 @@ function chevrons(scope?: TestInstance) {
     (node) =>
       node.type === 'RNSVGSvgView' &&
       node.queryAll(
-        (path) => path.type === 'RNSVGPath' && path.props.d === CHEVRON,
+        (path) => path.type === 'RNSVGPath' && path.props.d === chevronEndPath,
       ).length > 0,
   )
   return svgs ?? []

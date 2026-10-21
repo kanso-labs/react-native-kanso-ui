@@ -3,6 +3,7 @@ import type { Key, Selection } from 'react-stately'
 import type { TestInstance, TestNode } from 'test-renderer'
 
 import { describe, expect, it, jest } from '@jest/globals'
+import { checkPath } from '@kanso-labs/kanso-ui-core/glyphs'
 import { fireEvent, render, screen } from '@testing-library/react-native'
 import { createRef } from 'react'
 import {
@@ -18,9 +19,6 @@ import { scopeFor } from '../../theme/scope'
 
 const { theme } = scopeFor('light', {})
 const { colors, sizing, typography } = theme
-
-// kanso-ui's check, copied rather than read from the glyph under test.
-const CHECK = 'M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'
 
 // A press with no point on the page, on a row that measures nothing, so the
 // ripple waits and the press is all a case sees.
@@ -74,7 +72,7 @@ function boxesIn(element: TestInstance) {
 
 function checksIn(element: TestInstance) {
   return element.queryAll(
-    (node) => node.type === 'RNSVGPath' && node.props.d === CHECK,
+    (node) => node.type === 'RNSVGPath' && node.props.d === checkPath,
   )
 }
 

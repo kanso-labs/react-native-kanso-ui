@@ -10,6 +10,7 @@ import {
   it,
   jest,
 } from '@jest/globals'
+import { checkPath } from '@kanso-labs/kanso-ui-core/glyphs'
 import { act, fireEvent, render, screen } from '@testing-library/react-native'
 import { createRef } from 'react'
 import {
@@ -47,9 +48,6 @@ const DISABLED_CONTENT = withOpacity(
   colors.onSurface,
   stateLayerOpacity.disabledContent,
 )
-
-// kanso-ui's path, copied rather than read from the glyph under test.
-const CHECK = 'M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'
 
 // Where a drag begins across the track, and how far the seat travels from one
 // end to the other, from the page: the track's 48 inside its rule, less the
@@ -678,7 +676,7 @@ describe('Switch', () => {
         </Switch>,
       )
 
-      expect(pathOf(parts().glyph)).toBe(CHECK)
+      expect(pathOf(parts().glyph)).toBe(checkPath)
       expect(parts().glyph?.props).toMatchObject({
         color: colors.onPrimaryContainer,
         height: 16,

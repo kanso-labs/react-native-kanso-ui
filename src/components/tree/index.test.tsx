@@ -3,6 +3,7 @@ import type { Key, Selection } from 'react-stately'
 import type { TestInstance, TestNode } from 'test-renderer'
 
 import { describe, expect, it, jest } from '@jest/globals'
+import { checkPath, chevronEndPath } from '@kanso-labs/kanso-ui-core/glyphs'
 import { fireEvent, render, screen } from '@testing-library/react-native'
 import { createRef } from 'react'
 import { FlatList, I18nManager, StyleSheet, Text } from 'react-native'
@@ -17,10 +18,6 @@ const { theme } = scopeFor('light', {})
 const { colors, sizing, spacing, stateLayerOpacity } = theme
 
 const FADED = withOpacity(colors.onSurface, stateLayerOpacity.disabledContent)
-
-// kanso-ui's glyphs, copied rather than read from the glyphs under test.
-const CHECK = 'M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'
-const CHEVRON = 'M10 6 8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z'
 
 // A press with no point on the page, on a row that measures nothing, so the
 // ripple waits and the press is all a case sees.
@@ -75,7 +72,7 @@ function boxesIn(element: TestInstance) {
 
 function checksIn(element: TestInstance) {
   return element.queryAll(
-    (node) => node.type === 'RNSVGPath' && node.props.d === CHECK,
+    (node) => node.type === 'RNSVGPath' && node.props.d === checkPath,
   )
 }
 
@@ -119,7 +116,8 @@ function chevronIn(element: TestInstance) {
         typeof node.props.onClick === 'function' &&
         node
           .queryAll(
-            (each) => each.type === 'RNSVGPath' && each.props.d === CHEVRON,
+            (each) =>
+              each.type === 'RNSVGPath' && each.props.d === chevronEndPath,
           )
           .at(0) !== undefined,
     )
@@ -133,7 +131,7 @@ function chevronIn(element: TestInstance) {
 
 function chevronsIn(element: TestInstance) {
   return element.queryAll(
-    (node) => node.type === 'RNSVGPath' && node.props.d === CHEVRON,
+    (node) => node.type === 'RNSVGPath' && node.props.d === chevronEndPath,
   )
 }
 

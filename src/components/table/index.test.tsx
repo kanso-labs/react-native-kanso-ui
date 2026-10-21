@@ -5,6 +5,10 @@ import type { ColumnSize } from 'react-stately/useTableState'
 import type { TestInstance, TestNode } from 'test-renderer'
 
 import { afterEach, describe, expect, it, jest } from '@jest/globals'
+import {
+  arrowDownwardPath,
+  arrowUpwardPath,
+} from '@kanso-labs/kanso-ui-core/glyphs'
 import { act, fireEvent, render, screen } from '@testing-library/react-native'
 import { createRef, StrictMode } from 'react'
 import {
@@ -32,11 +36,6 @@ import { scopeFor } from '../../theme/scope'
 
 const { theme } = scopeFor('light', {})
 const { colors, sizing, spacing, stateLayerOpacity, typography } = theme
-
-// kanso-ui's arrows, copied rather than read from the glyphs under test.
-const ARROW_UP = 'M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z'
-const ARROW_DOWN =
-  'M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8 8-8z'
 
 // A press with no point on the page, on a row that measures nothing, so the
 // ripple waits and the press is all a case sees.
@@ -1168,8 +1167,12 @@ describe('Table', () => {
       const up = screen.getByRole('button', {
         name: 'Label, sortable column, ascending',
       })
-      expect(up.queryAll((node) => node.props.d === ARROW_UP)).toHaveLength(1)
-      expect(up.queryAll((node) => node.props.d === ARROW_DOWN)).toHaveLength(0)
+      expect(
+        up.queryAll((node) => node.props.d === arrowUpwardPath),
+      ).toHaveLength(1)
+      expect(
+        up.queryAll((node) => node.props.d === arrowDownwardPath),
+      ).toHaveLength(0)
       expect(
         styleOf(
           instance(up.queryAll((node) => node.type === 'RNSVGSvgView').at(0)),
@@ -1181,9 +1184,9 @@ describe('Table', () => {
       const down = screen.getByRole('button', {
         name: 'Label, sortable column, descending',
       })
-      expect(down.queryAll((node) => node.props.d === ARROW_DOWN)).toHaveLength(
-        1,
-      )
+      expect(
+        down.queryAll((node) => node.props.d === arrowDownwardPath),
+      ).toHaveLength(1)
     })
 
     it('draws no arrow on a sortable column it is not sorted by', async () => {
