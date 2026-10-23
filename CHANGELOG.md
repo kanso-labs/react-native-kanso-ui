@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.11.6](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.11.5...v0.11.6) (2026-10-23)
+
+
+### Dependencies
+
+* update dependency oxlint-tsgolint to v7.0.2005 ([#285](https://github.com/kanso-labs/react-native-kanso-ui/issues/285)) ([507181f](https://github.com/kanso-labs/react-native-kanso-ui/commit/507181f51973b6455a4f644cb622f74c3f9d0cdb))
+* update dependency tsdown to v0.23.2 ([#287](https://github.com/kanso-labs/react-native-kanso-ui/issues/287)) ([e82a121](https://github.com/kanso-labs/react-native-kanso-ui/commit/e82a121c4554526d0f2f9630752fcfd22c02c528))
+
 ## [0.11.5](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.11.4...v0.11.5) (2026-10-21)
 
 
