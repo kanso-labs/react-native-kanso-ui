@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.11.10](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.11.9...v0.11.10) (2026-10-27)
+
+
+### Dependencies
+
+* update dependency @kanso-labs/kanso-ui-core to v0.1.4 ([#304](https://github.com/kanso-labs/react-native-kanso-ui/issues/304)) ([3e2ad96](https://github.com/kanso-labs/react-native-kanso-ui/commit/3e2ad96ff5c1ad4dfb53f45c5f445069ea2b2872))
+* update dependency eslint-plugin-oxlint to v1.90.0 ([#307](https://github.com/kanso-labs/react-native-kanso-ui/issues/307)) ([d791bf4](https://github.com/kanso-labs/react-native-kanso-ui/commit/d791bf44e5495112c99cb488d529c9d9eda31b41))
+* update dependency oxlint to v1.90.0 ([#301](https://github.com/kanso-labs/react-native-kanso-ui/issues/301)) ([f74cb77](https://github.com/kanso-labs/react-native-kanso-ui/commit/f74cb77e66248eb71ec04f64546097f571b18272))
+* update dependency react-native-safe-area-context to v5.11.0 ([#308](https://github.com/kanso-labs/react-native-kanso-ui/issues/308)) ([00b4d4b](https://github.com/kanso-labs/react-native-kanso-ui/commit/00b4d4be29bc91a29e5e20b6189ab5973e11a5cf))
+* update example app ([#305](https://github.com/kanso-labs/react-native-kanso-ui/issues/305)) ([d36ff8d](https://github.com/kanso-labs/react-native-kanso-ui/commit/d36ff8d32eaf5c8618775d0d9d0ad22102f3bcf1))
+* update react-native to v0.88.1 ([#302](https://github.com/kanso-labs/react-native-kanso-ui/issues/302)) ([5a4d604](https://github.com/kanso-labs/react-native-kanso-ui/commit/5a4d604518332812258825fa446cd44b38cddf0b))
+* update storybook to v10.6.5 ([#306](https://github.com/kanso-labs/react-native-kanso-ui/issues/306)) ([9d71d51](https://github.com/kanso-labs/react-native-kanso-ui/commit/9d71d51a0efe2b6d20d55dd0e78d09b628886ea4))
+
 ## [0.11.9](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.11.8...v0.11.9) (2026-10-27)
 
 
