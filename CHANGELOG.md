@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.11.9](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.11.8...v0.11.9) (2026-10-27)
+
+
+### Dependencies
+
+* update dependency oxfmt to v0.75.0 ([#300](https://github.com/kanso-labs/react-native-kanso-ui/issues/300)) ([87d862e](https://github.com/kanso-labs/react-native-kanso-ui/commit/87d862e77ccebfa73a49dc044c0777157d672b76))
+* update dependency typescript-eslint to v8.72.1 ([#298](https://github.com/kanso-labs/react-native-kanso-ui/issues/298)) ([d3d2b0f](https://github.com/kanso-labs/react-native-kanso-ui/commit/d3d2b0f92fe2cacff692f9acb3f3428937ea5fd6))
+* update storybook to v10.6.4 ([#297](https://github.com/kanso-labs/react-native-kanso-ui/issues/297)) ([1863b7b](https://github.com/kanso-labs/react-native-kanso-ui/commit/1863b7b764438b14bbc10af41d8c18b783dad9c2))
+
 ## [0.11.8](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.11.7...v0.11.8) (2026-10-26)
 
 
