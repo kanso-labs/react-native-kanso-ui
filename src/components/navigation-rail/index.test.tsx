@@ -17,7 +17,7 @@ import {
   screen,
   within,
 } from '@testing-library/react-native'
-import { I18nManager, Pressable, StyleSheet, Text } from 'react-native'
+import { I18nManager, Pressable, StyleSheet, Text, View } from 'react-native'
 import { getAnimatedStyle } from 'react-native-reanimated'
 
 import type { NavigationRailItemProps } from '.'
@@ -57,6 +57,11 @@ const { colors, motion, spacing, typography } = theme
 const ICON = <Icon />
 
 const CALL_SITE = StyleSheet.create({ rail: { marginTop: 4 } }).rail
+
+// A view that puts what it holds at the rail's foot.
+const FOOT = StyleSheet.create({
+  foot: { alignSelf: 'stretch', marginTop: 'auto' },
+}).foot
 
 const HEADER = (
   <Pressable aria-label="Menu" role="button" testID="header-button" />
@@ -337,6 +342,34 @@ describe('NavigationRail', () => {
       expect(styleOf(listOf())).toMatchObject({ flexShrink: 1, margin: -4 })
       expect(containerStyleOf(listOf())).toMatchObject({ padding: 4 })
     })
+
+    it.each([
+      ['collapsed', false],
+      ['expanded', true],
+    ])(
+      'gives a destination at its foot the height the rest leave, %s',
+      async (_form, isExpanded) => {
+        await render(
+          <NavigationRail
+            aria-label="Label"
+            isExpanded={isExpanded}
+            testID="rail"
+          >
+            <NavigationRail.Item href="/first" icon={ICON}>
+              First item
+            </NavigationRail.Item>
+            <View style={FOOT}>
+              <NavigationRail.Item href="/second" icon={ICON}>
+                Second item
+              </NavigationRail.Item>
+            </View>
+          </NavigationRail>,
+        )
+
+        expect(containerStyleOf(listOf())).toMatchObject({ flexGrow: 1 })
+        expect(within(listOf()).getAllByRole('tab')).toHaveLength(2)
+      },
+    )
 
     it('lands the call site’s style on its surface', async () => {
       await render(
