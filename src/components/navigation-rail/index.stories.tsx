@@ -15,6 +15,13 @@ import { IconButton } from '../icon-button'
 type Shape = 'circle' | 'menu' | 'square' | 'triangle'
 
 const styles = StyleSheet.create({
+  // A view whose automatic top margin takes the height the destinations
+  // above it leave, which puts what it holds at the rail's foot. It spans
+  // the rail, so a collapsed destination in it is as wide as the others.
+  foot: {
+    alignSelf: 'stretch',
+    marginTop: 'auto',
+  },
   // The rail runs the height of the row that holds it, as it would the
   // screen's.
   frame: {
@@ -79,6 +86,18 @@ const DESTINATIONS = (
     <NavigationRail.Item href="/third" icon={TRIANGLE}>
       Third item
     </NavigationRail.Item>
+  </>
+)
+
+// The three destinations, and a fourth at the rail's foot.
+const FOOT_DESTINATIONS = (
+  <>
+    {DESTINATIONS}
+    <View style={styles.foot}>
+      <NavigationRail.Item href="/fourth" icon={CIRCLE}>
+        Fourth item
+      </NavigationRail.Item>
+    </View>
   </>
 )
 
@@ -221,6 +240,14 @@ const ManyDestinations: Story = {
   },
 }
 
-export { Default, Expanded, ManyDestinations, WithHeader }
+// A destination at the rail's foot, below the rest: a view with
+// `marginTop: 'auto'` around it takes the height the others leave.
+const DestinationAtFoot: Story = {
+  args: {
+    children: FOOT_DESTINATIONS,
+  },
+}
+
+export { Default, DestinationAtFoot, Expanded, ManyDestinations, WithHeader }
 
 export default meta

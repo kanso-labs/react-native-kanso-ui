@@ -52,12 +52,15 @@ import { composeStyles, themedStyles } from '../../theme/styles'
 //
 // The destinations scroll in a block of their own under the header, so a
 // rail shorter than they are scrolls them rather than squashing each below
-// its height, and the header stays where it is. The block is a `tablist` and
-// each destination a `tab`, which is how both platforms announce a set of
-// top-level destinations; the header is outside it, since what it holds is
-// not one of them. Web's rail is a landmark of links, which native has no
-// counterpart for. A destination still goes to its `href` through the app's
-// router, see `RouterProvider`.
+// its height, and the header stays where it is. What they scroll in is at
+// least as tall as that block, as web's list is, so a destination wrapped in
+// a view with `marginTop: 'auto'` sits at the rail's foot, below the rest,
+// while a rail they do not fit in still scrolls them. The block is a
+// `tablist` and each destination a `tab`, which is how both platforms
+// announce a set of top-level destinations; the header is outside it, since
+// what it holds is not one of them. Web's rail is a landmark of links, which
+// native has no counterpart for. A destination still goes to its `href`
+// through the app's router, see `RouterProvider`.
 
 type NavigationRailItemProps = NavigationItemProps
 
@@ -142,9 +145,12 @@ const stylesOf = themedStyles(({ colors, spacing }) =>
       paddingTop: TOP_PADDING,
       width: COLLAPSED_WIDTH,
     },
-    // The collapsed rail's destinations, 4dp apart.
+    // The collapsed rail's destinations, 4dp apart, in a list at least as
+    // tall as the block it scrolls in, which leaves an automatic margin the
+    // height they do not take.
     collapsedList: {
       alignItems: 'center',
+      flexGrow: 1,
       gap: spacing.xs,
       padding: RING_REACH,
     },
@@ -159,9 +165,11 @@ const stylesOf = themedStyles(({ colors, spacing }) =>
       paddingHorizontal: EXPANDED_PADDING,
       paddingTop: TOP_PADDING,
     },
-    // The expanded rail's pills, at its leading edge with no gap between.
+    // The expanded rail's pills, at its leading edge with no gap between,
+    // in a list as tall as the collapsed rail's.
     expandedList: {
       alignItems: 'flex-start',
+      flexGrow: 1,
       padding: RING_REACH,
     },
     // What the rail draws above its destinations, the page's 40dp clear of
@@ -218,6 +226,10 @@ function edgesOf(): readonly Edge[] {
  * gives it its height: it paints its surface to the screen's edges and keeps
  * its destinations clear of the status bar, the home indicator and a notch
  * itself.
+ *
+ * A destination wrapped in a view with `marginTop: 'auto'` sits at the
+ * rail's foot, below the rest. Give the view `alignSelf: 'stretch'` as well,
+ * so a collapsed destination in it is as wide as the others.
  *
  * `aria-label` names the destinations' tab list. `style`, `ref` and `testID`
  * land on the rail's own view, its surface.
