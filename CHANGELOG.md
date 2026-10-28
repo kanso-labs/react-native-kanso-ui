@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.12](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.11.11...v0.11.12) (2026-10-28)
+
+
+### Dependencies
+
+* update dependency tsdown to v0.23.3 ([#311](https://github.com/kanso-labs/react-native-kanso-ui/issues/311)) ([20c8491](https://github.com/kanso-labs/react-native-kanso-ui/commit/20c84916534636cb9fe8a799c56cb8efc6a4636e))
+
 ## [0.11.11](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.11.10...v0.11.11) (2026-10-28)
 
 
