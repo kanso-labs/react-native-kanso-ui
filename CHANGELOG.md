@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.11](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.11.10...v0.11.11) (2026-10-28)
+
+
+### Bug Fixes
+
+* **navigation-rail:** let the destinations' list fill the rail's height ([#309](https://github.com/kanso-labs/react-native-kanso-ui/issues/309)) ([ecefb46](https://github.com/kanso-labs/react-native-kanso-ui/commit/ecefb46005e9ad6fddde3c7d12aa8ba4be8a2599))
+
 ## [0.11.10](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.11.9...v0.11.10) (2026-10-27)
 
 
