@@ -64,7 +64,7 @@
     "@kanso-labs/kanso-ui-core": "0.1.5",
     "@react-native/babel-preset": "0.88.1",
     "@react-native/jest-preset": "0.88.1",
-    "@rolldown/plugin-babel": "0.2.4",
+    "@rolldown/plugin-babel": "0.3.0",
     "@storybook/addon-a11y": "10.6.5",
     "@storybook/addon-docs": "10.6.5",
     "@storybook/addon-vitest": "10.6.5",
