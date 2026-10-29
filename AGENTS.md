@@ -404,15 +404,23 @@ the pull request is open.
 
 ## Working the plan
 
-The [React Native project](https://github.com/orgs/kanso-labs/projects/8) holds
-the plan: one issue per pull request, each titled with the Conventional Commit
-it will merge as. Each issue carries a `kind:` and an `area:` label and the
-native Priority and Effort fields, and names what it depends on. A pull request
-closes its issue with `Closes #N` and takes the issue's two labels.
+The [Kanso UI project](https://github.com/orgs/kanso-labs/projects/1) holds the
+plan, for this repository, kanso-ui and kanso-ui-core together. Its fields,
+views and workflows are the organization's
+[project standard](https://github.com/kanso-labs/.github/blob/main/PROJECTS.md),
+and its README lists the Area options, so neither is restated here. The port's
+items are the sub-issues of one epic in this repository,
+[#323](https://github.com/kanso-labs/react-native-kanso-ui/issues/323).
+
+**An item is one issue per pull request**, titled with the Conventional Commit
+it will merge as. It has an issue type, a Priority, an Effort and an Area, the
+epic it belongs to as its parent, and a blocked-by link to each issue that has
+to land first. Its body repeats none of those.
 
 Items are worked in priority order, oldest first within a priority. Each item
-branches from `main` unless its "Depends on" names a pull request that has not
-merged yet.
+branches from `main` unless something blocking it has not merged yet. A pull
+request closes its issue with `Closes #N`, and the project's workflows move the
+item's Status from there.
 
 ## Traps
 
