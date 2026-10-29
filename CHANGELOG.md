@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.11.13](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.11.12...v0.11.13) (2026-10-29)
+
+
+### Dependencies
+
+* update dependency @kanso-labs/kanso-ui-core to v0.1.5 ([#313](https://github.com/kanso-labs/react-native-kanso-ui/issues/313)) ([acd4c6f](https://github.com/kanso-labs/react-native-kanso-ui/commit/acd4c6f7152132d13110ef00d31e201053c7d9f6))
+* update dependency @rolldown/plugin-babel to v0.3.0 ([#320](https://github.com/kanso-labs/react-native-kanso-ui/issues/320)) ([5acffd0](https://github.com/kanso-labs/react-native-kanso-ui/commit/5acffd036b8af3d8f980ab95e2e7ecbf8650e71d))
+* update dependency tsdown to v0.23.4 ([#321](https://github.com/kanso-labs/react-native-kanso-ui/issues/321)) ([9bafbaa](https://github.com/kanso-labs/react-native-kanso-ui/commit/9bafbaa457a110b463e8992d15f7afc4dcdd0699))
+* update example app ([#314](https://github.com/kanso-labs/react-native-kanso-ui/issues/314)) ([abe4bb3](https://github.com/kanso-labs/react-native-kanso-ui/commit/abe4bb3aaeff41202d9a95670ec181c35b4a0b14))
+* update kanso-labs/actions action to v4.4.0 ([#322](https://github.com/kanso-labs/react-native-kanso-ui/issues/322)) ([34de566](https://github.com/kanso-labs/react-native-kanso-ui/commit/34de566fc10e209b20111a0e51763c84ac6b549b))
+* update node.js to v24.22.2 ([#317](https://github.com/kanso-labs/react-native-kanso-ui/issues/317)) ([0cb6714](https://github.com/kanso-labs/react-native-kanso-ui/commit/0cb6714eb44619799f389dd37f85de2ad0567888))
+* update node.js to v26 ([#315](https://github.com/kanso-labs/react-native-kanso-ui/issues/315)) ([0e9dd45](https://github.com/kanso-labs/react-native-kanso-ui/commit/0e9dd459deb6263e607c71a6389c0e38be52438e))
+
 ## [0.11.12](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.11.11...v0.11.12) (2026-10-28)
 
 
