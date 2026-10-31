@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.11.16](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.11.15...v0.11.16) (2026-10-31)
+
+
+### Dependencies
+
+* update dependency @kanso-labs/kanso-ui-core to v0.1.7 ([#336](https://github.com/kanso-labs/react-native-kanso-ui/issues/336)) ([695fabc](https://github.com/kanso-labs/react-native-kanso-ui/commit/695fabca480b7093a712a6ec1bca19e031faea69))
+* update dependency @kanso-labs/kanso-ui-core to v0.1.7 ([#337](https://github.com/kanso-labs/react-native-kanso-ui/issues/337)) ([af59f47](https://github.com/kanso-labs/react-native-kanso-ui/commit/af59f4758e4fdf4541667ca9a5f443615238b446))
+* update dependency eslint to v10.14.0 ([#338](https://github.com/kanso-labs/react-native-kanso-ui/issues/338)) ([f35e13b](https://github.com/kanso-labs/react-native-kanso-ui/commit/f35e13b9d75e3abaf198149d7a996d7ec57cf35a))
+
 ## [0.11.15](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.11.14...v0.11.15) (2026-10-30)
 
 
