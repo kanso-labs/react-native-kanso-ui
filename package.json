@@ -79,7 +79,7 @@
     "eslint-plugin-oxlint": "1.90.0",
     "eslint-plugin-perfectionist": "5.13.0",
     "eslint-plugin-react-hooks": "7.1.1",
-    "globals": "17.13.0",
+    "globals": "17.14.0",
     "husky": "9.1.7",
     "jest": "29.7.0",
     "jest-junit": "17.0.0",
