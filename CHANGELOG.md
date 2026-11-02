@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.18](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.11.17...v0.11.18) (2026-11-02)
+
+
+### Dependencies
+
+* update dependency globals to v17.14.0 ([#347](https://github.com/kanso-labs/react-native-kanso-ui/issues/347)) ([c50d477](https://github.com/kanso-labs/react-native-kanso-ui/commit/c50d47744e292c372605a55620478ea1381fe25a))
+
 ## [0.11.17](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.11.16...v0.11.17) (2026-10-31)
 
 
