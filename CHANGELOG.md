@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.11.19](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.11.18...v0.11.19) (2026-11-03)
+
+
+### Dependencies
+
+* update dependency @kanso-labs/kanso-ui-core to v0.1.9 ([#351](https://github.com/kanso-labs/react-native-kanso-ui/issues/351)) ([0380759](https://github.com/kanso-labs/react-native-kanso-ui/commit/0380759ba532a9324f6e515c6f43c6f4af303170))
+* update dependency @kanso-labs/kanso-ui-core to v0.1.9 ([#352](https://github.com/kanso-labs/react-native-kanso-ui/issues/352)) ([f0e1f5f](https://github.com/kanso-labs/react-native-kanso-ui/commit/f0e1f5fc2d58225e7c7507b6abbe79de11735d87))
+* update dependency react-native-safe-area-context to v5.11.1 ([#355](https://github.com/kanso-labs/react-native-kanso-ui/issues/355)) ([1b4e8d6](https://github.com/kanso-labs/react-native-kanso-ui/commit/1b4e8d6f4a9142f73c1569f8ce34de00cdf9115f))
+* update dependency react-native-safe-area-context to v5.11.1 ([#356](https://github.com/kanso-labs/react-native-kanso-ui/issues/356)) ([053579d](https://github.com/kanso-labs/react-native-kanso-ui/commit/053579dfb7596879ccceee0ad4ce24e7604097d6))
+* update vitest to v5.1.0 ([#353](https://github.com/kanso-labs/react-native-kanso-ui/issues/353)) ([ede184b](https://github.com/kanso-labs/react-native-kanso-ui/commit/ede184b7f12de813e3ad117cad0f6eeda9d11b9d))
+
 ## [0.11.18](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.11.17...v0.11.18) (2026-11-02)
 
 
