@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.22](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.11.21...v0.11.22) (2026-11-04)
+
+
+### Dependencies
+
+* update dependency @babel/core to v7.29.13 ([#366](https://github.com/kanso-labs/react-native-kanso-ui/issues/366)) ([3e76661](https://github.com/kanso-labs/react-native-kanso-ui/commit/3e766615c0cc5357f21d145339127862cbb8edf3))
+
 ## [0.11.21](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.11.20...v0.11.21) (2026-11-04)
 
 
