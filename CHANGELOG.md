@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.11.21](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.11.20...v0.11.21) (2026-11-04)
+
+
+### Dependencies
+
+* update dependency @kanso-labs/kanso-ui-core to v0.1.11 ([#363](https://github.com/kanso-labs/react-native-kanso-ui/issues/363)) ([f4942f3](https://github.com/kanso-labs/react-native-kanso-ui/commit/f4942f32cc2cda7b031e3d4688b96457b35efc90))
+* update dependency @kanso-labs/kanso-ui-core to v0.1.11 ([#364](https://github.com/kanso-labs/react-native-kanso-ui/issues/364)) ([c161f66](https://github.com/kanso-labs/react-native-kanso-ui/commit/c161f668d22934c1d55ca07dd1e585669ff5c6c2))
+
 ## [0.11.20](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.11.19...v0.11.20) (2026-11-04)
 
 
