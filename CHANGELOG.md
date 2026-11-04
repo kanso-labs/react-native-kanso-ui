@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.11.20](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.11.19...v0.11.20) (2026-11-04)
+
+
+### Dependencies
+
+* update dependency @kanso-labs/kanso-ui-core to v0.1.10 ([#357](https://github.com/kanso-labs/react-native-kanso-ui/issues/357)) ([6137543](https://github.com/kanso-labs/react-native-kanso-ui/commit/613754384af9d3169df08e2c7df0c4a013b0c6d4))
+* update dependency oxfmt to v0.76.0 ([#360](https://github.com/kanso-labs/react-native-kanso-ui/issues/360)) ([29b56b9](https://github.com/kanso-labs/react-native-kanso-ui/commit/29b56b9cb4554f13ed7c8a7ea64e21e55dcd5b40))
+* update dependency oxlint to v1.91.0 ([#361](https://github.com/kanso-labs/react-native-kanso-ui/issues/361)) ([3c4aa93](https://github.com/kanso-labs/react-native-kanso-ui/commit/3c4aa93bf5bc49fc00253bdfdeccecf6d3e53fdb))
+* update dependency tsdown to v0.23.5 ([#358](https://github.com/kanso-labs/react-native-kanso-ui/issues/358)) ([4f46137](https://github.com/kanso-labs/react-native-kanso-ui/commit/4f46137b250cb0d94a0f1126ee5dbadd7c751792))
+* update example app ([#359](https://github.com/kanso-labs/react-native-kanso-ui/issues/359)) ([33ab5bd](https://github.com/kanso-labs/react-native-kanso-ui/commit/33ab5bd855c91f687541a041f56ff4a290c16802))
+
 ## [0.11.19](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.11.18...v0.11.19) (2026-11-03)
 
 
