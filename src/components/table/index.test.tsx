@@ -1604,6 +1604,39 @@ describe('Table', () => {
       expect(styleOf(screen.getByTestId('sum')).color).toBeUndefined()
     })
 
+    it('starts each cell after the columns the cells before it span', async () => {
+      await render(
+        <Table aria-label="Label">
+          <Table.Header>
+            <Table.Column defaultWidth={100} id="colName">
+              Label
+            </Table.Column>
+            <Table.Column defaultWidth={200} id="colStatus">
+              Status
+            </Table.Column>
+            <Table.Column id="colValue">Value</Table.Column>
+          </Table.Header>
+          <Table.Body />
+          <Table.Footer>
+            <Table.Row id="total">
+              <Table.Cell>Total</Table.Cell>
+              <Table.Cell colSpan={2}>06</Table.Cell>
+            </Table.Row>
+            <Table.Row id="average">
+              <Table.Cell colSpan={2}>Average</Table.Cell>
+              <Table.Cell>02</Table.Cell>
+            </Table.Row>
+          </Table.Footer>
+        </Table>,
+      )
+      await layOut()
+
+      expect(styleOf(cellOf('Total')).width).toBe(100)
+      expect(styleOf(cellOf('06')).width).toBe(500)
+      expect(styleOf(cellOf('Average')).width).toBe(300)
+      expect(styleOf(cellOf('02')).width).toBe(300)
+    })
+
     it('keeps its rows out of the selection and takes no press', async () => {
       await render(
         <Table aria-label="Label" selectionMode="multiple">
