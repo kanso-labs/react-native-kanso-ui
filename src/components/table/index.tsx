@@ -1010,16 +1010,25 @@ function FooterRows() {
         if (!isValidElement<TableRowProps>(row)) {
           return null
         }
-        let start = 0
-        const cells = childElementsOf(
+        const rowCells = childElementsOf(
           typeof row.props.children === 'function' ? null : row.props.children,
-        ).map((cell, cellIndex) => {
+        )
+        const starts = startsOf(
+          rowCells.map((cell) =>
+            isValidElement<TableCellProps>(cell)
+              ? (cell.props.colSpan ?? 1)
+              : 0,
+          ),
+        )
+        const cells = rowCells.map((cell, cellIndex) => {
           if (!isValidElement<TableCellProps>(cell)) {
             return null
           }
-          const span = cell.props.colSpan ?? 1
-          const width = widthAcross(table, start, span)
-          start += span
+          const width = widthAcross(
+            table,
+            starts[cellIndex] ?? 0,
+            cell.props.colSpan ?? 1,
+          )
           return (
             <View
               key={cell.key ?? cellIndex}
@@ -1620,6 +1629,22 @@ function roomTo(
     set(event.nativeEvent.layout.height)
     then?.(event)
   }
+}
+
+/**
+ * The column each footer cell starts at, from the columns the cells before it
+ * span, worked out before the cells are drawn rather than counted up while
+ * they are, which the React Compiler reads as a change after render.
+ */
+function startsOf(spans: readonly number[]): number[] {
+  const starts: number[] = []
+  let start = 0
+
+  for (const span of spans) {
+    starts.push(start)
+    start += span
+  }
+  return starts
 }
 
 /**
