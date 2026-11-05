@@ -307,7 +307,7 @@ function changedOf(line: SegmentLineProps) {
 // The number of characters at the start of every one of `texts` that they
 // share, which an era's name is typed after, as React Aria finds it.
 function commonPrefixLength(texts: readonly string[]) {
-  const sorted = texts.toSorted()
+  const sorted = [...texts].sort()
   const first = sorted.at(0) ?? ''
   const last = sorted.at(-1) ?? ''
   let length = 0

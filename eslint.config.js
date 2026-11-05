@@ -68,5 +68,27 @@ export default defineConfig([
       '@typescript-eslint/no-require-imports': 'off',
     },
   },
+  // The library and its stories run under Hermes, and the Hermes in Expo Go
+  // has none of ES2023's copying array methods: a call to `toSorted` threw
+  // "undefined is not a function" on a device, in every NumberField story,
+  // while Node and Chromium, which run every check here, have it. Copy the
+  // array and sort, reverse or splice the copy instead, which is why
+  // `.oxlintrc.json` turns off unicorn's `no-array-sort` and
+  // `no-array-reverse`: they ask for the very methods this forbids. Tests run
+  // under Node alone, so they keep the methods.
+  {
+    files: ['example/**/*.{ts,tsx}', 'src/**/*.{ts,tsx}'],
+    ignores: ['src/**/*.test.{ts,tsx}'],
+    rules: {
+      'no-restricted-properties': [
+        'error',
+        ...['toReversed', 'toSorted', 'toSpliced', 'with'].map((property) => ({
+          message:
+            'Hermes in Expo Go lacks the copying array methods; copy the array and sort, reverse or splice the copy.',
+          property,
+        })),
+      ],
+    },
+  },
   ...eslintPluginOxlint.buildFromOxlintConfigFile('./.oxlintrc.json'),
 ])

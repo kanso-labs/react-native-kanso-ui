@@ -430,6 +430,14 @@ item's Status from there.
 **`npm run lint` does not type-check.** It passes on code that `tsc -b` rejects,
 so run `npm run build` before pushing as well.
 
+**Hermes in Expo Go has no copying array methods.** `toSorted`, `toReversed`,
+`toSpliced` and `with` throw "undefined is not a function" on a device, while
+Node and Chromium, which run Jest, the web Storybook and every check here, have
+them, so a call to one passes CI and breaks every story that reaches it.
+ESLint's `no-restricted-properties` refuses them outside the tests, and
+`.oxlintrc.json` turns off the two unicorn rules that ask for them. Copy the
+array and sort, reverse or splice the copy.
+
 **Jest is held at 29.** `@react-native/jest-preset` depends on `babel-jest` and
 `jest-environment-node` at `^29.7.0`, so Jest 30 would run the preset's
 environment from the major before it. The Renovate rule holding it says when to

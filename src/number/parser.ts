@@ -386,7 +386,7 @@ function numeralsOf(locale: string, numberingSystem: string | undefined) {
       numberingSystem,
       useGrouping: false,
     }).format(9_876_543_210),
-  ).toReversed()
+  ).reverse()
 }
 
 function optionalString(value: unknown) {
@@ -397,7 +397,7 @@ function parserOf(locale: string, options: NumberFormatOptions) {
   const key =
     locale +
     Object.entries(options)
-      .toSorted(([a], [b]) => (a < b ? -1 : 1))
+      .sort(([a], [b]) => (a < b ? -1 : 1))
       .join()
   const cached = parserCache.get(key)
   if (cached !== undefined) {
@@ -580,7 +580,7 @@ function symbolsOf(
         .filter((piece) => piece !== '' && piece !== minusSign)
         .map(escapeRegex),
     ),
-  ].toSorted((a, b) => b.length - a.length)
+  ].sort((a, b) => b.length - a.length)
   const literals = new RegExp([...pieces, `[${SPACING}]`].join('|'), 'gu')
 
   const indexes = new Map(numerals.map((numeral, digit) => [numeral, digit]))
