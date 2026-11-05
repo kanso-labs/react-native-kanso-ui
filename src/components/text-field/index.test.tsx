@@ -127,6 +127,14 @@ function slots() {
 const LEADING = <IconProbe testID="leading" />
 const TRAILING = <IconProbe testID="trailing" />
 
+// The line holding the control between its prefix and its suffix.
+function affixLineOf(control: Host): Host {
+  if (!control.parent) {
+    throw new Error('Expected the control to sit in a line')
+  }
+  return control.parent
+}
+
 // The field in a view the cases find it by.
 function fieldOf(props: Partial<TextFieldProps>): ReactElement {
   return (
@@ -734,12 +742,32 @@ describe('TextField', () => {
       })
     })
 
+    it('centres its value beside a prefix and a suffix on iOS, where it is drawn centred down the control', async () => {
+      jest.replaceProperty(Platform, 'OS', 'ios')
+      await renderField({ prefix: 'Prefix', suffix: 'Suffix' })
+
+      expect(styleOf(affixLineOf(input()))).toMatchObject({
+        alignItems: 'center',
+        flexDirection: 'row',
+      })
+    })
+
     it('draws its value in the line height on Android', async () => {
       jest.replaceProperty(Platform, 'OS', 'android')
       await renderField()
 
       expect(styleOf(input())).toMatchObject({
         lineHeight: typography.bodyLargeLineHeight,
+      })
+    })
+
+    it('lines its value up with a prefix and a suffix by baseline on Android', async () => {
+      jest.replaceProperty(Platform, 'OS', 'android')
+      await renderField({ prefix: 'Prefix', suffix: 'Suffix' })
+
+      expect(styleOf(affixLineOf(input()))).toMatchObject({
+        alignItems: 'baseline',
+        flexDirection: 'row',
       })
     })
 
