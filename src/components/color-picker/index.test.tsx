@@ -303,6 +303,9 @@ describe('ColorPicker', () => {
       expect(
         styleOf(screen.getByRole('img', { name: nameOf(PURPLE) })),
       ).toMatchObject({ height: 24, width: 24 })
+      expect(
+        styleOf(screen.getByRole('img', { name: nameOf(PURPLE) })).opacity,
+      ).toBeUndefined()
       expect(fillOf(screen.getByRole('img', { name: nameOf(PURPLE) }))).toBe(
         parseColor(PURPLE).toString('css'),
       )
@@ -373,6 +376,14 @@ describe('ColorPicker', () => {
       expect(styleOf(screen.getByText('Label')).color).toBe(
         withOpacity(colors.onSurface, stateLayerOpacity.disabledContent),
       )
+    })
+
+    it('fades its swatch with its label while disabled', async () => {
+      await renderPicker({ isDisabled: true })
+
+      expect(
+        styleOf(screen.getByRole('img', { name: nameOf(PURPLE) })).opacity,
+      ).toBe(stateLayerOpacity.disabledContent)
     })
 
     it('draws its state layer in on surface under a pointer, and drops it once disabled', async () => {
