@@ -34,14 +34,24 @@ const styles = StyleSheet.create({
     position: 'relative',
     top: -RISE,
   },
-  // The large badge over the top trailing corner of what it is drawn on: its
-  // leading edge 12dp inside the trailing edge, whatever the width, as web's
-  // `calc(100% - 12px)` places it.
+  // The large badge over the top trailing corner of what it is drawn on, in
+  // its pin, from which it runs toward the end however long its count.
   over: {
-    marginStart: -OVERLAP,
+    flexShrink: 0,
+  },
+  // Where the large badge's leading edge goes: a pin of no width 12dp inside
+  // the trailing edge and 2dp above the top, so the badge it holds starts
+  // where web's `calc(100% - 12px)` places it. A percentage inset would do it
+  // in one step on web, but React Native lays out with Yoga's errata, which
+  // read a percentage on an absolute child against the room its parent was
+  // offered rather than the parent's own box: `start: '100%'` put the badge
+  // at the far edge of the row its icon sat in, measured on an iPhone.
+  pin: {
+    end: OVERLAP,
+    flexDirection: 'row',
     position: 'absolute',
-    start: '100%',
     top: -RISE,
+    width: 0,
   },
   // The small badge's 6dp square.
   small: {

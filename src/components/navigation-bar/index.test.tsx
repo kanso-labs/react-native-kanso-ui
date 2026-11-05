@@ -206,8 +206,11 @@ async function layOut({
 }
 
 // The badge's mark on a destination's icon.
+// The badge's mark on a destination's icon. The large badge over a corner is
+// held in a pin.
 function markOf(name: string) {
-  return child(child(iconSlotOf(name).children[0]).children[1])
+  const last = pinOf(name)
+  return last.props['aria-hidden'] === true ? last : child(last.children[0])
 }
 
 // The destinations drawn off screen in the horizontal form, to be measured.
@@ -226,6 +229,12 @@ function pillOf(name: string) {
   const destination = tab(name)
   const last = child(destination.children.at(-1))
   return last.children.length > 1 ? last : destination
+}
+
+// What follows a destination's icon in its badge: the mark, or the pin
+// holding the large badge.
+function pinOf(name: string) {
+  return child(child(iconSlotOf(name).children[0]).children[1])
 }
 
 // Renders a bar of three destinations, the second one current unless a case
@@ -854,13 +863,15 @@ describe('NavigationBar', () => {
 
       expect(styleOf(markOf('First item'))).toMatchObject({
         backgroundColor: colors.error,
-        marginStart: -12,
         minHeight: 16,
         minWidth: 16,
         paddingHorizontal: spacing.xs,
+      })
+      expect(styleOf(pinOf('First item'))).toMatchObject({
+        end: 12,
         position: 'absolute',
-        start: '100%',
         top: -2,
+        width: 0,
       })
       const count = countOf('First item')
       expect(count.children).toEqual(['3'])
@@ -926,7 +937,7 @@ describe('NavigationBar', () => {
   })
 
   describe('in a right-to-left layout', () => {
-    it('places the badge by start and end, which the layout turns over', async () => {
+    it('places the badge from its end, which the layout turns over', async () => {
       jest.replaceProperty(I18nManager, 'isRTL', true)
       const sample = { items: { first: { badge: 3 }, second: { badge: true } } }
       resize(COMPACT)
@@ -936,9 +947,9 @@ describe('NavigationBar', () => {
         </ThemeScope>,
       )
 
-      expect(styleOf(markOf('First item'))).toMatchObject({ start: '100%' })
+      expect(styleOf(pinOf('First item'))).toMatchObject({ end: 12 })
       expect(styleOf(markOf('Second item'))).toMatchObject({ end: 0 })
-      expect(styleOf(markOf('First item')).left).toBeUndefined()
+      expect(styleOf(pinOf('First item')).right).toBeUndefined()
       expect(styleOf(markOf('Second item')).right).toBeUndefined()
       expect(styleOf(rowOf()).flexDirection).toBe('row')
     })

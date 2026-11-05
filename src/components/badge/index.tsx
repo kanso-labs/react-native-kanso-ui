@@ -23,7 +23,7 @@ import { styles, stylesOf } from './styles'
 // badge fills the icon's top trailing 6dp square. The large badge's bottom
 // leading corner sits 14dp down and 12dp in from the icon's top trailing
 // corner, so it stands 2dp above the icon and grows toward the end as its
-// count lengthens. Both are placed by `start` and `end`, so the mark stays on
+// count lengthens. Both are placed from the `end` edge, so the mark stays on
 // the trailing corner under right-to-left.
 //
 // Given nothing to wrap, the badge is the mark alone, standing in the line
@@ -91,30 +91,35 @@ function Badge({ children, count, max = 999, style, ...props }: BadgeProps) {
   const label = count === undefined ? undefined : countOf(count, max, locale)
   const alone = children === undefined || children === null
 
+  const over = label !== undefined && !alone && !inFlow
+  const mark = (
+    <View
+      aria-hidden
+      style={composeStyles<ViewStyle>(
+        own.mark,
+        label === undefined
+          ? [styles.small, alone ? styles.alone : styles.smallOver]
+          : [
+              own.large,
+              alone ? styles.alone : inFlow ? styles.inFlow : styles.over,
+            ],
+      )}
+    >
+      {label === undefined ? null : (
+        <>
+          <NativeText style={styles.space}> </NativeText>
+          <NativeText style={composeStyles<TextStyle>(role, own.count)}>
+            {label}
+          </NativeText>
+        </>
+      )}
+    </View>
+  )
+
   return (
     <View {...props} style={composeStyles<ViewStyle>(styles.anchor, style)}>
       {children}
-      <View
-        aria-hidden
-        style={composeStyles<ViewStyle>(
-          own.mark,
-          label === undefined
-            ? [styles.small, alone ? styles.alone : styles.smallOver]
-            : [
-                own.large,
-                alone ? styles.alone : inFlow ? styles.inFlow : styles.over,
-              ],
-        )}
-      >
-        {label === undefined ? null : (
-          <>
-            <NativeText style={styles.space}> </NativeText>
-            <NativeText style={composeStyles<TextStyle>(role, own.count)}>
-              {label}
-            </NativeText>
-          </>
-        )}
-      </View>
+      {over ? <View style={styles.pin}>{mark}</View> : mark}
     </View>
   )
 }

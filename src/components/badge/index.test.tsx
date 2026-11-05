@@ -35,10 +35,16 @@ function countOf(of: TestInstance) {
   return child(of.children[1])
 }
 
-// The mark, which comes after what the badge is drawn on, or alone.
+// The mark, which comes after what the badge is drawn on, or alone. The
+// large badge over a corner is held in a pin.
 function mark() {
-  const children = anchor().children
-  return child(children.at(-1))
+  const last = child(anchor().children.at(-1))
+  return last.props['aria-hidden'] === true ? last : child(last.children[0])
+}
+
+// What holds the large badge over a corner.
+function pin() {
+  return child(anchor().children.at(-1))
 }
 
 function styleOf(element: {
@@ -154,14 +160,31 @@ describe('badge', () => {
         </Badge>,
       )
 
-      const style = styleOf(mark())
-      expect(style).toMatchObject({
-        marginStart: -12,
+      expect(styleOf(pin())).toMatchObject({
+        end: 12,
+        flexDirection: 'row',
         position: 'absolute',
-        start: '100%',
         top: -2,
+        width: 0,
       })
+      const style = styleOf(mark())
+      expect(style).toMatchObject({ flexShrink: 0 })
+      expect(style).not.toHaveProperty('position')
       expect(style).not.toHaveProperty('left')
+    })
+
+    it('places nothing by a percentage, which Yoga reads against the row around it', async () => {
+      await render(
+        <Badge count={3} testID="badge">
+          {ICON}
+        </Badge>,
+      )
+
+      for (const style of [styleOf(pin()), styleOf(mark())]) {
+        for (const value of Object.values(style)) {
+          expect(String(value)).not.toMatch(/%$/u)
+        }
+      }
     })
 
     it('grows toward the end as the count lengthens, at least 16dp wide', async () => {
