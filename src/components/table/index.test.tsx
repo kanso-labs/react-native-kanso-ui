@@ -296,6 +296,20 @@ function Loading(props: {
   )
 }
 
+// Lays out the column the table measures at `index`, among those it
+// measures, at `width`, as its widest word and its padding.
+async function measureColumn(index: number, width: number) {
+  await fireEvent(instance(measurer().children.at(index)), 'layout', {
+    nativeEvent: { layout: { height: 100, width, x: 0, y: 0 } },
+  })
+}
+
+// What the table measures its columns' words with, off screen: a view for
+// each column that sets text, holding its words.
+function measurer() {
+  return instance(instance(screen.root).children.at(-1))
+}
+
 // An element an empty table draws in place of rows.
 function nothing(): ReactNode {
   return <Text testID="nothing">Nothing to show</Text>
@@ -388,6 +402,29 @@ function Sortable(props: Partial<Parameters<typeof Table>[0]>) {
   )
 }
 
+// Two columns at a 600dp table, the first taking 560dp, which leaves the
+// second less than any minimum.
+function Squeezed({ minWidth }: { readonly minWidth?: number }) {
+  return (
+    <Table aria-label="Label" style={CALL_SITE}>
+      <Table.Header>
+        <Table.Column defaultWidth={560} id="colName">
+          Label
+        </Table.Column>
+        <Table.Column id="colStatus" minWidth={minWidth}>
+          Status
+        </Table.Column>
+      </Table.Header>
+      <Table.Body>
+        <Table.Row id="first">
+          <Table.Cell>First item</Table.Cell>
+          <Table.Cell>Waiting</Table.Cell>
+        </Table.Row>
+      </Table.Body>
+    </Table>
+  )
+}
+
 function styleOf(element: {
   props: { style?: StyleProp<TextStyle | ViewStyle> }
 }): TextStyle & ViewStyle {
@@ -398,6 +435,21 @@ function styleOf(element: {
 function widthsOf(...names: string[]) {
   return names.map((name) => styleOf(headerOf(name)).width)
 }
+
+// The words the column the table measures at `index` sets, in order.
+function wordsIn(index: number) {
+  return wordsOf(instance(measurer().children.at(index)))
+}
+
+// The words a measured column sets, each the text of its own Text.
+function wordsOf(column: TestInstance) {
+  return column.children.map((word) =>
+    instance(word)
+      .children.map((part) => (typeof part === 'string' ? part : ''))
+      .join(''),
+  )
+}
+
 // Each case's spies and replaced properties, the platform and the layout
 // direction among them, go back as they were.
 afterEach(() => {
@@ -681,6 +733,185 @@ describe('Table', () => {
 
       expect(styleOf(cellOf('First item')).width).toBe(400)
       expect(styleOf(cellOf('01')).width).toBe(200)
+    })
+  })
+
+  describe('the narrowest a column goes', () => {
+    it('measures each column’s words off screen, hidden from a screen reader', async () => {
+      await render(<Basic />)
+
+      expect(measurer().props['aria-hidden']).toBe(true)
+      expect(styleOf(measurer())).toMatchObject({
+        opacity: 0,
+        pointerEvents: 'none',
+        position: 'absolute',
+      })
+      expect(screen.getAllByText('Label')).toHaveLength(1)
+      expect(wordsIn(0)).toEqual(['Label', 'Second', 'First', 'Third', 'item'])
+      expect(wordsIn(1)).toEqual(['Value', '01', '02', '03'])
+    })
+
+    it('sets each word as the table does, inside the cells’ padding', async () => {
+      await render(<Basic />)
+
+      const column = instance(measurer().children.at(0))
+      const [name, word] = [column.children.at(0), column.children.at(1)]
+      const drawnName = styleOf(screen.getByText('Label'))
+      const drawnWord = styleOf(screen.getByText('Second item'))
+      expect(styleOf(column).paddingHorizontal).toBe(spacing.lg)
+      expect(instance(name).props.numberOfLines).toBe(1)
+      expect(styleOf(instance(name))).toMatchObject({
+        fontFamily: drawnName.fontFamily,
+        fontSize: drawnName.fontSize,
+        fontWeight: drawnName.fontWeight,
+        letterSpacing: drawnName.letterSpacing,
+      })
+      expect(styleOf(instance(word))).toMatchObject({
+        fontFamily: drawnWord.fontFamily,
+        fontSize: drawnWord.fontSize,
+        fontWeight: drawnWord.fontWeight,
+        letterSpacing: drawnWord.letterSpacing,
+      })
+    })
+
+    it('makes room for the arrow beside a sorted column’s name', async () => {
+      await render(<Sortable sortDescriptor={SORTED} />)
+
+      const sorted = instance(
+        instance(measurer().children.at(0)).children.at(0),
+      )
+      const other = instance(instance(measurer().children.at(1)).children.at(0))
+      expect(styleOf(sorted).paddingEnd).toBe(spacing.sm + 18)
+      expect(styleOf(other).paddingEnd).toBeUndefined()
+    })
+
+    it('keeps a column at least as wide as its widest word, scrolling past it', async () => {
+      await render(<Squeezed />)
+      await layOut()
+
+      expect(widthsOf('Label', 'Status')).toEqual([560, 75])
+
+      await measureColumn(1, 90.4)
+
+      expect(widthsOf('Label', 'Status')).toEqual([560, 91])
+      expect(styleOf(cellOf('Waiting')).width).toBe(91)
+      expect(scroller().props.scrollEnabled).toBe(true)
+    })
+
+    it('keeps React Stately’s 75dp for a column of short words', async () => {
+      await render(<Squeezed />)
+      await layOut()
+      await measureColumn(1, 50)
+
+      expect(widthsOf('Label', 'Status')).toEqual([560, 75])
+    })
+
+    it('keeps a column’s own minimum', async () => {
+      await render(<Squeezed minWidth={60} />)
+      await layOut()
+
+      expect(widthsOf('Label', 'Status')).toEqual([560, 60])
+
+      await measureColumn(1, 90)
+
+      expect(widthsOf('Label', 'Status')).toEqual([560, 60])
+    })
+
+    it('stops a resize handle at the widest word', async () => {
+      await render(<Resizable />)
+      await layOut()
+      await measureColumn(0, 195)
+
+      expect(handles().at(0)).toHaveAccessibilityValue({ min: 195 })
+
+      await fireEvent(
+        instance(handles().at(0)),
+        'accessibilityAction',
+        action('decrement'),
+      )
+
+      expect(widthsOf('Label')).toEqual([195])
+    })
+
+    it('measures the footer, and leaves out a checkbox, a cell across columns and an element', async () => {
+      await render(
+        <Table aria-label="Label" selectionMode="multiple">
+          <Table.Header>
+            <Table.Column id="colSelect" selection />
+            <Table.Column id="colName">Label</Table.Column>
+            <Table.Column id="colStatus">
+              <Text>Status</Text>
+            </Table.Column>
+            <Table.Column id="colValue">Value</Table.Column>
+          </Table.Header>
+          <Table.Body>
+            <Table.Row id="first">
+              <Table.Cell selection />
+              <Table.Cell colSpan={2}>Across two columns</Table.Cell>
+              <Table.Cell>01</Table.Cell>
+            </Table.Row>
+            <Table.Row id="second">
+              <Table.Cell selection />
+              <Table.Cell>Second item</Table.Cell>
+              <Table.Cell>
+                <Text>Waiting</Text>
+              </Table.Cell>
+              <Table.Cell>02</Table.Cell>
+            </Table.Row>
+          </Table.Body>
+          <Table.Footer>
+            <Table.Row id="total">
+              <Table.Cell colSpan={3}>Supporting line</Table.Cell>
+              <Table.Cell>Footnote</Table.Cell>
+            </Table.Row>
+          </Table.Footer>
+        </Table>,
+      )
+
+      expect(measurer().children).toHaveLength(2)
+      expect(wordsIn(0)).toEqual(['Label', 'Second', 'item'])
+      expect(wordsIn(1)).toEqual(['Value', '01', '02', 'Footnote'])
+    })
+
+    it('measures the eight longest of a column’s words', async () => {
+      const words = [
+        'First',
+        'Second',
+        'Third',
+        'Fourth',
+        'Fifth',
+        'Sixth',
+        'Seventh',
+        'Eighth',
+        'Ninth',
+        'Tenth',
+      ]
+      await render(
+        <Table aria-label="Label">
+          <Table.Header>
+            <Table.Column id="colName">Label</Table.Column>
+          </Table.Header>
+          <Table.Body>
+            {words.map((word) => (
+              <Table.Row id={word} key={word}>
+                <Table.Cell>{word}</Table.Cell>
+              </Table.Row>
+            ))}
+          </Table.Body>
+        </Table>,
+      )
+
+      expect(wordsIn(0)).toEqual([
+        'Label',
+        'Seventh',
+        'Second',
+        'Fourth',
+        'Eighth',
+        'First',
+        'Third',
+        'Fifth',
+        'Sixth',
+      ])
     })
   })
 
