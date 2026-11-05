@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.24](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.11.23...v0.11.24) (2026-11-05)
+
+
+### Dependencies
+
+* update kanso-labs/actions action to v4.5.0 ([#370](https://github.com/kanso-labs/react-native-kanso-ui/issues/370)) ([df6cf8d](https://github.com/kanso-labs/react-native-kanso-ui/commit/df6cf8d77fe92ac7cc6cbf769be1ab274770f7c9))
+
 ## [0.11.23](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.11.22...v0.11.23) (2026-11-05)
 
 
