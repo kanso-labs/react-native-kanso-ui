@@ -90,5 +90,29 @@ export default defineConfig([
       ],
     },
   },
+  // safe-area-context's `SafeAreaView` pads by its nearest provider's insets
+  // rather than its own overlap with the system bars, so a view below an app
+  // bar or above a screen's foot took the whole screen's inset. `SafeArea` in
+  // `src/safe-area` holds the view in a provider of its own, which is what
+  // makes the insets its own box's.
+  {
+    files: ['src/**/*.{ts,tsx}'],
+    ignores: ['src/safe-area/**'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              importNames: ['SafeAreaView'],
+              message:
+                "SafeAreaView pads by the root provider's insets wherever it sits; use SafeArea from src/safe-area.",
+              name: 'react-native-safe-area-context',
+            },
+          ],
+        },
+      ],
+    },
+  },
   ...eslintPluginOxlint.buildFromOxlintConfigFile('./.oxlintrc.json'),
 ])

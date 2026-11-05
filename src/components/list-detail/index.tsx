@@ -2,11 +2,11 @@ import type { ComponentRef, ReactNode, Ref } from 'react'
 import type { ViewProps, ViewStyle } from 'react-native'
 
 import { StyleSheet, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
 
 import type { WindowSizeClass } from '../../hooks/useWindowSizeClass'
 
 import { useWindowSizeClass } from '../../hooks/useWindowSizeClass'
+import { SafeArea } from '../../safe-area'
 import { useTheme } from '../../theme/scope'
 import { composeStyles, themedStyles } from '../../theme/styles'
 
@@ -177,7 +177,7 @@ function Pane({ children, hidden, style }: PaneProps) {
       aria-hidden={hidden}
       style={composeStyles<ViewStyle>(style, hidden ? styles.hidden : null)}
     >
-      <SafeAreaView style={styles.safeArea}>{children}</SafeAreaView>
+      <SafeArea style={styles.safeArea}>{children}</SafeArea>
     </View>
   )
 }

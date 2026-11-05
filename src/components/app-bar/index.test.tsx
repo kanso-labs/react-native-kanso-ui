@@ -128,8 +128,9 @@ function row() {
   return child(safeArea().children[0])
 }
 
+// The safe area, inside the provider of its own it reads its insets from.
 function safeArea() {
-  return child(bar().children[0])
+  return child(child(bar().children[0]).children[0])
 }
 
 function styleOf(element: {
@@ -242,6 +243,7 @@ describe('AppBar', () => {
     it('keeps the contents clear of the top and the sides', async () => {
       await renderBar()
 
+      expect(child(bar().children[0]).type).toBe('RNCSafeAreaProvider')
       expect(safeArea().type).toBe('RNCSafeAreaView')
       expect(safeArea().props.edges).toEqual({
         bottom: 'off',

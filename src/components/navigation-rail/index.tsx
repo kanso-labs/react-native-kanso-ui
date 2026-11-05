@@ -17,12 +17,12 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated'
-import { SafeAreaView } from 'react-native-safe-area-context'
 
 import type { NavigationItemProps } from '../../navigation'
 import type { ResolvedTheme } from '../../theme/scope'
 
 import { NavigationContext, NavigationItem } from '../../navigation'
+import { SafeArea } from '../../safe-area'
 import { useTheme } from '../../theme/scope'
 import { composeStyles, themedStyles } from '../../theme/styles'
 
@@ -277,7 +277,7 @@ function NavigationRail({
         onLayout={widthThen(width, reduceMotion, timingOf(theme))}
         style={styles.content}
       >
-        <SafeAreaView edges={edgesOf()} style={styles.inset}>
+        <SafeArea edges={edgesOf()} style={styles.inset}>
           <View style={isExpanded ? own.expanded : own.collapsed}>
             {header === undefined ? null : (
               <View
@@ -300,7 +300,7 @@ function NavigationRail({
               <NavigationContext value={context}>{children}</NavigationContext>
             </ScrollView>
           </View>
-        </SafeAreaView>
+        </SafeArea>
       </View>
     </Animated.View>
   )

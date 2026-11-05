@@ -307,8 +307,9 @@ function rowOf() {
   return child(safeAreaOf().children[0])
 }
 
+// The safe area, inside the provider of its own it reads its insets from.
 function safeAreaOf() {
-  return child(screen.getByTestId('bar').children[0])
+  return child(child(screen.getByTestId('bar').children[0]).children[0])
 }
 
 function Sample({
@@ -445,6 +446,9 @@ describe('NavigationBar', () => {
     it('keeps its destinations clear of the bottom and the sides', async () => {
       await renderBar()
 
+      expect(child(screen.getByTestId('bar').children[0]).type).toBe(
+        'RNCSafeAreaProvider',
+      )
       expect(safeAreaOf().type).toBe('RNCSafeAreaView')
       expect(safeAreaOf().props.edges).toEqual({
         bottom: 'additive',
