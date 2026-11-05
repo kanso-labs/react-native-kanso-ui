@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.11.25](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.11.24...v0.11.25) (2026-11-05)
+
+
+### Bug Fixes
+
+* **carousel:** let a masked item hide a label it has no room for ([#387](https://github.com/kanso-labs/react-native-kanso-ui/issues/387)) ([e968dea](https://github.com/kanso-labs/react-native-kanso-ui/commit/e968dea04c5ac71bd6f05a4237bf9f6f4dd38456))
+* **color-picker:** fade the trigger's swatch when the picker is disabled ([#384](https://github.com/kanso-labs/react-native-kanso-ui/issues/384)) ([f2b8cbd](https://github.com/kanso-labs/react-native-kanso-ui/commit/f2b8cbd053754532d17b5fc96f6edfaee8fb2501))
+* **combo-box:** give the chosen options their width before the input ([#386](https://github.com/kanso-labs/react-native-kanso-ui/issues/386)) ([6731f3b](https://github.com/kanso-labs/react-native-kanso-ui/commit/6731f3b98dbe66fd8e7d2df4e57a788356663ba6))
+* **field:** keep an outlined box 56dp around an icon button ([#383](https://github.com/kanso-labs/react-native-kanso-ui/issues/383)) ([351c87f](https://github.com/kanso-labs/react-native-kanso-ui/commit/351c87f3988e035fedc118c3b33d10bd64f3e754))
+* **range-calendar:** name every month when two months stack at a compact width ([#389](https://github.com/kanso-labs/react-native-kanso-ui/issues/389)) ([3aa0ed6](https://github.com/kanso-labs/react-native-kanso-ui/commit/3aa0ed6bb65fe781a06c3eaebc033982d37c0289))
+* **segmented-button:** keep every segment's label readable at a compact width ([#388](https://github.com/kanso-labs/react-native-kanso-ui/issues/388)) ([7ae3ced](https://github.com/kanso-labs/react-native-kanso-ui/commit/7ae3ced79de3152970ab610a523ff7dac560bddf))
+* **table:** let what a cell holds keep its own width ([#385](https://github.com/kanso-labs/react-native-kanso-ui/issues/385)) ([ade18f3](https://github.com/kanso-labs/react-native-kanso-ui/commit/ade18f36a194047c5321b15337d31f234d998353))
+
+
+### Dependencies
+
+* update dependency @kanso-labs/kanso-ui-core to v0.1.12 ([#395](https://github.com/kanso-labs/react-native-kanso-ui/issues/395)) ([9f4ad42](https://github.com/kanso-labs/react-native-kanso-ui/commit/9f4ad4237ecaade8c168786d1886c4c8d79638be))
+* update dependency @kanso-labs/kanso-ui-core to v0.1.12 ([#396](https://github.com/kanso-labs/react-native-kanso-ui/issues/396)) ([567b6e0](https://github.com/kanso-labs/react-native-kanso-ui/commit/567b6e02af45a2c3b6eafe939496a7b3b34f801e))
+* update dependency oxlint-tsgolint to v7.0.2006 ([#397](https://github.com/kanso-labs/react-native-kanso-ui/issues/397)) ([2cfb66f](https://github.com/kanso-labs/react-native-kanso-ui/commit/2cfb66f79166ca2b3595ec8f6c58be5e46f0b42e))
+* update dependency react-native-gesture-handler to v3.5.0 ([#400](https://github.com/kanso-labs/react-native-kanso-ui/issues/400)) ([cd703af](https://github.com/kanso-labs/react-native-kanso-ui/commit/cd703afc1522aa56e252284a235222c153b7856b))
+* update dependency react-native-svg to v15.16.1 ([#398](https://github.com/kanso-labs/react-native-kanso-ui/issues/398)) ([8bf4532](https://github.com/kanso-labs/react-native-kanso-ui/commit/8bf4532cc3f6d8bc2bbe5ef60c42ca10fd50f61a))
+* update storybook to v10.6.6 ([#399](https://github.com/kanso-labs/react-native-kanso-ui/issues/399)) ([9c0936b](https://github.com/kanso-labs/react-native-kanso-ui/commit/9c0936b9b8afd3d9792f3e24d7bbb67fb8a5ac1f))
+
 ## [0.11.24](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.11.23...v0.11.24) (2026-11-05)
 
 
