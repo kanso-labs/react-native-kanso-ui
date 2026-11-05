@@ -595,6 +595,14 @@ describe('carousel', () => {
       expect(styleOf(child(item(1).children[0])).width).toBe(240)
     })
 
+    it('holds what it holds at its own height, so the mask rounds the item rather than room below it', async () => {
+      await renderCarousel({ layout: 'uncontained' })
+      await layOut(400)
+
+      // Told to grow, Yoga grew it past an uncontained item on an iPhone.
+      expect(styleOf(child(item(1).children[0])).flexGrow ?? 0).toBe(0)
+    })
+
     it('hands children written as a function the width it is laid out at and how much of it shows', async () => {
       const shown: CarouselItemRenderProps[] = []
       await render(

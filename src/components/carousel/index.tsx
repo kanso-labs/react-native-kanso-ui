@@ -230,9 +230,12 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   // What an item holds, laid out at the large width and centred on the mask,
-  // so the mask cuts it at both sides.
+  // so the mask cuts it at both sides. It is as tall as what it holds, as
+  // web's is: told to grow, it grew 48dp past an uncontained item's content
+  // on an iPhone, the mask with it, so the mask's corners rounded empty
+  // space below the item and the item's own square corners showed.
   held: {
-    flexGrow: 1,
+    flexGrow: 0,
   },
   // Previous points at the start, and next at the end; the end chevron turns
   // over with the text itself, so previous turns it back.
