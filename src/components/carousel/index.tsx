@@ -5,7 +5,11 @@ import type {
   ViewProps,
   ViewStyle,
 } from 'react-native'
-import type { AnimatedStyle, SharedValue } from 'react-native-reanimated'
+import type {
+  AnimatedStyle,
+  DerivedValue,
+  SharedValue,
+} from 'react-native-reanimated'
 
 import {
   Children,
@@ -29,6 +33,7 @@ import Animated, {
   useAnimatedReaction,
   useAnimatedScrollHandler,
   useAnimatedStyle,
+  useDerivedValue,
   useReducedMotion,
   useSharedValue,
 } from 'react-native-reanimated'
@@ -75,6 +80,15 @@ import { IconButton } from '../icon-button'
 // no rests and no masks, so its items scroll in the row themselves, snapping
 // to their own starts.
 //
+// **What an item holds can see its mask.** The page shows an item's text
+// once the item is wide enough to hold it, and only what the item holds
+// knows where its text is, so `Carousel.Item` takes its children as a
+// function too, as web's does, handed the width the item is laid out at and
+// the width that shows of it. The second is a Reanimated value rather than
+// web's number, since the mask follows the scroll on the UI thread and a
+// number would re-render the item every frame; an animated style reads it
+// there, so text can fade or hide as the mask closes over it.
+//
 // **It is the ARIA carousel pattern** that web follows: a region named by
 // `label`, each item a group named by which of how many it is, and a previous
 // and a next button under it, at the end, which move to the neighbouring rest
@@ -108,9 +122,32 @@ const DEFAULT_ITEM_SIZE = 240
 const SLACK = 0.5
 
 type CarouselItemProps = Omit<ViewProps, 'children'> & {
-  /** What the item shows: usually an image, which the item masks. */
-  readonly children?: ReactNode
+  /**
+   * What the item shows: usually an image, which the item masks. A function
+   * is handed how much of the item shows, so text the item has no room for
+   * can be hidden as the mask closes over it.
+   */
+  readonly children?:
+    | ((state: CarouselItemRenderProps) => ReactNode)
+    | ReactNode
   readonly ref?: Ref<ComponentRef<typeof View>>
+}
+
+/** How much of a `Carousel.Item` shows, for children written as a function. */
+type CarouselItemRenderProps = {
+  /**
+   * How much of `width` shows, in dp, following the scroll on the UI
+   * thread, where an animated style reads it. The mask takes the rest evenly
+   * from both sides, so `(width - visibleWidth) / 2` is cut off each. It is
+   * `width` for an item drawn large, and for every item of an uncontained
+   * carousel, which masks nothing.
+   */
+  readonly visibleWidth: DerivedValue<number>
+  /**
+   * The width the item is laid out at, in dp: the large item's, which every
+   * item in the carousel shares.
+   */
+  readonly width: number
 }
 
 type CarouselProps = Omit<ViewProps, 'children'> & {
@@ -437,7 +474,9 @@ function CarouselItem({ children, style, ...props }: CarouselItemProps) {
   const slot = use(SlotContext)
   const count = slot?.count ?? 1
   const index = slot?.index ?? 0
-  const drawn = useDrawn(slot)
+  const visibleWidth = useVisibleWidth(slot)
+  const drawn = useDrawn(slot, visibleWidth)
+  const large = slot?.large ?? 0
 
   return (
     <View style={composeStyles<ViewStyle>(styles.slot, slotWidthOf(slot))}>
@@ -449,7 +488,9 @@ function CarouselItem({ children, style, ...props }: CarouselItemProps) {
         style={composeStyles<AnimatedStyle<ViewStyle>>(own.item, drawn, style)}
       >
         <View style={composeStyles<ViewStyle>(styles.held, slotWidthOf(slot))}>
-          {children}
+          {typeof children === 'function'
+            ? children({ visibleWidth, width: large })
+            : children}
         </View>
       </Animated.View>
     </View>
@@ -541,7 +582,7 @@ function slotWidthOf(slot: null | Slot): undefined | ViewStyle {
 // then from its slot to where the arrangement places it, at the width it is
 // drawn at. Physical, since a transform is: a right-to-left row is laid out
 // from the right, so there the item moves the other way.
-function useDrawn(slot: null | Slot) {
+function useDrawn(slot: null | Slot, visibleWidth: DerivedValue<number>) {
   const path = slot?.path
   const scrolled = slot?.scrolled
   const index = slot?.index ?? 0
@@ -555,21 +596,38 @@ function useDrawn(slot: null | Slot) {
       return {}
     }
     const offset = scrolled.get()
-    const position = offset / step
     const start = interpolate(
-      position,
+      offset / step,
       path.rests,
       path.starts,
       Extrapolation.CLAMP,
     )
-    const width = interpolate(
-      position,
+    const width = visibleWidth.get()
+    const shift = offset + start + width / 2 - index * step - large / 2
+    return { transform: [{ translateX: rtl ? -shift : shift }], width }
+  })
+}
+
+// The width an item is drawn at, which is how much of it shows: the
+// arrangement's, interpolated between rests, or the large width where
+// nothing is masked.
+function useVisibleWidth(slot: null | Slot): DerivedValue<number> {
+  const path = slot?.path
+  const scrolled = slot?.scrolled
+  const large = slot?.large ?? 0
+  const step = slot?.step ?? 0
+
+  return useDerivedValue(() => {
+    'worklet'
+    if (path === undefined || scrolled === undefined) {
+      return large
+    }
+    return interpolate(
+      scrolled.get() / step,
       path.rests,
       path.widths,
       Extrapolation.CLAMP,
     )
-    const shift = offset + start + width / 2 - index * step - large / 2
-    return { transform: [{ translateX: rtl ? -shift : shift }], width }
   })
 }
 
@@ -585,4 +643,9 @@ function widthTo(onMeasure: (width: number) => void) {
 Carousel.Item = CarouselItem
 
 export { Carousel, CarouselItem }
-export type { CarouselItemProps, CarouselLayout, CarouselProps }
+export type {
+  CarouselItemProps,
+  CarouselItemRenderProps,
+  CarouselLayout,
+  CarouselProps,
+}
