@@ -50,6 +50,21 @@ const SEGMENTS = (
   </>
 )
 
+// The default set with an icon before every label.
+const ICON_SEGMENTS = (
+  <>
+    <SegmentedButton.Segment icon={DOT} id="first">
+      First item
+    </SegmentedButton.Segment>
+    <SegmentedButton.Segment icon={DOT} id="second">
+      Second item
+    </SegmentedButton.Segment>
+    <SegmentedButton.Segment icon={DOT} id="third">
+      Third item
+    </SegmentedButton.Segment>
+  </>
+)
+
 const meta = {
   args: {
     'aria-label': 'Label',
@@ -73,19 +88,7 @@ const MultipleSelection: Story = {
 
 const WithIcons: Story = {
   args: {
-    children: (
-      <>
-        <SegmentedButton.Segment icon={DOT} id="first">
-          First item
-        </SegmentedButton.Segment>
-        <SegmentedButton.Segment icon={DOT} id="second">
-          Second item
-        </SegmentedButton.Segment>
-        <SegmentedButton.Segment icon={DOT} id="third">
-          Third item
-        </SegmentedButton.Segment>
-      </>
-    ),
+    children: ICON_SEGMENTS,
   },
 }
 
@@ -116,10 +119,26 @@ const IconOnly: Story = {
   },
 }
 
-// The set on a phone-width container, narrower than the track asks for. The
-// room a check needs is given back from the segments not drawing one before
-// any label is cut.
+// The set on a phone-width container, narrower than the track asks for.
+// "First item" has room for its check, but "Second item" would not if it were
+// chosen, so the set draws no check whichever segment is chosen, and the
+// chosen one takes the stronger container instead. Every label shows whole.
 const Narrow: Story = {
+  render: (args) => (
+    <View style={styles.narrow}>
+      <SegmentedButton {...args} />
+    </View>
+  ),
+}
+
+// The same container with an icon on every segment, where an icon would cut
+// a label that fits on its own. The set draws no check and no icons, and the
+// chosen segment takes the stronger container instead, so every label shows
+// whole and the choice still reads.
+const NarrowWithIcons: Story = {
+  args: {
+    children: ICON_SEGMENTS,
+  },
   render: (args) => (
     <View style={styles.narrow}>
       <SegmentedButton {...args} />
@@ -180,6 +199,7 @@ export {
   IconOnly,
   MultipleSelection,
   Narrow,
+  NarrowWithIcons,
   TwoSegments,
   WithIcons,
   WithoutSelectedIcon,

@@ -155,6 +155,23 @@ function gapOf(name: string) {
   return child(partsOf(name).leading.children.at(1))
 }
 
+// The sample set with the probe icon before every label.
+function IconSegments(props: Partial<SegmentedButtonProps>) {
+  return (
+    <SegmentedButton aria-label="Label" {...props}>
+      <SegmentedButton.Segment icon={ICON} id="first">
+        First item
+      </SegmentedButton.Segment>
+      <SegmentedButton.Segment icon={ICON} id="second">
+        Second item
+      </SegmentedButton.Segment>
+      <SegmentedButton.Segment icon={ICON} id="third">
+        Third item
+      </SegmentedButton.Segment>
+    </SegmentedButton>
+  )
+}
+
 // The chosen container of a set that chooses one.
 function indicator() {
   return child(clip().children.at(0))
@@ -1316,6 +1333,140 @@ describe('SegmentedButton', () => {
       expect(widthOf(child(slotOf('Second item')))).toBe(GLYPH)
       expect(widthOf(gapOf('Second item'))).toBe(spacing.sm)
       expect(widthOf(partsOf('Second item').trailing)).toBe(GIVE)
+    })
+  })
+
+  // Segments 115dp wide hold every sample label bare: 60, 80 and 70 against
+  // the 97dp, 98dp and 98dp left once the rules and the 8dp of padding either
+  // side are taken out. Beside a glyph's 26dp, the second's 80 would be cut,
+  // though the first is the one chosen.
+  describe('a track a glyph would crowd', () => {
+    const CROWDED = 115
+
+    it('draws no glyph beside any label once one would cut a label', async () => {
+      await render(<IconSegments defaultSelectedKeys={FIRST} />)
+
+      await measure()
+      await layOutAll(CROWDED)
+
+      expect(glyphOf('First item')).toBeUndefined()
+      expect(glyphOf('Second item')).toBeUndefined()
+      expect(screen.queryAllByTestId('icon')).toHaveLength(0)
+    })
+
+    it('gives every label the whole of its segment', async () => {
+      await render(<IconSegments defaultSelectedKeys={FIRST} />)
+
+      await measure()
+      await layOutAll(CROWDED)
+      await advance(motion.durationShort2)
+
+      expect(getAnimatedStyle(partsOf('First item').label)).toMatchObject({
+        maxWidth: CROWDED - 2 - spacing.sm * 2,
+      })
+      expect(getAnimatedStyle(partsOf('Second item').label)).toMatchObject({
+        maxWidth: CROWDED - 1 - spacing.sm * 2,
+      })
+    })
+
+    it('draws the chosen segment on the stronger container', async () => {
+      await render(<Segments defaultSelectedKeys={FIRST} />)
+
+      await measure()
+      await layOutAll(CROWDED)
+
+      expect(styleOf(indicator()).backgroundColor).toBe(colors.secondary)
+      expect(await labelColor('First item')).toBe(same(colors.onSecondary))
+    })
+
+    it('fills every chosen segment on secondary while several may be', async () => {
+      await render(
+        <Segments defaultSelectedKeys={FIRST} selectionMode="multiple" />,
+      )
+
+      await measure()
+      await layOutSegments(CROWDED)
+
+      expect(styleOf(fillOf('First item')).backgroundColor).toBe(
+        colors.secondary,
+      )
+    })
+
+    it('keeps the width it would give a glyph, so the answer cannot flip', async () => {
+      await render(<IconSegments defaultSelectedKeys={FIRST} />)
+
+      await measure()
+      const basis = styleOf(segment('First item')).width
+      await layOutAll(CROWDED)
+      await advance(motion.durationShort2)
+
+      expect(styleOf(segment('First item')).width).toBe(basis)
+      expect(widthOf(partsOf('First item').leading)).toBe(GIVE + RESERVE / 2)
+      expect(widthOf(partsOf('First item').trailing)).toBe(GIVE + RESERVE / 2)
+    })
+
+    it('draws the glyphs again once every label fits beside one', async () => {
+      await render(<IconSegments defaultSelectedKeys={FIRST} />)
+
+      await measure()
+      await layOutAll(CROWDED)
+      await layOutAll(80 + RESERVE + spacing.sm * 2 + 1)
+
+      expect(glyphOf('First item')).toBe(checkPath)
+      expect(glyphOf('Second item')).toBe(
+        `${colors.onSurface} ${String(GLYPH)}`,
+      )
+      expect(styleOf(indicator()).backgroundColor).toBe(
+        colors.secondaryContainer,
+      )
+    })
+
+    it('leaves an icon with no label as it is', async () => {
+      await render(
+        <SegmentedButton aria-label="Label" defaultSelectedKeys={FIRST}>
+          <SegmentedButton.Segment icon={ICON} id="first">
+            First item
+          </SegmentedButton.Segment>
+          <SegmentedButton.Segment
+            aria-label="Second item"
+            icon={ICON}
+            id="second"
+          />
+        </SegmentedButton>,
+      )
+
+      await measure([60])
+      await layOut(segment('First item'), { width: 80, x: 0 })
+
+      expect(glyphOf('First item')).toBeUndefined()
+      expect(screen.getAllByTestId('icon')).toHaveLength(1)
+    })
+
+    it('counts only a segment that could draw a glyph', async () => {
+      await render(
+        <SegmentedButton
+          aria-label="Label"
+          defaultSelectedKeys={FIRST}
+          showSelectedIcon={false}
+        >
+          <SegmentedButton.Segment icon={ICON} id="first">
+            First item
+          </SegmentedButton.Segment>
+          <SegmentedButton.Segment id="second">
+            Second item
+          </SegmentedButton.Segment>
+          <SegmentedButton.Segment id="third">
+            Third item
+          </SegmentedButton.Segment>
+        </SegmentedButton>,
+      )
+
+      await measure()
+      await layOutAll(60 + RESERVE + spacing.sm * 2 + 2)
+
+      expect(glyphOf('First item')).toBe(
+        `${colors.onSecondary} ${String(GLYPH)}`,
+      )
     })
   })
 

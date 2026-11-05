@@ -77,10 +77,22 @@ import { useTypeRole } from '../../typography/roles'
 // for it whether or not it does, split either side of the label while
 // nothing is drawn, so the track never changes width with the choice. That
 // room gives way before the label does: a squeezed segment gives back the
-// room first, then 4dp of its 12dp padding, and only then cuts its label
-// short with an ellipsis. The slot and the room around it ease over
-// `durationShort2` on the standard curve, and the check opens from its
-// centre.
+// room first, then 4dp of its 12dp padding, and then the glyphs themselves.
+// A label shows whole in a segment 16dp wider than it, or 42dp while a glyph
+// is drawn beside it, plus its rules, so on a phone a check or an icon is
+// what cuts a label that would otherwise fit. Once any segment's label would
+// be cut beside its glyph, the whole set stops drawing them: no check and no
+// icons beside a label, and the chosen segment on the stronger container a
+// set without a check draws, so the choice still reads. The whole set rather
+// than the one segment, since a set choosing several would otherwise draw one
+// chosen segment one way and the next another. And any segment rather than
+// the chosen one, since a check that would cut a label only once its segment
+// is chosen is the same cut a moment later, and choosing should not turn the
+// glyphs off or on. The answer reads each label's own width against its
+// segment's, and neither changes with what is drawn, so dropping the glyphs
+// cannot turn them back on. Only past that is a label cut short, with an
+// ellipsis. The slot and the room around it ease over `durationShort2` on the
+// standard curve, and the check opens from its centre.
 //
 // **The chosen container moves.** In a set that chooses one it is a view of
 // the track's own, behind the segments, so the labels and the rules are
@@ -116,6 +128,11 @@ type GroupContextValue = {
   /** The basis each segment takes, once every label is measured. */
   readonly basis: number | undefined
   readonly count: number
+  /**
+   * Whether a glyph would cut some segment's label, which turns every glyph
+   * beside a label off. See the header.
+   */
+  readonly crowded: boolean
   /** Records where a segment was laid out, for the chosen container. */
   readonly onPlace: (key: Key, place: Place) => void
   /**
@@ -432,6 +449,36 @@ function cornersOf(
   }
 }
 
+/**
+ * Whether a glyph would cut a label: some segment that could draw one has a
+ * label wider than what is left of the segment once its rules, the 8dp of
+ * padding it always keeps and the glyph's room are taken out. Only a segment
+ * that could draw a glyph counts, since a long label beside a slot it never
+ * fills is no reason for its neighbours to drop theirs. False until the
+ * segments are laid out.
+ */
+function crowdedOf(
+  segments: readonly ReactElement<SegmentedButtonSegmentProps>[],
+  labels: ReadonlyMap<Key, number>,
+  places: ReadonlyMap<Key, Place>,
+  showSelectedIcon: boolean,
+  { spacing }: ResolvedTheme,
+): boolean {
+  return segments.some(({ props }, index) => {
+    const label = labels.get(props.id)
+    const place = places.get(props.id)
+
+    return (
+      hasLabel(props.children) &&
+      reservesGlyph(props, showSelectedIcon) &&
+      label !== undefined &&
+      place !== undefined &&
+      label + GLYPH_SIZE + spacing.sm >
+        place.width - ruleOf(index) - RULE_WIDTH - spacing.sm * 2
+    )
+  })
+}
+
 // Whether a segment has a label, rather than an icon alone. An empty string
 // and a `false` from a condition at the call site are no label either.
 function hasLabel(children: ReactNode) {
@@ -670,10 +717,12 @@ function SegmentedButton({
   }
 
   const basis = basisOf(segments, labels, showSelectedIcon, theme)
+  const crowded = crowdedOf(segments, labels, places, showSelectedIcon, theme)
   const context = useMemo(
     () => ({
       basis,
       count: segments.length,
+      crowded,
       onPlace: (key: Key, place: Place) => {
         setPlaces((current) =>
           samePlace(current.get(key), place)
@@ -689,6 +738,7 @@ function SegmentedButton({
     }),
     [
       basis,
+      crowded,
       opening,
       places,
       segments.length,
@@ -713,7 +763,7 @@ function SegmentedButton({
           color={containerOf(
             theme,
             isDisabled || segment?.props.isDisabled === true,
-            showSelectedIcon && hasLabel(segment?.props.children),
+            showSelectedIcon && !crowded && hasLabel(segment?.props.children),
           )}
           place={
             segment === undefined ? undefined : places.get(segment.props.id)
@@ -783,15 +833,22 @@ function SegmentedButtonSegment({
   const selected = state?.selectedKeys.has(id) ?? false
   const disabled = ownDisabled || state?.isDisabled === true
   const labelled = hasLabel(children)
-  const marked = showSelectedIcon && labelled
+  // The room for a glyph is read from the set's props rather than from what
+  // is drawn, so a crowded set keeps the same room to give back.
   const reserves = reservesGlyph({ children, icon, id }, showSelectedIcon)
-  const glyph = selected && marked ? CHECK : (icon ?? null)
+  // A crowded set draws no glyph beside a label, and its chosen segment
+  // takes the colours a set without a check draws. An icon alone is
+  // untouched.
+  const crowded = group?.crowded ?? false
+  const checks = showSelectedIcon && labelled && !crowded
+  const shown = crowded && labelled ? undefined : icon
+  const glyph = selected && checks ? CHECK : (shown ?? null)
   const drawn = glyph !== null
   const first = index === 0
   const last = index === (group?.count ?? 0) - 1
 
   const { radii, spacing } = theme
-  const content = contentOf(theme, { disabled, marked, selected })
+  const content = contentOf(theme, { disabled, marked: checks, selected })
   const corners = cornersOf(radii.pill, first, last)
   const own = stylesOf(theme)
 
@@ -881,7 +938,7 @@ function SegmentedButtonSegment({
         style={composeStyles<AnimatedStyle<ViewStyle>>(
           styles.ownIndicator,
           corners,
-          { backgroundColor: containerOf(theme, disabled, marked) },
+          { backgroundColor: containerOf(theme, disabled, checks) },
           motion.fill,
         )}
       />
