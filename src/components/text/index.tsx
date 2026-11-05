@@ -1,15 +1,20 @@
 import type { ComponentRef, Ref } from 'react'
 import type { TextProps as NativeTextProps, TextStyle } from 'react-native'
 
-import { Text as NativeText, StyleSheet } from 'react-native'
+import { useMemo, useState } from 'react'
+import { Text as NativeText, Platform, StyleSheet } from 'react-native'
 
 import type { TypeRole } from '../../typography/roles'
 
 import { useTheme } from '../../theme/scope'
 import { composeStyles, themedStyles } from '../../theme/styles'
 import { useTypeRole } from '../../typography/roles'
-import { TextSizeContext } from '../../typography/size'
-import { sentenceLabel } from '../keycap'
+import {
+  descentTo,
+  TextLineContext,
+  TextSizeContext,
+} from '../../typography/size'
+import { holdsKeycap, sentenceLabel } from '../keycap'
 
 // Tone is a separate axis from variant so the two compose freely: any of the
 // fifteen roles in any of these colours, the same set web's Text takes.
@@ -25,6 +30,14 @@ const stylesOf = themedStyles(({ colors }) =>
     primary: { color: colors.primary },
   }),
 )
+
+const styles = StyleSheet.create({
+  // A native Text clips what it holds to its own box, and a Keycap on its
+  // first or last line can stand a stroke past it.
+  unclipped: {
+    overflow: 'visible',
+  },
+})
 
 type TextProps = NativeTextProps & {
   readonly ref?: Ref<ComponentRef<typeof NativeText>>
@@ -72,6 +85,7 @@ type TextProps = NativeTextProps & {
  */
 function Text({
   children,
+  onTextLayout,
   style,
   tone = 'neutral',
   variant = 'bodyMedium',
@@ -79,13 +93,26 @@ function Text({
 }: TextProps) {
   const role = useTypeRole(variant)
   const tones = stylesOf(useTheme())
-  const composed = composeStyles<TextStyle>(role, tones[tone], style)
-  // The size the text ends up at, the call site's over the role's, which a
-  // Code or a Keycap inside it sets a share of. Plain text holds neither, so
-  // it goes in as it is, and a host Text's children stay the string a call
-  // site wrote.
-  const size = StyleSheet.flatten(composed)?.fontSize
+  const [descent, setDescent] = useState<number | undefined>(undefined)
   const plain = typeof children === 'string' || typeof children === 'number'
+  // A Keycap on iOS and Android is a view laid in the line, which lowers
+  // itself onto the line's baseline, so a Text holding one measures where
+  // that is and lets it stand past its own box.
+  const keyed = !plain && Platform.OS !== 'web' && holdsKeycap(children)
+  const composed = composeStyles<TextStyle>(
+    role,
+    tones[tone],
+    keyed ? styles.unclipped : null,
+    style,
+  )
+  // The size the text ends up at, the call site's over the role's, which a
+  // Code or a Keycap inside it sets a share of, and the line height it is
+  // set on. Plain text holds neither, so it goes in as it is, and a host
+  // Text's children stay the string a call site wrote.
+  const flat = StyleSheet.flatten(composed)
+  const size = flat?.fontSize
+  const height = flat?.lineHeight
+  const line = useMemo(() => ({ descent, height }), [descent, height])
   // A Keycap is an inline View, whose name a native screen reader leaves out
   // of the sentence, so a Text holding one says the sentence itself unless
   // the call site has labelled it.
@@ -94,11 +121,18 @@ function Text({
     (props['aria-label'] === undefined ? sentenceLabel(children) : undefined)
 
   return (
-    <NativeText {...props} accessibilityLabel={label} style={composed}>
+    <NativeText
+      {...props}
+      accessibilityLabel={label}
+      onTextLayout={keyed ? descentTo(setDescent, onTextLayout) : onTextLayout}
+      style={composed}
+    >
       {plain ? (
         children
       ) : (
-        <TextSizeContext value={size}>{children}</TextSizeContext>
+        <TextSizeContext value={size}>
+          <TextLineContext value={line}>{children}</TextLineContext>
+        </TextSizeContext>
       )}
     </NativeText>
   )
