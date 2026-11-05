@@ -534,7 +534,12 @@ function FieldBox({
         </>
       )}
       {leading === undefined ? null : (
-        <View style={styles.icon}>
+        <View
+          style={composeStyles<ViewStyle>(
+            styles.icon,
+            outlined ? styles.iconOutlined : undefined,
+          )}
+        >
           <IconStyleContext
             value={iconStyleOf(
               isDisabled ? disabledContent : colors.onSurfaceVariant,
@@ -569,7 +574,12 @@ function FieldBox({
       </View>
       {end}
       {trailing === undefined ? null : (
-        <View style={styles.icon}>
+        <View
+          style={composeStyles<ViewStyle>(
+            styles.icon,
+            outlined ? styles.iconOutlined : undefined,
+          )}
+        >
           <IconStyleContext
             value={iconStyleOf(
               isDisabled

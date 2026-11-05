@@ -112,6 +112,16 @@ function IconProbe({ testID }: { readonly testID: string }) {
   return <Text testID={testID}>{`${String(color)} ${String(size)}`}</Text>
 }
 
+// The box's icon slots: its children holding the leading or trailing probe.
+function slots() {
+  return hostsOf(box()).filter(
+    (child) =>
+      child.queryAll((node) =>
+        ['leading', 'trailing'].includes(String(node.props.testID)),
+      ).length > 0,
+  )
+}
+
 // Hoisted so each is one stable element per render, which is what
 // react-perf's no-jsx-as-prop is after.
 const LEADING = <IconProbe testID="leading" />
@@ -649,6 +659,38 @@ describe('TextField', () => {
       expect(screen.getByTestId('trailing')).toHaveTextContent(
         `${colors.error} 24`,
       )
+    })
+
+    it('centres the icons in the filled box, inside its padding', async () => {
+      await renderField({ leadingIcon: LEADING, trailingIcon: TRAILING })
+
+      for (const slot of slots()) {
+        expect(styleOf(slot)).toMatchObject({ alignSelf: 'center' })
+        expect(styleOf(slot).marginVertical).toBeUndefined()
+      }
+    })
+
+    // A 40dp icon button between the outlined box's 16dp above and below
+    // made the box 72dp, which is how the outlined date and time pickers
+    // were drawn.
+    it("reaches past the outlined box's padding to its edges, so a 40dp button keeps it 56dp", async () => {
+      await renderField({
+        leadingIcon: LEADING,
+        trailingIcon: TRAILING,
+        variant: 'outlined',
+      })
+
+      expect(styleOf(box()).paddingVertical).toBe(spacing.lg)
+      const found = slots()
+      expect(found).toHaveLength(2)
+      for (const slot of found) {
+        expect(styleOf(slot)).toMatchObject({
+          alignItems: 'center',
+          alignSelf: 'stretch',
+          justifyContent: 'center',
+          marginVertical: -spacing.lg,
+        })
+      }
     })
 
     it('draws both icons in the disabled colour', async () => {
