@@ -112,6 +112,12 @@ const stylesOf = themedStyles(({ colors, radii, spacing, stateLayerOpacity }) =>
       height: SWATCH,
       width: SWATCH,
     },
+    // Laid over the swatch while the trigger is disabled, at the opacity a
+    // disabled label's colour mixes at, so the swatch fades with the label
+    // and the trigger does not read as half enabled.
+    swatchDisabled: {
+      opacity: stateLayerOpacity.disabledContent,
+    },
     trigger: {
       alignItems: 'center',
       alignSelf: 'flex-start',
@@ -247,7 +253,13 @@ function ColorPicker({
         testID={testID}
       >
         {feedback.layer}
-        <ColorSwatch color={state.color} style={styles.swatch} />
+        <ColorSwatch
+          color={state.color}
+          style={composeStyles<ViewStyle>(
+            styles.swatch,
+            isDisabled ? styles.swatchDisabled : undefined,
+          )}
+        />
         <Text
           style={composeStyles<TextStyle>(labelRole, {
             color: isDisabled
