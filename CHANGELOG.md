@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.11.26](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.11.25...v0.11.26) (2026-11-05)
+
+
+### Bug Fixes
+
+* **number-field:** stop calling the copying array methods Hermes in Expo Go lacks ([#402](https://github.com/kanso-labs/react-native-kanso-ui/issues/402)) ([07cdb35](https://github.com/kanso-labs/react-native-kanso-ui/commit/07cdb35197669d1f5db51c359d64dfaf970b620e))
+* **sheet:** lift sheets and dialogs above the keyboard ([#403](https://github.com/kanso-labs/react-native-kanso-ui/issues/403)) ([7f4bec4](https://github.com/kanso-labs/react-native-kanso-ui/commit/7f4bec47b09f1f62d3b7cca510a23cf4c8a21bb9))
+
 ## [0.11.25](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.11.24...v0.11.25) (2026-11-05)
 
 
