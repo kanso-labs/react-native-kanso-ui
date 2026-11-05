@@ -299,7 +299,10 @@ rules read the app's `tsconfig.json`, which extends Expo's from the app's own
 that never installed the app, CI's among them. Its dependencies are the versions
 its Expo SDK bundles, so `npx expo install --check` there says whether one has
 drifted, and an SDK upgrade is `npx expo install expo@<version> --fix` rather
-than a bump at a time.
+than a bump at a time. Renovate leaves the packages the SDK pins there alone,
+through a rule in `.github/renovate.json`: Expo Go carries their native half, so
+one bumped past the SDK's version fails only on a device, where no check here
+runs.
 
 Metro watches `../src` and resolves everything from the app's own
 `node_modules`, so the bundle carries one React. That also means a runtime
