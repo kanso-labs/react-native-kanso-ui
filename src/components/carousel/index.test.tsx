@@ -23,7 +23,7 @@ import {
 } from 'react-native'
 import { getAnimatedStyle } from 'react-native-reanimated'
 
-import type { CarouselLayout, CarouselProps } from '.'
+import type { CarouselItemRenderProps, CarouselLayout, CarouselProps } from '.'
 
 import { Carousel } from '.'
 import { I18nProvider } from '../../i18n/provider'
@@ -71,6 +71,10 @@ beforeEach(() => {
 
 afterEach(() => {
   jest.useRealTimers()
+  // Puts back what a case replaced, I18nManager's direction among them,
+  // which otherwise stayed right to left for every case after the first
+  // that turned it over.
+  jest.restoreAllMocks()
   scrollTo.mockRestore()
   Dimensions.set(INITIAL)
   Platform.OS = OS
@@ -589,6 +593,53 @@ describe('carousel', () => {
       await layOut(400)
 
       expect(styleOf(child(item(1).children[0])).width).toBe(240)
+    })
+
+    it('hands children written as a function the width it is laid out at and how much of it shows', async () => {
+      const shown: CarouselItemRenderProps[] = []
+      await render(
+        <Carousel label="Label" testID="carousel">
+          {LABELS.map((label, index) => (
+            <Carousel.Item key={label} testID={`item-${index}`}>
+              {(state) => {
+                shown[index] = state
+                return <Text>{label}</Text>
+              }}
+            </Carousel.Item>
+          ))}
+        </Carousel>,
+      )
+      await layOut(400)
+
+      expect(shown[0]?.width).toBe(240)
+      expect(shown[1]?.width).toBe(240)
+      expect(shown[0]?.visibleWidth.get()).toBe(240)
+      expect(shown[1]?.visibleWidth.get()).toBe(56)
+      expect(shown[1]?.visibleWidth.get()).toBe(getAnimatedStyle(item(1)).width)
+
+      await scrollBy(248)
+
+      expect(shown[0]?.visibleWidth.get()).toBe(56)
+      expect(shown[1]?.visibleWidth.get()).toBe(240)
+    })
+
+    it('shows an uncontained item whole', async () => {
+      const shown: CarouselItemRenderProps[] = []
+      await render(
+        <Carousel label="Label" layout="uncontained">
+          {LABELS.map((label, index) => (
+            <Carousel.Item key={label}>
+              {(state) => {
+                shown[index] = state
+                return <Text>{label}</Text>
+              }}
+            </Carousel.Item>
+          ))}
+        </Carousel>,
+      )
+
+      expect(shown[2]?.visibleWidth.get()).toBe(240)
+      expect(shown[2]?.width).toBe(240)
     })
 
     it('is a plain clip outside a carousel', async () => {
