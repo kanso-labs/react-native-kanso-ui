@@ -30,6 +30,24 @@
       "matchFileNames": ["example/package.json"]
     },
     {
+      "description": "Expo Go carries the native half of these modules at the versions its SDK bundles, so the example app's JavaScript half has to stay on exactly those. A bump past the SDK's version still installs and passes CI, which never runs the app, and then fails on a device: react-native-gesture-handler 3.4 called a native method Expo Go's 3.3 lacks, and the app crashed on launch. So Renovate leaves them alone, and `npx expo install expo@<version> --fix` in example/ moves them with the SDK. No later rule sets `enabled`, so the react-native group below still groups the root's copies without turning these back on.",
+      "enabled": false,
+      "matchFileNames": ["example/package.json"],
+      "matchPackageNames": [
+        "@react-native-async-storage/async-storage",
+        "expo",
+        "expo-*",
+        "react",
+        "react-dom",
+        "react-native",
+        "react-native-gesture-handler",
+        "react-native-reanimated",
+        "react-native-safe-area-context",
+        "react-native-svg",
+        "react-native-worklets"
+      ]
+    },
+    {
       "groupName": "commitlint",
       "matchPackageNames": ["@commitlint/**"]
     },
