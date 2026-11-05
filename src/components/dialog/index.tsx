@@ -51,6 +51,7 @@ import {
   useModalState,
   useModalTrigger,
 } from '../../modal'
+import { useKeyboardInset } from '../../overlay/keyboard'
 import { refsOf } from '../../ref'
 import { useTheme } from '../../theme/scope'
 import { composeStyles, themedStyles } from '../../theme/styles'
@@ -66,6 +67,14 @@ import { useTypeRole } from '../../typography/roles'
 // full-screen dialog: square corners, a 56dp header with the headline in
 // title large and a divider under it, and a 56dp action bar over a divider,
 // both inside the device's safe area.
+//
+// **It stays above the software keyboard.** While one is up the basic dialog
+// is centred in the room above it, and the full-screen one pads its bottom by
+// as much of the screen as the keyboard covers, so its actions and a field
+// focused in it are not hidden behind the keyboard. On Android a `Modal`
+// reports the keyboard to React Native only through
+// react-native-keyboard-controller, which src/overlay/keyboard.ts reads where
+// the app installs it.
 //
 // An alert dialog, `role="alertdialog"`, is a question with two or three
 // answers rather than a task, and stays the basic dialog at every width, as
@@ -444,6 +453,7 @@ function DialogContent({
   const [register] = useState(() => registerOf(setParts))
   const [title, setTitle] = useState<HostInstance | null>(null)
   const motion = useDialogMotion(state.isOpen, present, setPresent, basic)
+  const keyboard = useKeyboardInset(present)
   const layout = useMemo<DialogLayout>(
     () => ({ basic, parts, register, setTitle, titleId }),
     [basic, parts, register, titleId],
@@ -467,7 +477,9 @@ function DialogContent({
       <View
         style={composeStyles<ViewStyle>(
           styles.layout,
-          basic ? undefined : styles.layoutFull,
+          basic
+            ? { paddingBottom: theme.spacing.xl + keyboard }
+            : styles.layoutFull,
         )}
       >
         <Animated.View
@@ -477,7 +489,12 @@ function DialogContent({
           style={composeStyles<AnimatedStyle<ViewStyle>>(
             styles.container,
             basic ? styles.containerBasic : styles.containerFull,
-            basic ? undefined : insetsOf(insets),
+            basic
+              ? undefined
+              : {
+                  ...insetsOf(insets),
+                  paddingBottom: Math.max(insets.bottom, keyboard),
+                },
             motion.panel,
             style,
           )}

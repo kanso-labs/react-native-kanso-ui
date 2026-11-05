@@ -26,6 +26,7 @@ import {
 import { createRef, useCallback, useEffect, useState } from 'react'
 import {
   AccessibilityInfo,
+  DeviceEventEmitter,
   Dimensions,
   I18nManager,
   Platform,
@@ -67,6 +68,10 @@ const COMPACT = 412
 const MEDIUM = 800
 
 const INSETS: EdgeInsets = { bottom: 34, left: 12, right: 8, top: 47 }
+
+// How much of the screen the software keyboard covers once it is up, taller
+// than the home indicator's inset.
+const KEYBOARD = 300
 
 const NO_GAP = { gap: 0 }
 
@@ -130,6 +135,38 @@ function Held({
       </Dialog>
     </>
   )
+}
+
+// The keyboard as iOS reports it starting to move: up, covering `KEYBOARD`
+// of the screen, and then gone.
+async function keyboardGone() {
+  await act(() => {
+    DeviceEventEmitter.emit('keyboardWillHide', {
+      duration: 0,
+      easing: 'keyboard',
+      endCoordinates: {
+        height: 0,
+        screenX: 0,
+        screenY: INITIAL.screen.height,
+        width: COMPACT,
+      },
+    })
+  })
+}
+
+async function keyboardUp() {
+  await act(() => {
+    DeviceEventEmitter.emit('keyboardWillChangeFrame', {
+      duration: 0,
+      easing: 'keyboard',
+      endCoordinates: {
+        height: KEYBOARD,
+        screenX: 0,
+        screenY: INITIAL.screen.height - KEYBOARD,
+        width: COMPACT,
+      },
+    })
+  })
 }
 
 // The `Modal` the dialog is drawn in, which carries the back gesture and the
@@ -663,6 +700,24 @@ describe('Dialog', () => {
       })
     })
 
+    it('is centred in the room above the keyboard while one is up', async () => {
+      jest.replaceProperty(Platform, 'OS', 'ios')
+      await renderDialog({}, { defaultOpen: true })
+      await keyboardUp()
+
+      expect(
+        styleOf(child(screen.getByTestId('panel').parent ?? undefined))
+          .paddingBottom,
+      ).toBe(spacing.xl + KEYBOARD)
+
+      await keyboardGone()
+
+      expect(
+        styleOf(child(screen.getByTestId('panel').parent ?? undefined))
+          .paddingBottom,
+      ).toBe(spacing.xl)
+    })
+
     it('draws the scrim in the scrim role at 32%', async () => {
       await renderDialog({}, { defaultOpen: true })
 
@@ -776,6 +831,21 @@ describe('Dialog', () => {
         paddingStart: INSETS.left,
         paddingTop: INSETS.top,
       })
+    })
+
+    it('keeps its content above the keyboard while one is up', async () => {
+      jest.replaceProperty(Platform, 'OS', 'ios')
+      await renderDialog({}, { defaultOpen: true, insets: INSETS })
+
+      await keyboardUp()
+
+      expect(styleOf(screen.getByTestId('panel')).paddingBottom).toBe(KEYBOARD)
+
+      await keyboardGone()
+
+      expect(styleOf(screen.getByTestId('panel')).paddingBottom).toBe(
+        INSETS.bottom,
+      )
     })
 
     // React Native swaps a left and a right style under a right-to-left

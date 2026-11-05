@@ -20,8 +20,10 @@ import { act, fireEvent, render, screen } from '@testing-library/react-native'
 import { createRef, useCallback, useState } from 'react'
 import {
   AccessibilityInfo,
+  DeviceEventEmitter,
   Dimensions,
   I18nManager,
+  Platform,
   StyleSheet,
 } from 'react-native'
 import { State } from 'react-native-gesture-handler'
@@ -70,6 +72,10 @@ const SHORT = 300
 const TALL = 600
 
 const INSETS: EdgeInsets = { bottom: 34, left: 12, right: 8, top: 47 }
+
+// How much of the screen the software keyboard covers once it is up, taller
+// than the home indicator's inset.
+const KEYBOARD = 300
 
 // How long the sheet takes to arrive, and to leave: the longer of the panel's
 // exit and the scrim's fade.
@@ -130,6 +136,38 @@ function Held({
       <Sheet.Body testID="body">Supporting text</Sheet.Body>
     </Sheet.Content>
   )
+}
+
+// The keyboard as iOS reports it starting to move: up, covering `KEYBOARD`
+// of the screen, and then gone.
+async function keyboardGone() {
+  await act(() => {
+    DeviceEventEmitter.emit('keyboardWillHide', {
+      duration: 0,
+      easing: 'keyboard',
+      endCoordinates: {
+        height: 0,
+        screenX: 0,
+        screenY: INITIAL.screen.height,
+        width: COMPACT,
+      },
+    })
+  })
+}
+
+async function keyboardUp() {
+  await act(() => {
+    DeviceEventEmitter.emit('keyboardWillChangeFrame', {
+      duration: 0,
+      easing: 'keyboard',
+      endCoordinates: {
+        height: KEYBOARD,
+        screenX: 0,
+        screenY: INITIAL.screen.height - KEYBOARD,
+        width: COMPACT,
+      },
+    })
+  })
 }
 
 // Lays the panel out at `height`, as the platform reports it once the sheet
@@ -365,6 +403,21 @@ describe('Sheet', () => {
       })
     })
 
+    it('keeps its content above the keyboard while one is up', async () => {
+      jest.replaceProperty(Platform, 'OS', 'ios')
+      await renderSheet({}, { defaultOpen: true, insets: INSETS })
+
+      await keyboardUp()
+
+      expect(styleOf(screen.getByTestId('panel')).paddingBottom).toBe(KEYBOARD)
+
+      await keyboardGone()
+
+      expect(styleOf(screen.getByTestId('panel')).paddingBottom).toBe(
+        INSETS.bottom,
+      )
+    })
+
     it('stops short of a status bar taller than its top margin', async () => {
       await renderSheet(
         {},
@@ -429,6 +482,21 @@ describe('Sheet', () => {
         paddingStart: 0,
         paddingTop: INSETS.top,
       })
+    })
+
+    it('keeps its content above the keyboard while one is up', async () => {
+      jest.replaceProperty(Platform, 'OS', 'ios')
+      await renderSheet({}, { defaultOpen: true, insets: INSETS })
+
+      await keyboardUp()
+
+      expect(styleOf(screen.getByTestId('panel')).paddingBottom).toBe(KEYBOARD)
+
+      await keyboardGone()
+
+      expect(styleOf(screen.getByTestId('panel')).paddingBottom).toBe(
+        INSETS.bottom,
+      )
     })
 
     it('draws no handle', async () => {
@@ -715,6 +783,23 @@ describe('Sheet', () => {
 
       expect(offset()).toBe(TALL - HEIGHT / 2)
       expect(screen.getByTestId('body').props.scrollEnabled).toBe(false)
+    })
+
+    it('rises whole while the keyboard is up, and back once it goes', async () => {
+      jest.replaceProperty(Platform, 'OS', 'ios')
+      await renderSheet({}, { defaultOpen: true })
+      await layOut(TALL)
+      await advance(ENTER)
+
+      await keyboardUp()
+      await advance(ENTER)
+
+      expect(offset()).toBe(0)
+
+      await keyboardGone()
+      await advance(ENTER)
+
+      expect(offset()).toBe(TALL - HEIGHT / 2)
     })
 
     it('rises to its whole height on a drag up', async () => {
