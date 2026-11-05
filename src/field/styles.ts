@@ -103,6 +103,15 @@ const fieldStylesOf = themedStyles(
         alignSelf: 'center',
         justifyContent: 'center',
       },
+      // The outlined box's 16dp above and below the value would sit around
+      // a 40dp icon button as well, and make the box 72dp where the page
+      // gives 56dp, so the slot reaches past both to the box's edges and
+      // centres what it holds in the whole height, as web's does. The filled
+      // box's 8dp leaves a 40dp button inside its 56dp as it is.
+      iconOutlined: {
+        alignSelf: 'stretch',
+        marginVertical: -spacing.lg,
+      },
       // The filled box's active indicator: a rule across the bottom, laid
       // over the box so it thickening on focus moves nothing. A border
       // rather than a fill, since a forced palette on the web keeps a
