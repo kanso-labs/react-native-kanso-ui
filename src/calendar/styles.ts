@@ -163,7 +163,10 @@ const stylesOf = themedStyles(
         borderColor: colors.primary,
         borderWidth: 1,
       },
-      // The room a month's grid is held at: the weekday row and six weeks.
+      // The room a month's grid is held at: the weekday row and six weeks,
+      // so a calendar keeps its height from month to month. Months stacked
+      // one under another take the height of their own weeks instead, so a
+      // short month leaves no gap before the next one's name.
       grid: {
         height: row * (WEEKS_HELD + 1),
       },
@@ -241,6 +244,21 @@ const stylesOf = themedStyles(
         paddingHorizontal: spacing.sm,
       },
       menuButtonText: {
+        color: colors.onSurfaceVariant,
+      },
+      // The name of a month while several stack. Material Design's
+      // full-screen range picker names each month of its list the same way:
+      // title small in on surface variant, at the start of a 48dp row with
+      // its text at the row's foot, so it reads with the month below it
+      // rather than the one above, inset from the dates by the 12dp the
+      // container's padding leaves.
+      monthCaption: {
+        height: row,
+        justifyContent: 'flex-end',
+        paddingBottom: spacing.sm,
+        paddingHorizontal: spacing.md,
+      },
+      monthCaptionText: {
         color: colors.onSurfaceVariant,
       },
       // The months of a calendar showing more than one, one under another,

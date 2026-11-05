@@ -134,6 +134,7 @@ function CalendarFrame({
 }) {
   const own = stylesOf(useTheme())
   const sideBySide = useSideBySide(months)
+  const stacked = months > 1 && !sideBySide
   const grids = (
     <View style={sideBySide ? own.monthsSideBySide : own.months}>
       {offsetsOf(months).map((offset) => (
@@ -141,10 +142,14 @@ function CalendarFrame({
           key={offset.months}
           style={sideBySide ? own.monthSideBySide : undefined}
         >
+          {stacked ? (
+            <MonthCaption locale={locale} offset={offset} state={state} />
+          ) : null}
           <MonthGrid
             firstDayOfWeek={firstDayOfWeek}
             locale={locale}
             offset={offset}
+            stacked={stacked}
             state={state}
           />
         </View>
@@ -617,6 +622,47 @@ function MenuList({
 }
 
 /**
+ * The name of the month a grid shows, over the grid, while several stack. The
+ * heading between the chevrons names them all at once, which reads across
+ * months side by side in order; stacked, the second month sat under the
+ * first's last week with nothing saying which month it was. Formatted as the
+ * heading names a month: in full with its year, in the calendar's system and
+ * time zone, with the era where a Gregorian date falls before the common one.
+ *
+ * Hidden from a screen reader, which hears the month already with each date.
+ */
+function MonthCaption({
+  locale,
+  offset,
+  state,
+}: PartProps & {
+  /** How far the month is from the first one the calendar shows. */
+  readonly offset: MonthOffset
+}) {
+  const own = stylesOf(useTheme())
+  const role = useTypeRole('titleSmall')
+  const start = state.visibleRange.start.add(offset)
+  const month = start.calendar.getFormattableMonth?.(start) ?? start
+
+  return (
+    <View aria-hidden style={own.monthCaption}>
+      <NativeText
+        numberOfLines={1}
+        style={composeStyles<TextStyle>(role, own.monthCaptionText)}
+      >
+        {new DateFormatter(locale, {
+          calendar: start.calendar.identifier,
+          era: eraOf(start),
+          month: 'long',
+          timeZone: state.timeZone,
+          year: 'numeric',
+        }).format(month.toDate(state.timeZone))}
+      </NativeText>
+    </View>
+  )
+}
+
+/**
  * The weekday row and one month's weeks, held at six weeks of room so the
  * calendar keeps its height from month to month. The weeks slide in from the
  * side the new month comes from.
@@ -625,11 +671,17 @@ function MonthGrid({
   firstDayOfWeek,
   locale,
   offset,
+  stacked,
   state,
 }: PartProps & {
   readonly firstDayOfWeek: undefined | Weekday
   /** How far the month is from the first one the calendar shows. */
   readonly offset: MonthOffset
+  /**
+   * Whether the month is one of several one under another, which takes the
+   * height of its own weeks rather than six.
+   */
+  readonly stacked: boolean
 }) {
   const theme = useTheme()
   const own = stylesOf(theme)
@@ -639,7 +691,7 @@ function MonthGrid({
   const rowStyle = composeStyles<ViewStyle>(styles.row, own.rowHeight)
 
   return (
-    <View style={own.grid}>
+    <View style={stacked ? undefined : own.grid}>
       <View aria-hidden style={rowStyle}>
         {weekdaysOf(state, locale, firstDayOfWeek).map((weekday) => (
           <View key={weekday.key} style={styles.column}>
