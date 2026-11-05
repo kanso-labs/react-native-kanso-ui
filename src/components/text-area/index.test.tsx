@@ -213,6 +213,15 @@ describe('TextArea', () => {
       expect(input().props).not.toHaveProperty('rows')
     })
 
+    it('spaces its lines by the line height on iOS, which a one-line field draws without', async () => {
+      jest.replaceProperty(Platform, 'OS', 'ios')
+      await renderField()
+
+      expect(styleOf(input())).toMatchObject({
+        lineHeight: typography.bodyLargeLineHeight,
+      })
+    })
+
     it('takes its least height from rows', async () => {
       await renderField({ rows: 5 })
 

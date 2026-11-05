@@ -719,6 +719,30 @@ describe('TextField', () => {
       })
     })
 
+    it('draws its value on iOS without the line height, which iOS puts above it, and keeps the line as its height', async () => {
+      jest.replaceProperty(Platform, 'OS', 'ios')
+      await renderField({ prefix: 'Prefix' })
+
+      expect(styleOf(input())).toMatchObject({
+        fontSize: typography.bodyLargeSize,
+        minHeight: typography.bodyLargeLineHeight * FONT_SCALE,
+      })
+      expect(styleOf(input()).lineHeight).toBeUndefined()
+      // The prefix is text, which iOS centres in its line.
+      expect(styleOf(screen.getByText('Prefix'))).toMatchObject({
+        lineHeight: typography.bodyLargeLineHeight,
+      })
+    })
+
+    it('draws its value in the line height on Android', async () => {
+      jest.replaceProperty(Platform, 'OS', 'android')
+      await renderField()
+
+      expect(styleOf(input())).toMatchObject({
+        lineHeight: typography.bodyLargeLineHeight,
+      })
+    })
+
     it('fades the prefix and suffix in once the label has floated', async () => {
       await renderField({ prefix: 'Prefix', suffix: 'Suffix' })
 

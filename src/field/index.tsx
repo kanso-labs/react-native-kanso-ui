@@ -675,6 +675,7 @@ function FieldInput({
       selectionColor={caret}
       style={composeStyles<TextStyle>(
         role,
+        multiline || Platform.OS !== 'ios' ? undefined : UNSPACED,
         styles.input,
         colorOf(content),
         numeric ? numericOf(mono) : undefined,
@@ -1014,6 +1015,14 @@ const NOT_DRAWN: TextStyle = { display: 'none' }
 const OUT_OF_FLOW: ViewStyle = { position: 'absolute' }
 
 const SHRINKS: TextStyle = { flexShrink: 1 }
+
+// What a one-line control on iOS draws its value without: the type's line
+// height. iOS puts a line's room beyond its font's above the glyphs rather
+// than either side of them, so body large's 24dp line drew the value 4.7dp
+// below a prefix and a suffix, which are text and drawn centred in the same
+// line, measured on an iPhone. The control keeps the line as its least
+// height, and iOS centres one line down the control.
+const UNSPACED: TextStyle = { lineHeight: undefined }
 
 // How many characters' width a control holding chosen options keeps beside
 // them, in its own type's size, web's 3em.
