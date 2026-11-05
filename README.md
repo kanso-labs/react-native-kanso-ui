@@ -67,8 +67,9 @@ than the root's.
 Neither package ships a font. On iOS and Android a type role draws in the first
 family its token names when the app has registered that family with
 [expo-font](https://docs.expo.dev/versions/latest/sdk/font/), under that name,
-and in the system font otherwise. expo-font is an optional peer, so an app
-without it draws every role in the system font.
+and otherwise in the platform's monospaced face for the mono family, which code,
+keycaps and amounts draw in, and in the system font for the rest. expo-font is
+an optional peer, so an app without it draws in those faces throughout.
 
 ```tsx
 import { useFonts } from 'expo-font'

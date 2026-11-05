@@ -54,6 +54,12 @@ const SYSTEM_FONT = Platform.select({
   ios: 'System',
 })
 
+// The faces iOS and Android draw a list's generic monospace family in, by the
+// names React Native takes for them: iOS's monospaced system face, which it
+// names `ui-monospace`, and Android's `monospace`. Neither platform has a
+// face by the generic name the other uses.
+const MONOSPACE = new Set(['monospace', 'ui-monospace'])
+
 /** A family list as CSS writes it, quoting the names with spaces in them. */
 function cssStack(families: readonly string[]): string {
   return families
@@ -62,11 +68,26 @@ function cssStack(families: readonly string[]): string {
 }
 
 /**
+ * What a list draws in on iOS and Android when its first family is not
+ * there: the platform's monospaced face for a list naming a monospace family,
+ * as the mono token's does, so code keeps its columns, and the system font
+ * for any other.
+ */
+function fallbackOf(families: readonly string[]): string | undefined {
+  if (!families.some((family) => MONOSPACE.has(family))) {
+    return SYSTEM_FONT
+  }
+
+  return Platform.OS === 'android' ? 'monospace' : 'ui-monospace'
+}
+
+/**
  * The family a type role draws in, from the token's list of families.
  *
  * On iOS and Android that is the list's first family when the app has
- * registered it with expo-font, under the name the token gives it, and the
- * system font otherwise. Neither package ships a font, and React Native names
+ * registered it with expo-font, under the name the token gives it. Otherwise
+ * it is the platform's monospaced face for a monospace list, and the system
+ * font for any other. Neither package ships a font, and React Native names
  * one family rather than falling through a list, so the rest of the list is
  * the browser's alone. Under React Native Web the whole list goes to CSS, as
  * it does on kanso-ui.
@@ -86,7 +107,7 @@ function useFontFamily(families: readonly string[]): string | undefined {
 
   return first !== undefined && fonts?.isLoaded(first) === true
     ? first
-    : SYSTEM_FONT
+    : fallbackOf(families)
 }
 
 export { useFontFamily }

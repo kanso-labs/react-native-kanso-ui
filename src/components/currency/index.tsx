@@ -119,8 +119,8 @@ type ResolvedFormat = {
  * It sets no size of its own, so it takes the type of the Text around it:
  * put it in one, a heading-scale one for a larger figure. On its own it draws
  * at the platform's default size. The face is the mono family's first, once
- * the app has registered it with expo-font, and the system font until then,
- * with tabular figures either way.
+ * the app has registered it with expo-font, and the platform's monospaced
+ * face until then, with tabular figures either way.
  *
  * Web's `render` has no counterpart. `style`, `ref` and `testID` land on React
  * Native's own Text.
