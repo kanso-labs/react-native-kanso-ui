@@ -22,7 +22,7 @@ import { scopeFor } from '../../theme/scope'
 import { breakpoints } from '../../tokens/defaults'
 
 const { theme } = scopeFor('light', {})
-const { colors, radii, spacing, stateLayerOpacity } = theme
+const { colors, radii, spacing, stateLayerOpacity, typography } = theme
 
 const DISABLED_CONTENT = withOpacity(
   colors.onSurface,
@@ -574,6 +574,118 @@ describe('RangeCalendar', () => {
 
       expect(styleOf(screen.getByTestId('calendar')).width).toBe(360)
       expect(styleOf(monthsOf())).toEqual({ gap: spacing.xl })
+    })
+
+    it('names each month over its grid while they stack, hidden from a screen reader', async () => {
+      resize(breakpoints.expanded - 1)
+      await render(
+        <RangeCalendar
+          defaultValue={ACROSS}
+          locale="en-US"
+          visibleDuration={TWO_MONTHS}
+        />,
+      )
+
+      const [first, second] = monthsOf().children.map((month) =>
+        child(child(month).children.at(0)),
+      )
+      expect(first).toHaveTextContent('September 2026')
+      expect(second).toHaveTextContent('October 2026')
+      expect(first.props['aria-hidden']).toBe(true)
+      expect(screen.queryByText('October 2026')).not.toBeOnTheScreen()
+    })
+
+    it('sets a month’s name in title small, at the foot of a 48dp row', async () => {
+      resize(breakpoints.expanded - 1)
+      await render(
+        <RangeCalendar
+          defaultValue={ACROSS}
+          locale="en-US"
+          visibleDuration={TWO_MONTHS}
+        />,
+      )
+
+      const caption = child(child(monthsOf().children.at(0)).children.at(0))
+      expect(styleOf(caption)).toEqual({
+        height: 48,
+        justifyContent: 'flex-end',
+        paddingBottom: spacing.sm,
+        paddingHorizontal: spacing.md,
+      })
+      expect(textStyleOf(child(caption.children.at(0)))).toMatchObject({
+        color: colors.onSurfaceVariant,
+        fontSize: typography.titleSmallSize,
+        lineHeight: typography.titleSmallLineHeight,
+      })
+    })
+
+    it('moves the names with the months', async () => {
+      resize(breakpoints.expanded - 1)
+      await render(
+        <RangeCalendar
+          defaultValue={ACROSS}
+          locale="en-US"
+          visibleDuration={TWO_MONTHS}
+        />,
+      )
+
+      await fireEvent.press(screen.getByRole('button', { name: 'Next' }))
+
+      const [first, second] = monthsOf().children.map((month) =>
+        child(child(month).children.at(0)),
+      )
+      expect(first).toHaveTextContent('November 2026')
+      expect(second).toHaveTextContent('December 2026')
+    })
+
+    it('lets a stacked month take its own weeks’ height', async () => {
+      resize(breakpoints.expanded - 1)
+      await render(
+        <RangeCalendar
+          defaultValue={ACROSS}
+          locale="en-US"
+          visibleDuration={TWO_MONTHS}
+        />,
+      )
+
+      const grids = monthsOf().children.map((month) =>
+        child(child(month).children.at(1)),
+      )
+      expect(grids.map((grid) => styleOf(grid).height)).toEqual([
+        undefined,
+        undefined,
+      ])
+    })
+
+    it('names no month over the grids side by side, which keep six weeks of room', async () => {
+      resize(breakpoints.expanded)
+      await render(
+        <RangeCalendar
+          defaultValue={ACROSS}
+          locale="en-US"
+          visibleDuration={TWO_MONTHS}
+        />,
+      )
+
+      expect(
+        screen.queryByText('September 2026', { includeHiddenElements: true }),
+      ).not.toBeOnTheScreen()
+      expect(
+        monthsOf().children.map(
+          (month) => styleOf(child(child(month).children.at(0))).height,
+        ),
+      ).toEqual([48 * 7, 48 * 7])
+    })
+
+    it('names no month over the grid of a calendar of one, which keeps six weeks of room', async () => {
+      await render(<RangeCalendar defaultValue={RANGE} locale="en-US" />)
+
+      expect(
+        screen.getAllByText('September 2026', { includeHiddenElements: true }),
+      ).toHaveLength(1)
+      expect(
+        styleOf(child(child(monthsOf().children.at(0)).children.at(0))).height,
+      ).toBe(48 * 7)
     })
 
     it('sets them side by side from the expanded window size, widening to hold them', async () => {

@@ -68,7 +68,11 @@ import { composeStyles } from '../../theme/styles'
 // **`visibleDuration` shows more than one month**, each in a grid of its own,
 // side by side from the expanded window size up and one under another below
 // it, as web's sit, since two side by side come to 720dp with the padding.
-// The container widens to hold them. Only its `months` is read, as web draws
+// The container widens to hold them side by side. Stacked, each month is
+// named over its grid, since the heading names them all at once, and takes
+// the height of its own weeks, so a short month leaves no gap before the
+// next one's name; a calendar of one, and months side by side, keep six
+// weeks of room so the calendar holds its height from month to month. Only its `months` is read, as web draws
 // whole months alone, and with more than one the header is the plain one
 // whatever `showMonthYearMenus` says, since the menus name the first month
 // alone.
@@ -123,8 +127,8 @@ type CalendarProps<T extends DateValue = DateValue> = Pick<
   readonly testID?: string
   /**
    * How many months the calendar shows at once, and moves by: side by side
-   * from the expanded window size up, one under another below it. Only
-   * `months` is read.
+   * from the expanded window size up, one under another below it, each
+   * named over its weeks. Only `months` is read.
    * @default { months: 1 }
    */
   readonly visibleDuration?: DateDuration

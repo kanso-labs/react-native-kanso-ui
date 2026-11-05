@@ -92,8 +92,8 @@ type RangeCalendarProps<T extends DateValue = DateValue> = Pick<
   readonly testID?: string
   /**
    * How many months the calendar shows at once, and moves by: side by side
-   * from the expanded window size up, one under another below it. Only
-   * `months` is read.
+   * from the expanded window size up, one under another below it, each
+   * named over its weeks. Only `months` is read.
    * @default { months: 1 }
    */
   readonly visibleDuration?: DateDuration

@@ -536,6 +536,23 @@ describe('Calendar', () => {
       expect(dateNamed('Friday, October 16, 2026')).toBeEnabled()
     })
 
+    it('names each month over its grid while they stack', async () => {
+      await render(
+        <Calendar
+          defaultValue={SEPTEMBER}
+          locale="de-DE"
+          visibleDuration={TWO_MONTHS}
+        />,
+      )
+
+      expect(
+        screen.getByText('September 2026', { includeHiddenElements: true }),
+      ).toBeOnTheScreen()
+      expect(
+        screen.getByText('Oktober 2026', { includeHiddenElements: true }),
+      ).toBeOnTheScreen()
+    })
+
     it('moves by as many months as it shows', async () => {
       await render(
         <Calendar
