@@ -706,6 +706,13 @@ describe('Table', () => {
       })
     })
 
+    // Stretched, a Tag in a Status column was drawn as a bar across it.
+    it('lets what a cell holds keep its own width rather than the column’s', async () => {
+      await render(<Basic />)
+
+      expect(styleOf(cellOf('First item')).alignItems).toBe('flex-start')
+    })
+
     it('draws nothing in a cell with nothing in it', async () => {
       await render(
         <Table aria-label="Label">
