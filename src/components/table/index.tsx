@@ -197,8 +197,11 @@ const styles = StyleSheet.create({
 const stylesOf = themedStyles(({ colors, sizing, spacing }: ResolvedTheme) =>
   StyleSheet.create({
     // The page's 16dp at each side, which is also what puts 32dp between
-    // two columns.
+    // two columns. What a cell holds keeps its own width, as it does in a
+    // web table's cell, rather than stretching across the column: a Tag
+    // there is drawn around its label, not as a bar the column's width.
     cell: {
+      alignItems: 'flex-start',
       justifyContent: 'center',
       paddingHorizontal: spacing.lg,
     },
