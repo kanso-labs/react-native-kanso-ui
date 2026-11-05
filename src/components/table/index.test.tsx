@@ -1458,6 +1458,15 @@ describe('Table', () => {
       expect(styleOf(instance(screen.root)).marginTop).toBe(4)
       expect(getByGestureTestId('table-resize-colValue')).toBeTruthy()
     })
+
+    it('takes the place its rows give it without a style, where a gesture root would fill its parent', async () => {
+      await render(<Resizable style={undefined} />)
+
+      const root = instance(screen.root)
+      expect(screen.getAllByRole('slider')).toHaveLength(2)
+      expect(styleOf(root)).not.toHaveProperty('flex')
+      expect(styleOf(root)).not.toHaveProperty('flexGrow')
+    })
   })
 
   describe('the header’s place', () => {

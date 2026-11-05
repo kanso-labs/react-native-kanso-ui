@@ -1778,7 +1778,11 @@ function TableView({
 
   return (
     <TableContext value={value}>
-      <Root onLayout={widthTo(onWidth)} style={style}>
+      {/* A gesture root given no style fills its parent, which in a parent
+          sized by what it holds is no height at all: a resizable table drew
+          nothing on an iPhone. Composed, the call site's style is always a
+          style, so the table takes the place its rows give it either way. */}
+      <Root onLayout={widthTo(onWidth)} style={composeStyles<ViewStyle>(style)}>
         {native === undefined ? (
           scroller
         ) : (
