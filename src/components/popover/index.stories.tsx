@@ -30,12 +30,15 @@ const styles = StyleSheet.create({
   // Every open panel needs room on the side it asks for, or it flips and the
   // story shows the flip rather than the placement. A panel holding a title
   // alone is around 44dp tall, so the gutters are frame measurements wider
-  // than the spacing scale goes.
+  // than the spacing scale goes. Held to the page's width, a phone's window
+  // puts the four in a column rather than pushing the first past its edge,
+  // where the panel on the left had no room and flipped.
   sides: {
     alignSelf: 'center',
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 96,
+    maxWidth: '100%',
     padding: 96,
     width: 520,
   },

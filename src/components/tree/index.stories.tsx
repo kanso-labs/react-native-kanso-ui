@@ -6,8 +6,10 @@ import { Tree } from '.'
 import { Card } from '../card'
 
 const styles = StyleSheet.create({
-  // A tree fills the column it sits in, so it needs one to have a width.
+  // A tree fills the column it sits in, so it needs one to have a width,
+  // and no wider than the page, so a phone shows it whole.
   width: {
+    maxWidth: '100%',
     width: 380,
   },
 })
