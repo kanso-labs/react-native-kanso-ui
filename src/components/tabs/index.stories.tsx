@@ -49,13 +49,29 @@ const stylesOf = themedStyles(({ spacing }) =>
   }),
 )
 
+// The icon's own box, at the size it is handed.
+function boxOf(size: number): ViewStyle {
+  return {
+    alignItems: 'center',
+    height: size,
+    justifyContent: 'center',
+    width: size,
+  }
+}
+
 // A plain shape rather than an icon set, so the stories show the bar alone,
 // as web's do. It takes the colour and the size the tab hands it through
-// useIconStyle(), as an app's own icon reads them.
+// useIconStyle(), as an app's own icon reads them, centred in a square of
+// that size as a glyph is in an icon font's, which is the box a badge is
+// placed against.
 function Dot() {
   const { color, size } = useIconStyle()
 
-  return <View style={dotOf(color, size)} />
+  return (
+    <View style={boxOf(size)}>
+      <View style={dotOf(color, size)} />
+    </View>
+  )
 }
 
 function dotOf(color: ColorValue | undefined, size: number): ViewStyle {

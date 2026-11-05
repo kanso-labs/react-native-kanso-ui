@@ -34,10 +34,16 @@ const styles = StyleSheet.create({
     position: 'relative',
     top: -RISE,
   },
-  // The large badge over the top trailing corner of what it is drawn on, in
-  // its pin, from which it runs toward the end however long its count.
+  // The large badge over the top trailing corner of what it is drawn on,
+  // hung from its pin's leading edge, from which it runs toward the end
+  // however long its count. It is out of the pin's flow so that Yoga
+  // measures it at its count's own width: in the flow it was handed the
+  // pin's width, which is none, and "999+" wrapped one character to a line,
+  // measured on an iPhone.
   over: {
-    flexShrink: 0,
+    position: 'absolute',
+    start: 0,
+    top: 0,
   },
   // Where the large badge's leading edge goes: a pin of no width 12dp inside
   // the trailing edge and 2dp above the top, so the badge it holds starts
@@ -48,7 +54,6 @@ const styles = StyleSheet.create({
   // at the far edge of the row its icon sat in, measured on an iPhone.
   pin: {
     end: OVERLAP,
-    flexDirection: 'row',
     position: 'absolute',
     top: -RISE,
     width: 0,

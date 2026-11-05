@@ -162,15 +162,28 @@ describe('badge', () => {
 
       expect(styleOf(pin())).toMatchObject({
         end: 12,
-        flexDirection: 'row',
         position: 'absolute',
         top: -2,
         width: 0,
       })
       const style = styleOf(mark())
-      expect(style).toMatchObject({ flexShrink: 0 })
-      expect(style).not.toHaveProperty('position')
+      expect(style).toMatchObject({ position: 'absolute', start: 0, top: 0 })
       expect(style).not.toHaveProperty('left')
+    })
+
+    it('hangs a long count out of its pin, so the pin of no width cannot wrap it', async () => {
+      await render(
+        <Badge count={1200} testID="badge">
+          {ICON}
+        </Badge>,
+      )
+
+      expect(countOf(mark()).children).toEqual(['999+'])
+      // In the pin's flow, Yoga hands the badge the pin's width, none, and
+      // the count wraps one character to a line on a device.
+      expect(styleOf(mark()).position).toBe('absolute')
+      expect(styleOf(mark())).not.toHaveProperty('width')
+      expect(styleOf(mark())).not.toHaveProperty('maxWidth')
     })
 
     it('places nothing by a percentage, which Yoga reads against the row around it', async () => {

@@ -205,7 +205,6 @@ async function layOut({
   }
 }
 
-// The badge's mark on a destination's icon.
 // The badge's mark on a destination's icon. The large badge over a corner is
 // held in a pin.
 function markOf(name: string) {

@@ -12,7 +12,9 @@ import { RouterProvider } from '../../router'
 
 // Plain shapes rather than an icon set, so the stories show the bar alone,
 // as web's do. Each is a view in the colour and at the size the destination
-// hands it through useIconStyle(), as an app's own icon reads them.
+// hands it through useIconStyle(), as an app's own icon reads them, centred
+// in a square of that size as a glyph is in an icon font's, which is the box
+// a badge is placed against.
 type Shape = 'circle' | 'diamond' | 'ring' | 'square' | 'triangle'
 
 const ROUTES = [
@@ -62,7 +64,11 @@ An icon drawn by \`tabBarIcon\` takes the colour and size it is handed, or reads
 function Icon({ shape }: { readonly shape: Shape }) {
   const { color, size } = useIconStyle()
 
-  return <View style={shapeOf(shape, color, size)} />
+  return (
+    <View style={boxOf(size)}>
+      <View style={shapeOf(shape, color, size)} />
+    </View>
+  )
 }
 
 function iconFor(shape: Shape) {
@@ -192,6 +198,16 @@ const DESCRIPTORS: NavigationTabBarProps['descriptors'] = {
   third: {
     options: { tabBarIcon: iconFor('triangle'), title: 'Third item' },
   },
+}
+
+// The icon's own box, at the size it is handed.
+function boxOf(size: number): ViewStyle {
+  return {
+    alignItems: 'center',
+    height: size,
+    justifyContent: 'center',
+    width: size,
+  }
 }
 
 // The router's part, played by the story: the route that is current, which
