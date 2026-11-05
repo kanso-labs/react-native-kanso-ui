@@ -38,10 +38,15 @@ const styles = StyleSheet.create({
   fill: {
     flexGrow: 1,
   },
+  // The two containers ContainerWidths sets the feed in, each held to the
+  // page's width so a phone's window shows the wide one as wide as it can be
+  // rather than scrolling the page sideways to reach the rest of it.
   narrow: {
+    maxWidth: '100%',
     width: 300,
   },
   wide: {
+    maxWidth: '100%',
     width: 640,
   },
 })

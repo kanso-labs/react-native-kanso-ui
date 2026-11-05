@@ -13,8 +13,10 @@ const styles = StyleSheet.create({
   scroller: {
     height: 480,
   },
-  // A list fills the column it sits in, so it needs one to have a width.
+  // A list fills the column it sits in, so it needs one to have a width,
+  // and no wider than the page, so a phone shows it whole.
   width: {
+    maxWidth: '100%',
     width: 380,
   },
 })

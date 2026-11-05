@@ -10,8 +10,10 @@ import { Separator } from '../separator'
 import { Text } from '../text'
 
 const styles = StyleSheet.create({
-  // A row fills the column it sits in, so it needs one to have a width.
+  // A row fills the column it sits in, so it needs one to have a width,
+  // and no wider than the page, so a phone shows it whole.
   width: {
+    maxWidth: '100%',
     width: 380,
   },
 })

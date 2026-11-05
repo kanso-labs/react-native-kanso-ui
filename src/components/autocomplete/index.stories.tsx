@@ -10,8 +10,9 @@ import { Stack } from '../stack'
 
 const styles = StyleSheet.create({
   // The bar and the rows fill the column they sit in, so they need one to
-  // have a width.
+  // have a width, and no wider than the page, so a phone shows them whole.
   width: {
+    maxWidth: '100%',
     width: 380,
   },
 })
