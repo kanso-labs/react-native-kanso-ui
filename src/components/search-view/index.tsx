@@ -451,9 +451,9 @@ function SearchViewPanel({
   const header =
     (docked ? sizing.controlLg : FULL_HEADER) +
     typography.bodyLargeLineHeight * (window.fontScale - 1)
-  // Full screen, how far the keyboard reaches up over the view. iOS draws it
-  // over the window, where Android's `Modal` shrinks the window to make room
-  // and leaves it nothing to cover.
+  // Full screen, how far the keyboard reaches up over the view. iOS and
+  // Android both draw it over the window, which runs edge to edge and does
+  // not shrink to make room, so the view keeps out of its way itself.
   const covered =
     keyboardTop === null || bottom === null ? 0 : bottom - keyboardTop
 

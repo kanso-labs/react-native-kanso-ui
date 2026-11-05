@@ -60,6 +60,7 @@ import {
   useModalState,
   useModalTrigger,
 } from '../../modal'
+import { useKeyboardInset } from '../../overlay/keyboard'
 import { usePressFeedback } from '../../press'
 import { refsOf } from '../../ref'
 import { useTheme } from '../../theme/scope'
@@ -120,6 +121,14 @@ import { useTypeRole } from '../../typography/roles'
 // the bottom sheet's above the home indicator and inside the side insets of a
 // phone held sideways, and the side sheet's under the status bar and over the
 // home indicator, inside the inset on its own edge.
+//
+// **Its content stays above the software keyboard.** While one is up the
+// sheet pads its bottom by as much of the screen as the keyboard covers, in
+// place of the home indicator's inset, and a sheet with two heights rises
+// whole, so a field focused in it is not hidden behind the keyboard. On
+// Android a `Modal` reports the keyboard to React Native only through
+// react-native-keyboard-controller, which src/overlay/keyboard.ts reads where
+// the app installs it.
 
 // The side sheet's width, web's and the side sheets page's.
 const SIDE_WIDTH = 400
@@ -353,11 +362,17 @@ type Stops = {
 
 // The bottom sheet's room and padding: no taller than the window less the top
 // margin, or less the status bar where that is the taller, and its content
-// above the home indicator and inside the side insets.
-function bottomBoundsOf(insets: EdgeInsets, height: number): ViewStyle {
+// above the home indicator, or above the keyboard while one is up, and inside
+// the side insets.
+function bottomBoundsOf(
+  insets: EdgeInsets,
+  height: number,
+  keyboard: number,
+): ViewStyle {
   return {
     ...insetsOf(insets),
     maxHeight: height - Math.max(TOP_MARGIN, insets.top),
+    paddingBottom: Math.max(insets.bottom, keyboard),
     paddingTop: 0,
   }
 }
@@ -666,6 +681,7 @@ function SheetWindow({
   const insets = use(SafeAreaInsetsContext) ?? NO_INSETS
   const { height } = useWindowDimensions()
   const bottom = useWindowSizeClass() === 'compact'
+  const keyboard = useKeyboardInset()
   const titleId = useId()
   const [title, setTitle] = useState<HostInstance | null>(null)
   // The panel's height as laid out, before any drag moves it, and whether a
@@ -674,7 +690,10 @@ function SheetWindow({
   const [expanded, setExpanded] = useState(initialHeight === 'whole')
   const stops = stopsOf(bottom, full, height, isDismissable)
   const twoHeights = stops.partial !== null
-  const rest = stops.partial !== null && !expanded ? stops.partial : 0
+  // A sheet with two heights rises whole while the keyboard is up, so the
+  // field being typed in stays on the screen.
+  const rest =
+    stops.partial !== null && !expanded && keyboard === 0 ? stops.partial : 0
   const motion = useSheetMotion({ bottom, full, isOpen, rest, setPresent })
   const pan = useSheetDrag({
     close,
@@ -734,7 +753,9 @@ function SheetWindow({
             style={composeStyles<AnimatedStyle<ViewStyle>>(
               styles.container,
               bottom ? styles.containerBottom : styles.containerSide,
-              bottom ? bottomBoundsOf(insets, height) : sideInsetsOf(insets),
+              bottom
+                ? bottomBoundsOf(insets, height, keyboard)
+                : sideInsetsOf(insets, keyboard),
               motion.panel,
               style,
             )}
@@ -751,10 +772,14 @@ function SheetWindow({
 }
 
 // The side sheet's padding: its content under the status bar, over the home
-// indicator and inside the inset on its own edge. Its start edge faces the
-// screen it covers, which has none.
-function sideInsetsOf(insets: EdgeInsets): ViewStyle {
-  return { ...insetsOf(insets), paddingStart: 0 }
+// indicator, or over the keyboard while one is up, and inside the inset on its
+// own edge. Its start edge faces the screen it covers, which has none.
+function sideInsetsOf(insets: EdgeInsets, keyboard: number): ViewStyle {
+  return {
+    ...insetsOf(insets),
+    paddingBottom: Math.max(insets.bottom, keyboard),
+    paddingStart: 0,
+  }
 }
 
 function stopsOf(

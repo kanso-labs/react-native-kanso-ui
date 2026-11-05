@@ -113,6 +113,33 @@ draw Gesture Handler's root view around their own track, so an app need not wrap
 itself in `GestureHandlerRootView` for them, and one that already does loses
 nothing.
 
+### The keyboard
+
+A `Sheet`, a `Dialog` and a `SearchView` keep what they hold above the software
+keyboard. React Native draws edge to edge on Android, so the keyboard covers the
+window rather than shrinking it, and each of them is a `Modal`, a window of its
+own, whose keyboard Android reports to nothing React Native listens to. Install
+[react-native-keyboard-controller](https://kirillzyusko.github.io/react-native-keyboard-controller/),
+an optional peer, and mount its provider at the root of the app, for those
+reports to reach the library:
+
+```bash
+npx expo install react-native-keyboard-controller
+```
+
+```tsx
+import { KeyboardProvider } from 'react-native-keyboard-controller'
+
+;<KeyboardProvider navigationBarTranslucent statusBarTranslucent>
+  <App />
+</KeyboardProvider>
+```
+
+Without it, iOS keeps the overlays above the keyboard all the same, and Android
+does so only for a field in the app's own window. A screen of the app's own is
+the app's to keep clear, with the controller's `KeyboardAwareScrollView` or
+`KeyboardAvoidingView`.
+
 ## Routing
 
 A component with an `href` presses through the app's router once the app is

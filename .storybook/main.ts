@@ -91,6 +91,15 @@ const config: StorybookConfig = {
             find: 'expo-image-picker',
             replacement: path.join(import.meta.dirname, 'expo-image-picker.ts'),
           },
+          // The keyboard's reports from a sheet's or a dialog's window;
+          // react-native-keyboard-controller.ts says why it stands in.
+          {
+            find: 'react-native-keyboard-controller',
+            replacement: path.join(
+              import.meta.dirname,
+              'react-native-keyboard-controller.ts',
+            ),
+          },
           // Gesture Handler probes a class Reanimated does not export by its
           // path under src/, which is TypeScript the Babel pass here cannot
           // read, and a second copy of Reanimated beside the one the package

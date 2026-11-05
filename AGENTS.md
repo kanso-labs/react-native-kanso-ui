@@ -175,6 +175,16 @@ otherwise skips a function it cannot compile and says nothing. In
 `babel.config.cjs` it sits in an override excluding `node_modules`, since Jest
 transforms Storybook's own ESM-only packages through that file too.
 
+**The keyboard is moved through React Native's own events.** `Keyboard` reads
+them off `DeviceEventEmitter`, so a test emits `keyboardWillChangeFrame` with
+`Platform.OS` replaced by `ios`, and an overlay pads itself as it would on a
+device. react-native-keyboard-controller is an optional peer and no
+devDependency, so `src/overlay/keyboard.test.tsx` stands in for it with a
+virtual `jest.mock`, and every other suite runs as an app without it does. The
+web Storybook resolves it to the stand-in in
+`.storybook/react-native-keyboard-controller.ts`, since Vite resolves a dynamic
+import as it bundles.
+
 **Prove a new assertion can fail before trusting it.** Break the code it pins,
 watch the test go red, and put the code back. `[].every()` is `true`, so a check
 built on an empty list reports a state that never happened.
