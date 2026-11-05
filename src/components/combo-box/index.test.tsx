@@ -650,6 +650,22 @@ describe('ComboBox', () => {
       expect(input().props.value).toBe('')
     })
 
+    // From its own width, a browser's input shrank alongside the options and
+    // cut them short, "First item a…", with the line half empty.
+    it('gives the chosen options their width first, and the input what is left, 3em at least', async () => {
+      await renderComboBox<'multiple'>({
+        defaultValue: FIRST_AND_THIRD,
+        selectionMode: 'multiple',
+      })
+
+      expect(styleOf(shownText('First item and Third item')).flexShrink).toBe(1)
+      expect(styleOf(input())).toMatchObject({
+        flexBasis: 0,
+        flexGrow: 1,
+        minWidth: 3 * typography.bodyLargeSize,
+      })
+    })
+
     it('floats its label over the chosen options', async () => {
       await renderComboBox<'multiple'>({
         defaultValue: FIRST_AND_THIRD,

@@ -681,7 +681,7 @@ function FieldInput({
         multiline ? styles.inputMultiline : undefined,
         copied ? styles.inputOverCopy : extent,
         holdsChosen
-          ? minWidthOf(CHOSEN_ROOM * typography.bodyLargeSize * fontScale)
+          ? beside(CHOSEN_ROOM * typography.bodyLargeSize * fontScale)
           : undefined,
         affixed || copied || holdsChosen ? undefined : clearance,
       )}
@@ -1075,6 +1075,15 @@ function affixPart(
           : '',
     },
   ]
+}
+
+// The control beside chosen options: none of the line until they have
+// theirs, then whatever is left, and never less than `room`. From its own
+// width instead, a browser's input is twenty characters wide however
+// little it holds, and the two shrank together, cutting the options short
+// with room to spare.
+function beside(room: number): TextStyle {
+  return { flexBasis: 0, minWidth: room }
 }
 
 function boxControlOf(
