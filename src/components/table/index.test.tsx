@@ -1308,10 +1308,13 @@ describe('Table', () => {
 
       await act(() => {
         fireGestureHandler(getByGestureTestId('table-resize-colName'), [
-          { state: State.BEGAN, translationX: 0 },
-          { state: State.ACTIVE, translationX: 20 },
-          { state: State.ACTIVE, translationX: 50 },
-          { state: State.END, translationX: 50 },
+          // Gesture Handler counts translation from where the drag is
+          // taken, 20dp along here, and the edge follows the finger from
+          // where it went down all the same.
+          { absoluteX: 200, state: State.BEGAN, translationX: 0 },
+          { absoluteX: 220, state: State.ACTIVE, translationX: 0 },
+          { absoluteX: 250, state: State.ACTIVE, translationX: 30 },
+          { absoluteX: 250, state: State.END, translationX: 30 },
         ])
       })
 
@@ -1333,9 +1336,9 @@ describe('Table', () => {
 
       await act(() => {
         fireGestureHandler(getByGestureTestId('table-resize-colName'), [
-          { state: State.BEGAN, translationX: 0 },
-          { state: State.ACTIVE, translationX: 50 },
-          { state: State.END, translationX: 50 },
+          { absoluteX: 400, state: State.BEGAN, translationX: 0 },
+          { absoluteX: 450, state: State.ACTIVE, translationX: 0 },
+          { absoluteX: 450, state: State.END, translationX: 0 },
         ])
       })
 
@@ -1348,9 +1351,9 @@ describe('Table', () => {
 
       await act(() => {
         fireGestureHandler(getByGestureTestId('table-resize-colName'), [
-          { state: State.BEGAN, translationX: 0 },
-          { state: State.ACTIVE, translationX: -500 },
-          { state: State.END, translationX: -500 },
+          { absoluteX: 600, state: State.BEGAN, translationX: 0 },
+          { absoluteX: 100, state: State.ACTIVE, translationX: 0 },
+          { absoluteX: 100, state: State.END, translationX: 0 },
         ])
       })
 
@@ -1368,14 +1371,16 @@ describe('Table', () => {
       }
 
       await send('onGestureHandlerStateChange', {
+        absoluteX: 200,
         oldState: State.UNDETERMINED,
         state: State.BEGAN,
         translationX: 0,
       })
       await send('onGestureHandlerStateChange', {
+        absoluteX: 210,
         oldState: State.BEGAN,
         state: State.ACTIVE,
-        translationX: 10,
+        translationX: 0,
       })
 
       expect(styleOf(ruleOf(instance(handles().at(0))))).toMatchObject({
@@ -1388,9 +1393,10 @@ describe('Table', () => {
       })
 
       await send('onGestureHandlerStateChange', {
+        absoluteX: 210,
         oldState: State.ACTIVE,
         state: State.END,
-        translationX: 10,
+        translationX: 0,
       })
 
       expect(styleOf(ruleOf(instance(handles().at(0)))).width).toBe(1)

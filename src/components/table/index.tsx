@@ -1177,29 +1177,38 @@ function ResizeHandle({
   const locale = useLocaleOf(undefined)
   const { layout, native, onResize, onResizeEnd } = table
   const { key } = column
-  // The width the drag started from, or -1 between drags, and the width it
-  // last asked for. Shared values rather than refs: the gesture's callbacks
-  // are built while rendering, and the React Compiler lets no ref reach
-  // them.
+  // Where the finger went down across the window, the width the drag
+  // started from, or -1 between drags, and the width it last asked for.
+  // Shared values rather than refs: the gesture's callbacks are built while
+  // rendering, and the React Compiler lets no ref reach them.
+  const down = useSharedValue(0)
   const from = useSharedValue(-1)
   const last = useSharedValue(0)
   const width = layout.getColumnWidth(key)
   const resizing = layout.resizingColumn === key
 
-  function begin() {
-    from.set(layout.getColumnWidth(key))
-    last.set(layout.getColumnWidth(key))
+  function begin(x: number) {
+    const start = layout.getColumnWidth(key)
+    from.set(start)
+    last.set(start)
     layout.startResize(key)
+    resizeTo(start, x)
   }
 
-  function move(translation: number) {
+  function move(x: number) {
     const start = from.get()
     if (start < 0) {
       return
     }
-    // A drag towards the end widens the column, which is leftwards in a
-    // right-to-left layout.
-    const next = start + (I18nManager.isRTL ? -translation : translation)
+    resizeTo(start, x)
+  }
+
+  // The width the drag asks for once the finger is at `x` across the window.
+  // A drag towards the end widens the column, which is leftwards in a
+  // right-to-left layout.
+  function resizeTo(start: number, x: number) {
+    const moved = x - down.get()
+    const next = start + (I18nManager.isRTL ? -moved : moved)
     last.set(next)
     onResize?.(layout.updateResizedColumns(key, next))
   }
@@ -1225,13 +1234,19 @@ function ResizeHandle({
     .failOffsetY(SLOP_RANGE)
     .runOnJS(true)
     // The edge follows the finger from where it went down, so the distance
-    // it moved before the drag was taken counts too.
-    .onStart(({ translationX }) => {
-      begin()
-      move(translationX)
+    // it moved before the drag was taken counts too. That is read off where
+    // the finger is across the window rather than off the drag's
+    // translation, which Gesture Handler counts from the point the drag was
+    // taken: an edge that followed it fell behind the finger by as far as
+    // the finger had gone by then, half of a 40dp drag on an iPhone.
+    .onBegin(({ absoluteX }) => {
+      down.set(absoluteX)
     })
-    .onUpdate(({ translationX }) => {
-      move(translationX)
+    .onStart(({ absoluteX }) => {
+      begin(absoluteX)
+    })
+    .onUpdate(({ absoluteX }) => {
+      move(absoluteX)
     })
     .onFinalize(() => {
       finish()
