@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.11.27](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.11.26...v0.11.27) (2026-11-06)
+
+
+### Bug Fixes
+
+* **badge:** place the large badge without a percentage inset ([#410](https://github.com/kanso-labs/react-native-kanso-ui/issues/410)) ([5cc8fd9](https://github.com/kanso-labs/react-native-kanso-ui/commit/5cc8fd992158584eb5fbd18403c8576f1f27ef4a))
+* **carousel:** round an uncontained item's bottom corners on iOS ([#422](https://github.com/kanso-labs/react-native-kanso-ui/issues/422)) ([454ce0e](https://github.com/kanso-labs/react-native-kanso-ui/commit/454ce0e2cdc39d785f15ebe59d319bf1af48dd9f))
+* **chip-group:** centre the close target on its chip without a percentage inset ([#413](https://github.com/kanso-labs/react-native-kanso-ui/issues/413)) ([6fea750](https://github.com/kanso-labs/react-native-kanso-ui/commit/6fea750c4d9f04e225c6e9ee4dad0db6edc7aea2))
+* **field:** draw a one-line value on iOS without the type's line height ([#415](https://github.com/kanso-labs/react-native-kanso-ui/issues/415)) ([6c9919e](https://github.com/kanso-labs/react-native-kanso-ui/commit/6c9919e538668deb354feeccf9377b7df88f1f44))
+* **keycap:** set a keycap's text on the sentence's baseline on iOS ([#423](https://github.com/kanso-labs/react-native-kanso-ui/issues/423)) ([d9b90ea](https://github.com/kanso-labs/react-native-kanso-ui/commit/d9b90ea48f64b82e7613757ef4bda7c3a0d7599d))
+* **safe-area:** pad bars and panes only where they meet a system bar ([#407](https://github.com/kanso-labs/react-native-kanso-ui/issues/407)) ([48575a7](https://github.com/kanso-labs/react-native-kanso-ui/commit/48575a7d13e7e249672f616ec6dcd1d51e9c2abc))
+* **table:** keep a column's words whole at its narrowest ([#425](https://github.com/kanso-labs/react-native-kanso-ui/issues/425)) ([6349f9e](https://github.com/kanso-labs/react-native-kanso-ui/commit/6349f9ea0ee77e91897ee2f2169efbddc632afa8))
+* **table:** keep a resizable table's height when it is given no style ([#417](https://github.com/kanso-labs/react-native-kanso-ui/issues/417)) ([0cc558c](https://github.com/kanso-labs/react-native-kanso-ui/commit/0cc558c7efd11ebee14c1cac54e5e676577bbbf1))
+* **typography:** fall back to the platform's monospaced face for the mono family ([#419](https://github.com/kanso-labs/react-native-kanso-ui/issues/419)) ([5fd8df5](https://github.com/kanso-labs/react-native-kanso-ui/commit/5fd8df5ff810562ad60735407954e7048b9efdf4))
+
+
+### Dependencies
+
+* update dependency playwright to v1.65.0 ([#409](https://github.com/kanso-labs/react-native-kanso-ui/issues/409)) ([5cb5528](https://github.com/kanso-labs/react-native-kanso-ui/commit/5cb5528f0e6576270f8d0d86a2a6da7646884bb3))
+* update dependency tsdown to v0.23.7 ([#427](https://github.com/kanso-labs/react-native-kanso-ui/issues/427)) ([4af4058](https://github.com/kanso-labs/react-native-kanso-ui/commit/4af40584fcea0cc1b1117df8a91f2fe0ad5edda9))
+
 ## [0.11.26](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.11.25...v0.11.26) (2026-11-05)
 
 
