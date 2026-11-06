@@ -99,6 +99,20 @@ import { Checkbox } from '../checkbox'
 // web keeps them, and the widths are worked out by React Stately's column
 // layout, `fr` widths and all.
 //
+// **No column is narrower than its longest word.** React Stately's layout
+// sizes a column without reading what is in it, so a column at its 75dp
+// minimum took a word apart, "Statu" over "s", where web's table keeps every
+// word whole. So the table measures the widest word each column sets as text,
+// in its header, its rows and its footer, off screen and hidden from a screen
+// reader, and hands React Stately that, with the cell's padding and a sorted
+// column's arrow, as the column's minimum. Columns that stop fitting then
+// scroll sideways, as a wide table already does, and a resize handle stops at
+// the word rather than breaking it. A column given a `minWidth` of its own
+// keeps it. What a cell draws from elements of its own is not measured, since
+// the table sets no text in it. Of a column's words, the eight longest by
+// their letters are measured, which finds the widest without laying out every
+// word of a long table.
+//
 // Four things differ from web's, each because a screen reader or a touch on
 // a phone works differently from a keyboard in a browser.
 //
@@ -152,6 +166,13 @@ const RESIZE_STEP = 10
 const FLEXIBLE = '1fr'
 const MIN_WIDTH = 75
 
+// How many of a column's words are measured for its minimum, the longest by
+// their letters.
+const MEASURED_WORDS = 8
+
+// What a table holds before it has measured any column.
+const NO_MINIMUMS: ReadonlyMap<Key, number> = new Map()
+
 const styles = StyleSheet.create({
   // The header, the rows and the footer, as wide as the columns together.
   grid: {
@@ -174,6 +195,16 @@ const styles = StyleSheet.create({
     pointerEvents: 'box-none',
     position: 'absolute',
     right: 0,
+    top: 0,
+  },
+  // The columns' words, drawn off screen at their own widths, which each
+  // column's minimum is measured from.
+  measurer: {
+    alignItems: 'flex-start',
+    opacity: 0,
+    pointerEvents: 'none',
+    position: 'absolute',
+    start: 0,
     top: 0,
   },
   // The divider's own rule, inside the column it ends, as web draws it, so a
@@ -247,6 +278,12 @@ const stylesOf = themedStyles(({ colors, sizing, spacing }: ResolvedTheme) =>
     loading: {
       minHeight: ROW_HEIGHT,
     },
+    // One column's words, stacked at their own widths, inside the padding
+    // its cells take, so what is measured is the cell's width.
+    measured: {
+      alignItems: 'flex-start',
+      paddingHorizontal: spacing.lg,
+    },
     // The page's 52dp row.
     row: {
       flexDirection: 'row',
@@ -285,6 +322,13 @@ type BuilderContext = {
 type CellNode = Node<unknown> & {
   readonly colIndex?: null | number
   readonly colSpan?: null | number
+}
+
+/** The words a column sets as text, which its minimum is measured from. */
+type ColumnText = {
+  readonly body: readonly string[]
+  readonly footer: readonly string[]
+  readonly header: readonly string[]
 }
 
 type TableBodyProps<T extends object = object> = {
@@ -548,6 +592,10 @@ type TableViewProps = Omit<
   readonly footer: TableFooterProps | undefined
   readonly header: TableHeaderProps
   readonly layout: TableColumnResizeState<unknown>
+  /** Called with a change to the widest word each column measured. */
+  readonly onMinimums: (
+    update: (minimums: ReadonlyMap<Key, number>) => ReadonlyMap<Key, number>,
+  ) => void
   /** Called with the table's width as it is laid out. */
   readonly onWidth: (width: number) => void
   readonly state: TableState<unknown>
@@ -938,15 +986,94 @@ function* columnNode(
 }
 
 /**
- * The widths a column takes before anything says otherwise: React Stately's
- * own, and a checkbox's column as wide as its box and its padding, which it
- * keeps, since it holds one control and should not take a column of data's
- * room.
+ * Each column's words, measured off screen and hidden from a screen reader:
+ * its name in label large, with room for the arrow while the rows are sorted
+ * by it, what its rows set in body medium, and what its footer sets in label
+ * large, each column inside its cells' padding. A column with no text of its
+ * own measures nothing, and a checkbox's column keeps its own width.
  */
-function defaultsOf(selectionWidth: number) {
+function ColumnWords({
+  onMinimums,
+}: {
+  readonly onMinimums: TableViewProps['onMinimums']
+}) {
+  const theme = useTheme()
+  const own = stylesOf(theme)
+  const table = useTable()
+  const label = useTypeRole('labelLarge')
+  const text = useTypeRole('bodyMedium')
+  const { collection } = table.state
+  const words = useMemo(
+    () => wordsByColumn(collection, table.footer),
+    [collection, table.footer],
+  )
+  const sorted = table.state.sortDescriptor?.column
+  const arrow = useMemo(
+    () => ({ paddingEnd: theme.spacing.sm + ARROW_SIZE }),
+    [theme.spacing.sm],
+  )
+
+  return (
+    <View aria-hidden style={styles.measurer}>
+      {table.columns.map((column) => {
+        const found = words.get(column.key)
+        if (found === undefined || isSelection(column)) {
+          return null
+        }
+        return (
+          <View
+            key={column.key}
+            onLayout={minimumTo(onMinimums, column.key)}
+            style={own.measured}
+          >
+            {found.header.map((word) => (
+              <NativeText
+                key={`header ${word}`}
+                numberOfLines={1}
+                style={composeStyles<TextStyle>(
+                  label,
+                  sorted === column.key ? arrow : undefined,
+                )}
+              >
+                {word}
+              </NativeText>
+            ))}
+            {found.body.map((word) => (
+              <NativeText key={`body ${word}`} numberOfLines={1} style={text}>
+                {word}
+              </NativeText>
+            ))}
+            {found.footer.map((word) => (
+              <NativeText
+                key={`footer ${word}`}
+                numberOfLines={1}
+                style={label}
+              >
+                {word}
+              </NativeText>
+            ))}
+          </View>
+        )
+      })}
+    </View>
+  )
+}
+
+/**
+ * The widths a column takes before anything says otherwise: React Stately's
+ * own, at least the widest word the column measured, and a checkbox's column
+ * as wide as its box and its padding, which it keeps, since it holds one
+ * control and should not take a column of data's room.
+ */
+function defaultsOf(
+  selectionWidth: number,
+  minimums: ReadonlyMap<Key, number>,
+) {
   return {
     getDefaultMinWidth: (node: Node<unknown>): ColumnSize =>
-      isSelection(node) ? selectionWidth : MIN_WIDTH,
+      isSelection(node)
+        ? selectionWidth
+        : Math.max(MIN_WIDTH, minimums.get(node.key) ?? 0),
     getDefaultWidth: (node: Node<unknown>): ColumnSize =>
       isSelection(node) ? selectionWidth : FLEXIBLE,
   }
@@ -1479,6 +1606,7 @@ function Table({
   const theme = useTheme()
   const window = useWindowDimensions()
   const [measured, setMeasured] = useState<null | number>(null)
+  const [minimums, setMinimums] = useState(NO_MINIMUMS)
   const header = partOf<TableHeaderProps>(children, TableHeader)
   const body = partOf<TableBodyProps>(children, TableBody)
   const footer = partOf<TableFooterProps>(children, TableFooter)
@@ -1503,7 +1631,10 @@ function Table({
     sortDescriptor,
   })
   const selectionWidth = 2 * theme.spacing.lg + LAYER_SIZE
-  const defaults = useMemo(() => defaultsOf(selectionWidth), [selectionWidth])
+  const defaults = useMemo(
+    () => defaultsOf(selectionWidth, minimums),
+    [minimums, selectionWidth],
+  )
   const width = measured ?? window.width
   const layout = useTableColumnResizeState(
     { ...defaults, tableWidth: width },
@@ -1517,6 +1648,7 @@ function Table({
       footer={footer?.props}
       header={header.props}
       layout={layout}
+      onMinimums={setMinimums}
       onWidth={setMeasured}
       state={state}
       width={width}
@@ -1637,6 +1769,32 @@ function contentTo(
   }
 }
 
+/**
+ * The longest of a column's words by their letters, each once, which are the
+ * ones measured for its minimum.
+ */
+function longestOf(words: readonly string[]): string[] {
+  return [...new Set(words)]
+    .sort((first, second) => second.length - first.length)
+    .slice(0, MEASURED_WORDS)
+}
+
+/**
+ * Keeps the width a column's words were laid out at, rounded up, so the
+ * column is never a fraction of a point narrower than its widest word.
+ */
+function minimumTo(set: TableViewProps['onMinimums'], key: Key) {
+  return (event: LayoutChangeEvent) => {
+    const width = Math.ceil(event.nativeEvent.layout.width)
+
+    set((minimums) =>
+      minimums.get(key) === width
+        ? minimums
+        : new Map(minimums).set(key, width),
+    )
+  }
+}
+
 // Keeps the height the rows scroll in as it is laid out, and hands the
 // layout on to the call site.
 function roomTo(
@@ -1677,6 +1835,7 @@ function TableView({
   layout,
   onContentSizeChange,
   onLayout,
+  onMinimums,
   onResize,
   onResizeEnd,
   onRowAction,
@@ -1804,6 +1963,7 @@ function TableView({
           <GestureDetector gesture={native}>{scroller}</GestureDetector>
         )}
         <Status message={sortMessageOf(state, locale)} />
+        <ColumnWords onMinimums={onMinimums} />
       </Root>
     </TableContext>
   )
@@ -1835,6 +1995,82 @@ function widthTo(set: (width: number) => void) {
   return ({ nativeEvent }: LayoutChangeEvent) => {
     set(nativeEvent.layout.width)
   }
+}
+
+/**
+ * The words each column sets as text, by its key: its name's, its rows' and
+ * its footer's, the longest of each. A cell across several columns belongs to
+ * none of them, and a column with no text has no entry.
+ */
+function wordsByColumn(
+  collection: TableState<unknown>['collection'],
+  footer: TableFooterProps | undefined,
+): Map<Key, ColumnText> {
+  const { columns } = collection
+  const body = columns.map((): string[] => [])
+  const foot = columns.map((): string[] => [])
+
+  for (const row of collection) {
+    const cells: Iterable<CellNode> = collection.getChildren?.(row.key) ?? []
+    for (const cell of cells) {
+      if ((cell.colSpan ?? 1) === 1) {
+        body[cell.colIndex ?? cell.index]?.push(...wordsOf(cell.rendered))
+      }
+    }
+  }
+  for (const row of childElementsOf(footer?.children)) {
+    if (!isValidElement<TableRowProps>(row)) {
+      continue
+    }
+    const cells = childElementsOf(
+      typeof row.props.children === 'function' ? null : row.props.children,
+    )
+    const starts = startsOf(
+      cells.map((cell) =>
+        isValidElement<TableCellProps>(cell) ? (cell.props.colSpan ?? 1) : 0,
+      ),
+    )
+    for (const [index, cell] of cells.entries()) {
+      if (
+        isValidElement<TableCellProps>(cell) &&
+        (cell.props.colSpan ?? 1) === 1
+      ) {
+        foot[starts[index] ?? 0]?.push(...wordsOf(cell.props.children))
+      }
+    }
+  }
+
+  const words = new Map<Key, ColumnText>()
+  for (const [index, column] of columns.entries()) {
+    const found = {
+      body: longestOf(body[index] ?? []),
+      footer: longestOf(foot[index] ?? []),
+      header: longestOf(wordsOf(column.rendered)),
+    }
+    if (found.body.length + found.footer.length + found.header.length > 0) {
+      words.set(column.key, found)
+    }
+  }
+  return words
+}
+
+/**
+ * The words of what a column's header or a cell holds, when it is text alone,
+ * and none otherwise.
+ */
+function wordsOf(node: ReactNode): string[] {
+  const text: string[] = []
+
+  for (const part of Children.toArray(node)) {
+    if (typeof part !== 'string' && typeof part !== 'number') {
+      return []
+    }
+    text.push(String(part))
+  }
+  return text
+    .join('')
+    .split(/\s+/u)
+    .filter((word) => word !== '')
 }
 
 Table.Body = TableBody
