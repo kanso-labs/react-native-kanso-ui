@@ -180,8 +180,9 @@ async function renderRail({
   return render(<Sample {...sample} />)
 }
 
+// The safe area, inside the provider of its own it reads its insets from.
 function safeAreaOf() {
-  return child(contentOf().children[0])
+  return child(child(contentOf().children[0]).children[0])
 }
 
 // Renders a rail of three destinations, the first one current unless a case
@@ -312,6 +313,7 @@ describe('NavigationRail', () => {
     it('keeps its contents clear of the top, the bottom and its leading side', async () => {
       await renderRail()
 
+      expect(child(contentOf().children[0]).type).toBe('RNCSafeAreaProvider')
       expect(safeAreaOf().type).toBe('RNCSafeAreaView')
       expect(safeAreaOf().props.edges).toEqual({
         bottom: 'additive',

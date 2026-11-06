@@ -9,7 +9,6 @@ import type { Edge } from 'react-native-safe-area-context'
 
 import { use, useMemo, useState } from 'react'
 import { StyleSheet, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
 
 import type { NavigationItemProps } from '../../navigation'
 
@@ -21,6 +20,7 @@ import {
   NavigationDestination,
   NavigationItem,
 } from '../../navigation'
+import { SafeArea } from '../../safe-area'
 import { useTheme } from '../../theme/scope'
 import { composeStyles, themedStyles } from '../../theme/styles'
 
@@ -360,7 +360,7 @@ function NavigationBar({
       {...props}
       style={composeStyles<ViewStyle>(own.bar, style)}
     >
-      <SafeAreaView edges={EDGES}>
+      <SafeArea edges={EDGES}>
         <View
           onLayout={widthThen(setRoom)}
           style={composeStyles<ViewStyle>(
@@ -370,7 +370,7 @@ function NavigationBar({
         >
           <NavigationContext value={context}>{children}</NavigationContext>
         </View>
-      </SafeAreaView>
+      </SafeArea>
       {wide ? (
         <View aria-hidden style={styles.measurer}>
           <View style={styles.room}>

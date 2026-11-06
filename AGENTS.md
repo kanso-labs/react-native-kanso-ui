@@ -448,6 +448,14 @@ ESLint's `no-restricted-properties` refuses them outside the tests, and
 `.oxlintrc.json` turns off the two unicorn rules that ask for them. Copy the
 array and sort, reverse or splice the copy.
 
+**A `SafeAreaView` pads by its provider's insets, not its own.**
+safe-area-context's view reads the nearest provider's native view on iOS and
+Android alike, so with one provider at the root, every view took the whole
+screen's inset wherever it sat: an app bar drawn below another view took the
+status bar's 62pt on an iPhone. A provider's own insets are its overlap with the
+system bars, so `SafeArea` in `src/safe-area` holds the view in a provider of
+its own, and ESLint refuses `SafeAreaView` anywhere else in `src`.
+
 **Jest is held at 29.** `@react-native/jest-preset` depends on `babel-jest` and
 `jest-environment-node` at `^29.7.0`, so Jest 30 would run the preset's
 environment from the major before it. The Renovate rule holding it says when to

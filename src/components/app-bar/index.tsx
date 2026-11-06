@@ -10,7 +10,6 @@ import Animated, {
   useReducedMotion,
   withTiming,
 } from 'react-native-reanimated'
-import { SafeAreaView } from 'react-native-safe-area-context'
 
 import type { IconStyle } from '../../glyphs/icon-style'
 import type { TypeRole } from '../../typography/roles'
@@ -19,6 +18,7 @@ import { IconStyleContext } from '../../glyphs/icon-style'
 import { COLLAPSED_BLOCK_SIZE } from '../../hooks/useAppBarScroll'
 import { TARGET_SIZE } from '../../press'
 import { hasContent } from '../../row'
+import { SafeArea } from '../../safe-area'
 import { useTheme } from '../../theme/scope'
 import { composeStyles, themedStyles } from '../../theme/styles'
 import { Text } from '../text'
@@ -278,7 +278,7 @@ function AppBar({
         style,
       )}
     >
-      <SafeAreaView edges={EDGES} style={styles.safeArea}>
+      <SafeArea contentStyle={styles.safeArea} edges={EDGES}>
         <View
           style={composeStyles<ViewStyle>(styles.row, own.row, {
             maxWidth: contentMaxInlineSize,
@@ -314,7 +314,7 @@ function AppBar({
             <Slot color={theme.colors.onSurfaceVariant}>{trailing}</Slot>
           ) : null}
         </View>
-      </SafeAreaView>
+      </SafeArea>
     </Animated.View>
   )
 }

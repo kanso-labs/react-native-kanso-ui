@@ -248,8 +248,10 @@ describe('ListDetail', () => {
       await renderLayout()
 
       for (const pane of [listPane(), detailPane()]) {
-        const area = child(pane.children[0])
+        const provider = child(pane.children[0])
+        const area = child(provider.children[0])
 
+        expect(provider.type).toBe('RNCSafeAreaProvider')
         expect(area.type).toBe('RNCSafeAreaView')
         expect(area.props.edges).toEqual({
           bottom: 'additive',
