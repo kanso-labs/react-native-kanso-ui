@@ -1,14 +1,14 @@
 import type { ComponentRef, ReactNode, Ref } from 'react'
 import type { TextStyle, ViewProps, ViewStyle } from 'react-native'
 
-import { isValidElement } from 'react'
+import { isValidElement, useState } from 'react'
 import { Text as NativeText, Platform, StyleSheet, View } from 'react-native'
 
 import { useTheme } from '../../theme/scope'
 import { composeStyles, themedStyles } from '../../theme/styles'
 import { useFontFamily } from '../../typography/fonts'
 import { familyStyle } from '../../typography/roles'
-import { useTextSize } from '../../typography/size'
+import { descentTo, useTextLine, useTextSize } from '../../typography/size'
 
 // kanso-ui's Keycap: one key on a keyboard, as an instruction names it, drawn
 // as a small outlined cap in the line of text around it. A chord or a path
@@ -28,15 +28,30 @@ import { useTextSize } from '../../typography/size'
 // line, holding a Text of its own. Its size is the share of the one the
 // library's Text provides, as Code's is, and body medium's outside a Text.
 //
-// **iOS and Android stand an inline View on the baseline by its bottom edge**,
-// where React Native Web lays one out as an `inline-flex` box, which shares
-// its text's baseline with the line. So on native the cap is moved down by
-// how far its own baseline sits above its bottom edge: the 1dp rule, half the
-// leading the 1.4 line height adds, and the face's descent. The figures are
-// Roboto Mono's, the mono token's first family, measured in Chromium from the
-// face kanso-ui ships: 1.048em of ascent and 0.271em of descent, so 1.319em of
-// glyph box in a 1.4em line, and the baseline 0.3115em above the line box's
-// bottom. Neither platform's own placement has been measured on a device yet.
+// Neither platform lines an inline View up with the text around it by its
+// baseline, as React Native Web does with the `inline-flex` box it lays one
+// out as, so on native the cap is moved down onto the sentence's baseline,
+// by what React Native's own source says of where it puts the View and what
+// the two Texts measure of where their baselines are:
+//
+// - Android stands the View's bottom edge on the line's baseline, so the cap
+//   moves down by how far its own baseline sits above its bottom: the 1dp
+//   rule and the descent its Text measures, which takes in half the leading
+//   the 1.4 line height adds.
+// - iOS stands it 2.76pt above the bottom of the line, the descent of the
+//   font of the character holding it, which has none of its own, so
+//   TextKit's default of 12pt Helvetica: measured on an iPhone, the gap was
+//   2.67pt at every size, on its 3x grid. So the cap moves down by that gap
+//   and its own baseline's height, less how far the sentence's baseline sits
+//   above the bottom of its line, which the library's Text measures around a
+//   Keycap.
+//
+// Both measurements are of the faces actually drawn, so a mono family an app
+// registers moves the cap with it. Until the two Texts have been laid out the
+// cap is placed by the system font's figures, measured on an iPhone, which
+// came within 0.6pt of the measured place there. The cap can stand a stroke
+// past the first or last line, so the library's Text around it does not clip
+// what it holds.
 //
 // A screen reader on iOS or Android reads the Text around the cap as one
 // element whose words leave the cap out, since an inline View is not text. So
@@ -51,17 +66,32 @@ const SHARE = 0.8125
 // The line height against the cap's own size, web's `1.4`.
 const LINE = 1.4
 
-// Roboto Mono's ascent and descent against its size.
-const ASCENT = 1.048
-const DESCENT = 0.271
+// The system font's descent and line against its size, SF Pro's and SF
+// Mono's alike on an iPhone, for the place a cap takes before its Text and
+// the one around it have been laid out.
+const DESCENT = 0.2412
+const NATURAL = 1.1934
+
+// How far above the bottom of a line iOS stands the bottom edge of a View laid
+// in it.
+const IOS_GAP = 2.76
 
 // The rule around the cap, web's `1px`.
 const RULE = 1
 
-// How far the cap's baseline sits above its bottom edge at a size: the rule,
-// half the leading and the descent.
-function baselineOf(size: number) {
-  return RULE + ((LINE - ASCENT - DESCENT) / 2 + DESCENT) * size
+// How far a line's baseline sits above its bottom in the system font: the
+// descent and half the room a line taller than the font leaves, which React
+// Native puts half above the glyphs and half below.
+function descentOf(size: number, line: number) {
+  return DESCENT * size + Math.max(line - NATURAL * size, 0) / 2
+}
+
+/**
+ * How far a cap moves down to meet the sentence's baseline, from how far its
+ * own baseline and the sentence's sit above the bottoms of their lines.
+ */
+function loweringOf(own: number, around: number) {
+  return Platform.OS === 'ios' ? IOS_GAP + RULE + own - around : RULE + own
 }
 
 const styles = StyleSheet.create({
@@ -129,12 +159,28 @@ function Keycap({ children, style, ...props }: KeycapProps) {
   const theme = useTheme()
   const own = stylesOf(theme)
   const around = useTextSize()
+  const line = useTextLine()
   const mono = useFontFamily(theme.typography.fontFamilyMono)
+  // How far the key's baseline sits above the bottom of its line, once its
+  // Text has been laid out.
+  const [descent, setDescent] = useState<number | undefined>(undefined)
   const size = (around ?? theme.typography.bodyMediumSize) * SHARE
   const inline = around !== undefined
   const native = Platform.OS !== 'web'
   const lowered: null | ViewStyle =
-    inline && native ? { transform: [{ translateY: baselineOf(size) }] } : null
+    inline && native
+      ? {
+          transform: [
+            {
+              translateY: loweringOf(
+                descent ?? descentOf(size, size * LINE),
+                line?.descent ??
+                  descentOf(around, line?.height ?? around * NATURAL),
+              ),
+            },
+          ],
+        }
+      : null
 
   return (
     <View
@@ -149,6 +195,7 @@ function Keycap({ children, style, ...props }: KeycapProps) {
     >
       <NativeText
         numberOfLines={1}
+        onTextLayout={inline && native ? descentTo(setDescent) : undefined}
         style={composeStyles<TextStyle>(own.text, familyStyle(mono), {
           fontSize: size,
           lineHeight: size * LINE,
@@ -198,4 +245,4 @@ function spoken(node: ReactNode): null | string {
 
 export type { KeycapProps }
 
-export { Keycap, sentenceLabel }
+export { holdsKeycap, Keycap, sentenceLabel }

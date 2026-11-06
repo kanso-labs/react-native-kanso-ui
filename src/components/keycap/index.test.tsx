@@ -3,7 +3,12 @@ import type { StyleProp, TextStyle, ViewStyle } from 'react-native'
 import type { TestInstance, TestNode } from 'test-renderer'
 
 import { afterEach, describe, expect, it, jest } from '@jest/globals'
-import { render, screen, waitFor } from '@testing-library/react-native'
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react-native'
 import { createRef } from 'react'
 import { Platform, StyleSheet, View } from 'react-native'
 
@@ -61,6 +66,14 @@ function child(node: TestNode | undefined): TestInstance {
 
 function label() {
   return child(cap().children[0])
+}
+
+// Lays a Text out with its first line's baseline `descent` above the line's
+// bottom, as the platform reports it.
+async function layOut(text: TestInstance, descent: number) {
+  await fireEvent(text, 'textLayout', {
+    nativeEvent: { lines: [{ descender: descent }] },
+  })
 }
 
 function pressNothing() {
@@ -138,20 +151,70 @@ describe('keycap', () => {
       expect(styleOf(cap())).not.toHaveProperty('alignSelf')
     })
 
-    it('moves down until its baseline meets the sentence’s', async () => {
+    it('moves down onto the sentence’s baseline by the system font’s figures until it is laid out', async () => {
       await render(
         <Text variant="bodyLarge">
           Press <Keycap testID="cap">Esc</Keycap>
         </Text>,
       )
 
-      // Its bottom edge stands on the baseline, so it moves down by the rule,
-      // half the leading and Roboto Mono's descent at its own size.
-      const size = theme.typography.bodyLargeSize * 0.8125
-      const below = 1 + ((1.4 - 1.048 - 0.271) / 2 + 0.271) * size
+      // iOS stands the cap 2.76pt above the bottom of the line, so it moves
+      // down by that, the rule and its own baseline's height above its
+      // bottom, less the sentence's.
+      const around = theme.typography.bodyLargeSize
+      const size = around * 0.8125
+      const own = 0.2412 * size + (1.4 * size - 1.1934 * size) / 2
+      const line =
+        0.2412 * around +
+        (theme.typography.bodyLargeLineHeight - 1.1934 * around) / 2
       expect(styleOf(cap()).transform).toEqual([
-        { translateY: expect.closeTo(below) },
+        { translateY: expect.closeTo(2.76 + 1 + own - line) },
       ])
+    })
+
+    it('moves down onto the sentence’s baseline by what the two Texts measure once laid out', async () => {
+      await render(
+        <Text testID="sentence" variant="bodyLarge">
+          Press <Keycap testID="cap">Esc</Keycap>
+        </Text>,
+      )
+
+      await layOut(screen.getByTestId('sentence'), 6.31)
+      await layOut(label(), 4.67)
+
+      expect(styleOf(cap()).transform).toEqual([
+        { translateY: expect.closeTo(2.76 + 1 + 4.67 - 6.31) },
+      ])
+    })
+
+    it('stands its bottom edge on the baseline on Android, so moves down by its own baseline’s height', async () => {
+      Platform.OS = 'android'
+      await render(
+        <Text testID="sentence" variant="bodyLarge">
+          Press <Keycap testID="cap">Esc</Keycap>
+        </Text>,
+      )
+
+      await layOut(screen.getByTestId('sentence'), 6.31)
+      await layOut(label(), 4.67)
+
+      expect(styleOf(cap()).transform).toEqual([
+        { translateY: expect.closeTo(1 + 4.67) },
+      ])
+    })
+
+    it('lets the Text around it draw past its own box, and hands its layout on', async () => {
+      const onTextLayout = jest.fn()
+      await render(
+        <Text onTextLayout={onTextLayout} testID="sentence">
+          Press <Keycap>Esc</Keycap>
+        </Text>,
+      )
+
+      await layOut(screen.getByTestId('sentence'), 5)
+
+      expect(styleOf(screen.getByTestId('sentence')).overflow).toBe('visible')
+      expect(onTextLayout).toHaveBeenCalledTimes(1)
     })
 
     it('says the sentence with the key’s name in its place', async () => {
@@ -193,7 +256,7 @@ describe('keycap', () => {
     )
   })
 
-  it('leaves a Text holding no Keycap unlabelled', async () => {
+  it('leaves a Text holding no Keycap unlabelled and clipped', async () => {
     await render(
       <Text testID="sentence">
         A sentence naming <Code>identifier</Code>
@@ -202,6 +265,9 @@ describe('keycap', () => {
 
     expect(screen.getByTestId('sentence').props.accessibilityLabel).toBe(
       undefined,
+    )
+    expect(styleOf(screen.getByTestId('sentence'))).not.toHaveProperty(
+      'overflow',
     )
   })
 
@@ -214,6 +280,9 @@ describe('keycap', () => {
     )
 
     expect(styleOf(cap())).not.toHaveProperty('transform')
+    expect(styleOf(screen.getByTestId('sentence'))).not.toHaveProperty(
+      'overflow',
+    )
     expect(cap().props).not.toHaveProperty('accessibilityElementsHidden')
     expect(screen.getByTestId('sentence').props.accessibilityLabel).toBe(
       undefined,
