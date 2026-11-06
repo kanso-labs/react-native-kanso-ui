@@ -680,11 +680,11 @@ describe('Currency', () => {
       })
     })
 
-    it('draws in the system font while the family is not registered', async () => {
+    it('draws in the platform’s monospaced face while the family is not registered', async () => {
       const currency = await setup({ value: 42.5 })
 
       await waitFor(() => {
-        expect(styleOf(currency).fontFamily).toBe('System')
+        expect(styleOf(currency).fontFamily).toBe('ui-monospace')
       })
     })
   })
