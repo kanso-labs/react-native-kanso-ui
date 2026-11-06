@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.11.28](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.11.27...v0.11.28) (2026-11-06)
+
+
+### Dependencies
+
+* update dependency @kanso-labs/kanso-ui-core to v0.1.13 ([#428](https://github.com/kanso-labs/react-native-kanso-ui/issues/428)) ([491851c](https://github.com/kanso-labs/react-native-kanso-ui/commit/491851cc421a8416db6e63b58bf8527d4dec05eb))
+* update dependency @kanso-labs/kanso-ui-core to v0.1.13 ([#429](https://github.com/kanso-labs/react-native-kanso-ui/issues/429)) ([d82c6cb](https://github.com/kanso-labs/react-native-kanso-ui/commit/d82c6cb12d93645e8cf8e624b75744a364dcc000))
+* update dependency @kanso-labs/kanso-ui-core to v0.1.14 ([#433](https://github.com/kanso-labs/react-native-kanso-ui/issues/433)) ([c911aaa](https://github.com/kanso-labs/react-native-kanso-ui/commit/c911aaa72ed41fe40d4247a48b86c3fd6c9e255e))
+* update dependency @kanso-labs/kanso-ui-core to v0.1.14 ([#434](https://github.com/kanso-labs/react-native-kanso-ui/issues/434)) ([3d1fa42](https://github.com/kanso-labs/react-native-kanso-ui/commit/3d1fa429e30f2694cc9181f20c377e7443d0997a))
+* update dependency eslint-plugin-oxlint to v1.92.0 ([#435](https://github.com/kanso-labs/react-native-kanso-ui/issues/435)) ([b91a43d](https://github.com/kanso-labs/react-native-kanso-ui/commit/b91a43d07b821ee9dab1e2a5c5df550a488b699e))
+* update dependency oxfmt to v0.77.0 ([#430](https://github.com/kanso-labs/react-native-kanso-ui/issues/430)) ([7b2d459](https://github.com/kanso-labs/react-native-kanso-ui/commit/7b2d45909937ebc4295a02f9f03805929d647f1c))
+* update dependency oxlint to v1.92.0 ([#431](https://github.com/kanso-labs/react-native-kanso-ui/issues/431)) ([5f3b1ba](https://github.com/kanso-labs/react-native-kanso-ui/commit/5f3b1bab2738fedc81eee3c9457702da745df9ab))
+
 ## [0.11.27](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.11.26...v0.11.27) (2026-11-06)
 
 
