@@ -675,6 +675,7 @@ function FieldInput({
       selectionColor={caret}
       style={composeStyles<TextStyle>(
         role,
+        multiline || Platform.OS !== 'ios' ? undefined : UNSPACED,
         styles.input,
         colorOf(content),
         numeric ? numericOf(mono) : undefined,
@@ -710,7 +711,13 @@ function FieldInput({
   }
 
   return (
-    <View style={composeStyles<ViewStyle>(styles.affixLine, clearance)}>
+    <View
+      style={composeStyles<ViewStyle>(
+        styles.affixLine,
+        multiline || Platform.OS !== 'ios' ? undefined : CENTRED,
+        clearance,
+      )}
+    >
       {holdsChosen ? (
         <NativeText
           id={`${id}-chosen`}
@@ -1014,6 +1021,22 @@ const NOT_DRAWN: TextStyle = { display: 'none' }
 const OUT_OF_FLOW: ViewStyle = { position: 'absolute' }
 
 const SHRINKS: TextStyle = { flexShrink: 1 }
+
+// What a one-line control on iOS draws its value without: the type's line
+// height. iOS puts a line's room beyond its font's above the glyphs rather
+// than either side of them, so body large's 24dp line drew the value 4.7dp
+// below a prefix and a suffix, which are text and drawn centred in the same
+// line, measured on an iPhone. The control keeps the line as its least
+// height, and iOS centres one line down the control.
+const UNSPACED: TextStyle = { lineHeight: undefined }
+
+// How a one-line control on iOS lines up with the text beside it: centred
+// rather than on a baseline. Yoga reads the control's baseline from its value
+// laid out at its top, while iOS draws one line centred down the control, so
+// lining the two up by baseline drew the value 2dp below a prefix and a
+// suffix, measured on an iPhone. They are one line of the same type and as
+// tall as each other, so centring them shares their baseline.
+const CENTRED: ViewStyle = { alignItems: 'center' }
 
 // How many characters' width a control holding chosen options keeps beside
 // them, in its own type's size, web's 3em.
