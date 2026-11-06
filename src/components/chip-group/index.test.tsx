@@ -132,6 +132,11 @@ function IconProbe() {
   return <Text testID="icon">{`${String(color)} ${String(size)}`}</Text>
 }
 
+// The view holding this one.
+function parentOf(element: TestInstance) {
+  return child(element.parent ?? undefined)
+}
+
 // Hoisted so it is one stable element per render, which is what react-perf's
 // no-jsx-as-prop is after.
 const ICON = <IconProbe />
@@ -759,6 +764,18 @@ describe('ChipGroup', () => {
       expect(styleOf(chip('First item'))).toMatchObject({
         paddingEnd: spacing.lg + 18,
       })
+    })
+
+    it('is centred down the pill by the chip, not by a percentage, which Yoga reads against the row', async () => {
+      await render(<Group onRemove={jest.fn()} selectionMode="multiple" />)
+
+      const close = closeOf('First item')
+      expect(styleOf(close)).not.toHaveProperty('top')
+      expect(styleOf(close)).not.toHaveProperty('marginTop')
+      expect(styleOf(parentOf(close))).toMatchObject({
+        justifyContent: 'center',
+      })
+      expect(parentOf(chip('First item'))).toBe(parentOf(close))
     })
 
     it('leaves the pill its own padding without onRemove', async () => {

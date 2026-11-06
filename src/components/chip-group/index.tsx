@@ -186,8 +186,16 @@ const REMOVE_REACH: Insets = { bottom: 3, left: 3, right: 3, top: 3 }
 
 const styles = StyleSheet.create({
   // Holds the pill and the close target laid over it, and is never wider
-  // than the row, so the pill inside has a width to cut its label at.
+  // than the row, so the pill inside has a width to cut its label at. It is
+  // as tall as the pill, and centres the close target down it: an absolute
+  // child with no `top` or `bottom` is placed by its parent's justification,
+  // on web as in Yoga. A `top: '50%'` would not do the same, since Yoga reads
+  // a percentage on an absolute child against the room its parent was
+  // offered rather than the parent's own box: in a group of two rows, 72dp
+  // tall, it put every chip's target 36dp down, below the chip, measured on
+  // an iPhone.
   chip: {
+    justifyContent: 'center',
     maxWidth: '100%',
   },
   layer: {
@@ -233,16 +241,15 @@ const groupStylesOf = themedStyles(
       },
       // The close target, over the pill's end, where the pill's own padding
       // would end: the page pads 8dp on the side the glyph is on, and the
-      // label keeps the chip's 8dp gap before it.
+      // label keeps the chip's 8dp gap before it. The chip around it centres
+      // it down the pill.
       remove: {
         alignItems: 'center',
         borderRadius: radii.circle,
         end: RULE_WIDTH + spacing.lg - spacing.sm,
         height: GLYPH_SIZE,
         justifyContent: 'center',
-        marginTop: -GLYPH_SIZE / 2,
         position: 'absolute',
-        top: '50%',
         width: GLYPH_SIZE,
       },
       removeHovered: {
