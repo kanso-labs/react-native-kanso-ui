@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.11.31](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.11.30...v0.11.31) (2026-11-09)
+
+
+### Bug Fixes
+
+* **button-group:** round a connected group's ends no more than the theme's pill ([#452](https://github.com/kanso-labs/react-native-kanso-ui/issues/452)) ([8a1b53f](https://github.com/kanso-labs/react-native-kanso-ui/commit/8a1b53f4b8ed6365a953b88e5597c44f4b2278e8))
+* **table:** fade what a disabled row's cells hold ([#453](https://github.com/kanso-labs/react-native-kanso-ui/issues/453)) ([0d5a00f](https://github.com/kanso-labs/react-native-kanso-ui/commit/0d5a00fe337e65e1e1cbe701e36376009c585711))
+
+
+### Dependencies
+
+* update dependency @kanso-labs/kanso-ui-core to v0.1.16 ([#443](https://github.com/kanso-labs/react-native-kanso-ui/issues/443)) ([6f7274a](https://github.com/kanso-labs/react-native-kanso-ui/commit/6f7274a5352e86163b2159d1ce450b0fd2d8cdd2))
+* update dependency @kanso-labs/kanso-ui-core to v0.1.16 ([#444](https://github.com/kanso-labs/react-native-kanso-ui/issues/444)) ([59035b8](https://github.com/kanso-labs/react-native-kanso-ui/commit/59035b83573f10c94e6a20a7829f322272168ea2))
+* update dependency @rolldown/plugin-babel to v0.3.1 ([#448](https://github.com/kanso-labs/react-native-kanso-ui/issues/448)) ([ab0a4dc](https://github.com/kanso-labs/react-native-kanso-ui/commit/ab0a4dc79c88223c270e54a546ad342c07cf01a9))
+* update dependency oxfmt to v0.78.0 ([#450](https://github.com/kanso-labs/react-native-kanso-ui/issues/450)) ([3d13e22](https://github.com/kanso-labs/react-native-kanso-ui/commit/3d13e2227056d8d533013be0c7d309908780a834))
+* update dependency typescript-eslint to v8.72.2 ([#454](https://github.com/kanso-labs/react-native-kanso-ui/issues/454)) ([60594aa](https://github.com/kanso-labs/react-native-kanso-ui/commit/60594aa76ad22b19ad106658334d9cbd51ef8543))
+* update dependency vite to v8.3.7 ([#449](https://github.com/kanso-labs/react-native-kanso-ui/issues/449)) ([788aabf](https://github.com/kanso-labs/react-native-kanso-ui/commit/788aabfa5ec1d80a2f899b9d7b81960e55345f35))
+* update oxlint to v1.93.0 ([#451](https://github.com/kanso-labs/react-native-kanso-ui/issues/451)) ([835e9de](https://github.com/kanso-labs/react-native-kanso-ui/commit/835e9dea9acafea134f9dc0d6696196bfdd14765))
+
 ## [0.11.30](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.11.29...v0.11.30) (2026-11-08)
 
 
