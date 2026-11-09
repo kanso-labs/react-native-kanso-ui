@@ -225,6 +225,14 @@ const styles = StyleSheet.create({
   },
 })
 
+// A disabled row's cell, faded as a whole so that whatever it holds fades
+// with its text, a Tag or anything else that draws its own colours.
+const fadedOf = themedStyles(({ stateLayerOpacity }: ResolvedTheme) =>
+  StyleSheet.create({
+    cell: { opacity: stateLayerOpacity.disabledContent },
+  }),
+)
+
 const stylesOf = themedStyles(({ colors, sizing, spacing }: ResolvedTheme) =>
   StyleSheet.create({
     // The page's 16dp at each side, which is also what puts 32dp between
@@ -608,7 +616,9 @@ const TableContext = createContext<null | TableValue>(null)
 /**
  * A cell of a body row, its column's width or the columns' it spans: its
  * text in body medium and the row's content colour, or what it was given,
- * with an icon in it drawn in that colour, or the row's checkbox.
+ * with an icon in it drawn in that colour, or the row's checkbox. On a
+ * disabled row the cell fades as a whole, which reaches whatever it holds;
+ * the checkbox draws its own disabled state instead.
  */
 function BodyCell({
   cell,
@@ -623,7 +633,8 @@ function BodyCell({
   readonly isSelected: boolean
   readonly onSelect: (() => void) | undefined
 }) {
-  const own = stylesOf(useTheme())
+  const theme = useTheme()
+  const own = stylesOf(theme)
   const table = useTable()
   const text = useTypeRole('bodyMedium')
   const icon = useMemo(() => ({ color, size: 24 }), [color])
@@ -653,7 +664,12 @@ function BodyCell({
 
   return (
     <View
-      style={composeStyles<ViewStyle>(own.cell, { width }, style)}
+      style={composeStyles<ViewStyle>(
+        own.cell,
+        isDisabled ? fadedOf(theme).cell : undefined,
+        { width },
+        style,
+      )}
       testID={testID}
     >
       <IconStyleContext value={icon}>
@@ -697,7 +713,8 @@ function* bodyNode(props: TableBodyProps) {
 
 /**
  * A row of the body: the state layer, the ripple and the focus ring over its
- * cells, on primary container while selected and faded while disabled. A row
+ * cells, on primary container while selected and with its cells faded while
+ * disabled. A row
  * with nothing to do on a press, in a table that neither selects nor acts, is
  * a `View` that only presents.
  */
@@ -765,6 +782,9 @@ function BodyRow({
     isDisabled: disabled,
     isSelected: marked,
   })
+  // A disabled row's cells fade as a whole, so the text in them is drawn at
+  // full strength under that rather than faded twice.
+  const cellColor = disabled ? rowContentColor(theme, {}) : content
   const feedback = usePressFeedback({
     color: content,
     disabled,
@@ -781,7 +801,7 @@ function BodyRow({
     (cell) => (
       <BodyCell
         cell={cell}
-        color={content}
+        color={cellColor}
         isDisabled={disabled}
         isSelected={selected}
         key={cell.key}
