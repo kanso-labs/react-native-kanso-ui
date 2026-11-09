@@ -31,8 +31,8 @@ import { Table } from '.'
 import { useIconStyle } from '../../glyphs/icon-style'
 import { I18nProvider } from '../../i18n/provider'
 import { RouterProvider } from '../../router'
-import { withOpacity } from '../../theme/color'
 import { scopeFor } from '../../theme/scope'
+import { Tag } from '../tag'
 
 const { theme } = scopeFor('light', {})
 const { colors, sizing, spacing, stateLayerOpacity, typography } = theme
@@ -944,6 +944,44 @@ describe('Table', () => {
       expect(styleOf(cellOf('First item')).alignItems).toBe('flex-start')
     })
 
+    // Faded through its colour alone, a disabled row left a Tag in a cell at
+    // full strength beside its faded text.
+    it('fades what a disabled row’s cells hold with their text', async () => {
+      await render(
+        <Table aria-label="Label" disabledKeys={SECOND}>
+          <Table.Header>
+            <Table.Column id="colName" isRowHeader>
+              Label
+            </Table.Column>
+            <Table.Column id="colTag">Tag</Table.Column>
+          </Table.Header>
+          <Table.Body>
+            <Table.Row id="first">
+              <Table.Cell>First item</Table.Cell>
+              <Table.Cell testID="enabled">
+                <Tag>Label</Tag>
+              </Table.Cell>
+            </Table.Row>
+            <Table.Row id="second">
+              <Table.Cell>Second item</Table.Cell>
+              <Table.Cell testID="disabled">
+                <Tag>Label</Tag>
+              </Table.Cell>
+            </Table.Row>
+          </Table.Body>
+        </Table>,
+      )
+      const faded = stateLayerOpacity.disabledContent
+
+      expect(styleOf(screen.getByTestId('disabled')).opacity).toBe(faded)
+      expect(styleOf(cellOf('Second item')).opacity).toBe(faded)
+      expect(styleOf(screen.getByText('Second item')).color).toBe(
+        colors.onSurface,
+      )
+      expect(styleOf(screen.getByTestId('enabled')).opacity).toBeUndefined()
+      expect(styleOf(cellOf('First item')).opacity).toBeUndefined()
+    })
+
     it('draws nothing in a cell with nothing in it', async () => {
       await render(
         <Table aria-label="Label">
@@ -1308,9 +1346,15 @@ describe('Table', () => {
 
         expect(row.props.accessibilityActions).toBeUndefined()
         expect(styleOf(row).backgroundColor).toBeUndefined()
-        expect(styleOf(screen.getByText(text)).color).toBe(
-          withOpacity(colors.onSurface, stateLayerOpacity.disabledContent),
-        )
+        expect(styleOf(screen.getByText(text)).color).toBe(colors.onSurface)
+        // The label's cell fades and the checkbox's does not, since the
+        // checkbox draws its own disabled state.
+        expect(
+          row.queryAll(
+            (node) =>
+              styleOf(node).opacity === stateLayerOpacity.disabledContent,
+          ),
+        ).toEqual([cellOf(text)])
         expect(onRowAction).not.toHaveBeenCalled()
         expect(onSelectionChange).not.toHaveBeenCalled()
       },
