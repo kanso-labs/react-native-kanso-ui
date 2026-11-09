@@ -145,13 +145,16 @@ const gapsOf = themedStyles(({ spacing }) =>
 )
 
 // A connected button's three corners at each size: the inner corner it
-// rests at, the one it presses to, and the round end, half the button's
-// height. Not the pill: a corner larger than half its side scales down every
-// corner beside it, so a pill end beside an 8dp inner corner would shrink
-// the inner one. The 20dp at `xxl` and the 2dp and 10dp halves fall between
+// rests at, the one it presses to, and the round end, the theme's pill up to
+// half the button's height. Not the pill alone: a corner larger than half its
+// side scales down every corner beside it, so a pill end beside an 8dp inner
+// corner would shrink the inner one. Not half the height alone either: a
+// theme that squares its pill squares its Buttons, and the group's ends
+// follow them. The 20dp at `xxl` and the 2dp and 10dp halves fall between
 // steps of the radius scale and are written out, as on web.
 const cornersOf = themedStyles(({ radii, sizing }: ResolvedTheme) => {
-  const round = (size: ControlSize) => sizing[HEIGHTS[size]] / 2
+  const round = (size: ControlSize) =>
+    Math.min(radii.pill, sizing[HEIGHTS[size]] / 2)
 
   return {
     inner: { lg: radii.sm, md: radii.sm, xl: radii.lg, xs: radii.xs, xxl: 20 },
