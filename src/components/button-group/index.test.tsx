@@ -15,8 +15,10 @@ import { Platform, StyleSheet } from 'react-native'
 import { getAnimatedStyle } from 'react-native-reanimated'
 
 import type { ControlSize } from '../../button'
+import type { KuiTheme } from '../../tokens/defaults'
 
 import { ButtonGroup } from '.'
+import { ThemeScope } from '../../theme-scope'
 import { scopeFor } from '../../theme/scope'
 import { Button } from '../button'
 import { IconButton } from '../icon-button'
@@ -28,6 +30,10 @@ const { colors, motion, radii, sizing, spacing } = theme
 // jsx-no-new-array-as-prop is after.
 const FIRST = ['first']
 const SECOND = ['second']
+
+// A pill smaller than half of any button's height, as the Terminal scheme
+// squares its corners.
+const SQUARED_PILL: KuiTheme = { '--kui-radius-pill': '2px' }
 
 // A press with no point on the page, on a control that measures nothing, so
 // the ripple waits and the press is all a case sees.
@@ -656,6 +662,38 @@ describe('the connected group', () => {
     expect(cornersOf(third)).toMatchObject({
       end: [round, round],
       start: [radii.sm, radii.sm],
+    })
+  })
+
+  it("rounds its ends no more than the theme's pill", async () => {
+    await render(
+      <ThemeScope theme={SQUARED_PILL}>
+        <Group variant="connected" />
+        <Button>Label</Button>
+      </ThemeScope>,
+    )
+    const [first, , third, alone] = buttons()
+
+    expect(cornersOf(first).start).toEqual([2, 2])
+    expect(cornersOf(third).end).toEqual([2, 2])
+    expect(cornersOf(alone).round).toBe(2)
+  })
+
+  it("rounds a selected button's inner corners no more than the pill", async () => {
+    await render(
+      <ThemeScope theme={SQUARED_PILL}>
+        <Group
+          defaultSelectedKeys={SECOND}
+          selectionMode="single"
+          variant="connected"
+        />
+      </ThemeScope>,
+    )
+    const second = screen.getByRole('radio', { name: 'Second item' })
+
+    expect(cornersOf(second)).toMatchObject({
+      end: [2, 2],
+      start: [2, 2],
     })
   })
 
