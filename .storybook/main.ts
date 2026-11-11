@@ -24,7 +24,11 @@ const svgSoundModule = {
 }
 
 const config: StorybookConfig = {
-  addons: ['@storybook/addon-docs', '@storybook/addon-a11y'],
+  addons: [
+    '@chromatic-com/storybook',
+    '@storybook/addon-docs',
+    '@storybook/addon-a11y',
+  ],
   docs: {
     // As in kanso-ui: the page autodocs writes for a component is its
     // overview, so it takes that name rather than Storybook's own "Docs".

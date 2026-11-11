@@ -54,6 +54,7 @@ package too.
 | Coverage  | `npm run test:coverage`  | Jest with coverage and JUnit results, which `Test` uploads     |
 | Stories   | `npm run test:storybook` | Every story in Chromium through Vitest, failing on a11y        |
 | Storybook | `npm run storybook`      | The web Storybook at http://localhost:6006                     |
+| Chromatic | `npm run chromatic`      | Visual tests by hand; needs `CHROMATIC_PROJECT_TOKEN` in env   |
 | Lint      | `npm run lint`           | oxlint, then ESLint, then oxfmt formatting check               |
 | Build     | `npm run build`          | Type-checks (`tsc -b`) then builds ESM into `dist/`            |
 | Format    | `npm run format`         | oxfmt; `npm run format:check` is the check `lint` already runs |
@@ -356,6 +357,21 @@ creates that environment admitting the default branch alone, and a run a release
 starts runs on its tag. v0.1.0's deploy was refused before it started, with _Tag
 "v0.1.0" is not allowed to deploy to github-pages due to environment protection
 rules_, while the build job beside it passed.
+
+**`Chromatic` snapshots the web Storybook on every push**, through
+`chromaui/action`, and its job is named `Run visual regression tests` as in
+kanso-ui. The snapshots are of the library rendered by React Native Web, so they
+catch token, layout and contrast drift and say nothing about how iOS or Android
+draw text or shadows. The token is the repository secret
+`CHROMATIC_PROJECT_TOKEN`; a run without it fails at the action. `onlyChanged`
+(TurboSnap) is set in `chromatic.config.json` and in the workflow, and the
+checkout is full-depth because Chromatic reads the history to find its baseline.
+The run exits once the build is uploaded, so a change in the snapshots does not
+fail the job: it is reviewed and accepted in Chromatic, which posts its own
+commit statuses. The workflow is grouped per ref and cancels only off `main`,
+because each build on `main` advances the baseline every later comparison is
+made against. It is not a required check yet, so a ruleset names nothing it
+posts.
 
 **`Test` reports the suite's coverage on the pull request**, through
 `actions/upload-code-coverage`, from the Cobertura file `npm run test:coverage`
