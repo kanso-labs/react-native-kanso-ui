@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.11.35](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.11.34...v0.11.35) (2026-11-11)
+
+
+### Dependencies
+
+* update dependency @kanso-labs/kanso-ui-core to v0.1.18 ([#474](https://github.com/kanso-labs/react-native-kanso-ui/issues/474)) ([a21dacc](https://github.com/kanso-labs/react-native-kanso-ui/commit/a21dacc06593277ddebf7338fdd9c00abc4b7103))
+* update dependency @kanso-labs/kanso-ui-core to v0.1.18 ([#475](https://github.com/kanso-labs/react-native-kanso-ui/issues/475)) ([65cf558](https://github.com/kanso-labs/react-native-kanso-ui/commit/65cf55899be2818371968364867378cc55e344aa))
+* update dependency vite to v8.3.8 ([#468](https://github.com/kanso-labs/react-native-kanso-ui/issues/468)) ([7648326](https://github.com/kanso-labs/react-native-kanso-ui/commit/7648326cfab3abc23e3b973ef186cd1252bdf746))
+* update kanso-labs/actions action to v4.5.2 ([#469](https://github.com/kanso-labs/react-native-kanso-ui/issues/469)) ([bab51cf](https://github.com/kanso-labs/react-native-kanso-ui/commit/bab51cf9d9ebafd72ecf127c830ad84af92c126b))
+* update node.js to v26.13.1 ([#470](https://github.com/kanso-labs/react-native-kanso-ui/issues/470)) ([6be57db](https://github.com/kanso-labs/react-native-kanso-ui/commit/6be57dbe994f2dab298a08878b020a7cb8e7e769))
+
 ## [0.11.34](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.11.33...v0.11.34) (2026-11-11)
 
 
