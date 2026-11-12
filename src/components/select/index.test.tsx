@@ -381,7 +381,12 @@ describe('Select', () => {
     it('shows the placeholder, out of sight until the label floats', async () => {
       await renderSelect()
 
-      expect(styleOf(shownText('Select an item')).color).toBe('transparent')
+      // Hidden by its opacity, which Android honours where it draws a
+      // transparent colour in black, in the muted role it floats in.
+      expect(styleOf(shownText('Select an item'))).toMatchObject({
+        color: colors.onSurfaceVariant,
+        opacity: 0,
+      })
 
       await screen.rerender(
         <ThemeScope>
@@ -394,9 +399,10 @@ describe('Select', () => {
         </ThemeScope>,
       )
 
-      expect(styleOf(shownText('Select an item')).color).toBe(
-        colors.onSurfaceVariant,
-      )
+      expect(styleOf(shownText('Select an item'))).toMatchObject({
+        color: colors.onSurfaceVariant,
+      })
+      expect(styleOf(shownText('Select an item'))).not.toHaveProperty('opacity')
     })
 
     it('floats its label while the list is open, and rests it once it closes', async () => {
