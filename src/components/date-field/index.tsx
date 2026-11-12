@@ -11,6 +11,7 @@ import { useDateFieldState } from 'react-stately/useDateFieldState'
 import type { FieldVariant } from '../../field'
 
 import { useLocaleOf } from '../../i18n/provider'
+import { fieldClockOf } from '../../segments/clock'
 import { SegmentedField } from '../../segments/field'
 
 // kanso-ui's DateField: a date typed a segment at a time rather than picked
@@ -182,7 +183,7 @@ function DateField<T extends DateValue = DateValue>({
     isDisabled,
     isReadOnly,
     isRequired,
-    locale: writtenIn,
+    ...fieldClockOf(writtenIn, props.hourCycle),
   })
 
   return (

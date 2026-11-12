@@ -16,6 +16,7 @@ import type { FieldVariant } from '../../field'
 import { messagesFor } from '../../i18n'
 import { useLocaleOf } from '../../i18n/provider'
 import { PickerPopup, PickerTrigger } from '../../picker'
+import { fieldClockOf } from '../../segments/clock'
 import { SegmentedField } from '../../segments/field'
 import { Calendar } from '../calendar'
 
@@ -247,7 +248,7 @@ function DatePicker<T extends DateValue = DateValue>({
     isDisabled,
     isReadOnly,
     isRequired,
-    locale: writtenIn,
+    ...fieldClockOf(writtenIn, props.hourCycle),
     maxValue,
     minValue,
     onChange: setValue,

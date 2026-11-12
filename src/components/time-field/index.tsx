@@ -8,6 +8,7 @@ import { useTimeFieldState } from 'react-stately/useTimeFieldState'
 import type { DateFieldProps } from '../date-field'
 
 import { useLocaleOf } from '../../i18n/provider'
+import { fieldClockOf } from '../../segments/clock'
 import { SegmentedField } from '../../segments/field'
 
 // kanso-ui's TimeField: a time typed a segment at a time. Every part of it is
@@ -106,7 +107,7 @@ function TimeField<T extends TimeValue = TimeValue>({
     isDisabled,
     isReadOnly,
     isRequired,
-    locale: writtenIn,
+    ...fieldClockOf(writtenIn, props.hourCycle),
   })
 
   return (

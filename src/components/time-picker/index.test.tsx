@@ -289,6 +289,44 @@ describe('TimePicker', () => {
     })
   })
 
+  // Hermes on Android resolves `hour12: false` in en-US to `h24`, and writes
+  // the hour from 0 to 23 all the same; React Stately keeps an hour on that
+  // cycle one higher than the hour of the day.
+  describe('where a twenty-four hour clock resolves to h24, as on Android', () => {
+    beforeEach(() => {
+      // oxlint-disable-next-line typescript/unbound-method -- called with the formatter as `this`, through `call`
+      const resolve = Intl.DateTimeFormat.prototype.resolvedOptions
+
+      jest
+        .spyOn(Intl.DateTimeFormat.prototype, 'resolvedOptions')
+        .mockImplementation(function resolved(this: Intl.DateTimeFormat) {
+          const options = resolve.call(this)
+
+          return options.hourCycle === 'h23' && !options.locale.includes('-hc-')
+            ? { ...options, hourCycle: 'h24' }
+            : options
+        })
+    })
+
+    afterEach(() => {
+      jest.restoreAllMocks()
+    })
+
+    it('writes the hour that is chosen, in the field and in the modal', async () => {
+      await renderPicker({ defaultValue: new Time(21, 30), hourCycle: 24 })
+
+      expect(fieldShows()).toEqual(['21', '30'])
+
+      await open()
+
+      expect(textOf(boxOf('hour'))).toBe('21')
+
+      await tap(INNER_THREE)
+
+      expect(textOf(boxOf('hour'))).toBe('15')
+    })
+  })
+
   describe('the modal', () => {
     it("opens on the dial, headed by the page's words, with the field's time in the boxes", async () => {
       await renderPicker()
