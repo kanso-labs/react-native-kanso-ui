@@ -1,3 +1,4 @@
+import type { ReactElement } from 'react'
 import type { StyleProp, TextStyle, ViewStyle } from 'react-native'
 import type { Key, Selection } from 'react-stately'
 import type { TestInstance, TestNode } from 'test-renderer'
@@ -6,7 +7,7 @@ import { describe, expect, it, jest } from '@jest/globals'
 import { checkPath, chevronEndPath } from '@kanso-labs/kanso-ui-core/glyphs'
 import { fireEvent, render, screen } from '@testing-library/react-native'
 import { createRef } from 'react'
-import { FlatList, I18nManager, StyleSheet, Text } from 'react-native'
+import { FlatList, I18nManager, StyleSheet, Text, View } from 'react-native'
 import { getAnimatedStyle } from 'react-native-reanimated'
 
 import { Tree } from '.'
@@ -148,6 +149,11 @@ function headlines() {
         .map((child) => (typeof child === 'string' ? child : ''))
         .join(''),
     )
+}
+
+// A `render` that draws the row inside a view of the call site's own.
+function inAView(row: ReactElement) {
+  return <View testID="wrapper">{row}</View>
 }
 
 // A node of the tree that is an element rather than text.
@@ -547,6 +553,35 @@ describe('Tree', () => {
       })
       // The headline is drawn inside the row rather than handed to it.
       expect(screen.getByTestId('row').props).not.toHaveProperty('headline')
+    })
+
+    it('draws a row inside what its render returns, where it still opens', async () => {
+      await render(
+        <Tree aria-label="Label">
+          <Tree.Item headline="First item" id="first" render={inAView}>
+            <Tree.Item headline="Second item" id="second" />
+          </Tree.Item>
+        </Tree>,
+      )
+
+      expect(screen.getByTestId('wrapper').children).toEqual([
+        rowOf('First item'),
+      ])
+      expect(rowOf('First item').props.accessibilityActions).toEqual([
+        { label: 'Expand', name: 'expand' },
+      ])
+
+      await fireEvent(rowOf('First item'), 'accessibilityAction', EXPAND)
+
+      // The row under it is drawn after the view, not inside it.
+      expect(headlines()).toEqual(['First item', 'Second item'])
+      expect(screen.getAllByTestId('wrapper')).toHaveLength(1)
+      expect(screen.getByTestId('wrapper').children).toEqual([
+        rowOf('First item'),
+      ])
+      expect(rowOf('First item').props.accessibilityActions).toEqual([
+        { label: 'Collapse', name: 'collapse' },
+      ])
     })
   })
 

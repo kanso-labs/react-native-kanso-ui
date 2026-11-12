@@ -75,7 +75,8 @@ ListLoadMore.getCollectionNode = loaderNode
  * selects draws a checkbox before whatever `leading` holds.
  *
  * The list draws it from its entry in the collection, so it renders nothing
- * on its own. `style`, `ref` and `testID` land on the row.
+ * on its own. `style`, `ref` and `testID` land on the row, and `render`
+ * draws the row inside a view of the app's own.
  */
 function ListRow(_props: ListRowProps): null {
   return null

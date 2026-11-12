@@ -184,7 +184,8 @@ function NavigationTree<T extends object = object>({
  *
  * Rows nested as `children` are what make it open: a row with none draws no
  * chevron. The tree draws it from its entry in the collection, so it renders
- * nothing on its own. `style`, `ref` and `testID` land on the row.
+ * nothing on its own. `style`, `ref` and `testID` land on the row, and
+ * `render` draws the row inside a view of the app's own.
  */
 function NavigationTreeItem(_props: NavigationTreeItemProps): null {
   return null

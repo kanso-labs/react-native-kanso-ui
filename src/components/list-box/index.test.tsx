@@ -1,3 +1,4 @@
+import type { ReactElement } from 'react'
 import type { StyleProp, TextStyle, ViewStyle } from 'react-native'
 import type { Selection } from 'react-stately'
 import type { TestInstance } from 'test-renderer'
@@ -10,7 +11,7 @@ import {
   within,
 } from '@testing-library/react-native'
 import { createRef } from 'react'
-import { FlatList, StyleSheet, Text } from 'react-native'
+import { FlatList, StyleSheet, Text, View } from 'react-native'
 
 import { ListBox } from '.'
 import { withOpacity } from '../../theme/color'
@@ -68,6 +69,11 @@ const WITH_SUPPORTING = [
 
 function EmptyState() {
   return <Text>Nothing here</Text>
+}
+
+// A `render` that draws the option inside a view of the call site's own.
+function inAView(option: ReactElement) {
+  return <View testID="wrapper">{option}</View>
 }
 
 // The keys the latest change reported, in order.
@@ -670,6 +676,41 @@ describe('ListBox', () => {
         marginTop: 4,
         minHeight: sizing.rowSm,
       })
+    })
+
+    it('draws an option inside what its render returns, where it still selects', async () => {
+      const onSelectionChange = jest.fn<(keys: Selection) => void>()
+      await render(
+        <ListBox
+          aria-label="Label"
+          onSelectionChange={onSelectionChange}
+          selectionMode="single"
+        >
+          <ListBox.Item id="first">First item</ListBox.Item>
+          <ListBox.Item id="second" render={inAView}>
+            Second item
+          </ListBox.Item>
+        </ListBox>,
+      )
+
+      expect(screen.getAllByTestId('wrapper')).toHaveLength(1)
+      expect(screen.getByTestId('wrapper').children).toEqual([
+        optionOf('Second item'),
+      ])
+      expect(optionOf('First item').parent).not.toBe(
+        screen.getByTestId('wrapper'),
+      )
+
+      await fireEvent.press(optionOf('Second item'), PRESS)
+
+      const selected = screen.getByRole('button', {
+        name: /Second item/,
+        selected: true,
+      })
+
+      expect(keysOf(onSelectionChange)).toEqual(['second'])
+      expect(selected.parent).toBe(screen.getByTestId('wrapper'))
+      expect(styleOf(selected).backgroundColor).toBe(colors.primaryContainer)
     })
   })
 })

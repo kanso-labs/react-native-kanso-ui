@@ -383,6 +383,13 @@ const stylesOf = themedStyles(({ colors, radii, spacing }) =>
       justifyContent: 'flex-end',
       padding: spacing.lg,
     },
+    // A dashed box around the row of the List section drawn inside a view of
+    // the page's own, which would otherwise draw nothing.
+    wrapper: {
+      borderColor: colors.outline,
+      borderStyle: 'dashed',
+      borderWidth: 1,
+    },
   }),
 )
 
@@ -413,6 +420,12 @@ function dotOf(color: ColorValue | undefined, size: number): ViewStyle {
     height: size / 2,
     width: size / 2,
   }
+}
+
+// The `render` of the List section's wrapped row: the row it is handed,
+// inside a view of the page's own.
+function inAView(row: ReactNode) {
+  return <Wrapper>{row}</Wrapper>
 }
 
 function Item({ children }: PlaceholderProps) {
@@ -1058,7 +1071,7 @@ function Showcase({ name }: ShowcaseProps) {
       </Section>
 
       <Section
-        description="The shared row under selection, with a checkbox drawn on every one while the list toggles."
+        description="The shared row under selection, with a checkbox drawn on every one while the list toggles. The second list draws a row inside a view of the page's own, and the dashed box around that row is the view."
         title="List"
       >
         <Card padding="none" variant="outlined">
@@ -1076,6 +1089,19 @@ function Showcase({ name }: ShowcaseProps) {
             </List.Item>
             <List.Item id="third" supporting="Supporting line">
               Third item
+            </List.Item>
+          </List>
+        </Card>
+        <Card padding="none" variant="outlined">
+          <List
+            aria-label="Label"
+            defaultSelectedKeys={LIST_SELECTION}
+            scrollEnabled={false}
+            selectionMode="multiple"
+          >
+            <List.Item id="first">First item</List.Item>
+            <List.Item id="second" render={inAView}>
+              Second item
             </List.Item>
           </List>
         </Card>
@@ -1734,6 +1760,12 @@ function showSnackbar() {
   SHOWCASE_MESSAGES.add('First item saved', {
     action: { label: 'Undo', onPress: removeNothing },
   })
+}
+
+function Wrapper({ children }: { readonly children: ReactNode }) {
+  const styles = stylesOf(useTheme())
+
+  return <View style={styles.wrapper}>{children}</View>
 }
 
 export type { ShowcaseProps }
