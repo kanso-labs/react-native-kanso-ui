@@ -74,9 +74,14 @@ import { composeStyles, themedStyles } from '../../theme/styles'
 // Under a right-to-left layout the handle starts from the right, and a drag
 // toward the left turns the switch on.
 //
-// Gesture Handler recognises a drag only under its root view, so the track
+// Gesture Handler recognises a drag only under its root view, so the switch
 // carries one of its own, as its guide asks of a library. An app that wraps
-// itself in one already makes this one a plain view.
+// itself in one already makes this one a plain view. It is the switch's own
+// outer view, around the row's `Pressable` rather than inside it: once a press
+// is under way, Android hands the `Pressable`'s native view every move made
+// over what it holds, so a root inside it never saw the drag, and letting go
+// flipped the switch as a tap, whichever way the drag went. Above the
+// `Pressable`, the root sees the moves first.
 //
 // The row, the label and the line under it are src/control's, which Checkbox
 // and Radio draw through as well. The whole row is the `Pressable`, so a press
@@ -164,8 +169,7 @@ const DRAG_SLOP = TRAVEL / 2
 
 const styles = StyleSheet.create({
   // The 52 by 40 the switch takes in the row, the height of the state layer
-  // around the handle, with the track centred in it. Gesture Handler's root
-  // view, sized to the track rather than to the screen it fills by default.
+  // around the handle, with the track centred in it.
   control: {
     flexShrink: 0,
     height: LAYER_SIZE,
@@ -366,7 +370,11 @@ function Switch({
   const motion = useSwitchMotion(paint, { offset: drag.offset, on, size })
 
   return (
-    <View {...props} style={style} testID={testID}>
+    <GestureHandlerRootView
+      {...props}
+      style={composeStyles<ViewStyle>(style)}
+      testID={testID}
+    >
       <Pressable
         aria-checked={on}
         aria-label={ariaLabel}
@@ -378,7 +386,7 @@ function Switch({
         onPress={drag.pressOf(state)}
         style={controlStylesOf(theme).row}
       >
-        <GestureHandlerRootView style={styles.control}>
+        <View style={styles.control}>
           <GestureDetector gesture={drag.gesture}>
             <View style={styles.drag}>
               <Animated.View
@@ -411,7 +419,7 @@ function Switch({
               </Animated.View>
             </View>
           </GestureDetector>
-        </GestureHandlerRootView>
+        </View>
         <ControlLabel isDisabled={isDisabled}>{children}</ControlLabel>
       </Pressable>
       <ControlMessage
@@ -420,7 +428,7 @@ function Switch({
         id={messageId}
         style={own.messages}
       />
-    </View>
+    </GestureHandlerRootView>
   )
 }
 
