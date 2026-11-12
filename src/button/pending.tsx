@@ -39,6 +39,18 @@ const pendingStyles = StyleSheet.create({
 // site's own props, so an `aria-busy` of its own still wins, as on web.
 const BUSY = { 'aria-busy': true } as const
 
+/**
+ * What a pending Button reports: busy, and named by the ring that stands in
+ * for its hidden label, as web's name for it is. Android writes the busy
+ * state into a view's content description, which a screen reader then reads
+ * in place of the text under it, so a button named by its text alone was
+ * described as "busy" and nothing else. Spread before the call site's own
+ * props, so an `aria-label` of its own still wins.
+ */
+function busyAs(label: string) {
+  return { 'aria-busy': true, 'aria-label': label } as const
+}
+
 // What takes the hidden content out of what a screen reader reads, so the
 // button is named by the ring while it shows.
 const CONCEALED = { 'aria-hidden': true } as const
@@ -134,6 +146,7 @@ function usePending(isPending: boolean, pendingLabel: string | undefined) {
 
 export {
   BUSY,
+  busyAs,
   CONCEALED,
   PendingContent,
   PendingRing,
