@@ -1,8 +1,17 @@
-import type { ReactNode } from 'react'
+import type { ReactElement, ReactNode } from 'react'
 import type { ColorValue, ViewStyle } from 'react-native'
 
 import { CalendarDate, Time } from '@internationalized/date'
-import { StyleSheet, View } from 'react-native'
+import {
+  Children,
+  createContext,
+  isValidElement,
+  startTransition,
+  use,
+  useEffect,
+  useState,
+} from 'react'
+import { Platform, StyleSheet, View } from 'react-native'
 import { TokenFieldValue } from 'react-stately'
 
 import type { DemoThemeName } from './themes'
@@ -109,6 +118,15 @@ import { demoThemes } from './themes'
 // `Section`, which draws the rule above it along with its headline, and a new
 // component is a new `Section` in its alphabetical place, with the sentence
 // web's showcase gives it.
+//
+// **A device mounts the sections' content a few at a time.** Every section's
+// rule and headline is drawn at once, and the content of the first few with
+// them, so the first screen arrives as a story does. The rest mounts one
+// section after each commit, in a transition, so React yields to a press or
+// a scroll between two of them: mounted at once, the page held a phone's
+// JavaScript thread for up to 43 seconds before it drew anything. The web
+// mounts the whole page at once, where it costs a moment and where the
+// accessibility checks read it as soon as it renders.
 
 type PlaceholderProps = {
   readonly children: string
@@ -452,6 +470,59 @@ function Placeholder({ children }: PlaceholderProps) {
 
 // The chip group's close targets show what a scheme does to them, and the
 // page has nothing to remove a chip from.
+// How many sections a device mounts the content of with the page, enough to
+// fill its first screen.
+const FIRST_SECTIONS = 3
+
+// Whether a section's content is mounted yet. Outside `Sections` it always is.
+const MountedContext = createContext(true)
+
+// Whether a child of the page is one of its sections.
+function isSection(
+  part: ReturnType<typeof Children.toArray>[number],
+): part is ReactElement<SectionProps> {
+  return isValidElement(part) && part.type === Section
+}
+
+// The page's root, its sections' content each mounted in its turn: on a
+// device the first few at once and then one after each commit, in a
+// transition, and on the web all of them at once. What is not a section is
+// drawn as it is.
+function Page({ children }: { readonly children: ReactNode }) {
+  const styles = stylesOf(useTheme())
+  const parts = Children.toArray(children)
+  const total = parts.filter(isSection).length
+  const [count, setCount] = useState(
+    Platform.OS === 'web' ? total : FIRST_SECTIONS,
+  )
+
+  useEffect(() => {
+    if (count < total) {
+      startTransition(() => {
+        setCount(count + 1)
+      })
+    }
+  }, [count, total])
+
+  // The sections follow the bar and the page's own intro, one after another,
+  // so a section's turn is how far it stands past the first.
+  const first = parts.findIndex(isSection)
+
+  return (
+    <View style={styles.page}>
+      {parts.map((part, position): ReactNode =>
+        isSection(part) ? (
+          <MountedContext key={part.key} value={position - first < count}>
+            {part}
+          </MountedContext>
+        ) : (
+          part
+        ),
+      )}
+    </View>
+  )
+}
+
 function removeNothing() {}
 
 // One component's entry. The rule is drawn here rather than between two
@@ -459,6 +530,7 @@ function removeNothing() {}
 // list of them.
 function Section({ children, description, title }: SectionProps) {
   const styles = stylesOf(useTheme())
+  const mounted = use(MountedContext)
 
   return (
     <View style={styles.section} testID="showcase-section">
@@ -471,7 +543,7 @@ function Section({ children, description, title }: SectionProps) {
           {description}
         </Text>
       </View>
-      {children}
+      {mounted ? children : null}
     </View>
   )
 }
@@ -487,7 +559,7 @@ function Showcase({ name }: ShowcaseProps) {
     name === 'dark' ? LIBRARY_DARK : demoThemes[name]
 
   return (
-    <View style={styles.page}>
+    <Page>
       <View style={styles.bar}>
         <AppBar
           headline="Headline"
@@ -1750,7 +1822,7 @@ function Showcase({ name }: ShowcaseProps) {
           </Tree>
         </Card>
       </Section>
-    </View>
+    </Page>
   )
 }
 
