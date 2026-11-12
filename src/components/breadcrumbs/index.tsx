@@ -3,9 +3,18 @@ import type { StyleProp, TextStyle, ViewProps, ViewStyle } from 'react-native'
 import type { Key } from 'react-stately'
 
 import { Children, createContext, Fragment, isValidElement, use } from 'react'
-import { Text as NativeText, Platform, StyleSheet, View } from 'react-native'
+import {
+  Text as NativeText,
+  Platform,
+  Pressable,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+} from 'react-native'
 
 import { ChevronEndGlyph } from '../../glyphs'
+import { hitSlop } from '../../press'
+import { useLinkPress } from '../../router'
 import { useTheme } from '../../theme/scope'
 import { composeStyles, themedStyles } from '../../theme/styles'
 import { useTypeRole } from '../../typography/roles'
@@ -35,6 +44,15 @@ import { Link } from '../link'
 // Each is the library's Link with `tone="inherit"`, taking the row's muted
 // colour, and `underline="hover"`, leaving the rule for a pointer. A press
 // goes through the `RouterProvider` around the trail, as any Link's does.
+//
+// **A crumb takes a press 48dp tall on iOS and Android.** A link is a nested
+// Text, which has no frame to reach out from, so there the crumb's text sits
+// in a view that reaches out to 48dp tall through `hitSlop`, as the
+// library's other controls do, and presses the link's way. It reaches up and
+// down alone, so a press on a separator is never taken for the crumb beside
+// it. The view is no element of its own to a screen reader, which reaches the
+// link inside it. The web keeps the link alone, where a pointer needs no
+// reach and the view would take a click the link already takes.
 //
 // The trail is one group named by its `aria-label`, and it wraps onto further
 // lines rather than running off the edge.
@@ -112,6 +130,11 @@ const stylesOf = themedStyles(({ colors, spacing }) =>
     },
     label: {
       color: colors.onSurfaceVariant,
+      flexShrink: 1,
+    },
+    // The view a crumb's 48dp reach is taken from, which shrinks with the
+    // label inside it.
+    reach: {
       flexShrink: 1,
     },
     root: {
@@ -193,6 +216,13 @@ function BreadcrumbsItem({
   const theme = useTheme()
   const { isCurrent, isDisabled, onAction } = use(ItemContext)
   const labelRole = useTypeRole('labelLarge')
+  const { fontScale } = useWindowDimensions()
+  const action = actionOf(id, isDisabled ? undefined : onAction)
+  const press = useLinkPress(href, action)
+  const reaches =
+    Platform.OS !== 'web' &&
+    !isDisabled &&
+    (href !== undefined || action !== undefined)
 
   const own = stylesOf(theme)
   const label = composeStyles<TextStyle>(
@@ -212,17 +242,21 @@ function BreadcrumbsItem({
         </NativeText>
       ) : (
         <>
-          <NativeText style={label}>
-            <Link
-              href={href}
-              isDisabled={isDisabled}
-              onPress={actionOf(id, isDisabled ? undefined : onAction)}
-              tone="inherit"
-              underline="hover"
+          {reaches ? (
+            <Pressable
+              accessible={false}
+              hitSlop={hitSlop(
+                theme.typography.labelLargeLineHeight * fontScale,
+              )}
+              importantForAccessibility="no"
+              onPress={press}
+              style={own.reach}
             >
-              {children}
-            </Link>
-          </NativeText>
+              {crumbOf(label, { action, children, href, isDisabled })}
+            </Pressable>
+          ) : (
+            crumbOf(label, { action, children, href, isDisabled })
+          )}
           <ChevronEndGlyph
             color={theme.colors.onSurfaceVariant}
             size={CHEVRON_SIZE}
@@ -231,6 +265,36 @@ function BreadcrumbsItem({
         </>
       )}
     </View>
+  )
+}
+
+// A crumb's label, the link inside its type.
+function crumbOf(
+  label: StyleProp<TextStyle>,
+  {
+    action,
+    children,
+    href,
+    isDisabled,
+  }: {
+    readonly action: (() => void) | undefined
+    readonly children: ReactNode
+    readonly href: string | undefined
+    readonly isDisabled: boolean
+  },
+) {
+  return (
+    <NativeText style={label}>
+      <Link
+        href={href}
+        isDisabled={isDisabled}
+        onPress={action}
+        tone="inherit"
+        underline="hover"
+      >
+        {children}
+      </Link>
+    </NativeText>
   )
 }
 

@@ -6,7 +6,13 @@ import { afterEach, describe, expect, it, jest } from '@jest/globals'
 import { chevronEndPath } from '@kanso-labs/kanso-ui-core/glyphs'
 import { fireEvent, render, screen } from '@testing-library/react-native'
 import { createRef } from 'react'
-import { I18nManager, Platform, StyleSheet, View } from 'react-native'
+import {
+  Dimensions,
+  I18nManager,
+  Platform,
+  StyleSheet,
+  View,
+} from 'react-native'
 
 import { Breadcrumbs, BreadcrumbsItem } from '.'
 import { RouterProvider } from '../../router'
@@ -62,6 +68,11 @@ function parentOf(node: TestInstance) {
     throw new TypeError('expected a parent')
   }
   return node.parent
+}
+
+// The view a crumb takes its 48dp reach from, around the crumb's label.
+function reachOf(name: string) {
+  return parentOf(parentOf(screen.getByRole('link', { name })))
 }
 
 function Routed({
@@ -289,6 +300,64 @@ describe('Breadcrumbs', () => {
       expect(
         screen.getByRole('link', { name: 'First item' }).props.onPress,
       ).toBeUndefined()
+    })
+
+    it('reaches a crumb 48dp tall, and no further along the row', async () => {
+      await render(<Trail />)
+
+      // Half of what a line of label large, at the device's text size,
+      // leaves of 48dp: 14dp above and below a 20dp line.
+      const { fontScale } = Dimensions.get('window')
+      const reach = (48 - typography.labelLargeLineHeight * fontScale) / 2
+
+      expect(reachOf('First item').props.hitSlop).toEqual({
+        bottom: reach,
+        left: 0,
+        right: 0,
+        top: reach,
+      })
+      expect(reachOf('First item').props.accessible).toBe(false)
+      expect(styleOf(reachOf('First item'))).toEqual({ flexShrink: 1 })
+    })
+
+    it('takes a press within its reach as one on the link, and a press on the link once', async () => {
+      const navigate = jest.fn()
+      const onAction = jest.fn()
+
+      await render(
+        <Routed navigate={navigate}>
+          <Trail onAction={onAction} />
+        </Routed>,
+      )
+      await fireEvent.press(reachOf('Second item'))
+
+      expect(onAction.mock.calls).toEqual([['second']])
+      expect(navigate.mock.calls).toEqual([['/second']])
+
+      await fireEvent.press(screen.getByRole('link', { name: 'First item' }))
+
+      expect(onAction.mock.calls).toEqual([['second'], ['first']])
+      expect(navigate.mock.calls).toEqual([['/second'], ['/first']])
+    })
+
+    it('reaches no further where nothing follows a press, or on the web', async () => {
+      await render(<Trail isDisabled />)
+
+      expect(reachOf('First item').props.hitSlop).toBeUndefined()
+
+      await render(
+        <Breadcrumbs aria-label="Label">
+          <BreadcrumbsItem>First item</BreadcrumbsItem>
+          <BreadcrumbsItem>Second item</BreadcrumbsItem>
+        </Breadcrumbs>,
+      )
+
+      expect(reachOf('First item').props.hitSlop).toBeUndefined()
+
+      Platform.OS = 'web'
+      await render(<Trail />)
+
+      expect(reachOf('First item').props.hitSlop).toBeUndefined()
     })
 
     it('disables every link while the trail is disabled', async () => {
