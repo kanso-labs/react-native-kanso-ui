@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.12.0](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.11.35...v0.12.0) (2026-11-12)
+
+
+### Features
+
+* **list:** let an app wrap a list item's row in a view of its own ([#480](https://github.com/kanso-labs/react-native-kanso-ui/issues/480)) ([a424ce7](https://github.com/kanso-labs/react-native-kanso-ui/commit/a424ce7c713d35169d821865d4adcb8043f48ef7))
+
+
+### Dependencies
+
+* update kanso-labs/actions action to v4.5.3 ([#476](https://github.com/kanso-labs/react-native-kanso-ui/issues/476)) ([fc12a03](https://github.com/kanso-labs/react-native-kanso-ui/commit/fc12a037ab709ade9358e38d543661ee6e3ed683))
+
 ## [0.11.35](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.11.34...v0.11.35) (2026-11-11)
 
 
