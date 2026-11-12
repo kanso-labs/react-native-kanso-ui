@@ -768,6 +768,35 @@ describe('RadioGroup', () => {
       expect(styleOf(child(items.children.at(0)))).toEqual({})
     })
 
+    it('leaves 12dp after a description, so it reads with its own button rather than the next', async () => {
+      await render(
+        <RadioGroup label="Label">
+          <Radio description="Supporting line" value="first">
+            First item
+          </Radio>
+          <Radio value="second">Second item</Radio>
+        </RadioGroup>,
+      )
+
+      const items = child(group().children.at(1))
+      expect(styleOf(child(items.children.at(0)))).toEqual({
+        marginBottom: spacing.md,
+      })
+      expect(styleOf(child(items.children.at(1)))).toEqual({})
+
+      await render(
+        <RadioGroup label="Label" orientation="horizontal">
+          <Radio description="Supporting line" value="first">
+            First item
+          </Radio>
+        </RadioGroup>,
+      )
+
+      expect(
+        styleOf(child(child(group().children.at(1)).children.at(0))),
+      ).toEqual({ flexShrink: 1 })
+    })
+
     it('lays them along a wrapping line 16dp apart when horizontal, each giving up width', async () => {
       await render(
         <RadioGroup label="Label" orientation="horizontal">

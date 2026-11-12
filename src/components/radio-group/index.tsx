@@ -181,6 +181,15 @@ const styles = StyleSheet.create({
 const groupStylesOf = themedStyles(
   ({ colors, radii, spacing, stateLayerOpacity }) =>
     StyleSheet.create({
+      // An option with a description, in a group one under another: 12dp
+      // after the description. The label is centred in its 40dp row, 8dp
+      // off its edge, so the description 4dp under the row sat 12dp from
+      // its own label's text and 8dp from the next one's, and read as the
+      // next option's. This leaves it 12dp from its own and 20dp from the
+      // next, and an option without one where it was.
+      described: {
+        marginBottom: spacing.md,
+      },
       dot: {
         borderRadius: radii.circle,
       },
@@ -316,6 +325,7 @@ function Radio({
       {...props}
       style={composeStyles<ViewStyle>(
         horizontal ? styles.shrink : undefined,
+        !horizontal && description !== undefined ? own.described : undefined,
         style,
       )}
     >
