@@ -1,11 +1,12 @@
 import type { Meta, StoryFn } from '@storybook/react'
+import type { TestInstance } from 'test-renderer'
 
-import { describe, expect, it, jest } from '@jest/globals'
+import { afterEach, describe, expect, it, jest } from '@jest/globals'
 import { composeStories } from '@storybook/react'
-import { render, screen } from '@testing-library/react-native'
+import { fireEvent, render, screen } from '@testing-library/react-native'
 import { readdirSync } from 'node:fs'
 import path from 'node:path'
-import { StyleSheet } from 'react-native'
+import { Linking, StyleSheet } from 'react-native'
 
 import type { DemoTheme } from './theming/themes'
 
@@ -73,4 +74,51 @@ describe.each(files)('%s', (file) => {
       })
     })
   })
+})
+
+// The stories whose destinations carry a page's address, which a device has
+// nothing to open with. Each stands in for an app's router, so a press stays
+// inside the story rather than reaching the platform, which warned "Could
+// not open /third" and changed nothing.
+const ROUTED = [
+  'components/breadcrumbs/index.stories.tsx',
+  'components/link/index.stories.tsx',
+  'components/navigation-bar/index.stories.tsx',
+  'components/navigation-rail/index.stories.tsx',
+  'components/navigation-tree/index.stories.tsx',
+].map((file) => path.normalize(file))
+
+// Presses each of `targets` in turn, each an act of its own.
+async function pressEach(targets: readonly TestInstance[]) {
+  const first = targets.at(0)
+  if (first !== undefined) {
+    await fireEvent.press(first)
+    await pressEach(targets.slice(1))
+  }
+}
+
+describe.each(ROUTED)('%s', (file) => {
+  // React Native mocks `Linking` already, so the spy is that mock, whose
+  // calls a restore keeps.
+  afterEach(() => {
+    jest.clearAllMocks()
+    jest.restoreAllMocks()
+  })
+
+  it.each(storiesIn(file, 'light'))(
+    'keeps a press on each destination of %s inside the story',
+    async (_, Story) => {
+      const open = jest.spyOn(Linking, 'openURL')
+      await render(<Story />)
+
+      const destinations = [
+        ...screen.queryAllByRole('link'),
+        ...screen.queryAllByRole('tab'),
+      ]
+      await pressEach(destinations)
+
+      expect(destinations.length).toBeGreaterThan(0)
+      expect(open).not.toHaveBeenCalled()
+    },
+  )
 })

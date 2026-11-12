@@ -4,8 +4,11 @@ import type { ColorValue, ViewStyle } from 'react-native'
 import { useState } from 'react'
 import { StyleSheet, View } from 'react-native'
 
+import type { NavigationRailProps } from '.'
+
 import { NavigationRail } from '.'
 import { useIconStyle } from '../../glyphs/icon-style'
+import { RouterProvider } from '../../router'
 import { IconButton } from '../icon-button'
 
 // Plain shapes rather than an icon set, so the stories show the rail alone,
@@ -139,6 +142,7 @@ function boxOf(size: number): ViewStyle {
 // which is how the page has a reader move between the two forms.
 function Expandable() {
   const [isExpanded, setExpanded] = useState(false)
+  const [route, setRoute] = useState('/first')
   const button = {
     'aria-expanded': isExpanded,
     'aria-label': 'Menu',
@@ -150,13 +154,31 @@ function Expandable() {
     'aria-label': 'Label',
     header: <IconButton {...button}>{MENU}</IconButton>,
     isExpanded,
-    selectedRoute: '/first',
+    selectedRoute: route,
   }
 
   return (
-    <View style={styles.frame}>
-      <NavigationRail {...rail}>{DESTINATIONS}</NavigationRail>
-    </View>
+    <RouterProvider navigate={setRoute}>
+      <View style={styles.frame}>
+        <NavigationRail {...rail}>{DESTINATIONS}</NavigationRail>
+      </View>
+    </RouterProvider>
+  )
+}
+
+// The router's part, played by every story: the route that is current,
+// which pressing a destination sets. A device has nothing to open a page's
+// address with, so without it a press went to the platform, which warned
+// and changed nothing.
+function Navigated({ selectedRoute, ...props }: NavigationRailProps) {
+  const [route, setRoute] = useState(selectedRoute)
+
+  return (
+    <RouterProvider navigate={setRoute}>
+      <View style={styles.frame}>
+        <NavigationRail {...props} selectedRoute={route} />
+      </View>
+    </RouterProvider>
   )
 }
 
@@ -202,11 +224,9 @@ const meta = {
     selectedRoute: '/first',
   },
   component: NavigationRail,
-  render: (args) => (
-    <View style={styles.frame}>
-      <NavigationRail {...args} />
-    </View>
-  ),
+  // Keyed on the route the Controls panel sets, which starts it again from
+  // there.
+  render: (args) => <Navigated key={String(args.selectedRoute)} {...args} />,
   title: 'Components/NavigationRail',
 } satisfies Meta<typeof NavigationRail>
 

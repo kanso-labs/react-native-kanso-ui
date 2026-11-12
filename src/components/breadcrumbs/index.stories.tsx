@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react'
+import type { Decorator, Meta, StoryObj } from '@storybook/react'
 
 import { useState } from 'react'
 import { StyleSheet, View } from 'react-native'
@@ -6,6 +6,7 @@ import { StyleSheet, View } from 'react-native'
 import type { Key } from '../..'
 
 import { Breadcrumbs } from '.'
+import { RouterProvider } from '../../router'
 import { Stack } from '../stack'
 import { Text } from '../text'
 
@@ -33,12 +34,24 @@ const styles = StyleSheet.create({
   },
 })
 
+// A router that goes nowhere, around every story: a device has nothing to
+// open a page's address with, so without one a press on a crumb went to the
+// platform, which warned and changed nothing. The press is still drawn.
+function goNowhere() {}
+
+const Unrouted: Decorator = (Story) => (
+  <RouterProvider navigate={goNowhere}>
+    <Story />
+  </RouterProvider>
+)
+
 const meta = {
   args: {
     'aria-label': 'Label',
     children: TRAIL,
   },
   component: Breadcrumbs,
+  decorators: [Unrouted],
   title: 'Components/Breadcrumbs',
 } satisfies Meta<typeof Breadcrumbs>
 

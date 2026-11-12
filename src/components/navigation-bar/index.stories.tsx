@@ -4,7 +4,7 @@ import type { ColorValue, ViewStyle } from 'react-native'
 import { useState } from 'react'
 import { View } from 'react-native'
 
-import type { NavigationTabBarProps } from '.'
+import type { NavigationBarProps, NavigationTabBarProps } from '.'
 
 import { NavigationBar, NavigationTabBar } from '.'
 import { useIconStyle } from '../../glyphs/icon-style'
@@ -210,14 +210,16 @@ function boxOf(size: number): ViewStyle {
   }
 }
 
-// The router's part, played by the story: the route that is current, which
-// pressing a destination sets.
-function Navigated() {
-  const [route, setRoute] = useState('/first')
+// The router's part, played by every story: the route that is current,
+// which pressing a destination sets. A device has nothing to open a page's
+// address with, so without it a press went to the platform, which warned
+// and changed nothing.
+function Navigated({ selectedRoute, ...props }: NavigationBarProps) {
+  const [route, setRoute] = useState(selectedRoute)
 
   return (
     <RouterProvider navigate={setRoute}>
-      <NavigationBar selectedRoute={route}>{THREE}</NavigationBar>
+      <NavigationBar {...props} selectedRoute={route} />
     </RouterProvider>
   )
 }
@@ -296,6 +298,9 @@ const meta = {
     selectedRoute: '/first',
   },
   component: NavigationBar,
+  // Keyed on the route the Controls panel sets, which starts it again from
+  // there.
+  render: (args) => <Navigated key={String(args.selectedRoute)} {...args} />,
   title: 'Components/NavigationBar',
 } satisfies Meta<typeof NavigationBar>
 
@@ -336,11 +341,9 @@ const LongLabels: Story = {
   },
 }
 
-// The wiring an app's router does, with the story standing in for it:
+// The wiring an app's router does, which every story here stands in for:
 // pressing a destination makes it current.
-const Navigation: Story = {
-  render: () => <Navigated />,
-}
+const Navigation: Story = {}
 
 // The bar drawn for a tab navigator, through its `tabBar` prop.
 const TabBar: Story = {
