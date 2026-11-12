@@ -50,7 +50,12 @@ import { composeStyles, themedStyles } from '../../theme/styles'
 //
 // **The panel moves its height on Reanimated**, from nothing to the height
 // its content reports through `onLayout`, over the medium2 duration on the
-// emphasised curve, web's. Under reduced motion it opens and closes at once.
+// emphasised curve, web's. Whenever the clip holds a height of its own, the
+// content lies across the clip's width out of its flow: Yoga lays a child of
+// a clip that hides its overflow out no taller than the clip, so content in
+// the flow of a clip that is opening from nothing measures nothing but its
+// padding on Android, and the panel opens to that. React Native Web lays it
+// out at its own height either way. Under reduced motion it opens and closes at once.
 // It closes the same way it opens, which web does not: there the collapsed
 // panel takes React Aria's `hidden="until-found"`, which stops its content
 // being laid out at once and leaves nothing to shrink, and native has no
@@ -73,8 +78,7 @@ const stylesOf = themedStyles(({ spacing }: ResolvedTheme) =>
 )
 
 const styles = StyleSheet.create({
-  // What the panel's height moves inside: its content lays out at its own
-  // height whatever the clip is, which is what `onLayout` measures.
+  // What the panel's height moves inside.
   clip: {
     overflow: 'hidden',
   },
@@ -82,6 +86,15 @@ const styles = StyleSheet.create({
   // or a screen reader once its close has run.
   closed: {
     display: 'none',
+  },
+  // The content while the clip holds a height: across the clip's width and
+  // out of its flow, so it lays out at its own height whatever the clip's is,
+  // which is what `onLayout` measures.
+  measured: {
+    left: 0,
+    position: 'absolute',
+    right: 0,
+    top: 0,
   },
 })
 
@@ -343,6 +356,12 @@ function DisclosurePanel({
 
     return { height: measured * progress }
   })
+  // The content stays in the clip's flow only while the clip takes the
+  // content's own height, which is when it holds none to bound it by.
+  const flow = useAnimatedStyle(() => {
+    'worklet'
+    return height.get() < 0 && openness.get() === 1 ? {} : styles.measured
+  })
 
   return (
     <Animated.View
@@ -353,15 +372,16 @@ function DisclosurePanel({
       style={composeStyles<AnimatedStyle<ViewStyle>>(styles.clip, clip, style)}
       testID={testID}
     >
-      <View
+      <Animated.View
         onLayout={measure}
-        style={composeStyles<ViewStyle>(
+        style={composeStyles<AnimatedStyle<ViewStyle>>(
           own.inner,
+          flow,
           shown ? undefined : styles.closed,
         )}
       >
         {children}
-      </View>
+      </Animated.View>
     </Animated.View>
   )
 }
