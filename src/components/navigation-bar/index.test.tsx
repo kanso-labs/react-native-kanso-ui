@@ -498,6 +498,16 @@ describe('NavigationBar', () => {
       expect(styleOf(rowOf()).alignItems).toBe('stretch')
     })
 
+    // Without it, labels cut short on a phone ran into each other.
+    it('keeps each destination 4dp in from either end of its share', async () => {
+      await renderBar()
+
+      expect(styleOf(tab('First item'))).toMatchObject({
+        minWidth: 0,
+        paddingHorizontal: spacing.xs,
+      })
+    })
+
     it('puts the label under a 56dp by 32dp indicator', async () => {
       await renderBar()
 
