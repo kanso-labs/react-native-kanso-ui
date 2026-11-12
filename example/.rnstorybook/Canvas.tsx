@@ -68,10 +68,19 @@ function Gutter({
 }) {
   const { content } = stylesOf(useTheme())
 
+  // `handled` hands a press made while the keyboard is up to whatever takes
+  // it, as an app's screen would, and puts the keyboard away only for a
+  // press nothing takes. The default spends the first press on the keyboard,
+  // so a field's clear button or a suggestion's row took two.
   return scrolls ? (
     <View style={content}>{children}</View>
   ) : (
-    <ScrollView contentContainerStyle={content}>{children}</ScrollView>
+    <ScrollView
+      contentContainerStyle={content}
+      keyboardShouldPersistTaps="handled"
+    >
+      {children}
+    </ScrollView>
   )
 }
 
