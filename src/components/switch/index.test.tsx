@@ -42,21 +42,22 @@ jest.mock('react-native-reanimated', () => ({
 }))
 
 // Gesture Handler's root view, which a test cannot tell from a plain view, as
-// one that says what it is.
+// one that says what it is. A proxy rather than a copy of the module, which
+// would read every export, a deprecated one that warns among them.
 jest.mock('react-native-gesture-handler', () => {
   const { createElement } = jest.requireActual<typeof import('react')>('react')
   const actual = jest.requireActual<
     typeof import('react-native-gesture-handler')
   >('react-native-gesture-handler')
-  return {
-    __esModule: true,
-    ...actual,
-    GestureHandlerRootView: (props: object) =>
-      createElement(actual.GestureHandlerRootView, {
-        ...props,
-        nativeID: 'gesture-handler-root',
-      }),
-  }
+  const Root = (props: object) =>
+    createElement(actual.GestureHandlerRootView, {
+      ...props,
+      nativeID: 'gesture-handler-root',
+    })
+  return new Proxy(actual, {
+    get: (target, key): unknown =>
+      key === 'GestureHandlerRootView' ? Root : Reflect.get(target, key),
+  })
 })
 
 const { theme } = scopeFor('light', {})
