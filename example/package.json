@@ -5,7 +5,7 @@
   "description": "The on-device Storybook for react-native-kanso-ui, run in Expo Go from the story files in ../src",
   "main": "index.ts",
   "scripts": {
-    "android": "expo start --android",
+    "android": "expo start --android --localhost",
     "export": "expo export",
     "ios": "expo start --ios",
     "start": "expo start",

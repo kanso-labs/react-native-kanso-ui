@@ -329,6 +329,14 @@ resolves under Metro. `app.json` names those two platforms: Expo would otherwise
 bundle for the web as well, which the root's Storybook does instead, and fail on
 the React Native Web the app does not install.
 
+**`npm run android` there serves the emulator over adb, through `--localhost`.**
+Expo otherwise hands Expo Go the machine's LAN address, and an emulator that
+changes network just after it boots drops the bundle download part-way: Metro
+reports the bundle built while Expo Go sits at "Bundling 79%", with
+`Software caused connection abort` in logcat. With the flag Expo reverses port
+8081 over adb, so the emulator reads Metro at `127.0.0.1`. The emulator has to
+be running first, and Expo finds `adb` through `ANDROID_HOME`.
+
 ## Workflows and checks
 
 `Build`, `Lint` and `Test` run on every pull request and on pushes to `main`,
