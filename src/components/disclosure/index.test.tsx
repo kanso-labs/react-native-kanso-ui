@@ -49,6 +49,9 @@ const PRESS = {
 // The height a case's content reports.
 const CONTENT = 120
 
+// The content laid across the clip's width, out of its flow.
+const ACROSS = { left: 0, position: 'absolute', right: 0, top: 0 }
+
 // Hoisted so the slot and the call sites' styles are stable, which is what
 // react-perf's no-jsx-as-prop and no-new-object-as-prop are after.
 const LEADING = <Text testID="leading">Lead</Text>
@@ -415,6 +418,35 @@ describe('Disclosure', () => {
       await laidOut()
 
       expect(heightOf()).toBe(CONTENT)
+    })
+
+    it("lays its content out of the clip's flow while the clip holds a height, so the clip cannot bound it", async () => {
+      await renderDisclosure()
+      await press()
+
+      // Opening from nothing: Android lays content in the flow of a 0dp
+      // clip out at its padding alone.
+      expect(getAnimatedStyle(content())).toMatchObject(ACROSS)
+
+      await laidOut()
+      await advance(motion.durationMedium2)
+
+      expect(heightOf()).toBe(CONTENT)
+      expect(getAnimatedStyle(content())).toMatchObject(ACROSS)
+
+      await press()
+
+      expect(getAnimatedStyle(content())).toMatchObject(ACROSS)
+    })
+
+    it('keeps its content in the flow of a clip that takes its height', async () => {
+      await renderDisclosure({ defaultExpanded: true })
+
+      expect(getAnimatedStyle(content())).not.toHaveProperty('position')
+
+      await laidOut()
+
+      expect(getAnimatedStyle(content())).toMatchObject(ACROSS)
     })
 
     it('keeps nothing a closed panel reports, and opens to the height it last measured', async () => {
