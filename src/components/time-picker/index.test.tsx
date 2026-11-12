@@ -143,7 +143,7 @@ function handle() {
 
 // The hidden input the boxes take their keys through on iOS and Android.
 function input() {
-  return within(container()).getByDisplayValue(' ', {
+  return within(container()).getByDisplayValue(/^ /u, {
     includeHiddenElements: true,
     normalizer: (text) => text,
   })

@@ -121,10 +121,10 @@ function focusSentTo() {
   })
 }
 
-// The hidden input that takes the keys on iOS and Android, which holds one
-// space.
+// The hidden input that takes the keys on iOS and Android, whose text starts
+// with one space.
 function input() {
-  return screen.getByDisplayValue(' ', {
+  return screen.getByDisplayValue(/^ /u, {
     includeHiddenElements: true,
     normalizer: (text) => text,
   })

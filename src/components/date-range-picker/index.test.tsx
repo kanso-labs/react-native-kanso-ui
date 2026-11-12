@@ -169,9 +169,9 @@ function hintOf(name: string) {
 }
 
 // The hidden input that takes the keys on iOS and Android, one for each
-// date, each holding one space.
+// date, each with a text that starts with one space.
 function input(date: 'end' | 'start') {
-  const inputs = screen.getAllByDisplayValue(' ', {
+  const inputs = screen.getAllByDisplayValue(/^ /u, {
     includeHiddenElements: true,
     normalizer: (text) => text,
   })

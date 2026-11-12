@@ -33,10 +33,10 @@ function firstHostOf(element: ReturnType<typeof segmentOf>) {
   return child
 }
 
-// The hidden input that takes the keys on iOS and Android, which holds one
-// space.
+// The hidden input that takes the keys on iOS and Android, whose text starts
+// with one space.
 function input() {
-  return screen.getByDisplayValue(' ', {
+  return screen.getByDisplayValue(/^ /u, {
     includeHiddenElements: true,
     normalizer: (text) => text,
   })
@@ -263,6 +263,20 @@ describe('TimeField', () => {
 
       expect(shown()).toStrictEqual(['2', '30', 'PM'])
       expect(onChange).toHaveBeenLastCalledWith(new Time(14, 30))
+    })
+
+    // The review's case: `adb shell input text 45` hands the second key over
+    // before the input is put back, in a text that still holds the first.
+    it('takes a second key handed over in a text still holding the first', async () => {
+      const onChange = jest.fn()
+      await renderField({ defaultValue: TIME, onChange })
+
+      await fireEvent.press(segmentOf('minute'))
+      await fireEvent.changeText(input(), ' 4')
+      await fireEvent.changeText(input(), ' 45')
+
+      expect(textOf(segmentOf('minute'))).toBe('45')
+      expect(onChange).toHaveBeenLastCalledWith(new Time(9, 45))
     })
 
     it("turns the day period between the locale's words for the two", async () => {
