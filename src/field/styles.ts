@@ -255,6 +255,12 @@ const fieldStylesOf = themedStyles(
         flexDirection: 'row',
         overflow: 'hidden',
       },
+      // A chosen field's placeholder under a resting label: out of sight and
+      // still on its line, so the box keeps its height. Android draws text in
+      // a transparent colour in its default black, so it is the opacity.
+      unseen: {
+        opacity: 0,
+      },
       // A token field's pills and its control on the value's line, in a row
       // that wraps. A line is a pill's height at the least, as web's line is,
       // so the control after the pills sits on their line rather than above

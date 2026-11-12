@@ -914,14 +914,12 @@ function FieldValue({ children, isPlaceholder = false }: FieldValueProps) {
   const { fontScale } = useWindowDimensions()
   const role = useTypeRole('bodyLarge')
   const { colors, stateLayerOpacity, typography } = theme
-  const color =
-    isPlaceholder && !box.floated
-      ? 'transparent'
-      : box.disabled
-        ? withOpacity(colors.onSurface, stateLayerOpacity.disabledContent)
-        : isPlaceholder
-          ? colors.onSurfaceVariant
-          : colors.onSurface
+  const styles = fieldStylesOf(theme)
+  const color = box.disabled
+    ? withOpacity(colors.onSurface, stateLayerOpacity.disabledContent)
+    : isPlaceholder
+      ? colors.onSurfaceVariant
+      : colors.onSurface
 
   return (
     <NativeText
@@ -930,6 +928,7 @@ function FieldValue({ children, isPlaceholder = false }: FieldValueProps) {
       style={composeStyles<TextStyle>(
         role,
         colorOf(color),
+        isPlaceholder && !box.floated ? styles.unseen : undefined,
         box.underLabel
           ? marginTopOf(typography.bodySmallLineHeight * fontScale)
           : undefined,
