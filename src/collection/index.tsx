@@ -79,8 +79,9 @@ import { useTypeRole } from '../typography/roles'
 // the one whose `href` is the route is marked with the drawer's pill, and
 // the rows it sits under with a bold label.
 //
-// Four things differ from web's, each because a screen reader or a touch on
-// a phone works differently from a keyboard in a browser.
+// Five things differ from web's, each because a screen reader, a touch or a
+// screen on a phone works differently from a keyboard and a page in a
+// browser.
 //
 // **A row is one element to a screen reader.** Web's List row is a grid row
 // whose checkbox is a cell a keyboard reaches on its own, and web's ListBox
@@ -111,6 +112,18 @@ import { useTypeRole } from '../typography/roles'
 // web leaves to the page. A sticky header needs a ground to cover the rows
 // scrolling under it, and it takes the list's, so a `style` giving the list
 // another background gives its headers the same one.
+//
+// **A row's `render` is handed the row's element.** Web's row takes React
+// Aria's `render`, which is handed the row's props to spread onto an element
+// of the kind it expects. What an app puts in a row's place on a phone is
+// most often a view around it, the one a screen transition library measures
+// to open a page out of the row that was pressed, as Material Design's
+// container transform does, and what goes inside a view is an element. Its
+// `props` are the row's own, the ref among them, for an app that draws the
+// row through a pressable of its own instead. Either way the cell the
+// `FlatList` keys is the one around what `render` returns, and the press,
+// the state layers, the selection and the accessibility actions are in the
+// element handed over.
 
 // A checkbox drawn in a row sits in a slot an icon's size, the lists page's
 // 24dp, rather than in the 40dp state layer Checkbox draws it in.
@@ -306,6 +319,13 @@ type CollectionProps<T extends object = object> = Omit<
   readonly style?: StyleProp<ViewStyle>
 }
 
+/**
+ * A row as the collection draws it, which a row's `render` is handed: a
+ * `Pressable`, or a `View` for a row that only presents, whose `props` hold
+ * the row's press, state, style, ref and content.
+ */
+type CollectionRowElement = ReactElement<PressableProps>
+
 type CollectionRowProps = Omit<
   PressableProps,
   'children' | 'disabled' | 'id' | 'role' | 'style'
@@ -333,6 +353,23 @@ type CollectionRowProps = Omit<
    */
   readonly overline?: ReactNode
   readonly ref?: Ref<HostInstance>
+  /**
+   * Draws the row inside a view of the app's own, or through one in its
+   * place: called with the row's element, it returns what the list draws for
+   * the row. The view a screen transition library measures goes around a row
+   * this way, so a page can open out of the row that was pressed.
+   *
+   * ```tsx
+   * <List.Item id="first" render={(row) => <View style={bounds}>{row}</View>}>
+   *   First item
+   * </List.Item>
+   * ```
+   *
+   * The row inside keeps its press feedback, its selection and its
+   * accessibility actions. The element's `props` are the row's own, its ref
+   * among them, for a pressable that takes them in the row's place.
+   */
+  readonly render?: (row: CollectionRowElement) => ReactElement
   readonly style?: StyleProp<ViewStyle>
   /** A second line under the headline, in body medium and the muted role. */
   readonly supporting?: ReactNode
@@ -662,6 +699,17 @@ function currentState(current: boolean) {
     return { 'aria-selected': current }
   }
   return current ? CURRENT_PAGE : undefined
+}
+
+/**
+ * What the list draws for a row: the row itself, or what the row's `render`
+ * makes of it.
+ */
+function drawnThrough(
+  render: CollectionRowProps['render'],
+  row: CollectionRowElement,
+): ReactElement {
+  return render === undefined ? row : render(row)
 }
 
 /**
@@ -1048,7 +1096,8 @@ function* rowNode(props: CollectionRowProps) {
  * Tree's row is indented by its depth and starts with its chevron, or a
  * chevron's space on a row with nothing under it. A row with nothing to do
  * on a press, in a collection that neither selects nor acts, is a `View`
- * that only presents.
+ * that only presents. A row with a `render` is handed over to it, and what
+ * it returns is drawn in the row's place.
  */
 function RowNode({ node }: { readonly node: Node<unknown> }) {
   const theme = useTheme()
@@ -1076,6 +1125,7 @@ function RowNode({ node }: { readonly node: Node<unknown> }) {
     onPressOut,
     overline,
     ref,
+    render,
     style,
     supporting,
     textValue: _textValue,
@@ -1221,7 +1271,8 @@ function RowNode({ node }: { readonly node: Node<unknown> }) {
   ]
 
   if (!checks && action === undefined && onPress === undefined) {
-    return (
+    return drawnThrough(
+      render,
       <View
         aria-disabled={disabled || undefined}
         ref={rowRef}
@@ -1229,11 +1280,12 @@ function RowNode({ node }: { readonly node: Node<unknown> }) {
         testID={props.testID}
       >
         {lines}
-      </View>
+      </View>,
     )
   }
 
-  return (
+  return drawnThrough(
+    render,
     <Pressable
       role={href === undefined ? 'button' : 'link'}
       {...props}
@@ -1268,7 +1320,7 @@ function RowNode({ node }: { readonly node: Node<unknown> }) {
     >
       {feedback.layer}
       {lines}
-    </Pressable>
+    </Pressable>,
   )
 }
 

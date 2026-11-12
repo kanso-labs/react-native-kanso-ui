@@ -1,8 +1,11 @@
 import type { Decorator, Meta, StoryObj } from '@storybook/react'
+import type { ReactNode } from 'react'
 
 import { StyleSheet, View } from 'react-native'
 
 import { List } from '.'
+import { useTheme } from '../../theme/scope'
+import { themedStyles } from '../../theme/styles'
 import { Avatar } from '../avatar'
 import { Card } from '../card'
 import { Currency } from '../currency'
@@ -20,6 +23,19 @@ const styles = StyleSheet.create({
     width: 380,
   },
 })
+
+const stylesOf = themedStyles(({ colors }) =>
+  StyleSheet.create({
+    // The view `InAView` draws its second row inside, with a dashed border so
+    // it shows. An app's own draws nothing: it is the view a screen
+    // transition library measures.
+    wrapper: {
+      borderColor: colors.outline,
+      borderStyle: 'dashed',
+      borderWidth: 1,
+    },
+  }),
+)
 
 // Hoisted so neither the keys nor the slots are new values on every render,
 // which is what react-perf's array and JSX rules are after.
@@ -62,6 +78,15 @@ const Framed: Decorator = (Story) => (
     </Card>
   </View>
 )
+
+// A row's `render`: the row it is handed, inside a view of the story's own.
+function inAView(row: ReactNode) {
+  return <Wrapper>{row}</Wrapper>
+}
+
+function Wrapper({ children }: { readonly children: ReactNode }) {
+  return <View style={stylesOf(useTheme()).wrapper}>{children}</View>
+}
 
 const meta = {
   args: {
@@ -185,6 +210,23 @@ const Loading: Story = {
   },
 }
 
+// The second row drawn inside a view of the story's own, through the row's
+// `render`, which is where an app puts the view a screen transition library
+// measures to open a page out of the row that was pressed. The row inside
+// ripples and selects as the one above it does.
+const InAView: Story = {
+  args: {
+    children: [
+      <List.Item id="first" key="first">
+        First item
+      </List.Item>,
+      <List.Item id="second" key="second" render={inAView}>
+        Second item
+      </List.Item>,
+    ],
+  },
+}
+
 // A thousand rows in a list a few hundred dp tall, of which only those in
 // view and a few screens either side are drawn.
 const Long: Story = {
@@ -204,6 +246,7 @@ const Long: Story = {
 export {
   Default,
   Disabled,
+  InAView,
   Loading,
   Long,
   Sections,

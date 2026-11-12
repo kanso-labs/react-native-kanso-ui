@@ -1,17 +1,30 @@
-import type { StyleProp, TextStyle, ViewStyle } from 'react-native'
+import type { ComponentRef, ReactElement } from 'react'
+import type {
+  PressableProps,
+  StyleProp,
+  TextStyle,
+  ViewStyle,
+} from 'react-native'
 import type { Key, Selection } from 'react-stately'
 import type { TestInstance, TestNode } from 'test-renderer'
 
 import { describe, expect, it, jest } from '@jest/globals'
 import { checkPath } from '@kanso-labs/kanso-ui-core/glyphs'
-import { fireEvent, render, screen } from '@testing-library/react-native'
+import {
+  fireEvent,
+  render,
+  screen,
+  within,
+} from '@testing-library/react-native'
 import { createRef } from 'react'
 import {
   AccessibilityInfo,
   FlatList,
   Platform,
+  Pressable,
   StyleSheet,
   Text,
+  View,
 } from 'react-native'
 
 import { List } from '.'
@@ -84,6 +97,22 @@ function header() {
   return screen.getByRole('heading', { name: 'Header' })
 }
 
+// The headlines drawn, top to bottom.
+function headlines() {
+  return screen
+    .getAllByText(/item$/)
+    .map((node) =>
+      node.children
+        .map((child) => (typeof child === 'string' ? child : ''))
+        .join(''),
+    )
+}
+
+// A `render` that draws the row inside a view of the call site's own.
+function inAView(row: ReactElement) {
+  return <View testID="wrapper">{row}</View>
+}
+
 // A node of the tree that is an element rather than text.
 function instance(node: null | TestNode | undefined): TestInstance {
   if (node === null || node === undefined || typeof node === 'string') {
@@ -135,6 +164,12 @@ function styleOf(element: {
   props: { style?: StyleProp<TextStyle | ViewStyle> }
 }): TextStyle & ViewStyle {
   return StyleSheet.flatten([element.props.style]) ?? {}
+}
+
+// A `render` that draws the row through a pressable of the call site's own,
+// which takes the row's props in the row's place.
+function throughAPressable(row: ReactElement<PressableProps>) {
+  return <Pressable {...row.props} testID="own" />
 }
 
 describe('List', () => {
@@ -663,6 +698,129 @@ describe('List', () => {
 
       expect(announce).toHaveBeenCalledTimes(1)
       expect(announce).toHaveBeenCalledWith('Loading more')
+    })
+  })
+
+  describe('a row with a render', () => {
+    it('draws that row alone inside what render returns, the row as it was', async () => {
+      const onAction = jest.fn()
+      await render(
+        <List aria-label="Label" onAction={onAction} selectionMode="multiple">
+          <List.Item id="first">First item</List.Item>
+          <List.Item aria-label="Second label" id="second" render={inAView}>
+            Second item
+          </List.Item>
+          <List.Item id="third">Third item</List.Item>
+        </List>,
+      )
+
+      const wrappers = screen.getAllByTestId('wrapper')
+      const wrapper = instance(wrappers.at(0))
+      const row = screen.getByRole('button', { name: 'Second label' })
+
+      expect(wrappers).toHaveLength(1)
+      expect(wrapper.children).toEqual([row])
+      expect(rowOf('First item').parent).not.toBe(wrapper)
+      expect(rowOf('Third item').parent).not.toBe(wrapper)
+      expect(headlines()).toEqual(['First item', 'Second item', 'Third item'])
+
+      // The label and the actions are the row's, as on a row without one,
+      // and the view around it carries neither.
+      expect(row.props.accessibilityLabel).toBe('Second label')
+      expect(row.props.accessibilityActions).toEqual([
+        { label: 'Select', name: 'select' },
+      ])
+      expect(row.props.accessibilityActions).toEqual(
+        rowOf('First item').props.accessibilityActions,
+      )
+      expect(wrapper.props).not.toHaveProperty('accessibilityLabel')
+      expect(wrapper.props).not.toHaveProperty('accessibilityActions')
+      expect(wrapper.props).not.toHaveProperty('render')
+      expect(row.props).not.toHaveProperty('render')
+
+      await fireEvent.press(row, PRESS)
+
+      expect(onAction).toHaveBeenCalledTimes(1)
+      expect(onAction).toHaveBeenCalledWith('second')
+    })
+
+    it('selects the row inside, on primary container with its box checked', async () => {
+      const onSelectionChange = jest.fn<(keys: Selection) => void>()
+      await render(
+        <List
+          aria-label="Label"
+          onSelectionChange={onSelectionChange}
+          selectionMode="multiple"
+        >
+          <List.Item id="first">First item</List.Item>
+          <List.Item id="second" render={inAView}>
+            Second item
+          </List.Item>
+        </List>,
+      )
+
+      await fireEvent.press(rowOf('Second item'), PRESS)
+
+      const row = screen.getByRole('button', {
+        name: /Second item/,
+        selected: true,
+      })
+
+      expect(keysOf(onSelectionChange)).toEqual(['second'])
+      expect(row.parent).toBe(screen.getByTestId('wrapper'))
+      expect(checksIn(row)).toHaveLength(1)
+      expect(styleOf(row).backgroundColor).toBe(colors.primaryContainer)
+
+      await fireEvent(row, 'accessibilityAction', SELECT)
+
+      expect(keysOf(onSelectionChange)).toEqual([])
+    })
+
+    it('draws a row that only presents inside it too', async () => {
+      await render(
+        <List aria-label="Label">
+          <List.Item id="first" render={inAView}>
+            First item
+          </List.Item>
+          <List.Item id="second">Second item</List.Item>
+        </List>,
+      )
+
+      const wrapper = screen.getByTestId('wrapper')
+
+      expect(within(wrapper).getByText('First item')).toBeOnTheScreen()
+      expect(within(wrapper).queryByText('Second item')).toBe(null)
+      expect(styleOf(instance(wrapper.children.at(0))).minHeight).toBe(
+        sizing.rowSm,
+      )
+      expect(screen.queryByRole('button')).toBe(null)
+    })
+
+    it("hands render the row's own props, for a pressable in its place", async () => {
+      const onAction = jest.fn()
+      const ref = createRef<ComponentRef<typeof View>>()
+      await render(
+        <List aria-label="Label" onAction={onAction} selectionMode="multiple">
+          <List.Item id="first" ref={ref} render={throughAPressable}>
+            First item
+          </List.Item>
+        </List>,
+      )
+
+      const own = screen.getByTestId('own')
+
+      expect(screen.getAllByRole('button')).toEqual([own])
+      expect(rowOf('First item')).toBe(own)
+      expect(own.props.accessibilityActions).toEqual([
+        { label: 'Select', name: 'select' },
+      ])
+      expect(styleOf(own).minHeight).toBe(sizing.rowSm)
+      expect(ref.current).not.toBe(null)
+
+      await fireEvent.press(own, PRESS)
+
+      expect(onAction).toHaveBeenCalledTimes(1)
+      expect(onAction).toHaveBeenCalledWith('first')
     })
   })
 

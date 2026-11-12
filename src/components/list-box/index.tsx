@@ -69,7 +69,8 @@ function ListBox<T extends object = object>(props: ListBoxProps<T>) {
  * option an `id`, which is the key selection is reported by.
  *
  * The list draws it from its entry in the collection, so it renders nothing
- * on its own. `style`, `ref` and `testID` land on the option.
+ * on its own. `style`, `ref` and `testID` land on the option, and `render`
+ * draws the option inside a view of the app's own.
  */
 function ListBoxItem(_props: ListBoxItemProps): null {
   return null
