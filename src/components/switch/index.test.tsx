@@ -41,6 +41,25 @@ jest.mock('react-native-reanimated', () => ({
   useReducedMotion: () => mockReducedMotion,
 }))
 
+// Gesture Handler's root view, which a test cannot tell from a plain view, as
+// one that says what it is. A proxy rather than a copy of the module, which
+// would read every export, a deprecated one that warns among them.
+jest.mock('react-native-gesture-handler', () => {
+  const { createElement } = jest.requireActual<typeof import('react')>('react')
+  const actual = jest.requireActual<
+    typeof import('react-native-gesture-handler')
+  >('react-native-gesture-handler')
+  const Root = (props: object) =>
+    createElement(actual.GestureHandlerRootView, {
+      ...props,
+      nativeID: 'gesture-handler-root',
+    })
+  return new Proxy(actual, {
+    get: (target, key): unknown =>
+      key === 'GestureHandlerRootView' ? Root : Reflect.get(target, key),
+  })
+})
+
 const { theme } = scopeFor('light', {})
 const { colors, motion, radii, spacing, stateLayerOpacity, typography } = theme
 
@@ -359,6 +378,21 @@ describe('Switch', () => {
   })
 
   describe('dragging', () => {
+    // Once a press is under way, Android hands the pressed view every move
+    // over what it holds, so a root inside the row never saw a drag.
+    it("holds the row's press under Gesture Handler's root, not the root under the press", async () => {
+      await render(<Switch testID="switch">Label</Switch>)
+
+      const root = screen.getByTestId('switch')
+
+      expect(root.props.nativeID).toBe('gesture-handler-root')
+      expect(
+        screen
+          .getByRole('switch')
+          .queryAll((node) => node.props.nativeID === 'gesture-handler-root'),
+      ).toHaveLength(0)
+    })
+
     it('turns on when the handle is let go past the middle', async () => {
       const onChange = jest.fn()
       await render(
