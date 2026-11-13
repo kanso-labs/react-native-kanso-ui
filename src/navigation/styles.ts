@@ -101,9 +101,15 @@ const stylesOf = themedStyles(({ radii, spacing }) =>
       borderRadius: radii.pill,
     },
     // A vertical destination: the indicator with the label 4dp under it,
-    // sharing the bar's width with the others. Its press is the whole of
-    // that share, so it needs no reach of its own. Reversed, since the label
-    // comes first in the tree.
+    // sharing the bar's width with the others, 4dp in from either end of its
+    // share, as a collapsed rail's is. Its press is the whole of that share,
+    // so it needs no reach of its own. Reversed, since the label comes first
+    // in the tree.
+    //
+    // The 4dp is the library's own: web's destination runs to the ends of
+    // its share, and there labels cut short on a phone ran into each other
+    // with nothing between, "First destin…Second de…". A label that fits is
+    // centred as before.
     vertical: {
       alignItems: 'center',
       flexBasis: 0,
@@ -112,6 +118,7 @@ const stylesOf = themedStyles(({ radii, spacing }) =>
       gap: spacing.xs,
       justifyContent: 'center',
       minWidth: 0,
+      paddingHorizontal: spacing.xs,
       paddingVertical: VERTICAL_PADDING,
     },
   }),
