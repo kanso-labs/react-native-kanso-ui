@@ -44,7 +44,7 @@ jobs:
       # snapshots are of the library rendered by React Native Web rather than
       # of iOS or Android. onlyChanged is set in chromatic.config.json.
       - name: Run Chromatic
-        uses: chromaui/action@v18.14.3
+        uses: chromaui/action@v18.14.4
         with:
           exitOnceUploaded: true
           onlyChanged: true
