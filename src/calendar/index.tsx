@@ -2,7 +2,6 @@ import type { CalendarDate } from '@internationalized/date'
 import type { ComponentRef, ReactNode, RefObject } from 'react'
 import type {
   HostInstance,
-  ListRenderItemInfo,
   StyleProp,
   TextStyle,
   ViewStyle,
@@ -22,12 +21,20 @@ import {
   toCalendarDate,
   today,
 } from '@internationalized/date'
-import { createContext, use, useLayoutEffect, useRef, useState } from 'react'
 import {
-  FlatList,
+  createContext,
+  startTransition,
+  use,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react'
+import {
   I18nManager,
   Text as NativeText,
   Pressable,
+  ScrollView,
   StyleSheet,
   View,
 } from 'react-native'
@@ -107,6 +114,7 @@ const LISTED_YEARS = 201
 
 // An open list holds the weekday row and six weeks of room, seven rows, and
 // opens with the entry shown in the middle one, three rows from the top.
+const LIST_ROWS = WEEKS_HELD + 1
 const ROWS_ABOVE_SHOWN = WEEKS_HELD / 2
 
 /**
@@ -502,14 +510,6 @@ function highlightThen(state: SomeCalendarState, date: CalendarDate) {
 
 // The row a list's row occupies, which is every row's 48dp, so the list can
 // open scrolled to the entry shown without laying out the rows before it.
-function layoutOf(height: number) {
-  return (_data: ArrayLike<ListEntry> | null | undefined, index: number) => ({
-    index,
-    length: height,
-    offset: height * index,
-  })
-}
-
 function listKeyOf(entry: ListEntry) {
   return String(entry.id)
 }
@@ -584,6 +584,16 @@ function MenuButton({
  * entry shown checked, opening scrolled so that entry sits in the middle with
  * the entries either side of it in view. The screen reader is sent to it as
  * it opens.
+ *
+ * A plain scroll view holding every row rather than a virtualized list: a
+ * calendar mostly sits on a screen that scrolls the same way, where React
+ * Native logs an error for a virtualized list inside a plain scroll view, and
+ * a development build shows it over the app. The rows in view and a list's
+ * height either side of them are drawn as it opens, and the rest as a row's
+ * room until the commit after, in a transition: drawn at once, the 201 years
+ * took an Android emulator over a second longer to open than the virtualized
+ * list did. `nestedScrollEnabled` lets it scroll inside that screen on
+ * Android.
  */
 function MenuList({
   disabled,
@@ -602,22 +612,49 @@ function MenuList({
   const own = stylesOf(theme)
   const [checked, setChecked] = useState<HostInstance | null>(null)
 
+  // Whether every row is drawn, or only those near the ones in view.
+  const [whole, setWhole] = useState(false)
+
   useFocusOnPlaced(true, checked)
 
+  useEffect(() => {
+    startTransition(() => {
+      setWhole(true)
+    })
+  }, [])
+
+  const above = Math.max(
+    0,
+    Math.min(shown - ROWS_ABOVE_SHOWN, entries.length - (WEEKS_HELD + 1)),
+  )
+  // The rows drawn as the list opens: those in view, and a list's height
+  // above and below them.
+  const near = (index: number) =>
+    index >= above - LIST_ROWS && index < above + 2 * LIST_ROWS
+
   return (
-    <FlatList
+    <ScrollView
       aria-label={name}
-      data={entries}
-      getItemLayout={layoutOf(theme.sizing.controlMd)}
-      initialScrollIndex={Math.max(
-        0,
-        Math.min(shown - ROWS_ABOVE_SHOWN, entries.length - (WEEKS_HELD + 1)),
-      )}
-      keyExtractor={listKeyOf}
-      renderItem={rowOf({ disabled, onChoose, setChecked, shown })}
+      contentOffset={offsetOf(above, theme.sizing.controlMd)}
+      nestedScrollEnabled
       role="radiogroup"
       style={own.list}
-    />
+    >
+      {entries.map((entry, index) =>
+        whole || near(index) ? (
+          <Row
+            entry={entry}
+            isChecked={entry.id === shown}
+            isDisabled={disabled.has(entry.id)}
+            key={listKeyOf(entry)}
+            onChoose={onChoose}
+            setChecked={setChecked}
+          />
+        ) : (
+          <View key={listKeyOf(entry)} style={own.listRoom} />
+        ),
+      )}
+    </ScrollView>
   )
 }
 
@@ -771,6 +808,11 @@ function monthsOf(
       }
     },
   )
+}
+
+// Where an open list starts scrolled to, a row's height to each row above.
+function offsetOf(rows: number, height: number) {
+  return { x: 0, y: rows * height }
 }
 
 // One offset per month a calendar shows, the first month's none.
@@ -952,28 +994,6 @@ function Row({
         {entry.formatted}
       </NativeText>
     </Pressable>
-  )
-}
-
-function rowOf({
-  disabled,
-  onChoose,
-  setChecked,
-  shown,
-}: {
-  readonly disabled: ReadonlySet<number>
-  readonly onChoose: (entry: ListEntry) => void
-  readonly setChecked: (row: HostInstance | null) => void
-  readonly shown: number
-}) {
-  return ({ item }: ListRenderItemInfo<ListEntry>) => (
-    <Row
-      entry={item}
-      isChecked={item.id === shown}
-      isDisabled={disabled.has(item.id)}
-      onChoose={onChoose}
-      setChecked={setChecked}
-    />
   )
 }
 

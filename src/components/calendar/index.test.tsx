@@ -14,7 +14,13 @@ import {
 } from '@jest/globals'
 import { act, fireEvent, render, screen } from '@testing-library/react-native'
 import { createRef } from 'react'
-import { AccessibilityInfo, I18nManager, StyleSheet, View } from 'react-native'
+import {
+  AccessibilityInfo,
+  I18nManager,
+  ScrollView,
+  StyleSheet,
+  View,
+} from 'react-native'
 import { getAnimatedStyle } from 'react-native-reanimated'
 
 import { Calendar } from '.'
@@ -30,8 +36,35 @@ jest.mock('react-native-reanimated', () => ({
   useReducedMotion: () => mockReducedMotion,
 }))
 
+// The transitions a case holds back to run by hand, while it holds them. Run
+// at once otherwise.
+const mockHeld: (() => void)[] = []
+let mockHolding = false
+
+jest.mock('react', () => {
+  const actual = jest.requireActual<typeof import('react')>('react')
+  return {
+    ...actual,
+    startTransition: (callback: () => void) => {
+      if (mockHolding) {
+        mockHeld.push(callback)
+      } else {
+        actual.startTransition(callback)
+      }
+    },
+  }
+})
+
 const { theme } = scopeFor('light', {})
-const { colors, motion, radii, spacing, stateLayerOpacity, typography } = theme
+const {
+  colors,
+  motion,
+  radii,
+  sizing,
+  spacing,
+  stateLayerOpacity,
+  typography,
+} = theme
 
 const DISABLED_CONTENT = withOpacity(
   colors.onSurface,
@@ -191,6 +224,8 @@ beforeEach(() => {
 })
 
 afterEach(() => {
+  mockHeld.length = 0
+  mockHolding = false
   mockReducedMotion = false
   jest.restoreAllMocks()
   jest.useRealTimers()
@@ -616,6 +651,72 @@ describe('Calendar', () => {
       expect(screen.queryByRole('button', { name: 'Previous' })).toBe(null)
       expect(screen.queryByRole('button', { name: 'Next' })).toBe(null)
       expect(datesOf()).toHaveLength(0)
+    })
+
+    // A calendar mostly sits on a screen that scrolls the same way, where
+    // React Native logs an error for a virtualized list inside a plain scroll
+    // view, which a development build shows over the app.
+    it('opens each list scrolled to the entry shown, with no virtualized list inside the screen around it', async () => {
+      const error = jest.spyOn(console, 'error').mockImplementation(() => {})
+      await render(
+        <ScrollView>
+          <Calendar
+            defaultValue={SEPTEMBER}
+            locale="en-US"
+            showMonthYearMenus
+          />
+        </ScrollView>,
+      )
+
+      // September, the ninth month, three rows down a list seven rows tall.
+      await fireEvent.press(screen.getByRole('button', { name: 'Sep month' }))
+
+      expect(listOf()?.props.contentOffset).toEqual({
+        x: 0,
+        y: 5 * sizing.controlMd,
+      })
+
+      // 2026, a century into the 201 years the list holds.
+      await fireEvent.press(screen.getByRole('button', { name: 'Sep month' }))
+      await fireEvent.press(screen.getByRole('button', { name: '2026 year' }))
+
+      expect(listOf()?.props.contentOffset).toEqual({
+        x: 0,
+        y: 97 * sizing.controlMd,
+      })
+      expect(screen.getAllByRole('radio')).toHaveLength(201)
+      expect(
+        error.mock.calls.filter(([message]) =>
+          String(message).includes('VirtualizedLists should never be nested'),
+        ),
+      ).toEqual([])
+      error.mockRestore()
+    })
+
+    it('draws the years in view and a list either side as it opens, and the rest once it has', async () => {
+      mockHolding = true
+      await render(
+        <Calendar defaultValue={SEPTEMBER} locale="en-US" showMonthYearMenus />,
+      )
+
+      await fireEvent.press(screen.getByRole('button', { name: '2026 year' }))
+
+      // The seven in view from 2023, and seven either side: 2016 to 2036.
+      expect(screen.getAllByRole('radio')).toHaveLength(21)
+      expect(screen.getByRole('radio', { name: '2016' })).toBeTruthy()
+      expect(screen.getByRole('radio', { name: '2036' })).toBeTruthy()
+      expect(screen.queryByRole('radio', { name: '2015' })).toBeNull()
+      expect(screen.queryByRole('radio', { name: '2037' })).toBeNull()
+      // Every row keeps its room, so the list scrolls as far as it will.
+      expect(child(listOf()?.children.at(0)).children).toHaveLength(201)
+
+      await act(() => {
+        for (const next of mockHeld.splice(0)) {
+          next()
+        }
+      })
+
+      expect(screen.getAllByRole('radio')).toHaveLength(201)
     })
 
     it('moves to the month chosen and closes the list', async () => {
