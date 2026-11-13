@@ -211,6 +211,11 @@ const stylesOf = themedStyles(
         justifyContent: 'center',
         width: 24,
       },
+      // A row of an open list not drawn yet, which keeps its room, so the
+      // list opens scrolled to the same place and keeps it once it is.
+      listRoom: {
+        height: row,
+      },
       // An open list's row: the page's 48dp, its label 16dp in from the
       // container's edge with the check's column first.
       listRow: {
