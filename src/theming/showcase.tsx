@@ -122,9 +122,9 @@ import { demoThemes } from './themes'
 // **A device mounts the sections' content a few at a time.** Every section's
 // rule and headline is drawn at once, and the content of the first few with
 // them, so the first screen arrives as a story does. The rest mounts one
-// section after each commit, in a transition, so React yields to a press or
-// a scroll between two of them: mounted at once, the page held a phone's
-// JavaScript thread for up to 43 seconds before it drew anything. The web
+// section at a time, a pause after each commit, in a transition, so the
+// device answers a press or a scroll between two of them: mounted at once,
+// the page held a phone for up to 43 seconds before it drew anything. The web
 // mounts the whole page at once, where it costs a moment and where the
 // accessibility checks read it as soon as it renders.
 
@@ -468,13 +468,17 @@ function Placeholder({ children }: PlaceholderProps) {
   )
 }
 
-// The chip group's close targets show what a scheme does to them, and the
-// page has nothing to remove a chip from.
 // How many sections a device mounts the content of with the page, enough to
 // fill its first screen.
 const FIRST_SECTIONS = 3
 
-// Whether a section's content is mounted yet. Outside `Sections` it always is.
+// How long a device waits after a section's content mounts before it mounts
+// the next. Mounted back to back, each as the last one committed, the
+// sections kept an Android emulator from answering a scroll until the whole
+// page was in; with this pause it scrolls at once while the rest arrive.
+const SECTION_PAUSE = 250
+
+// Whether a section's content is mounted yet. Outside `Page` it always is.
 const MountedContext = createContext(true)
 
 // Whether a child of the page is one of its sections.
@@ -485,7 +489,7 @@ function isSection(
 }
 
 // The page's root, its sections' content each mounted in its turn: on a
-// device the first few at once and then one after each commit, in a
+// device the first few at once and then one a pause after each commit, in a
 // transition, and on the web all of them at once. What is not a section is
 // drawn as it is.
 function Page({ children }: { readonly children: ReactNode }) {
@@ -497,10 +501,16 @@ function Page({ children }: { readonly children: ReactNode }) {
   )
 
   useEffect(() => {
-    if (count < total) {
+    if (count >= total) {
+      return undefined
+    }
+    const timer = setTimeout(() => {
       startTransition(() => {
         setCount(count + 1)
       })
+    }, SECTION_PAUSE)
+    return () => {
+      clearTimeout(timer)
     }
   }, [count, total])
 
@@ -523,6 +533,8 @@ function Page({ children }: { readonly children: ReactNode }) {
   )
 }
 
+// The chip group's close targets show what a scheme does to them, and the
+// page has nothing to remove a chip from.
 function removeNothing() {}
 
 // One component's entry. The rule is drawn here rather than between two

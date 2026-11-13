@@ -1,4 +1,11 @@
-import { afterEach, describe, expect, it, jest } from '@jest/globals'
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from '@jest/globals'
 import { act, render, screen, within } from '@testing-library/react-native'
 import { existsSync, readdirSync } from 'node:fs'
 import path from 'node:path'
@@ -32,40 +39,26 @@ const EXPECTED = readdirSync(COMPONENTS, { withFileTypes: true })
       .join(''),
   )
 
-// The transitions the page has started and not yet run, while a case holds
-// them back to step through them one at a time. Run at once otherwise.
-const mockHeld: (() => void)[] = []
-let mockHolding = false
-
-jest.mock('react', () => {
-  const actual = jest.requireActual<typeof import('react')>('react')
-  return {
-    ...actual,
-    startTransition: (callback: () => void) => {
-      if (mockHolding) {
-        mockHeld.push(callback)
-      } else {
-        actual.startTransition(callback)
-      }
-    },
-  }
-})
+// The pause a device takes after one section's content mounts before the
+// next, which the page's own constant sets.
+const PAUSE = 250
 
 const OS = Platform.OS
 
+beforeEach(() => {
+  jest.useFakeTimers()
+})
+
 afterEach(() => {
-  mockHeld.length = 0
-  mockHolding = false
+  jest.useRealTimers()
   Platform.OS = OS
 })
 
-// Runs every transition the page starts, one after another, until it starts
-// no more.
-async function drain(): Promise<void> {
-  if (mockHeld.length > 0) {
-    await step()
-    await drain()
-  }
+// Runs the clock on by `milliseconds`, and the commits that follow.
+async function advance(milliseconds: number) {
+  await act(() => {
+    jest.advanceTimersByTime(milliseconds)
+  })
 }
 
 // How many sections draw anything under their headline: a section's rule,
@@ -76,6 +69,16 @@ function filled() {
     .filter((section) => section.children.length > 2).length
 }
 
+// Runs a pause at a time until the page mounts no more, each pause an act of
+// its own, since the next is set only once the section before has committed.
+async function mountAll(): Promise<void> {
+  const before = filled()
+  await advance(PAUSE)
+  if (filled() > before) {
+    await mountAll()
+  }
+}
+
 // The page inside a ThemeScope, as the Storybook canvas draws it, whose
 // overlay host is where the page's snackbar draws.
 async function renderPage(name: 'dark' | DemoThemeName) {
@@ -84,17 +87,6 @@ async function renderPage(name: 'dark' | DemoThemeName) {
       <Showcase name={name} />
     </ThemeScope>,
   )
-}
-
-// Runs the transition the page started last, and the commit after it.
-async function step() {
-  const next = mockHeld.shift()
-  if (next === undefined) {
-    throw new TypeError('expected the page to start a transition')
-  }
-  await act(() => {
-    next()
-  })
 }
 
 describe('the showcase', () => {
@@ -127,12 +119,12 @@ describe('the showcase', () => {
   // describes is the page's own.
   it('draws every other section once the page has mounted', async () => {
     await renderPage('editorial')
+    await mountAll()
 
     expect(filled()).toBe(EXPECTED.length - 1)
   })
 
-  it('mounts the sections a few at a time on a device, one after each commit', async () => {
-    mockHolding = true
+  it('mounts the sections a few at a time on a device, a pause after each', async () => {
     await renderPage('editorial')
 
     // Every headline at once, and the content of the first three, the first
@@ -142,22 +134,26 @@ describe('the showcase', () => {
     )
     expect(filled()).toBe(2)
 
-    await step()
+    // Nothing more until the pause has run, so the device has frames free
+    // to answer a scroll between two sections.
+    await advance(PAUSE - 1)
+
+    expect(filled()).toBe(2)
+
+    await advance(1)
 
     expect(filled()).toBe(3)
 
-    await drain()
+    await mountAll()
 
     expect(filled()).toBe(EXPECTED.length - 1)
   })
 
   it('mounts the whole page at once on the web', async () => {
-    mockHolding = true
     Platform.OS = 'web'
     await renderPage('editorial')
 
     expect(filled()).toBe(EXPECTED.length - 1)
-    expect(mockHeld).toHaveLength(0)
   })
 
   it('names the scheme it is drawn under', async () => {
