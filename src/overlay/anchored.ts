@@ -1,8 +1,18 @@
 import type { RefObject } from 'react'
-import type { HostInstance, LayoutChangeEvent, ViewStyle } from 'react-native'
+import type {
+  HostInstance,
+  LayoutChangeEvent,
+  MeasureInWindowOnSuccessCallback,
+  ViewStyle,
+} from 'react-native'
 
 import { use, useEffect, useState } from 'react'
-import { Dimensions, I18nManager, useWindowDimensions } from 'react-native'
+import {
+  Dimensions,
+  I18nManager,
+  Platform,
+  useWindowDimensions,
+} from 'react-native'
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context'
 
 import type { OverlayAlign, OverlaySide, Rect, Size } from './placement'
@@ -52,7 +62,7 @@ type AnchoredPlacementOptions = {
   /** Moves the surface along that side, in dp: right or down when positive. */
   readonly alignOffset?: number | undefined
   /** The view the surface opens beside. */
-  readonly anchor: RefObject<null | Pick<HostInstance, 'measureInWindow'>>
+  readonly anchor: RefObject<Measurable | null>
   /**
    * Which side of the anchor the surface opens on. It flips to the opposite
    * side when there is no room.
@@ -65,6 +75,9 @@ type AnchoredPlacementOptions = {
    */
   readonly sideOffset?: number | undefined
 }
+
+// A view the surface is placed by: the anchor, and the layer it is drawn in.
+type Measurable = Pick<HostInstance, 'measure' | 'measureInWindow'>
 
 type Measured = {
   readonly anchor: Rect
@@ -84,6 +97,23 @@ const HIDDEN: ViewStyle = {
 // is the best bound there is.
 const NO_INSETS = { bottom: 0, left: 0, right: 0, top: 0 }
 
+// Where a view is, in the space the anchor and the layer are compared in.
+// On Android that is the screen, through `measure`'s page coordinates:
+// `measureInWindow` there counts from below the status bar in the app's
+// window and from the screen's top in a `Modal` drawn under a translucent
+// one, so a surface placed in a modal's layer by an anchor in the app landed
+// a status bar too high, over the anchor. iOS and the web keep
+// `measureInWindow`, whose windows share their origin.
+function locate(view: Measurable, callback: MeasureInWindowOnSuccessCallback) {
+  if (Platform.OS === 'android') {
+    view.measure((_x, _y, width, height, pageX, pageY) => {
+      callback(pageX, pageY, width, height)
+    })
+  } else {
+    view.measureInWindow(callback)
+  }
+}
+
 /**
  * Places a surface drawn in an `Overlay` beside the view that opened it, as
  * web's anchored overlays are placed: on `side`, lined up by `align`, flipped
@@ -93,8 +123,10 @@ const NO_INSETS = { bottom: 0, left: 0, right: 0, top: 0 }
  * shown, so a list opened from a field being typed in stays above the keys.
  * On `top` and `bottom`, `start` and `end` follow `I18nManager.isRTL`.
  *
- * The anchor is measured with `measureInWindow` whenever the surface reports
- * a new size, the window changes size or the keyboard moves.
+ * The anchor is measured whenever the surface reports a new size, the window
+ * changes size or the keyboard moves: with `measureInWindow`, or on Android
+ * with `measure`'s page coordinates, which are the screen's in every window,
+ * and there the bounds are the screen's too.
  */
 function useAnchoredPlacement({
   align = 'center',
@@ -123,8 +155,8 @@ function useAnchoredPlacement({
         return
       }
 
-      layer.measureInWindow((originX, originY) => {
-        target.measureInWindow((x, y, width, height) => {
+      locate(layer, (originX, originY) => {
+        locate(target, (x, y, width, height) => {
           setMeasured({
             anchor: { height, width, x, y },
             origin: { x: originX, y: originY },
@@ -175,7 +207,11 @@ function useAnchoredPlacement({
     alignOffset,
     anchor: measured.anchor,
     bounds: aboveKeyboard(
-      boundsOf(window, insets, spacing.md),
+      boundsOf(
+        Platform.OS === 'android' ? Dimensions.get('screen') : window,
+        insets,
+        spacing.md,
+      ),
       keyboardTop,
       spacing.md,
     ),
@@ -201,8 +237,8 @@ function useAnchoredPlacement({
       maxHeight: placement.maxHeight,
       position: 'absolute',
       top: placement.y - measured.origin.y,
-      // The placement is in physical coordinates, as `measureInWindow`
-      // reports them. React Native swaps `left` and `right` in a right-to-left
+      // The placement is in physical coordinates, as the measurements
+      // report them. React Native swaps `left` and `right` in a right-to-left
       // layout unless an app turns that off, so there `right` is what puts
       // the surface's left edge where the placement says.
       ...(I18nManager.isRTL && I18nManager.doLeftAndRightSwapInRTL

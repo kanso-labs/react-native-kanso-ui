@@ -2,6 +2,7 @@ import type { ComponentRef, RefObject } from 'react'
 import type {
   HostInstance,
   MeasureInWindowOnSuccessCallback,
+  MeasureOnSuccessCallback,
   StyleProp,
   ViewProps,
   ViewStyle,
@@ -40,7 +41,7 @@ type Frame = readonly [x: number, y: number, width: number, height: number]
 // What React Native's Jest preset draws a View as: a class component holding
 // its props, with the native methods on its prototype. React Native's types
 // declare View a function, whose prototype they leave untyped.
-type MockedView = Pick<HostInstance, 'measureInWindow'> & {
+type MockedView = Pick<HostInstance, 'measure' | 'measureInWindow'> & {
   readonly props: ViewProps
 }
 
@@ -48,6 +49,13 @@ type MockedView = Pick<HostInstance, 'measureInWindow'> & {
 // the overlay layer, the only other view measured, at the window's corner
 // unless a case moves it.
 const frames: { anchor: Frame; layer: Frame } = {
+  anchor: [180, 300, 40, 40],
+  layer: [0, 0, 400, 800],
+}
+
+// Where `measure` reports each view on the page, the screen on Android. The
+// same as `measureInWindow` unless a case moves them apart.
+const pages: { anchor: Frame; layer: Frame } = {
   anchor: [180, 300, 40, 40],
   layer: [0, 0, 400, 800],
 }
@@ -135,6 +143,8 @@ function Surface(props: SurfaceProps) {
 beforeEach(() => {
   frames.anchor = [180, 300, 40, 40]
   frames.layer = [0, 0, 400, 800]
+  pages.anchor = [180, 300, 40, 40]
+  pages.layer = [0, 0, 400, 800]
   anchorFrames.length = 0
   placements.length = 0
   sides.length = 0
@@ -151,6 +161,14 @@ beforeEach(() => {
     callback: MeasureInWindowOnSuccessCallback,
   ) {
     callback(...(this.props.testID === 'anchor' ? frames.anchor : frames.layer))
+  })
+  jest.spyOn(prototype, 'measure').mockImplementation(function measure(
+    this: MockedView,
+    callback: MeasureOnSuccessCallback,
+  ) {
+    const [x, y, width, height] =
+      this.props.testID === 'anchor' ? pages.anchor : pages.layer
+    callback(0, 0, width, height, x, y)
   })
 })
 
@@ -275,6 +293,51 @@ describe('useAnchoredPlacement', () => {
     })
 
     expect(placed()).toMatchObject({ left: 340, maxHeight: 240, top: 148 })
+  })
+
+  // Android's `measureInWindow` counts from below the status bar in the
+  // app's window and from the screen's top in a `Modal` drawn under a
+  // translucent one, so in a modal's layer the two disagree by the bar.
+  describe('on Android', () => {
+    beforeEach(() => {
+      jest.replaceProperty(Platform, 'OS', 'android')
+    })
+
+    it("places the surface by the screen, where a modal's layer and the anchor agree", async () => {
+      // The anchor 24dp below the status bar's 24dp, and the layer at the
+      // screen's top, as a modal's is; `measureInWindow` reads both as the
+      // app's window would.
+      frames.anchor = [180, 276, 40, 40]
+      pages.anchor = [180, 300, 40, 40]
+
+      await render(<Anchored />)
+      await laidOut()
+
+      // spacing.sm below the anchor's 340, measured from the layer's top.
+      expect(placed()).toMatchObject({ top: 348 })
+
+      // A layer that starts lower on the screen, as one in the app's window
+      // does, below the status bar.
+      pages.layer = [0, 24, 400, 776]
+      await render(<Anchored />)
+      await laidOut()
+
+      expect(placed()).toMatchObject({ top: 324 })
+    })
+
+    it("keeps the surface inside the screen's bounds, which the page coordinates are in", async () => {
+      Dimensions.set({
+        screen: { fontScale: 1, height: 848, scale: 1, width: 400 },
+        window: { fontScale: 1, height: 800, scale: 1, width: 400 },
+      })
+
+      await render(<Anchored />)
+      await laidOut()
+
+      // From 348 to spacing.md above the screen's 848 rather than the
+      // window's 800.
+      expect(placed()).toMatchObject({ maxHeight: 488 })
+    })
   })
 
   describe('while a keyboard is shown', () => {
