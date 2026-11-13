@@ -55,11 +55,13 @@ function reportTo(setPressed: (pressed: string) => void) {
 
 // A trail whose items report their key rather than navigating, which is what
 // a screen routing on its own needs, with the key it last reported under it.
+// 16dp under the trail, past the 14dp a crumb's press reaches below its text
+// on iOS and Android: a view drawn inside that reach takes the press first.
 function Routed() {
   const [pressed, setPressed] = useState<string>('none')
 
   return (
-    <Stack gap="xxs">
+    <Stack gap="lg">
       <Breadcrumbs aria-label="Routed" onAction={reportTo(setPressed)}>
         <Breadcrumbs.Item id="first">First item</Breadcrumbs.Item>
         <Breadcrumbs.Item id="second">Second item</Breadcrumbs.Item>
