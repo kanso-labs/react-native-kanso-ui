@@ -75,7 +75,13 @@ import { segmentStylesOf } from './styles'
 // the keyboard, so a press on a segment makes it the one being typed and
 // focuses a text input no one sees or reads, which holds one space and hands
 // over each key typed after it. Its keyboard is a number pad for a segment of
-// digits and the full one for a day period or an era. A screen reader reaches
+// digits and the full one for a day period or an era. The input keeps what
+// it is handed rather than being put back to the space after each key, and a
+// change is read for what it adds to the text before it, so keys that arrive
+// together, from a paste, a hardware keyboard or an input method, are each
+// read once. They are typed one at a time, each after the render the one
+// before it caused, so a key that moved on to the next segment has the next
+// one type the key after it, against the value the first left. A screen reader reaches
 // each segment as an adjustable element instead, which a swipe steps up or
 // down, and which opens the keyboard when activated.
 //
@@ -186,7 +192,12 @@ type SegmentLineProps = Omit<DateSegmentsProps, 'ref'> & {
   readonly input: RefObject<ComponentRef<typeof TextInput> | null>
   readonly inside: RefObject<boolean>
   readonly nodes: RefObject<Map<DateSegmentType, HostInstance>>
+  readonly pending: RefObject<Typed[]>
+  readonly seen: RefObject<string>
   readonly setActive: Dispatch<SetStateAction<DateSegmentType | null>>
+  readonly setText: Dispatch<SetStateAction<string>>
+  readonly text: string
+  readonly waiting: RefObject<boolean>
 }
 
 /**
@@ -208,6 +219,10 @@ type Step =
   | 'incrementPage'
   | 'incrementToMax'
 
+// A key the hidden input was handed: a character typed, or `null` for a
+// backspace.
+type Typed = null | string
+
 // What a segment is handed under React Native Web, which takes keys and focus
 // on any element.
 type WebSegmentProps = Pick<PressableProps, 'onBlur' | 'onFocus' | 'onKeyDown'>
@@ -222,12 +237,9 @@ const ADJUSTABLE: readonly AccessibilityActionInfo[] = [
 // marks a locale sets a direction with.
 const INVISIBLE = /[\s\u061C\u200E\u200F\u202A-\u202E\u2066-\u2069]/gu
 
-// The text the hidden input holds, which a backspace has something to take
-// from and which every key typed lands after.
+// The text the hidden input starts from, which a backspace has something to
+// take from and which every key typed lands after.
 const SENTINEL = ' '
-
-// Where the hidden input's caret stays: after the space.
-const AFTER_SENTINEL = { end: SENTINEL.length, start: SENTINEL.length }
 
 // The segments a number is typed into, which the number pad serves.
 const NUMERIC = new Set<DateSegmentType>([
@@ -276,30 +288,27 @@ function arrivedIn({ inside, onFocus }: SegmentLineProps) {
   }
 }
 
-// What the hidden input does with each change to its text: a shorter text is
-// a backspace, and a longer one a key typed after the space.
+// Where the hidden input's caret stays: at the end of its text, which every
+// key typed lands after.
+function caretAfter(text: string) {
+  return { end: text.length, start: text.length }
+}
+
+// What the hidden input does with each change to its text: keeps it, reads
+// the keys it hands over, and types them in turn. A shorter text is a
+// backspace, which an input with nothing left is given its space back after.
 function changedOf(line: SegmentLineProps) {
   return (text: string) => {
-    const segment = line.state.segments.find(
-      (each) => each.type === line.active,
-    )
+    const before = line.seen.current
+    const keys = keysOf(before, text)
+    const emptied = text.length < SENTINEL.length
 
-    if (segment === undefined) {
-      return
-    }
+    line.seen.current = emptied ? SENTINEL : text
+    line.setText(line.seen.current)
+    line.pending.current.push(...keys)
 
-    if (text.length < SENTINEL.length) {
-      eraseKey(line, segment)
-      return
-    }
-
-    // One key at a time, the first typed after the space: a second handed
-    // over in the same change would be written over by the first, since
-    // both are set from the value this render holds.
-    const point = text.replace(SENTINEL, '').codePointAt(0)
-
-    if (point !== undefined) {
-      typeKey(line, segment, String.fromCodePoint(point))
+    if (!line.waiting.current) {
+      typePending(line)
     }
   }
 }
@@ -336,6 +345,15 @@ function DateSegments({ onActiveChange, ref, ...props }: DateSegmentsProps) {
   const input = useRef<ComponentRef<typeof TextInput>>(null)
   // Each segment's element under React Native Web, which focus moves to.
   const nodes = useRef(new Map<DateSegmentType, HostInstance>())
+  // The hidden input's text, which it keeps as it is handed it, and the last
+  // text a change has been read against, which is ahead of the state until
+  // the render after the change.
+  const [text, setText] = useState(SENTINEL)
+  const seen = useRef(SENTINEL)
+  // The keys handed over and not yet typed, and whether one that was typed
+  // changed the state, so the next waits for the render that follows.
+  const pending = useRef<Typed[]>([])
+  const waiting = useRef(false)
   const { drawing, state } = props
   const reportActive = useEffectEvent((type: DateSegmentType | null) => {
     onActiveChange?.(type)
@@ -375,7 +393,12 @@ function DateSegments({ onActiveChange, ref, ...props }: DateSegmentsProps) {
       input={input}
       inside={inside}
       nodes={nodes}
+      pending={pending}
+      seen={seen}
       setActive={setActive}
+      setText={setText}
+      text={text}
+      waiting={waiting}
     />
   )
 }
@@ -457,17 +480,17 @@ function eraseFrom(
   return false
 }
 
-function eraseKey(line: SegmentLineProps, segment: DateSegment) {
-  edited(
-    line,
-    eraseFrom(
-      line.state,
-      segment,
-      line.locale,
-      line.entered,
-      movesFrom(line, segment.type),
-    ),
+function eraseKey(line: SegmentLineProps, segment: DateSegment): boolean {
+  const changed = eraseFrom(
+    line.state,
+    segment,
+    line.locale,
+    line.entered,
+    movesFrom(line, segment.type),
   )
+
+  edited(line, changed)
+  return changed
 }
 
 // The calendar's eras with the names a key picks them by: each era's name in
@@ -555,18 +578,47 @@ function inputOf({ input }: SegmentLineProps) {
   }
 }
 
+// The keys a change to the hidden input's text hands over, read against the
+// text before it. A shorter text is one backspace, since the input shows no
+// caret and no menu to take more than one character at a time. A longer text
+// that still starts with the one before hands over what it adds after it.
+// Anything else is a text the input was put back to and typed into since,
+// which hands over what follows the space.
+function keysOf(before: string, text: string): Typed[] {
+  if (text.length < before.length) {
+    return [null]
+  }
+
+  const added =
+    text.length > before.length && text.startsWith(before)
+      ? text.slice(before.length)
+      : text.slice(SENTINEL.length)
+
+  return Array.from(added)
+}
+
 // What focus leaving the segments does: fills in what the placeholder can,
 // as React Aria's field does on blur, then tells the field.
+// The hidden input goes back to its space here, while nothing is typed into
+// it, and whatever it handed over and was not yet typed is dropped.
 function leftOf({
   entered,
   inside,
   onBlur,
+  pending,
+  seen,
   setActive,
+  setText,
   state,
+  waiting,
 }: SegmentLineProps) {
   return () => {
     inside.current = false
     entered.current = ''
+    pending.current = []
+    waiting.current = false
+    seen.current = SENTINEL
+    setText(SENTINEL)
     setActive(null)
     state.confirmPlaceholder()
     onBlur?.()
@@ -654,6 +706,14 @@ function SegmentLine(line: SegmentLineProps) {
   const parts =
     value === '' ? described : [{ id: valueId, text: value }, ...described]
   const canEdit = !state.isDisabled && !state.isReadOnly
+
+  // The keys a change handed over after one that changed the state, typed
+  // now that the render it caused has run.
+  useEffect(() => {
+    if (line.waiting.current) {
+      typePending(line)
+    }
+  })
 
   return (
     <FieldSegments>
@@ -762,10 +822,10 @@ function SegmentLine(line: SegmentLineProps) {
           onChangeText={changedOf(line)}
           onFocus={inputFocusedOf(line)}
           ref={inputOf(line)}
-          selection={AFTER_SENTINEL}
+          selection={caretAfter(line.text)}
           spellCheck={false}
           style={styles.input}
-          value={SENTINEL}
+          value={line.text}
         />
       )}
     </FieldSegments>
@@ -927,18 +987,57 @@ function typeInto(
   return false
 }
 
-function typeKey(line: SegmentLineProps, segment: DateSegment, key: string) {
-  edited(
-    line,
-    typeInto(
-      line.state,
-      segment,
-      key,
-      line.locale,
-      line.entered,
-      movesFrom(line, segment.type),
-    ),
+function typeKey(
+  line: SegmentLineProps,
+  segment: DateSegment,
+  key: string,
+): boolean {
+  const changed = typeInto(
+    line.state,
+    segment,
+    key,
+    line.locale,
+    line.entered,
+    movesFrom(line, segment.type),
   )
+
+  edited(line, changed)
+  return changed
+}
+
+// Types the keys the hidden input handed over, in turn, into the segment
+// being typed. A key that changes the state stops it there, as does a
+// backspace, which on an empty segment moves to the one before without
+// changing anything: the next key is typed once the render that follows has
+// run, against the segment and the value it left, which `SegmentLine` does
+// after each render.
+function typePending(line: SegmentLineProps) {
+  line.waiting.current = false
+
+  for (;;) {
+    const key = line.pending.current.shift()
+
+    if (key === undefined) {
+      return
+    }
+
+    const segment = line.state.segments.find(
+      (each) => each.type === line.active,
+    )
+
+    if (segment === undefined) {
+      line.pending.current = []
+      return
+    }
+
+    const changed =
+      key === null ? eraseKey(line, segment) : typeKey(line, segment, key)
+
+    if (changed || key === null) {
+      line.waiting.current = true
+      return
+    }
+  }
 }
 
 // The date or the time a field holds, written out, which describes the

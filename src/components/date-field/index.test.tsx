@@ -120,10 +120,10 @@ function firstHostOf(element: ReturnType<typeof segmentOf>, what: string) {
   return child
 }
 
-// The hidden input that takes the keys on iOS and Android, which holds one
-// space.
+// The hidden input that takes the keys on iOS and Android, whose text starts
+// with one space.
 function input() {
-  return screen.getByDisplayValue(' ', {
+  return screen.getByDisplayValue(/^ /u, {
     includeHiddenElements: true,
     normalizer: (text) => text,
   })
@@ -473,6 +473,36 @@ describe('DateField', () => {
       expect(active()).toBe(segmentOf('day'))
     })
 
+    // A paste, a hardware keyboard or an input method can hand over several
+    // keys at once, or a second before the input is put back.
+    it('types every key a change hands over, each into the segment the one before it left', async () => {
+      const onChange = jest.fn()
+      await renderField({ onChange })
+      await fireEvent.press(segmentOf('month'))
+
+      await fireEvent.changeText(input(), ' 12252026')
+
+      expect(shown()).toStrictEqual(['12', '25', '2026'])
+      expect(onChange).toHaveBeenLastCalledWith(new CalendarDate(2026, 12, 25))
+    })
+
+    it('reads a change for what it adds to the text before it', async () => {
+      await renderField()
+      await fireEvent.press(segmentOf('month'))
+
+      await fireEvent.changeText(input(), ' 1')
+      await fireEvent.changeText(input(), ' 12')
+      await fireEvent.changeText(input(), ' 122')
+
+      expect(shown()).toStrictEqual(['12', '2', 'yyyy'])
+
+      // A backspace takes the last of them, from a text the input still
+      // holds the keys in.
+      await fireEvent.changeText(input(), ' 12')
+
+      expect(shown()).toStrictEqual(['12', 'dd', 'yyyy'])
+    })
+
     it('starts again from the key alone past the largest the segment takes', async () => {
       await renderField()
       await fireEvent.press(segmentOf('month'))
@@ -730,7 +760,7 @@ describe('DateField', () => {
     it('hides the input from a screen reader', async () => {
       await renderField()
 
-      expect(screen.queryByDisplayValue(' ', { normalizer: (t) => t })).toBe(
+      expect(screen.queryByDisplayValue(/^ /u, { normalizer: (t) => t })).toBe(
         null,
       )
       expect(input().props.caretHidden).toBe(true)
@@ -1195,7 +1225,7 @@ describe('DateField', () => {
       await renderOnWeb()
 
       expect(
-        screen.queryByDisplayValue(' ', {
+        screen.queryByDisplayValue(/^ /u, {
           includeHiddenElements: true,
           normalizer: (text) => text,
         }),
