@@ -626,7 +626,13 @@ describe('ColorArea', () => {
         { name: 'increment' },
         { name: 'decrement' },
       ])
-      expect(styleOf(first ?? { props: {} })).toStrictEqual({ flexGrow: 1 })
+      // The frame's full height: the seat centres what it holds, which left a
+      // half with nothing in it 0dp tall, and Android leaves a view with no
+      // height out of what a screen reader reaches.
+      expect(styleOf(first ?? { props: {} })).toStrictEqual({
+        alignSelf: 'stretch',
+        flexGrow: 1,
+      })
     })
 
     it('says each channel’s value and the colour’s name', async () => {

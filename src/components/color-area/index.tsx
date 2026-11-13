@@ -153,8 +153,12 @@ const BLACK = 'rgb(0, 0, 0)'
 const WHITE = 'rgb(255, 255, 255)'
 
 const styles = StyleSheet.create({
-  // One adjustable half of the handle's frame.
+  // One adjustable half of the handle's frame, the frame's full height. The
+  // seat centres what it holds, which left a half with nothing in it 0dp
+  // tall, and Android leaves a view with no height out of what a screen
+  // reader reaches.
   half: {
+    alignSelf: 'stretch',
     flexGrow: 1,
   },
   root: {
