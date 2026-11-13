@@ -1,5 +1,39 @@
 # Changelog
 
+## [0.12.1](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.12.0...v0.12.1) (2026-11-13)
+
+
+### Bug Fixes
+
+* **app-bar:** keep a collapsed bar collapsed while its screen is scrolled ([#527](https://github.com/kanso-labs/react-native-kanso-ui/issues/527)) ([212e88f](https://github.com/kanso-labs/react-native-kanso-ui/commit/212e88f156ee568962bb99aa1740552662c5e61f))
+* **breadcrumbs:** give a crumb a 48dp target ([#507](https://github.com/kanso-labs/react-native-kanso-ui/issues/507)) ([2668a3a](https://github.com/kanso-labs/react-native-kanso-ui/commit/2668a3aac752a90e4a27b0d7171defa53ae0604b))
+* **calendar:** open the month and year menus on a scrolling screen without React Native's error ([#526](https://github.com/kanso-labs/react-native-kanso-ui/issues/526)) ([ef9e9c1](https://github.com/kanso-labs/react-native-kanso-ui/commit/ef9e9c13a9656988d8b1a5a99f46ead794c32a21))
+* **color-area:** give a screen reader the two channels on Android ([#525](https://github.com/kanso-labs/react-native-kanso-ui/issues/525)) ([7c17605](https://github.com/kanso-labs/react-native-kanso-ui/commit/7c1760516e4fe53e49e748ff408fdac4e195f312))
+* **disclosure:** open a pressed section to its content's height ([#498](https://github.com/kanso-labs/react-native-kanso-ui/issues/498)) ([8dbbeca](https://github.com/kanso-labs/react-native-kanso-ui/commit/8dbbeca6634d3cd51c72da9e5520a308501786b0))
+* **field:** draw the whole of a short supporting line on Android ([#530](https://github.com/kanso-labs/react-native-kanso-ui/issues/530)) ([2bf3aca](https://github.com/kanso-labs/react-native-kanso-ui/commit/2bf3aca643cac46fd4e9bb978df56781ec151d9e))
+* **field:** keep a placeholder out of sight under a resting label on Android ([#500](https://github.com/kanso-labs/react-native-kanso-ui/issues/500)) ([ebdf4b9](https://github.com/kanso-labs/react-native-kanso-ui/commit/ebdf4b91ac425c0b4e6fc98c0a3841b36d1f222c))
+* keep a control's name beside its busy or mixed state on Android ([#503](https://github.com/kanso-labs/react-native-kanso-ui/issues/503)) ([2fcfca2](https://github.com/kanso-labs/react-native-kanso-ui/commit/2fcfca218cec68e79cd486a38e9434d34109bca2))
+* **navigation-bar:** keep room between labels that are cut short ([#514](https://github.com/kanso-labs/react-native-kanso-ui/issues/514)) ([c3f1ac6](https://github.com/kanso-labs/react-native-kanso-ui/commit/c3f1ac604ed7f6bfe8fc8024124a811484b9ce7f))
+* **popover:** place a modal popover by its trigger on Android ([#524](https://github.com/kanso-labs/react-native-kanso-ui/issues/524)) ([ff71a8b](https://github.com/kanso-labs/react-native-kanso-ui/commit/ff71a8bc468c170a2a4af7c4bbecaf56ff12d221))
+* **radio-group:** set an option's description by its own option ([#504](https://github.com/kanso-labs/react-native-kanso-ui/issues/504)) ([ddd8877](https://github.com/kanso-labs/react-native-kanso-ui/commit/ddd88776f8809b95ac1d5d41b7a62f055bbe6ac4))
+* **segments:** take every digit typed into a segment in a burst ([#513](https://github.com/kanso-labs/react-native-kanso-ui/issues/513)) ([337bb1f](https://github.com/kanso-labs/react-native-kanso-ui/commit/337bb1f807717541cc58977a3b09b6cb7f44912d))
+* **switch:** set a switch by a drag along its track ([#512](https://github.com/kanso-labs/react-native-kanso-ui/issues/512)) ([84daaf9](https://github.com/kanso-labs/react-native-kanso-ui/commit/84daaf99e798e62a95db3f97d06d97a8fc139da8))
+* **tabs:** keep a badged tab's label on one line where it fits ([#515](https://github.com/kanso-labs/react-native-kanso-ui/issues/515)) ([8a14635](https://github.com/kanso-labs/react-native-kanso-ui/commit/8a146359194792b4cd6dedd6939ee2f6ab2b9c08))
+* **time-picker:** write the hour that is chosen on a twenty-four hour clock ([#502](https://github.com/kanso-labs/react-native-kanso-ui/issues/502)) ([6610fd2](https://github.com/kanso-labs/react-native-kanso-ui/commit/6610fd2d369821bf493277215ec7e9c3d25f9b9f))
+
+
+### Performance Improvements
+
+* **theming:** mount the showcase page without freezing a device ([#510](https://github.com/kanso-labs/react-native-kanso-ui/issues/510)) ([bbdc2ca](https://github.com/kanso-labs/react-native-kanso-ui/commit/bbdc2ca8a47d603cb31a5b20076b2eb54324f80b))
+
+
+### Dependencies
+
+* update dependency @kanso-labs/kanso-ui-core to v0.1.19 ([#517](https://github.com/kanso-labs/react-native-kanso-ui/issues/517)) ([e818b68](https://github.com/kanso-labs/react-native-kanso-ui/commit/e818b68c172cf04e6b88517c6ae2ae49cf0d9f56))
+* update dependency @kanso-labs/kanso-ui-core to v0.1.19 ([#518](https://github.com/kanso-labs/react-native-kanso-ui/issues/518)) ([62e5c6e](https://github.com/kanso-labs/react-native-kanso-ui/commit/62e5c6edbc38a2bb309c12e200d7bcdbfd2336de))
+* update dependency oxlint-tsgolint to v7.0.2007 ([#519](https://github.com/kanso-labs/react-native-kanso-ui/issues/519)) ([1edda56](https://github.com/kanso-labs/react-native-kanso-ui/commit/1edda566c543717f75bcefc572b07ca7936906f8))
+* update kanso-labs/actions action to v4.5.4 ([#520](https://github.com/kanso-labs/react-native-kanso-ui/issues/520)) ([fcbfbc1](https://github.com/kanso-labs/react-native-kanso-ui/commit/fcbfbc10865d6cfcc8343243e54f37c0d012103f))
+
 ## [0.12.0](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.11.35...v0.12.0) (2026-11-12)
 
 
