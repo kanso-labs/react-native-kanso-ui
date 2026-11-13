@@ -775,6 +775,37 @@ describe('Tabs', () => {
       expect(marksIn(child(row.children[1]))).toHaveLength(1)
     })
 
+    it('lets a badged label reach half the padding past it in equal sections, and no further', async () => {
+      await renderTabs({
+        tabs: { first: { 'aria-label': 'First item, new', badge: true } },
+      })
+
+      expect(styleOf(labelOf('First item, new')).marginHorizontal).toBe(
+        -spacing.sm,
+      )
+      expect(styleOf(labelOf('Second item')).marginHorizontal).toBeUndefined()
+
+      // A scrollable tab is as wide as its label, and a vertical bar as wide
+      // as its widest, so neither has a label to make room for.
+      await renderTabs({
+        layout: 'scrollable',
+        tabs: { first: { 'aria-label': 'First item, new', badge: true } },
+      })
+
+      expect(
+        styleOf(labelOf('First item, new')).marginHorizontal,
+      ).toBeUndefined()
+
+      await renderTabs({
+        orientation: 'vertical',
+        tabs: { first: { 'aria-label': 'First item, new', badge: true } },
+      })
+
+      expect(
+        styleOf(labelOf('First item, new')).marginHorizontal,
+      ).toBeUndefined()
+    })
+
     it('sets a secondary tab’s badge after its label, not on its icon', async () => {
       await renderTabs({
         tabs: {

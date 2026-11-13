@@ -75,7 +75,13 @@ import { Badge } from '../badge'
 // 48dp.
 //
 // A badge sits on the icon where a primary tab stacks one, and 4dp after the
-// label anywhere else.
+// label anywhere else. There, in a bar of equal sections, the label and the
+// badge may reach 8dp into the tab's 16dp padding at either end before the
+// label gives up its line, so a label that fits without a badge fits with
+// one: three equal tabs on a phone left a badged "Second item" 2dp short of
+// its line. A label that fits is centred at its own width as before, since
+// the room is a negative margin, which the label takes only where it needs
+// it.
 //
 // **The bar is equal sections unless `layout` says otherwise.**
 // `layout="scrollable"` gives each tab its label's width, between 72dp and
@@ -447,6 +453,12 @@ const stylesOf = themedStyles(({ colors, sizing, spacing }: ResolvedTheme) =>
       position: 'absolute',
       top: 0,
       width: PRIMARY_THICKNESS,
+    },
+    // A label with a badge after it in a bar of equal sections: free to reach
+    // half the tab's padding past it at either end, which it takes only
+    // where its text and badge are wider than the tab holds.
+    labelBadged: {
+      marginHorizontal: -spacing.sm,
     },
     // A secondary tab's icon before its label, 8dp from it. The label comes
     // first in the tree, so the row runs backwards.
@@ -1034,6 +1046,9 @@ function ListTab({
         style={composeStyles<ViewStyle>(
           styles.label,
           hasIcon ? (stacked ? own.labelStacked : own.labelInline) : undefined,
+          after !== null && !vertical && bar.layout === 'fixed'
+            ? own.labelBadged
+            : undefined,
         )}
       >
         {after === null ? (
