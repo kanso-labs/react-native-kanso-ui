@@ -1,10 +1,22 @@
-import type { Meta, StoryObj } from '@storybook/react'
+import type { Decorator, Meta, StoryObj } from '@storybook/react'
 
 import { Link } from '.'
+import { RouterProvider } from '../../router'
 import { Stack } from '../stack'
 import { Text } from '../text'
 
 const FOOTER_LINKS = ['First item', 'Second item', 'Third item'] as const
+
+// A router that goes nowhere, around every story: a device has nothing to
+// open a page's address with, so without one a press on a link went to the
+// platform, which warned and changed nothing. The press is still drawn.
+function goNowhere() {}
+
+const Unrouted: Decorator = (Story) => (
+  <RouterProvider navigate={goNowhere}>
+    <Story />
+  </RouterProvider>
+)
 
 const meta = {
   args: {
@@ -12,6 +24,7 @@ const meta = {
     href: '/first',
   },
   component: Link,
+  decorators: [Unrouted],
   title: 'Components/Link',
 } satisfies Meta<typeof Link>
 
