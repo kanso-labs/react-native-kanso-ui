@@ -465,7 +465,7 @@ function FabMenuPanel({
   onAction,
   tone,
 }: {
-  readonly anchor: RefObject<Pick<HostInstance, 'measureInWindow'>>
+  readonly anchor: RefObject<Pick<HostInstance, 'measure' | 'measureInWindow'>>
   readonly children: ReactNode
   readonly close: () => void
   readonly label: string
@@ -571,15 +571,29 @@ function pressThen(
 /**
  * The close button the FAB becomes, for the actions to be placed against: a
  * square of the close button's edge in the FAB's bottom trailing corner, read
- * off the FAB wherever in its change it is when it is measured.
+ * off the FAB wherever in its change it is when it is measured, either way
+ * the placement measures it.
  */
 function useCloseButtonAnchor(
   fab: RefObject<HostInstance | null>,
   edge: number,
 ) {
-  return useMemo<RefObject<Pick<HostInstance, 'measureInWindow'>>>(
+  return useMemo<RefObject<Pick<HostInstance, 'measure' | 'measureInWindow'>>>(
     () => ({
       current: {
+        measure: (callback) => {
+          fab.current?.measure((x, y, width, height, pageX, pageY) => {
+            const left = I18nManager.isRTL ? 0 : width - edge
+            callback(
+              x + left,
+              y + height - edge,
+              edge,
+              edge,
+              pageX + left,
+              pageY + height - edge,
+            )
+          })
+        },
         measureInWindow: (callback) => {
           fab.current?.measureInWindow((x, y, width, height) => {
             callback(
