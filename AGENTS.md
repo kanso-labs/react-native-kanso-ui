@@ -143,7 +143,9 @@ Specific to this repository:
   `--no-error-on-unmatched-pattern` because oxfmt exits non-zero when every path
   handed to it is one of its own ignores, which would reject a commit staging
   `CHANGELOG.md` alone; keep `.oxfmtrc.json` the one list of ignores rather than
-  repeating them in the glob.
+  repeating them in the glob. oxlint takes the same flag for the same reason: it
+  leaves the example app out, and without the flag a commit staging only the
+  app's files is rejected.
 
 ## Testing
 
