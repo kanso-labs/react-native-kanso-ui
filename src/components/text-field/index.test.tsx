@@ -817,6 +817,34 @@ describe('TextField', () => {
       ).toMatchObject({ color: colors.error })
     })
 
+    // Android laid "ja-JP" out a fraction wider than it measured, with body
+    // small's tracking, and drew "ja-J" in a line as wide as the text.
+    it('gives the description or the error the room the count leaves', async () => {
+      const { rerender } = await renderField({
+        characterCount: true,
+        defaultValue: 'Value',
+        description: 'ja-JP',
+      })
+
+      const fills = { flexGrow: 1, flexShrink: 1 }
+      expect(
+        styleOf(screen.getByText('ja-JP', { includeHiddenElements: true })),
+      ).toMatchObject(fills)
+      expect(
+        styleOf(screen.getByText('5', { includeHiddenElements: true })),
+      ).toMatchObject({ flexShrink: 0, marginStart: 'auto' })
+      expect(
+        styleOf(screen.getByText('5', { includeHiddenElements: true })),
+      ).not.toHaveProperty('flexGrow', 1)
+
+      await rerender({ error: 'Enter a value.' })
+
+      const region = screen.getByText('Enter a value.', {
+        includeHiddenElements: true,
+      }).parent
+      expect(region === null ? {} : styleOf(region)).toMatchObject(fills)
+    })
+
     it('reads the prefix and suffix ahead of the description', async () => {
       await renderField({
         description: 'Supporting line',
