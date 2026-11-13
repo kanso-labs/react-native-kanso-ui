@@ -185,6 +185,26 @@ describe('Checkbox', () => {
       expect(checkbox()).toBePartiallyChecked()
     })
 
+    // Android writes the mixed state into the content description, which is
+    // read in place of the label's text unless the box has a name of its own.
+    it('takes its label as a name of its own while mixed', async () => {
+      await render(<Checkbox>Label</Checkbox>)
+      expect(checkbox().props.accessibilityLabel).toBeUndefined()
+
+      await screen.rerender(<Checkbox isIndeterminate>Label</Checkbox>)
+      expect(checkbox().props.accessibilityLabel).toBe('Label')
+      expect(
+        screen.getByRole('checkbox', { checked: 'mixed', name: 'Label' }),
+      ).toBe(checkbox())
+
+      await screen.rerender(
+        <Checkbox aria-label="Own label" isIndeterminate>
+          Label
+        </Checkbox>,
+      )
+      expect(checkbox().props.accessibilityLabel).toBe('Own label')
+    })
+
     it('reads its description as its hint, and hides the line itself', async () => {
       await render(<Checkbox description="Supporting line">Label</Checkbox>)
 

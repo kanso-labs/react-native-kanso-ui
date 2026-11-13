@@ -49,7 +49,7 @@ import {
 } from '../../button/group'
 import { palettesOf } from '../../button/palettes'
 import {
-  BUSY,
+  busyAs,
   CONCEALED,
   PendingContent,
   PendingRing,
@@ -510,7 +510,7 @@ function Button({
       role={href === undefined ? 'button' : 'link'}
       {...(isToggle ? toggleState(action.selected) : undefined)}
       {...membership?.accessibility}
-      {...(pending ? BUSY : undefined)}
+      {...(pending ? busyAs(ringLabel) : undefined)}
       {...props}
       {...triggerProps}
       {...feedback.handlers}

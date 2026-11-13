@@ -937,6 +937,31 @@ describe('the pending state', () => {
     expect(screen.getByRole('button', { busy: true })).toBe(button())
   })
 
+  // Android writes the busy state into the content description, which is
+  // read in place of the text under the button unless it has a name of its
+  // own.
+  it('is named by its ring while busy, unless the call site names it', async () => {
+    await render(
+      <Button isPending testID="button">
+        Label
+      </Button>,
+    )
+
+    expect(button().props.accessibilityLabel).toBe('Loading')
+
+    await screen.rerender(
+      <Button aria-label="Own label" isPending testID="button">
+        Label
+      </Button>,
+    )
+
+    expect(button().props.accessibilityLabel).toBe('Own label')
+
+    await screen.rerender(<Button testID="button">Label</Button>)
+
+    expect(button().props.accessibilityLabel).toBeUndefined()
+  })
+
   it.each(VARIANTS)(
     'draws its ring in the label colour under %s',
     async (variant, _container, content) => {

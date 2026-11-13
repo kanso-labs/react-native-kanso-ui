@@ -210,7 +210,9 @@ function Checkbox({
     <View {...props} style={style}>
       <Pressable
         aria-checked={isIndeterminate ? 'mixed' : state.isSelected}
-        aria-label={ariaLabel}
+        aria-label={
+          ariaLabel ?? (isIndeterminate ? nameOf(children) : undefined)
+        }
         role="checkbox"
         {...describedBy(messageId, messageOf(description, error))}
         {...feedback.handlers}
@@ -262,6 +264,15 @@ function memberOf(
       onChange?.(isSelected)
     },
   }
+}
+
+// A label that is a string names the box while it is indeterminate, as its
+// own `aria-label`: Android writes the mixed state into the box's content
+// description, which a screen reader then reads in place of the label's
+// text, so the box was described as "mixed" and nothing else. Anything else
+// leaves the name to `aria-label`.
+function nameOf(children: ReactNode): string | undefined {
+  return typeof children === 'string' ? children : undefined
 }
 
 // A press's toggle. Built by a call rather than declared in the component,
