@@ -4,15 +4,25 @@ import { StyleSheet, View } from 'react-native'
 
 import { Badge } from '.'
 import { PersonGlyph } from '../../glyphs'
+import { useTheme } from '../../theme/scope'
 import { IconButton } from '../icon-button'
 import { Stack } from '../stack'
 import { Text } from '../text'
 
 // One of the library's own glyphs rather than an icon set, so the stories show
-// the badge alone, at the 24dp the page measures it against. Hoisted so it is
-// one stable element per render, which is what react-perf's no-jsx-as-prop is
-// after.
-const ICON = <PersonGlyph />
+// the badge alone, at the 24dp the page measures it against. In the on-surface
+// role, as an app draws an icon on a surface: a glyph with no colour around it
+// draws black, which the dark scheme's surface hides, leaving the badge
+// floating by itself.
+function Icon() {
+  const { colors } = useTheme()
+
+  return <PersonGlyph color={colors.onSurface} />
+}
+
+// Hoisted so it is one stable element per render, which is what react-perf's
+// no-jsx-as-prop is after.
+const ICON = <Icon />
 
 const styles = StyleSheet.create({
   start: {
