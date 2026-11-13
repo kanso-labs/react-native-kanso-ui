@@ -61,6 +61,7 @@ import { usePanelShown, usePanelStyle } from '../../overlay/panel'
 import { roomOf } from '../../picker'
 import { usePressFeedback } from '../../press'
 import { DateSegments } from '../../segments'
+import { fieldClockOf } from '../../segments/clock'
 import { SegmentedField } from '../../segments/field'
 import { useTheme } from '../../theme/scope'
 import { composeStyles, themedStyles } from '../../theme/styles'
@@ -734,8 +735,7 @@ function ModalContent({
   const state = useTimeFieldState({
     granularity,
     hideTimeZone: true,
-    hourCycle,
-    locale,
+    ...fieldClockOf(locale, hourCycle),
     onChange: (next: null | TimeValue) => {
       if (next !== null) {
         setDraft(next)
@@ -1059,7 +1059,7 @@ function TimePicker<T extends TimeValue = TimeValue>({
     isDisabled,
     isReadOnly,
     isRequired,
-    locale: writtenIn,
+    ...fieldClockOf(writtenIn, props.hourCycle),
   })
   const selectTime = selectTimeLabel ?? words.selectTime
   // oxlint-disable-next-line typescript/unbound-method -- React Stately's setters are callbacks, and read no `this`
