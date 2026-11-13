@@ -789,6 +789,7 @@ function FieldMessage({
     colorOf(invalid ? colors.error : colors.onSurfaceVariant),
     SHRINKS,
   )
+  const lineStyle = composeStyles<TextStyle>(messageStyle, FILLS)
 
   useErrorAnnouncement(error)
 
@@ -805,7 +806,7 @@ function FieldMessage({
         aria-live="polite"
         {...(Platform.OS === 'web' ? ATOMIC : undefined)}
         {...(Platform.OS === 'ios' ? HIDDEN : undefined)}
-        style={invalid && error !== '' ? SHRINKS : OUT_OF_FLOW}
+        style={invalid && error !== '' ? FILLS : OUT_OF_FLOW}
       >
         {invalid && error !== '' ? (
           <NativeText id={ids.error} style={messageStyle}>
@@ -817,7 +818,7 @@ function FieldMessage({
         <NativeText
           {...(Platform.OS === 'web' ? undefined : HIDDEN)}
           id={ids.description}
-          style={messageStyle}
+          style={lineStyle}
         >
           {description}
         </NativeText>
@@ -1018,6 +1019,15 @@ const NOT_DRAWN: TextStyle = { display: 'none' }
 
 // The live region with nothing in it, which takes no place in the line.
 const OUT_OF_FLOW: ViewStyle = { position: 'absolute' }
+
+// The error or the description, which takes what the line has free. Android
+// lays a line out again once React Native has measured it, and with body
+// small's tracking it can need a fraction of a pixel more than the measure
+// gave: a short line measured to its own width then lost its last letter to a
+// second line out of sight, "ja-JP" drawn as "ja-J". Given the room the line
+// leaves, the text is laid out wider than it needs, and draws whole. It starts
+// where it did, so nothing moves, and the count stays at the end.
+const FILLS: TextStyle = { flexGrow: 1, flexShrink: 1 }
 
 const SHRINKS: TextStyle = { flexShrink: 1 }
 
