@@ -1,8 +1,8 @@
 import type { TextStyle } from 'react-native'
 
-import { describe, expect, it } from '@jest/globals'
-import { fireEvent, render, screen } from '@testing-library/react-native'
-import { ScrollView, StyleSheet, Text, View } from 'react-native'
+import { afterEach, describe, expect, it, jest } from '@jest/globals'
+import { act, fireEvent, render, screen } from '@testing-library/react-native'
+import { Platform, ScrollView, StyleSheet, Text, View } from 'react-native'
 
 import { AppBar } from '../components/app-bar'
 import { scopeFor } from '../theme/scope'
@@ -67,14 +67,15 @@ function Screen() {
   )
 }
 
-// The screen scrolled to an offset, over content of the given height.
-async function scroll(offset: number, content: number) {
+// The screen scrolled to an offset, over content of the given height, in a
+// view of the given height.
+async function scroll(offset: number, content: number, viewport = VIEWPORT) {
   await fireEvent.scroll(screen.getByTestId('scroller'), {
     nativeEvent: {
       contentInset: { bottom: 0, left: 0, right: 0, top: 0 },
       contentOffset: { x: 0, y: offset },
       contentSize: { height: content, width: 400 },
-      layoutMeasurement: { height: VIEWPORT, width: 400 },
+      layoutMeasurement: { height: viewport, width: 400 },
       zoomScale: 1,
     },
   })
@@ -93,6 +94,11 @@ function state() {
 function textStyleOf(element: { props: { style?: TextStyle } }): TextStyle {
   return StyleSheet.flatten([element.props.style]) ?? {}
 }
+
+afterEach(() => {
+  jest.useRealTimers()
+  jest.restoreAllMocks()
+})
 
 describe('useAppBarScroll', () => {
   it('starts neither scrolled nor collapsed', async () => {
@@ -183,6 +189,55 @@ describe('useAppBarScroll', () => {
       await scroll(SHORT - VIEWPORT, SHORT)
 
       expect(state()).toMatch(/^collapsed /)
+    })
+  })
+
+  // Android sends the event a resize brings with an offset of 0, while the
+  // screen is still scrolled.
+  it('leaves alone the event that comes with the view at a new height', async () => {
+    await render(<Probe collapseAfter={100} />)
+    await layout(LARGE)
+
+    await scroll(400, 2000)
+    expect(state()).toBe('collapsed scrolled')
+
+    // The view grew by what the bar gave back, and says it is at the top.
+    await scroll(0, 2000, VIEWPORT + LARGE - COLLAPSED_BLOCK_SIZE)
+    expect(state()).toBe('collapsed scrolled')
+
+    // At that height, an offset of 0 is the screen's.
+    await scroll(0, 2000, VIEWPORT + LARGE - COLLAPSED_BLOCK_SIZE)
+    expect(state()).toBe('expanded top')
+  })
+
+  // A scroll view there that changes height while it is dragged goes back to
+  // an earlier offset, so the bar changes once the scroll has stopped.
+  describe('on Android', () => {
+    it('changes the bar 150ms after the last scroll event, and follows the offset at once', async () => {
+      jest.replaceProperty(Platform, 'OS', 'android')
+      jest.useFakeTimers()
+      await render(<Probe collapseAfter={100} />)
+      await layout(LARGE)
+
+      await scroll(300, 2000)
+      await act(() => {
+        jest.advanceTimersByTime(149)
+      })
+      await scroll(400, 2000)
+
+      expect(state()).toBe('expanded scrolled')
+
+      await act(() => {
+        jest.advanceTimersByTime(149)
+      })
+
+      expect(state()).toBe('expanded scrolled')
+
+      await act(() => {
+        jest.advanceTimersByTime(1)
+      })
+
+      expect(state()).toBe('collapsed scrolled')
     })
   })
 
