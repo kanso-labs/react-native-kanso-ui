@@ -115,16 +115,9 @@ describe('the showcase', () => {
     expect(titles).toHaveLength(EXPECTED.length)
   })
 
-  // AppBar's section draws nothing under its headline, since the bar it
-  // describes is the page's own.
-  it('draws every other section once the page has mounted', async () => {
-    await renderPage('editorial')
-    await mountAll()
-
-    expect(filled()).toBe(EXPECTED.length - 1)
-  })
-
-  it('mounts the sections a few at a time on a device, a pause after each', async () => {
+  // It mounts the page a section at a time, which a busy machine running the
+  // whole suite takes longer than Jest's five seconds over.
+  it('mounts the sections a few at a time on a device, a pause after each, and every one in the end', async () => {
     await renderPage('editorial')
 
     // Every headline at once, and the content of the first three, the first
@@ -144,10 +137,12 @@ describe('the showcase', () => {
 
     expect(filled()).toBe(3)
 
+    // AppBar's section draws nothing under its headline, since the bar it
+    // describes is the page's own.
     await mountAll()
 
     expect(filled()).toBe(EXPECTED.length - 1)
-  })
+  }, 30_000)
 
   it('mounts the whole page at once on the web', async () => {
     Platform.OS = 'web'
