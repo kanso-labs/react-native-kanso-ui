@@ -66,6 +66,16 @@ function styleOf(element: {
   return StyleSheet.flatten([element.props.style]) ?? {}
 }
 
+// The face Android draws a role in while its family is not registered: the
+// system font's medium face for the roles at 500, and the system font for the
+// rest.
+const ANDROID_FACES: readonly (readonly [TypeRole, string])[] = [
+  ['labelLarge', 'sans-serif-medium'],
+  ['titleMedium', 'sans-serif-medium'],
+  ['bodyLarge', 'sans-serif'],
+  ['titleLarge', 'sans-serif'],
+]
+
 afterEach(() => {
   mockLoaded.clear()
   jest.restoreAllMocks()
@@ -152,12 +162,7 @@ describe('Text', () => {
 
   // Android draws `sans-serif` at 500 exactly as at 400, which would draw
   // the titles and the labels as body text.
-  it.each([
-    ['labelLarge', 'sans-serif-medium'],
-    ['titleMedium', 'sans-serif-medium'],
-    ['bodyLarge', 'sans-serif'],
-    ['titleLarge', 'sans-serif'],
-  ] as const)(
+  it.each(ANDROID_FACES)(
     'draws %s in Android’s %s while the family is not registered',
     async (variant, family) => {
       jest.replaceProperty(Platform, 'OS', 'android')
