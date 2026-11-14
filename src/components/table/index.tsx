@@ -157,6 +157,11 @@ const ARROW_SIZE = 18
 // clips it there.
 const HANDLE = 24
 
+// How far a handle's drag reaches, centred on the edge: the 48dp target
+// Material Design asks a touch to have, around the 24dp the handle is drawn
+// as, so a drag begun beside the edge still takes it.
+const REACH = 48
+
 // How far a screen reader's step moves a column's edge, React Aria's step for
 // a key.
 const RESIZE_STEP = 10
@@ -1299,6 +1304,16 @@ function partOf<P>(children: ReactNode, type: unknown) {
   )
 }
 
+// Where a handle's drag reaches past the strip it is drawn as, either side.
+function reachOf(isLast: boolean) {
+  const beside = (REACH - HANDLE) / 2
+  const past = isLast ? REACH / 2 : beside
+
+  return I18nManager.isRTL
+    ? { left: past, right: beside }
+    : { left: beside, right: past }
+}
+
 // One row of the body, drawn as the part it came from.
 function renderRow({ index, item }: ListRenderItemInfo<Node<unknown>>) {
   return <BodyRow index={index} node={item} />
@@ -1375,6 +1390,11 @@ function ResizeHandle({
   // while it does.
   // oxlint-disable-next-line react/capitalized-calls, typescript/no-deprecated -- a builder named after its gesture, not a component; see above
   const drag = Gesture.Pan()
+    // Reaching to 48dp across the header, centred on the edge, past the
+    // strip the handle is drawn as. The last one's strip is only the half
+    // inside the table, so its reach past the table's end is the whole half,
+    // on the left under a right-to-left layout.
+    .hitSlop(reachOf(isLast))
     // Taken once it moves along the header, and let go to a scroll once it
     // moves across it first.
     .activeOffsetX(SLOP_RANGE)
