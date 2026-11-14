@@ -1,5 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react'
+import type { Color } from 'react-stately'
 
+import { useState } from 'react'
 import { StyleSheet, View } from 'react-native'
 
 import { ColorArea } from '.'
@@ -8,9 +10,7 @@ import { themedStyles } from '../../theme/styles'
 import { ColorSlider } from '../color-slider'
 
 const BLUE = 'hsl(200, 100%, 50%)'
-// RGB, not HSL: alpha is a channel of a colour area only in RGB, and in HSL
-// React Aria draws saturation and lightness instead.
-const TRANSLUCENT = 'rgba(0, 170, 255, 0.6)'
+const TRANSLUCENT = 'hsla(200, 100%, 50%, 0.6)'
 
 const styles = StyleSheet.create({
   // A plane takes the width it is given and stays square, so the samples
@@ -55,15 +55,37 @@ type Story = StoryObj<typeof meta>
 
 const Default: Story = {}
 
-// Its own story because alpha is the one channel pairing that behaves
-// differently from the rest, and the one a consumer is most likely to reach
-// for and find does nothing in HSL.
+// A plane and an alpha slider holding one translucent value, which is how a
+// colour with transparency is edited here: the plane carries two of the
+// colour's own channels and the slider its alpha, as ColorPicker composes
+// them. Alpha is not given to the plane, whose colours would then disagree
+// with its own handle; see the component's header.
+function TranslucentPicker() {
+  const own = stylesOf(useTheme())
+  const [value, setValue] = useState<Color | string>(TRANSLUCENT)
+
+  return (
+    <View style={own.picker}>
+      <ColorArea
+        onChange={setValue}
+        value={value}
+        xChannel="saturation"
+        yChannel="lightness"
+      />
+      <ColorSlider
+        channel="alpha"
+        label="Alpha"
+        onChange={setValue}
+        value={value}
+      />
+    </View>
+  )
+}
+
+// Its own story because alpha is the one channel a consumer is most likely
+// to hand the plane, and the one that belongs beside it instead.
 const Alpha: Story = {
-  args: {
-    defaultValue: TRANSLUCENT,
-    xChannel: 'red',
-    yChannel: 'alpha',
-  },
+  render: () => <TranslucentPicker />,
 }
 
 const Disabled: Story = {
