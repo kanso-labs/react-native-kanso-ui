@@ -103,11 +103,15 @@ function input() {
   return screen.getByLabelText('Label')
 }
 
-// A handler a host was handed for its key presses, as the control's own.
 function isKeyHandler(
   handler: unknown,
 ): handler is (event: { nativeEvent: { key: string } }) => void {
   return typeof handler === 'function'
+}
+
+// A handler a host was handed for its key presses, as the control's own.
+function isTextHandler(value: unknown): value is (text: string) => void {
+  return typeof value === 'function'
 }
 
 // The label as it is drawn, which is hidden from screen readers.
@@ -313,6 +317,84 @@ describe('TokenField', () => {
         ...TAGGED,
         { text: ' x', type: 'text' },
       ])
+    })
+
+    // A burst of keys can arrive before Android has taken the text the
+    // field set as a typed tag turned into a pill, made on what the control
+    // last reported, which still holds the tag.
+    it('adds a burst made on the text before a pill once, after the pill', async () => {
+      const onChange = jest.fn()
+      await renderField({
+        defaultValue: tagged([{ text: 'Type a #tag', type: 'text' }]),
+        onChange,
+      })
+
+      await fireEvent.changeText(input(), 'Type a #tag ')
+
+      expect(input().props.value).toBe(' ')
+
+      await fireEvent.changeText(input(), 'Type a #tag one two')
+
+      expect(onChangeSegments(onChange, -1)).toEqual([
+        { text: 'Type a ', type: 'text' },
+        { text: '#tag', type: 'token' },
+        { text: ' one two', type: 'text' },
+      ])
+      expect(input().props.value).toBe(' one two')
+    })
+
+    // Changes can arrive faster than the field renders, so each is handed
+    // to the handler the last render made.
+    it('builds each change on the last, before the field renders again', async () => {
+      const onChange = jest.fn()
+      await renderField({
+        defaultValue: tagged([{ text: 'Type a #tag', type: 'text' }]),
+        onChange,
+      })
+
+      const handler: unknown = input().props.onChangeText
+      if (!isTextHandler(handler)) {
+        missing('text handler')
+      }
+
+      await act(() => {
+        handler('Type a #tag ')
+        handler('Type a #tag o')
+        handler('Type a #tag on')
+      })
+
+      expect(onChangeSegments(onChange, -1)).toEqual([
+        { text: 'Type a ', type: 'text' },
+        { text: '#tag', type: 'token' },
+        { text: ' on', type: 'text' },
+      ])
+      expect(input().props.value).toBe(' on')
+    })
+
+    it('takes a change made on its own text once the control has it', async () => {
+      const onChange = jest.fn()
+      await renderField({
+        defaultValue: tagged([{ text: 'Type a #tag', type: 'text' }]),
+        onChange,
+      })
+
+      await fireEvent.changeText(input(), 'Type a #tag ')
+      await fireEvent.changeText(input(), ' one')
+
+      expect(input().props.value).toBe(' one')
+    })
+
+    it('types after the text a removed pill gives back, once', async () => {
+      await renderField({ defaultValue: tagged() })
+
+      await pressBackspace()
+      await pressBackspace()
+
+      expect(input().props.value).toBe(' and ')
+
+      await fireEvent.changeText(input(), ' and x')
+
+      expect(input().props.value).toBe(' and x')
     })
 
     it('makes nothing a token with the plain value', async () => {
