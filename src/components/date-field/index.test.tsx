@@ -18,6 +18,7 @@ import {
 import { act, fireEvent, render, screen } from '@testing-library/react-native'
 import { createRef } from 'react'
 import {
+  Dimensions,
   I18nManager,
   Platform,
   StyleSheet,
@@ -805,6 +806,30 @@ describe('DateField', () => {
 
     afterEach(() => {
       jest.useRealTimers()
+    })
+
+    // A segment is as big as its digits, and once the field has focus the
+    // box passes no press on, so a tap just under "15" changed nothing.
+    it('reaches each segment up and down to 48dp, and not across', async () => {
+      const initial = Dimensions.get('window')
+      Dimensions.set({
+        screen: { ...initial, fontScale: 1 },
+        window: { ...initial, fontScale: 1 },
+      })
+
+      try {
+        await renderField()
+
+        // Half of what a 24dp line of body large leaves of 48dp.
+        expect(segmentOf('day').props.hitSlop).toEqual({
+          bottom: 12,
+          left: 0,
+          right: 0,
+          top: 12,
+        })
+      } finally {
+        Dimensions.set({ screen: initial, window: initial })
+      }
     })
 
     it('marks the label of a field that must be filled', async () => {

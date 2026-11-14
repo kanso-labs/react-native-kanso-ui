@@ -41,6 +41,7 @@ import {
   Pressable,
   StyleSheet,
   TextInput,
+  useWindowDimensions,
 } from 'react-native'
 
 import type { FieldDescriptionPart } from '../field'
@@ -51,6 +52,7 @@ import { startsWithIn } from '../autocomplete'
 import { descriptionOf, FieldSegments, requiredName } from '../field'
 import { messagesFor } from '../i18n'
 import { NumberParser } from '../number/parser'
+import { hitSlop } from '../press'
 import { useTheme } from '../theme/scope'
 import { composeStyles } from '../theme/styles'
 import { useTypeRole } from '../typography/roles'
@@ -699,6 +701,12 @@ function SegmentLine(line: SegmentLineProps) {
   const theme = useTheme()
   const own = segmentStylesOf(theme)
   const role = useTypeRole('bodyLarge')
+  const { fontScale } = useWindowDimensions()
+  // A segment is only as big as its digits, 13dp wide and a line tall, and
+  // once the field has focus the box passes no press on, so each reaches up
+  // and down to the field line's 48dp. Not across, since the segments sit
+  // flush and a press beside one belongs to the next.
+  const reach = hitSlop(theme.typography.bodyLargeLineHeight * fontScale)
   const messages = messagesFor(locale)
   const words = messages.segments
   const first = state.segments.find((segment) => typedInto(drawing, segment))
@@ -774,6 +782,7 @@ function SegmentLine(line: SegmentLineProps) {
             aria-valuenow={segment.value ?? undefined}
             aria-valuetext={valueTextOf(segment, state, locale, words.empty)}
             disabled={state.isDisabled}
+            hitSlop={drawing === undefined ? reach : undefined}
             key={segment.type}
             onAccessibilityAction={actionOf(line, segment)}
             onPress={
