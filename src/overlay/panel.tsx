@@ -23,6 +23,7 @@ import {
 import type { OverlaySide, Rect } from './placement'
 
 import { useTheme } from '../theme/scope'
+import { useHiddenBelow } from './host'
 
 // What a non-modal panel anchored beside its trigger does besides being
 // placed, shared by Popover and Menu so the two cannot drift: the layer a
@@ -63,7 +64,9 @@ const styles = StyleSheet.create({
 /**
  * The layer a press outside a non-modal panel lands on, drawn just before the
  * panel so it sits under it. The press goes no further, so a press on the
- * trigger closes the panel rather than opening it again, as on web.
+ * trigger closes the panel rather than opening it again, as on web. While it
+ * is drawn, a screen reader is kept from the screen under it and from the
+ * overlays before it.
  *
  * Given a `hole`, the layer is drawn around that frame rather than over it,
  * so a press there reaches the screen under it and leaves the panel open: a
@@ -71,12 +74,21 @@ const styles = StyleSheet.create({
  * a click in a combo box's input leaves its list open on web.
  */
 function DismissLayer({
+  hidesBelow = true,
   hole,
   onPress,
 }: {
+  /**
+   * Whether a screen reader is kept from the screen under the panel, as a
+   * finger is. A combo box leaves it in reach, since its input is still
+   * typed into while its list is open, as React Aria leaves it on web.
+   */
+  readonly hidesBelow?: boolean
   readonly hole?: Rect | undefined
   readonly onPress: () => void
 }) {
+  useHiddenBelow(hidesBelow)
+
   if (hole === undefined) {
     return <LayerPart onPress={onPress} style={styles.layer} />
   }

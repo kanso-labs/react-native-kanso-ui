@@ -1,16 +1,16 @@
 import type { StyleProp, ViewStyle } from 'react-native'
 
-import { describe, expect, it, jest } from '@jest/globals'
+import { afterEach, describe, expect, it, jest } from '@jest/globals'
 import { render, screen, within } from '@testing-library/react-native'
 import { createContext, use, useEffect } from 'react'
-import { StyleSheet, Text, View } from 'react-native'
+import { Platform, StyleSheet, Text, View } from 'react-native'
 
 import type { KuiTheme } from '../tokens/defaults'
 
 import { I18nProvider, useLocale } from '../i18n/provider'
 import { ThemeScope } from '../theme-scope'
 import { type ResolvedTheme, useTheme } from '../theme/scope'
-import { Overlay, OverlayHost } from './host'
+import { Overlay, OverlayHost, useHiddenBelow } from './host'
 
 const ACCENT: KuiTheme = { '--kui-color-primary': '#7d5260' }
 
@@ -45,11 +45,51 @@ function Closing({ first }: { readonly first: boolean }) {
   )
 }
 
+function Hider({ hides }: { readonly hides: boolean }) {
+  useHiddenBelow(hides)
+  return null
+}
+
+// An overlay that keeps a screen reader from what lies under it while it
+// hides, as an anchored panel's dismiss layer does.
+function Hiding({
+  hides,
+  label,
+}: {
+  readonly hides: boolean
+  readonly label: string
+}) {
+  return (
+    <Overlay>
+      <Hider hides={hides} />
+      <View testID={`overlay ${label}`} />
+    </Overlay>
+  )
+}
+
 function Labelled({ label }: { readonly label: string }) {
   return (
     <Overlay>
       <View testID={`overlay ${label}`} />
     </Overlay>
+  )
+}
+
+// A screen beside two overlays, the second of which may hide what is under
+// it.
+function Layered({
+  hides,
+  open = true,
+}: {
+  readonly hides: boolean
+  readonly open?: boolean
+}) {
+  return (
+    <ThemeScope>
+      <View accessible aria-label="Screen" testID="screen" />
+      <Labelled label="first" />
+      {open ? <Hiding hides={hides} label="second" /> : null}
+    </ThemeScope>
   )
 }
 
@@ -264,6 +304,52 @@ describe('Overlay', () => {
     } finally {
       error.mockRestore()
     }
+  })
+})
+
+describe('useHiddenBelow', () => {
+  afterEach(() => {
+    jest.restoreAllMocks()
+  })
+
+  it('keeps a screen reader from the screen and the overlays under it', async () => {
+    await render(<Layered hides />)
+
+    expect(screen.queryByLabelText('Screen')).toBeNull()
+    expect(screen.queryByTestId('overlay first')).toBeNull()
+    expect(screen.getByTestId('overlay second')).toBeOnTheScreen()
+  })
+
+  it('hides nothing while it does not hide', async () => {
+    await render(<Layered hides={false} />)
+
+    expect(screen.getByLabelText('Screen')).toBeOnTheScreen()
+    expect(screen.getByTestId('overlay first')).toBeOnTheScreen()
+  })
+
+  it('gives the screen back once its overlay closes', async () => {
+    await render(<Layered hides />)
+    await screen.rerender(<Layered hides open={false} />)
+
+    expect(screen.getByLabelText('Screen')).toBeOnTheScreen()
+    expect(screen.getByTestId('overlay first')).toBeOnTheScreen()
+  })
+
+  it('keeps the screen in a view of its own that fills the host and is never flattened', async () => {
+    await render(<Layered hides={false} />)
+
+    const view = screen.getByTestId('screen').parent
+
+    expect(view?.props.collapsable).toBe(false)
+    expect(styleOf(view ?? { props: {} })).toEqual({ flexGrow: 1 })
+  })
+
+  it('hides nothing on the web', async () => {
+    jest.replaceProperty(Platform, 'OS', 'web')
+    await render(<Layered hides />)
+
+    expect(screen.getByLabelText('Screen')).toBeOnTheScreen()
+    expect(screen.getByTestId('overlay first')).toBeOnTheScreen()
   })
 })
 

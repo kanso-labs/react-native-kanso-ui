@@ -110,8 +110,10 @@ async function advance(milliseconds: number) {
   })
 }
 
+// Hidden from a screen reader while the calendar is open, so found with the
+// hidden elements.
 function calendarButton(name = 'Calendar Label') {
-  return screen.getByRole('button', { name })
+  return screen.getByRole('button', { includeHiddenElements: true, name })
 }
 
 function child(node: TestInstance['children'][number] | undefined) {
@@ -279,10 +281,13 @@ function segmentOf(name: string, date: 'End' | 'Start' = 'Start') {
   )
 }
 
-// The segments a person types into, in the order they are drawn.
+// The segments a person types into, in the order they are drawn. Hidden
+// from a screen reader while the calendar is open, so found with the hidden
+// elements.
 function segments() {
   return screen.getAllByRole(
     Platform.OS === 'web' ? 'spinbutton' : 'adjustable',
+    { includeHiddenElements: true },
   )
 }
 

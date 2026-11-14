@@ -8,7 +8,7 @@ import {
   useState,
   useSyncExternalStore,
 } from 'react'
-import { StyleSheet, View } from 'react-native'
+import { Platform, StyleSheet, View } from 'react-native'
 
 import { I18nProvider, useProvidedLocale } from '../i18n/provider'
 import { ScopeContext, useScope } from '../theme/scope'
@@ -20,6 +20,16 @@ type OverlayStore = {
   /** Takes the layer the host draws its overlays in, as its ref. */
   readonly attach: (layer: ComponentRef<typeof View> | null) => void
   readonly entries: () => readonly Entry[]
+  /**
+   * How many of the overlays a screen reader is kept from, counted from the
+   * first, or -1 while it reaches all of them and the screen.
+   */
+  readonly hiddenBelow: () => number
+  /**
+   * Hides from a screen reader what lies under the overlay `key`, the screen
+   * and the overlays before it, until the returned function is called.
+   */
+  readonly hide: (key: string) => () => void
   /** The layer the host draws its overlays in, for placing one in it. */
   readonly layer: () => ComponentRef<typeof View> | null
   readonly remove: (key: string) => void
@@ -28,6 +38,9 @@ type OverlayStore = {
 }
 
 const OverlayHostContext = createContext<null | OverlayStore>(null)
+
+// The key of the overlay a caller is drawn in, and `null` outside one.
+const EntryContext = createContext<null | string>(null)
 
 const styles = StyleSheet.create({
   // Each overlay fills the layer on a box of its own, so one laid out in the
@@ -41,7 +54,21 @@ const styles = StyleSheet.create({
     right: 0,
     top: 0,
   },
+  // The screen, in a view of its own that fills the host's, so a screen
+  // reader can be kept from it as a whole while a panel is open. It is never
+  // flattened away, or hiding it would make it a view of its own and remount
+  // what it holds, losing a scroll offset or a field's focus.
+  screen: {
+    flexGrow: 1,
+  },
 })
+
+// Hidden on iOS and Android alone: on the web an `aria-hidden` over a control
+// that takes focus is an error of its own, and React Native Web's overlays
+// are not where a browser's screen reader wanders.
+function hiddenOf(hidden: boolean) {
+  return hidden && Platform.OS !== 'web'
+}
 
 /**
  * Draws its content above the screen, in the overlay host of the app's
@@ -90,18 +117,32 @@ function Overlay({ children }: { readonly children?: ReactNode }) {
 }
 
 /**
- * Hosts the overlays drawn inside it: its children, then a layer over them
- * that fills the view around the host. Mounting or unmounting an overlay
- * renders the layer alone, so the screen under it keeps its state.
+ * Hosts the overlays drawn inside it: its children, in a view that fills the
+ * view around the host, then a layer over them that fills it too. Mounting
+ * or unmounting an overlay renders the layer alone, so the screen under it
+ * keeps its state.
+ *
+ * While an overlay asks for it, through {@link useHiddenBelow}, the screen
+ * and the overlays under that one are kept from a screen reader on iOS and
+ * Android, as React Aria hides what lies outside an open menu on web. A
+ * screen reader acts on what it reaches directly, so otherwise a swipe left
+ * an open menu and a double tap worked a control under it.
  *
  * The outermost `ThemeScope` renders one, so an app has one at its root.
  */
 function OverlayHost({ children }: { readonly children?: ReactNode }) {
   const [store] = useState(storeFor)
+  const hiddenBelow = useSyncExternalStore(store.subscribe, store.hiddenBelow)
 
   return (
     <OverlayHostContext value={store}>
-      {children}
+      <View
+        aria-hidden={hiddenOf(hiddenBelow >= 0)}
+        collapsable={false}
+        style={styles.screen}
+      >
+        {children}
+      </View>
       <OverlayLayer attach={store.attach} store={store} />
     </OverlayHostContext>
   )
@@ -119,12 +160,17 @@ function OverlayLayer({
   readonly store: OverlayStore
 }) {
   const entries = useSyncExternalStore(store.subscribe, store.entries)
+  const hiddenBelow = useSyncExternalStore(store.subscribe, store.hiddenBelow)
 
   return (
     <View ref={attach} style={styles.fill}>
-      {entries.map(([key, content]) => (
-        <View key={key} style={styles.fill}>
-          {content}
+      {entries.map(([key, content], index) => (
+        <View
+          aria-hidden={hiddenOf(index < hiddenBelow)}
+          key={key}
+          style={styles.fill}
+        >
+          <EntryContext value={key}>{content}</EntryContext>
         </View>
       ))}
     </View>
@@ -134,11 +180,14 @@ function OverlayLayer({
 function storeFor(): OverlayStore {
   const content = new Map<string, ReactNode>()
   const listeners = new Set<() => void>()
+  const hiders = new Set<string>()
   let entries: readonly Entry[] = []
+  let hiddenBelow = -1
   let layer: ComponentRef<typeof View> | null = null
 
   const changed = () => {
     entries = [...content]
+    hiddenBelow = entries.findLastIndex(([key]) => hiders.has(key))
     for (const listener of listeners) {
       listener()
     }
@@ -149,6 +198,15 @@ function storeFor(): OverlayStore {
       layer = view
     },
     entries: () => entries,
+    hiddenBelow: () => hiddenBelow,
+    hide: (key) => {
+      hiders.add(key)
+      changed()
+      return () => {
+        hiders.delete(key)
+        changed()
+      }
+    },
     layer: () => layer,
     remove: (key) => {
       if (content.delete(key)) {
@@ -170,4 +228,21 @@ function storeFor(): OverlayStore {
 
 export type { OverlayStore }
 
-export { Overlay, OverlayHost, OverlayHostContext }
+/**
+ * Keeps a screen reader from what lies under the overlay the caller is drawn
+ * in, the screen and the overlays before it, while `hides` holds. Outside an
+ * overlay it does nothing.
+ */
+function useHiddenBelow(hides: boolean) {
+  const store = use(OverlayHostContext)
+  const key = use(EntryContext)
+
+  useLayoutEffect(() => {
+    if (!hides || store === null || key === null) {
+      return undefined
+    }
+    return store.hide(key)
+  }, [hides, key, store])
+}
+
+export { Overlay, OverlayHost, OverlayHostContext, useHiddenBelow }

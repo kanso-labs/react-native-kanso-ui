@@ -89,8 +89,10 @@ async function advance(milliseconds: number) {
   })
 }
 
+// Hidden from a screen reader while the calendar is open, so found with the
+// hidden elements.
 function calendarButton(name = 'Calendar Label') {
-  return screen.getByRole('button', { name })
+  return screen.getByRole('button', { includeHiddenElements: true, name })
 }
 
 function child(node: TestInstance['children'][number] | undefined) {
@@ -190,9 +192,10 @@ function resize(width: number) {
   Dimensions.set({ screen: metrics, window: metrics })
 }
 
-// The scrim, the first thing the `Modal` draws.
+// The scrim, the first thing the `Modal` draws, in the view its overlay host
+// keeps its content in.
 function scrim() {
-  return child(modal().children[0])
+  return child(child(modal().children[0]).children[0])
 }
 
 function segmentOf(name: string) {
@@ -200,10 +203,13 @@ function segmentOf(name: string) {
 }
 
 // What each segment shows, in the order they are drawn: a segment's text is
-// its first child's.
+// its first child's. Hidden from a screen reader while the calendar is open,
+// so found with the hidden elements.
 function shown() {
   return screen
-    .getAllByRole(Platform.OS === 'web' ? 'spinbutton' : 'adjustable')
+    .getAllByRole(Platform.OS === 'web' ? 'spinbutton' : 'adjustable', {
+      includeHiddenElements: true,
+    })
     .map((segment) => {
       const text = child(segment.children.at(0)).children.at(0)
       return typeof text === 'string' ? text : undefined

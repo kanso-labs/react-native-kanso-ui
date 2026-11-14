@@ -163,8 +163,10 @@ function closeMark() {
   return found?.at(0) ?? null
 }
 
+// Hidden from a screen reader while what it opens is open, so found with the
+// hidden elements.
 function fab() {
-  return screen.getByTestId('fab')
+  return screen.getByTestId('fab', { includeHiddenElements: true })
 }
 
 // The FAB's eased width, height, corner and container as they stand.

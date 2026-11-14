@@ -251,8 +251,10 @@ function surface() {
   return node
 }
 
+// Hidden from a screen reader while the surface is open, so found with the
+// hidden elements.
 function trigger(name = `Label, ${nameOf(PURPLE)}`) {
-  return screen.getByRole('button', { name })
+  return screen.getByRole('button', { includeHiddenElements: true, name })
 }
 
 beforeEach(() => {

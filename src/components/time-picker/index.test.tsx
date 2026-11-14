@@ -197,9 +197,10 @@ async function renderPicker(
   )
 }
 
-// The scrim, the first thing the `Modal` draws.
+// The scrim, the first thing the `Modal` draws, in the view its overlay host
+// keeps its content in.
 function scrim() {
-  return child(modal().children[0])
+  return child(child(modal().children[0]).children[0])
 }
 
 function styleOf(element: {

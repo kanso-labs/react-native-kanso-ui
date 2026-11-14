@@ -572,6 +572,7 @@ function ComboBoxList({
     <>
       {isOpen ? (
         <DismissLayer
+          hidesBelow={false}
           hole={placement.anchorFrame}
           onPress={dismissOf(control, close)}
         />
