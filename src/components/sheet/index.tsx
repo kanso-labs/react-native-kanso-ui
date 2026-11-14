@@ -59,6 +59,7 @@ import {
   panelRoleOf,
   useModalState,
   useModalTrigger,
+  useTitleName,
 } from '../../modal'
 import { useKeyboardInset } from '../../overlay/keyboard'
 import { usePressFeedback } from '../../press'
@@ -270,6 +271,8 @@ type SheetLayout = {
   // keeps the builder while it does.
   // oxlint-disable-next-line typescript/no-deprecated -- see above
   readonly pan: GestureType
+  /** Keeps the headline's text, which names the sheet. */
+  readonly setName: (name: string | undefined) => void
   readonly setTitle: (node: HostInstance | null) => void
   readonly titleId: string
   /** What a press on the handle does, where the sheet has two heights. */
@@ -648,6 +651,8 @@ function SheetTitle({ ref, style, ...props }: SheetTitleProps) {
   const styles = stylesOf(useTheme())
   const role = useTypeRole('titleLarge')
 
+  useTitleName(layout.setName, props.children)
+
   return (
     <NativeText
       {...props}
@@ -684,6 +689,7 @@ function SheetWindow({
   const keyboard = useKeyboardInset()
   const titleId = useId()
   const [title, setTitle] = useState<HostInstance | null>(null)
+  const [name, setName] = useState<string | undefined>(undefined)
   // The panel's height as laid out, before any drag moves it, and whether a
   // sheet with two heights is at the higher one.
   const [full, setFull] = useState<null | number>(null)
@@ -715,6 +721,7 @@ function SheetWindow({
       bottom,
       expanded: !twoHeights || expanded,
       pan,
+      setName,
       setTitle,
       titleId,
       toggle: twoHeights ? toggle : undefined,
@@ -744,7 +751,7 @@ function SheetWindow({
       >
         <GestureDetector gesture={pan}>
           <Animated.View
-            {...panelRoleOf('dialog', labelledBy)}
+            {...panelRoleOf('dialog', labelledBy, name)}
             onAccessibilityEscape={
               isKeyboardDismissDisabled ? undefined : close
             }

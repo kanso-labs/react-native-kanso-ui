@@ -20,7 +20,12 @@ import {
   useRef,
   useState,
 } from 'react'
-import { Text as NativeText, ScrollView, StyleSheet } from 'react-native'
+import {
+  Text as NativeText,
+  Platform,
+  ScrollView,
+  StyleSheet,
+} from 'react-native'
 import Animated from 'react-native-reanimated'
 import { useOverlayTriggerState } from 'react-stately/useOverlayTriggerState'
 
@@ -29,7 +34,7 @@ import type { OverlayAlign, OverlaySide } from '../../overlay'
 import type { ResolvedTheme } from '../../theme/scope'
 
 import { ButtonSlotContext } from '../../button/slots'
-import { ModalWindow, panelRoleOf } from '../../modal'
+import { ModalWindow, panelRoleOf, useTitleName } from '../../modal'
 import { Overlay, useAnchoredPlacement } from '../../overlay'
 import {
   DismissLayer,
@@ -150,6 +155,8 @@ type PanelProps = Omit<PopoverContentProps, 'triggerRef'> & {
   readonly isOpen: boolean
   readonly labelledBy: string | undefined
   readonly modal: boolean
+  /** The headline's text, which names the panel on iOS and Android. */
+  readonly name: string | undefined
   readonly setPresent: (present: boolean) => void
   readonly size: PopoverSize
   /** The headline, which a screen reader is sent to once the panel shows. */
@@ -254,6 +261,8 @@ type PopoverSize = 'md' | 'sm'
 // What the panel's parts read: the headline's id, and where its node goes.
 type PopoverTitle = {
   readonly id: string
+  /** Keeps the headline's text, which names the panel. */
+  readonly setName: (name: string | undefined) => void
   readonly setTitle: (node: HostInstance | null) => void
 }
 
@@ -265,6 +274,16 @@ type PopoverTrigger = 'hover' | 'press'
 
 const PopoverContext = createContext<null | PopoverRoot>(null)
 const TitleContext = createContext<null | PopoverTitle>(null)
+
+/**
+ * Names the popover: the panel is labelled by it, and a screen reader is
+ * sent to it once a pressed popover shows. In title small on on-surface
+ * variant, the rich tooltip's subhead. `style`, `ref` and `testID` land on
+ * React Native's own Text.
+ */
+// What a headline drawn outside a panel does with its text: nothing, since it
+// throws before it is drawn.
+function ignoreName() {}
 
 /**
  * A panel anchored to the control that opened it, as the tooltips spec
@@ -364,9 +383,10 @@ function PopoverContent({ triggerRef, ...props }: PopoverContentProps) {
   const { anchor, close, hover, isOpen, modal, size } = root
   const [present, setPresent] = useState(isOpen)
   const [title, setTitle] = useState<HostInstance | null>(null)
+  const [name, setName] = useState<string | undefined>(undefined)
   const [byPointer, setByPointer] = useState(hover.byPointer)
   const id = useId()
-  const titled = useMemo(() => ({ id, setTitle }), [id])
+  const titled = useMemo(() => ({ id, setName, setTitle }), [id])
 
   // Mounted the moment it opens, and kept until its exit has run.
   if (isOpen && !present) {
@@ -397,6 +417,7 @@ function PopoverContent({ triggerRef, ...props }: PopoverContentProps) {
       isOpen={isOpen}
       labelledBy={labelledBy}
       modal={modal}
+      name={name}
       setPresent={setPresent}
       size={size}
       title={title}
@@ -453,6 +474,7 @@ function PopoverPanel({
   isOpen,
   labelledBy,
   modal,
+  name,
   ref,
   setPresent,
   side,
@@ -483,8 +505,12 @@ function PopoverPanel({
       {dismissable ? <DismissLayer onPress={close} /> : null}
       <Animated.View
         {...(modal
-          ? panelRoleOf('dialog', labelledBy)
-          : { 'aria-labelledby': labelledBy, role: 'dialog' as const })}
+          ? panelRoleOf('dialog', labelledBy, name)
+          : {
+              'aria-label': Platform.OS === 'web' ? undefined : name,
+              'aria-labelledby': labelledBy,
+              role: 'dialog' as const,
+            })}
         onAccessibilityEscape={close}
         onPointerEnter={hover.panelEnter}
         onPointerLeave={hover.panelLeave}
@@ -513,16 +539,12 @@ function PopoverPanel({
   )
 }
 
-/**
- * Names the popover: the panel is labelled by it, and a screen reader is
- * sent to it once a pressed popover shows. In title small on on-surface
- * variant, the rich tooltip's subhead. `style`, `ref` and `testID` land on
- * React Native's own Text.
- */
 function PopoverTitle({ ref, style, ...props }: PopoverTitleProps) {
   const titled = use(TitleContext)
   const styles = stylesOf(useTheme())
   const role = useTypeRole('titleSmall')
+
+  useTitleName(titled?.setName ?? ignoreName, props.children)
 
   if (titled === null) {
     throw new Error('Popover.Title is drawn inside Popover.Content.')

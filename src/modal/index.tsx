@@ -10,7 +10,14 @@ import type { AnimatedStyle } from 'react-native-reanimated'
 import type { EdgeInsets } from 'react-native-safe-area-context'
 import type { OverlayTriggerState } from 'react-stately/useOverlayTriggerState'
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import {
   AccessibilityInfo,
   I18nManager,
@@ -201,16 +208,26 @@ function ModalWindow({
 }
 
 // The surface's role and name on iOS and Android. On web React Native Web's
-// `Modal` is the dialog element, so the surface takes neither there.
+// `Modal` is the dialog element, so the surface takes neither there. Android
+// only links the views `aria-labelledby` names, and fills the name of a view
+// with a role and no label from the text of what it holds, so a sheet whose
+// body could not scroll was named by every line in it. The headline's own
+// text, `name`, is the surface's label where there is one.
 function panelRoleOf(
   role: 'alertdialog' | 'dialog',
   labelledBy: string | undefined,
-): Pick<ViewProps, 'aria-labelledby' | 'aria-modal' | 'role'> {
+  name?: string,
+): Pick<ViewProps, 'aria-label' | 'aria-labelledby' | 'aria-modal' | 'role'> {
   if (Platform.OS === 'web') {
     return {}
   }
 
-  return { 'aria-labelledby': labelledBy, 'aria-modal': true, role }
+  return {
+    'aria-label': name,
+    'aria-labelledby': labelledBy,
+    'aria-modal': true,
+    role,
+  }
 }
 
 // Counts each part as it mounts and unmounts, so the parts around it know
@@ -229,6 +246,21 @@ function registerOf<Part extends string>(
       setParts((parts) => ({ ...parts, [part]: parts[part] - 1 }))
     }
   }
+}
+
+// What a node says as plain text, or `undefined` where it holds anything
+// else.
+function textOf(node: ReactNode): string | undefined {
+  if (typeof node === 'string' || typeof node === 'number') {
+    return String(node)
+  }
+  if (!Array.isArray(node)) {
+    return undefined
+  }
+
+  const parts = node.map((part: ReactNode) => textOf(part))
+
+  return parts.every((part) => part !== undefined) ? parts.join('') : undefined
 }
 
 /**
@@ -300,6 +332,26 @@ function useReturnFocus(present: boolean, outer: ModalTrigger | null) {
   }, [outer, present])
 }
 
+/**
+ * The text a surface's headline holds, which names the surface, kept with
+ * `setName` while the headline is drawn: its children when they are text,
+ * and nothing otherwise, which leaves the name to `aria-labelledby`.
+ */
+function useTitleName(
+  setName: (name: string | undefined) => void,
+  children: ReactNode,
+) {
+  const name = textOf(children)
+
+  useLayoutEffect(() => {
+    setName(name)
+
+    return () => {
+      setName(undefined)
+    }
+  }, [name, setName])
+}
+
 export {
   insetsOf,
   ModalWindow,
@@ -308,5 +360,6 @@ export {
   registerOf,
   useModalState,
   useModalTrigger,
+  useTitleName,
 }
 export type { ModalOpenProps, ModalTrigger }

@@ -728,6 +728,7 @@ describe('Popover', () => {
       expect(panel().props.role).toBe('dialog')
       expect(panel().props['aria-modal']).toBe(undefined)
       expect(panel().props['aria-labelledby']).toBe(title.props.nativeID)
+      expect(panel().props['aria-label']).toBe('Headline')
       expect(screen.getByRole('heading', { name: 'Headline' })).toBe(title)
     })
 

@@ -311,6 +311,7 @@ describe('Dialog', () => {
       expect(panel.props['aria-modal']).toBe(true)
       expect(panel.props['aria-labelledby']).toBe(title.props.nativeID)
       expect(title.props.nativeID).toEqual(expect.any(String))
+      expect(panel.props['aria-label']).toBe('Headline')
     })
 
     it('draws its title as a heading', async () => {
