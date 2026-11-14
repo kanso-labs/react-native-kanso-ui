@@ -319,6 +319,21 @@ describe('Sheet', () => {
       expect(title.props.nativeID).toEqual(expect.any(String))
     })
 
+    // Android fills a view with a role and no label from the text it holds,
+    // so a sheet whose body could not scroll was named by every line in it.
+    it('takes its title’s text as its label', async () => {
+      await render(
+        <Sheet.Content defaultOpen testID="panel">
+          <Sheet.Header>
+            <Sheet.Title>Headline</Sheet.Title>
+          </Sheet.Header>
+          <Sheet.Body>Supporting text</Sheet.Body>
+        </Sheet.Content>,
+      )
+
+      expect(screen.getByTestId('panel').props['aria-label']).toBe('Headline')
+    })
+
     it('names nothing when it has no title', async () => {
       await render(
         <Sheet.Content defaultOpen testID="panel">
@@ -329,6 +344,7 @@ describe('Sheet', () => {
       expect(screen.getByTestId('panel').props['aria-labelledby']).toBe(
         undefined,
       )
+      expect(screen.getByTestId('panel').props['aria-label']).toBe(undefined)
     })
 
     it('sends the screen reader to the title once it shows', async () => {

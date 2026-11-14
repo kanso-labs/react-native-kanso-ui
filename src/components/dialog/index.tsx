@@ -50,6 +50,7 @@ import {
   registerOf,
   useModalState,
   useModalTrigger,
+  useTitleName,
 } from '../../modal'
 import { useKeyboardInset } from '../../overlay/keyboard'
 import { refsOf } from '../../ref'
@@ -232,6 +233,8 @@ type DialogLayout = {
   readonly basic: boolean
   readonly parts: Readonly<Record<DialogPart, number>>
   readonly register: (part: DialogPart) => () => void
+  /** Keeps the headline's text, which names the dialog. */
+  readonly setName: (name: string | undefined) => void
   readonly setTitle: (node: HostInstance | null) => void
   readonly titleId: string
 }
@@ -452,10 +455,11 @@ function DialogContent({
   const [parts, setParts] = useState(NO_PARTS)
   const [register] = useState(() => registerOf(setParts))
   const [title, setTitle] = useState<HostInstance | null>(null)
+  const [name, setName] = useState<string | undefined>(undefined)
   const motion = useDialogMotion(state.isOpen, present, setPresent, basic)
   const keyboard = useKeyboardInset(present)
   const layout = useMemo<DialogLayout>(
-    () => ({ basic, parts, register, setTitle, titleId }),
+    () => ({ basic, parts, register, setName, setTitle, titleId }),
     [basic, parts, register, titleId],
   )
 
@@ -483,7 +487,7 @@ function DialogContent({
         )}
       >
         <Animated.View
-          {...panelRoleOf(role, labelledBy)}
+          {...panelRoleOf(role, labelledBy, name)}
           onAccessibilityEscape={isKeyboardDismissDisabled ? undefined : close}
           {...props}
           style={composeStyles<AnimatedStyle<ViewStyle>>(
@@ -566,9 +570,10 @@ function DialogTitle({ ref, style, ...props }: DialogTitleProps) {
   const layout = useLayout('Dialog.Title')
   const styles = stylesOf(useTheme())
   const role = useTypeRole(layout.basic ? 'headlineSmall' : 'titleLarge')
-  const { register, setTitle } = layout
+  const { register, setName, setTitle } = layout
 
   useLayoutEffect(() => register('title'), [register])
+  useTitleName(setName, props.children)
 
   return (
     <NativeText
