@@ -302,6 +302,24 @@ describe('Breadcrumbs', () => {
       ).toBeUndefined()
     })
 
+    // Rows 4dp apart put the lower row's reach over the lower half of the
+    // row above, so a press on "First item" followed "Fourth item".
+    it('sets wrapped rows apart so their reaches meet edge to edge', async () => {
+      await render(<Trail />)
+
+      const { fontScale } = Dimensions.get('window')
+
+      const trail = screen.getByTestId('first').parent
+
+      expect(styleOf(trail ?? { props: {} })).toMatchObject({
+        gap: spacing.xs,
+        rowGap: Math.max(
+          48 - typography.labelLargeLineHeight * fontScale,
+          spacing.xs,
+        ),
+      })
+    })
+
     it('reaches a crumb 48dp tall, and no further along the row', async () => {
       await render(<Trail />)
 
