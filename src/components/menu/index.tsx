@@ -49,6 +49,7 @@ import type { ResolvedTheme } from '../../theme/scope'
 
 import { ButtonSlotContext } from '../../button/slots'
 import { CheckGlyph, ChevronEndGlyph } from '../../glyphs'
+import { GROUP } from '../../group'
 import { useMessages } from '../../i18n/provider'
 import { Overlay, useAnchoredPlacement } from '../../overlay'
 import {
@@ -1167,6 +1168,7 @@ function SectionNode<T>({
 
   return (
     <View
+      {...GROUP}
       aria-label={named ? undefined : node['aria-label']}
       aria-labelledby={named ? id : undefined}
       role="group"

@@ -13,6 +13,7 @@ import type { ButtonProps } from '../button'
 import { HEIGHTS } from '../../button'
 import { ButtonGroupItemContext } from '../../button/group'
 import { ChevronDownGlyph } from '../../glyphs'
+import { GROUP } from '../../group'
 import { useTheme } from '../../theme/scope'
 import { composeStyles, themedStyles } from '../../theme/styles'
 import { Button } from '../button'
@@ -285,6 +286,7 @@ function SplitButton({
   return (
     <SplitButtonContext value={context}>
       <View
+        {...GROUP}
         role="group"
         {...props}
         style={composeStyles<ViewStyle>(groupOf(theme).group, style)}

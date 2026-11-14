@@ -6,6 +6,7 @@ import { Platform, StyleSheet, View } from 'react-native'
 import type { IconStyle } from '../../glyphs/icon-style'
 
 import { IconStyleContext } from '../../glyphs/icon-style'
+import { GROUP } from '../../group'
 import { SeparatorOrientationContext } from '../../separator'
 import { useTheme } from '../../theme/scope'
 import { composeStyles, themedStyles } from '../../theme/styles'
@@ -164,6 +165,7 @@ function Toolbar({
     >
       <IconStyleContext value={iconStyleOf(content)}>
         <View
+          {...GROUP}
           role="toolbar"
           {...(Platform.OS === 'web' && orientation === 'vertical'
             ? VERTICAL

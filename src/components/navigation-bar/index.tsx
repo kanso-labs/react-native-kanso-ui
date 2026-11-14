@@ -12,6 +12,7 @@ import { StyleSheet, View } from 'react-native'
 
 import type { NavigationItemProps } from '../../navigation'
 
+import { GROUP } from '../../group'
 import { useWindowSizeClass } from '../../hooks/useWindowSizeClass'
 import {
   iconColorOf,
@@ -356,6 +357,7 @@ function NavigationBar({
 
   return (
     <View
+      {...GROUP}
       role="tablist"
       {...props}
       style={composeStyles<ViewStyle>(own.bar, style)}

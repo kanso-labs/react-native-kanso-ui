@@ -12,6 +12,7 @@ import { createContext, use } from 'react'
 import { Pressable, StyleSheet, View } from 'react-native'
 import { useColorPickerState } from 'react-stately/useColorPickerState'
 
+import { GROUP } from '../../group'
 import { useLocaleOf, useMessages } from '../../i18n/provider'
 import { hitSlop, usePressFeedback } from '../../press'
 import {
@@ -236,6 +237,7 @@ function ColorSwatchPicker({
 
   return (
     <View
+      {...GROUP}
       {...props}
       aria-label={label}
       role="radiogroup"

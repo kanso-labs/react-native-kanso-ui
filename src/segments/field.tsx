@@ -16,6 +16,7 @@ import type { FieldVariant } from '../field'
 import { DateSegments } from '.'
 import { describedBy, FieldBox, FieldMessage, FieldSegments } from '../field'
 import { useFieldValidation } from '../form'
+import { GROUP } from '../group'
 import { messagesFor } from '../i18n'
 import { useTheme } from '../theme/scope'
 import { composeStyles } from '../theme/styles'
@@ -179,6 +180,7 @@ function FieldLine(line: FieldLineProps) {
 
   return (
     <View
+      {...GROUP}
       aria-label={label}
       ref={ref}
       role="group"

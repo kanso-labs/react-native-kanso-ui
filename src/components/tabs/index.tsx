@@ -50,6 +50,7 @@ import type { IconStyle } from '../../glyphs/icon-style'
 import type { ResolvedTheme } from '../../theme/scope'
 
 import { IconStyleContext } from '../../glyphs/icon-style'
+import { GROUP } from '../../group'
 import { usePressFeedback } from '../../press'
 import { useLinkPress } from '../../router'
 import { withOpacity } from '../../theme/color'
@@ -676,6 +677,7 @@ function TabsList<T extends object = object>({
 
   return (
     <View
+      {...GROUP}
       aria-label={ariaLabel}
       aria-labelledby={labelledBy}
       ref={ref}

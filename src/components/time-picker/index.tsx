@@ -48,6 +48,7 @@ import type { TimeFieldProps } from '../time-field'
 
 import { ButtonSlotContext } from '../../button/slots'
 import { ClockGlyph, KeyboardGlyph } from '../../glyphs'
+import { GROUP } from '../../group'
 import { messagesFor } from '../../i18n'
 import { useLocaleOf } from '../../i18n/provider'
 import {
@@ -886,6 +887,7 @@ function ModalContent({
           </View>
           {twelveHour ? (
             <View
+              {...GROUP}
               aria-label={words.dayPeriod}
               role="radiogroup"
               style={composeStyles<ViewStyle>(

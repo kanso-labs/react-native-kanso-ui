@@ -17,6 +17,7 @@ import type { ButtonShape } from '../button'
 
 import { HEIGHTS } from '../../button'
 import { ButtonGroupItemContext } from '../../button/group'
+import { GROUP } from '../../group'
 import { useTheme } from '../../theme/scope'
 import { composeStyles, themedStyles } from '../../theme/styles'
 
@@ -223,6 +224,7 @@ function ButtonGroup({
 
   return (
     <View
+      {...GROUP}
       role={
         selectionMode === undefined
           ? 'group'

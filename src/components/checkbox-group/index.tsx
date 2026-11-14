@@ -19,6 +19,7 @@ import { messageOf } from '../../control'
 import { CheckboxGroupContext, createMembers } from '../../control/group'
 import { useErrorAnnouncement } from '../../field'
 import { useFieldValidation, useInsideForm } from '../../form'
+import { GROUP } from '../../group'
 import { withOpacity } from '../../theme/color'
 import { useTheme } from '../../theme/scope'
 import { composeStyles, themedStyles } from '../../theme/styles'
@@ -244,6 +245,7 @@ function CheckboxGroup({
 
   return (
     <View
+      {...GROUP}
       {...props}
       aria-labelledby={labelId}
       role="group"

@@ -21,6 +21,7 @@ import Animated, {
 import type { NavigationItemProps } from '../../navigation'
 import type { ResolvedTheme } from '../../theme/scope'
 
+import { scrollNameOf } from '../../group'
 import { NavigationContext, NavigationItem } from '../../navigation'
 import { SafeArea } from '../../safe-area'
 import { useTheme } from '../../theme/scope'
@@ -290,7 +291,7 @@ function NavigationRail({
               </View>
             )}
             <ScrollView
-              aria-label={ariaLabel}
+              {...scrollNameOf(ariaLabel)}
               contentContainerStyle={
                 isExpanded ? own.expandedList : own.collapsedList
               }
