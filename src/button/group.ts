@@ -98,10 +98,11 @@ type GroupCorners = { readonly end: number; readonly start: number }
 /** How a button in a selecting group is announced, and whether it is chosen. */
 type GroupMembership = {
   readonly accessibility: {
+    readonly accessibilityRole?: 'togglebutton'
     readonly 'aria-checked'?: boolean
     readonly 'aria-pressed'?: boolean
     readonly 'aria-selected'?: boolean
-    readonly role: 'button' | 'radio'
+    readonly role: 'button' | 'radio' | undefined
   }
   readonly selected: boolean
   readonly toggle: () => void
@@ -186,7 +187,7 @@ function groupSelectionOf(
   return {
     accessibility: single
       ? { 'aria-checked': selected, role: 'radio' }
-      : { ...toggleState(selected), role: 'button' },
+      : { role: 'button', ...toggleState(selected) },
     selected,
     toggle: () => {
       if (id !== undefined) {
