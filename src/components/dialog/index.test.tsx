@@ -698,8 +698,37 @@ describe('Dialog', () => {
       ).toMatchObject({
         alignItems: 'center',
         justifyContent: 'center',
-        padding: spacing.xl,
+        paddingBottom: spacing.xl,
+        paddingEnd: spacing.xl,
+        paddingStart: spacing.xl,
+        paddingTop: spacing.xl,
       })
+    })
+
+    it('keeps its 24dp inside the safe area, clear of the system bars', async () => {
+      await renderDialog({}, { defaultOpen: true, insets: INSETS })
+
+      expect(
+        styleOf(child(screen.getByTestId('panel').parent ?? undefined)),
+      ).toMatchObject({
+        paddingBottom: INSETS.bottom + spacing.xl,
+        paddingEnd: INSETS.right + spacing.xl,
+        paddingStart: INSETS.left + spacing.xl,
+        paddingTop: INSETS.top + spacing.xl,
+      })
+    })
+
+    it('keeps its 24dp above the keyboard rather than above the inset under it', async () => {
+      jest.replaceProperty(Platform, 'OS', 'ios')
+      await renderDialog({}, { defaultOpen: true, insets: INSETS })
+      await keyboardUp()
+
+      expect(
+        styleOf(child(screen.getByTestId('panel').parent ?? undefined))
+          .paddingBottom,
+      ).toBe(KEYBOARD + spacing.xl)
+
+      await keyboardGone()
     })
 
     it('is centred in the room above the keyboard while one is up', async () => {

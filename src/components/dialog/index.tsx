@@ -53,6 +53,7 @@ import {
   useTitleName,
 } from '../../modal'
 import { useKeyboardInset } from '../../overlay/keyboard'
+import { roomOf } from '../../picker'
 import { refsOf } from '../../ref'
 import { useTheme } from '../../theme/scope'
 import { composeStyles, themedStyles } from '../../theme/styles'
@@ -62,12 +63,12 @@ import { useTypeRole } from '../../typography/roles'
 // component, since the page pairs them by window size rather than offering a
 // choice. In a medium window or wider it is the basic dialog, a container on
 // surface container high with the 28dp corner, between 280 and 560dp wide,
-// centred over the scrim, with 24dp of padding all round, 16dp between the
-// headline and the body and 24dp between the body and the actions. In a
-// compact window, below 600dp, the same dialog fills the window as the page's
-// full-screen dialog: square corners, a 56dp header with the headline in
-// title large and a divider under it, and a 56dp action bar over a divider,
-// both inside the device's safe area.
+// centred over the scrim 24dp inside the device's safe area, with 24dp of
+// padding all round, 16dp between the headline and the body and 24dp between
+// the body and the actions. In a compact window, below 600dp, the same dialog
+// fills the window as the page's full-screen dialog: square corners, a 56dp
+// header with the headline in title large and a divider under it, and a 56dp
+// action bar over a divider, both inside the device's safe area.
 //
 // **It stays above the software keyboard.** While one is up the basic dialog
 // is centred in the room above it, and the full-screen one pads its bottom by
@@ -201,7 +202,8 @@ const stylesOf = themedStyles(
         paddingTop: spacing.xs,
       },
       // The scrim centres the container, which is what makes the dialog a
-      // dialog rather than a sheet. Full screen it has no room to give. It
+      // dialog rather than a sheet, 24dp inside the safe area, or above the
+      // keyboard while one is up. Full screen it has no room to give. It
       // takes no touches itself, so a press around the container reaches the
       // scrim under it.
       layout: {
@@ -209,7 +211,6 @@ const stylesOf = themedStyles(
         bottom: 0,
         justifyContent: 'center',
         left: 0,
-        padding: spacing.xl,
         pointerEvents: 'box-none',
         position: 'absolute',
         right: 0,
@@ -482,7 +483,10 @@ function DialogContent({
         style={composeStyles<ViewStyle>(
           styles.layout,
           basic
-            ? { paddingBottom: theme.spacing.xl + keyboard }
+            ? insetsOf({
+                ...roomOf(insets, theme.spacing.xl),
+                bottom: Math.max(insets.bottom, keyboard) + theme.spacing.xl,
+              })
             : styles.layoutFull,
         )}
       >
