@@ -250,6 +250,27 @@ afterEach(() => {
   jest.useRealTimers()
 })
 
+// The label's first line laid out at a height, as the platform draws it.
+async function laidOutLine(height: number) {
+  await fireEvent(screen.getByText('Label'), 'textLayout', {
+    nativeEvent: {
+      lines: [
+        {
+          ascender: 0,
+          capHeight: 0,
+          descender: 0,
+          height,
+          text: 'Label',
+          width: 40,
+          x: 0,
+          xHeight: 0,
+          y: 0,
+        },
+      ],
+    },
+  })
+}
+
 describe('Switch', () => {
   describe('semantics', () => {
     it('is announced as a switch named by its label', async () => {
@@ -984,6 +1005,7 @@ describe('Switch', () => {
 
     it('sets the label in body large, its first line centred on the track', async () => {
       await render(<Switch>Label</Switch>)
+      await laidOutLine(typography.bodyLargeLineHeight)
 
       expect(styleOf(switchOf())).toMatchObject({
         columnGap: spacing.sm,

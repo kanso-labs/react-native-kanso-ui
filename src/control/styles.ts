@@ -16,7 +16,7 @@ import { themedStyles } from '../theme/styles'
 const LAYER_SIZE = 40
 
 const controlStylesOf = themedStyles(
-  ({ colors, radii, spacing, stateLayerOpacity, typography }) =>
+  ({ colors, radii, spacing, stateLayerOpacity }) =>
     StyleSheet.create({
       // The 40dp state layer, which centres what the control draws in it.
       disc: {
@@ -27,11 +27,9 @@ const controlStylesOf = themedStyles(
         justifyContent: 'center',
         width: LAYER_SIZE,
       },
-      // Centres the label's first line on the layer, whether the label is
-      // one line or wraps to several: half of what the layer has spare over
-      // one body-large line, rather than a step of the spacing scale, which
-      // is that half only under the default tokens. A line taller than the
-      // layer has no room to centre in, and the padding falls to nothing.
+      // The label's padding, which centres its first line on the layer
+      // whether the label is one line or wraps to several, is `useControlLine`'s,
+      // from the line as it is drawn.
       //
       // `minWidth: 0` is for React Native Web, where a text in a row keeps
       // CSS's automatic minimum, the width of its longest word, so a label
@@ -41,10 +39,6 @@ const controlStylesOf = themedStyles(
         color: colors.onSurface,
         flexShrink: 1,
         minWidth: 0,
-        paddingVertical: Math.max(
-          0,
-          (LAYER_SIZE - typography.bodyLargeLineHeight) / 2,
-        ),
       },
       labelDisabled: {
         color: withOpacity(colors.onSurface, stateLayerOpacity.disabledContent),
