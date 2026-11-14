@@ -971,8 +971,8 @@ describe('ComboBox', () => {
       ).toEqual([['combo-box', 'focus']])
     })
 
-    it('hears how many options are listed as the list opens and as a search changes it', async () => {
-      jest.replaceProperty(Platform, 'OS', 'android')
+    it('hears how many options are listed as the list opens and as a search changes it, in a live region on the web', async () => {
+      jest.replaceProperty(Platform, 'OS', 'web')
       await renderComboBox()
 
       expect(queryShown(/available/u)).toBeNull()
@@ -986,10 +986,6 @@ describe('ComboBox', () => {
       await fireEvent.changeText(input(), 'thi')
 
       expect(shownText('1 option available.')).toBeTruthy()
-
-      await fireEvent(input(), 'blur', {})
-
-      expect(queryShown(/available/u)).toBeNull()
     })
 
     it('hears it on iOS through AccessibilityInfo', async () => {

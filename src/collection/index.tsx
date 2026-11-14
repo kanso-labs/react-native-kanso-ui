@@ -1435,18 +1435,20 @@ function SelectBox({
 }
 
 /**
- * A message said to a screen reader as it changes and never drawn: in a
- * polite live region on Android and under React Native Web, and through
- * `AccessibilityInfo` on iOS, which has no live regions, so nothing is drawn
- * there at all. The message a status mounts with is not said, and an empty
- * one says nothing. A search's count of rows, and a table's sort.
+ * A message said to a screen reader as it changes and never drawn: through
+ * `AccessibilityInfo` on iOS and Android, so nothing is drawn there at all,
+ * and in a polite live region under React Native Web. A live region on
+ * Android was a text node of its own, which TalkBack stopped on as it moved
+ * through the list, and read "No results" twice beside the empty row. The
+ * message a status mounts with is not said, and an empty one says nothing.
+ * A search's count of rows, and a table's sort.
  */
 function Status({ message }: { readonly message: string }) {
   const own = stylesOf(useTheme())
 
   useAnnouncement(message)
 
-  if (Platform.OS === 'ios') {
+  if (Platform.OS !== 'web') {
     return null
   }
 
@@ -1530,14 +1532,14 @@ function treeLead({
   )
 }
 
-// Says a status's message on iOS each time it changes. The message a status
+// Says a status's message on iOS and Android each time it changes. The message a status
 // mounts with is not said, as a live region does not read what it was mounted
 // holding, and an empty message says nothing.
 function useAnnouncement(message: string) {
   const was = useRef(message)
 
   useEffect(() => {
-    if (message !== was.current && message !== '' && Platform.OS === 'ios') {
+    if (message !== was.current && message !== '' && Platform.OS !== 'web') {
       AccessibilityInfo.announceForAccessibility(message)
     }
     was.current = message
