@@ -263,23 +263,6 @@ function colorOf(color: string): TextStyle {
   return { color }
 }
 
-function editorOf<T extends TokenFieldValue>(
-  state: TokenFieldState<T>,
-  setSelected: (index: null | number) => void,
-): Editor {
-  return {
-    edit: (text) => {
-      setSelected(null)
-      state.setValue(withTrailing(state.value, text))
-    },
-    remove: (index) => {
-      setSelected(null)
-      state.setValue(withoutToken(state.value, index))
-    },
-    select: setSelected,
-  }
-}
-
 // Whether the field holds anything, for the floating label: a token, or text
 // of any length.
 function isPopulated(segments: readonly TokenFieldSegment[]) {
@@ -375,17 +358,14 @@ function TokenField<T extends TokenFieldValue = TokenFieldValue>({
   const control = useRef<ComponentRef<typeof TextInput>>(null)
   const state = useTokenFieldState<T>({ defaultValue, onChange, value })
   const [selected, setSelected] = useState<null | number>(null)
-  const editor = editorOf(state, setSelected)
+  const editor = useEditor(state, setSelected)
   const focus = useFieldFocus({ onBlur: blurThen(editor, onBlur), onFocus })
   const locale = useLocaleOf(undefined)
   const messages = useMessages()
   const editable = !isDisabled && !isReadOnly
   const { segments } = state.value
   const last = lastTokenOf(segments)
-  const trailing = segments
-    .slice(last + 1)
-    .map((segment) => segment.text)
-    .join('')
+  const trailing = trailingOf(segments)
   // A selection the value has moved out from under, by an edit the call site
   // made, selects nothing.
   const chosen =
@@ -576,6 +556,79 @@ function TokenText({
       {children}
     </NativeText>
   )
+}
+
+// What follows the last token among the segments, which the control holds.
+function trailingOf(segments: readonly TokenFieldSegment[]) {
+  return segments
+    .slice(lastTokenOf(segments) + 1)
+    .map((segment) => segment.text)
+    .join('')
+}
+
+/**
+ * What the control holds after a change reporting `text`, read as what the
+ * change adds to the text it was made on. That is the field's own while the
+ * control shows it. But a change can arrive before Android has taken a value
+ * the field set, as one does when a typed tag turns into a pill while keys
+ * are still coming in a burst, and it is then made on what the control last
+ * reported, which still holds the tag. Replayed whole, that text came back
+ * after the pill again. So whichever of the two `text` begins with, the
+ * longer, is what the change was made on, and what follows it is added to
+ * the field's text. A change that begins with neither, such as a deletion
+ * made on stale text, is taken as it is.
+ */
+function typedOf(text: string, reported: string, shown: string) {
+  const onShown = text.startsWith(shown)
+  const onReported = text.startsWith(reported)
+
+  if (onReported && (!onShown || reported.length > shown.length)) {
+    return shown + text.slice(reported.length)
+  }
+  return text
+}
+
+/**
+ * What the field's parts do to its value and its selected pill.
+ *
+ * Several changes can arrive from the control before the field renders
+ * again, so an edit builds on the value the last one made, until a render
+ * hands the field a value of its own. And it keeps what the control last
+ * reported holding, which a change arriving before the control has taken the
+ * field's own text was made on.
+ */
+function useEditor<T extends TokenFieldValue>(
+  state: TokenFieldState<T>,
+  setSelected: (index: null | number) => void,
+): Editor {
+  const reported = useRef(trailingOf(state.value.segments))
+  const made = useRef<null | { readonly from: T; readonly to: T }>(null)
+
+  // The value an edit builds on: the last edit's, while no render has
+  // handed the field another since.
+  const current = () =>
+    made.current !== null && made.current.from === state.value
+      ? made.current.to
+      : state.value
+
+  const change = (next: T) => {
+    made.current = { from: state.value, to: next }
+    setSelected(null)
+    state.setValue(next)
+  }
+
+  return {
+    edit: (text) => {
+      const value = current()
+      const typed = typedOf(text, reported.current, trailingOf(value.segments))
+      reported.current = text
+      change(withTrailing(value, typed))
+    },
+    remove: (index) => {
+      change(withoutToken(current(), index))
+    },
+    select: setSelected,
+  }
 }
 
 // Takes the token at `index` out, joining the text either side of it.
