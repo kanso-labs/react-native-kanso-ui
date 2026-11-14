@@ -33,6 +33,7 @@ import type { ResolvedTheme } from '../theme/scope'
 import { AnimatedPressable } from '../button'
 import { ButtonSlotContext, ButtonTooltipContext } from '../button/slots'
 import { OverlayHost } from '../overlay'
+import { textOf } from '../plain-text'
 import { SeparatorOrientationContext } from '../separator'
 import { withOpacity } from '../theme/color'
 import { useTheme } from '../theme/scope'
@@ -246,21 +247,6 @@ function registerOf<Part extends string>(
       setParts((parts) => ({ ...parts, [part]: parts[part] - 1 }))
     }
   }
-}
-
-// What a node says as plain text, or `undefined` where it holds anything
-// else.
-function textOf(node: ReactNode): string | undefined {
-  if (typeof node === 'string' || typeof node === 'number') {
-    return String(node)
-  }
-  if (!Array.isArray(node)) {
-    return undefined
-  }
-
-  const parts = node.map((part: ReactNode) => textOf(part))
-
-  return parts.every((part) => part !== undefined) ? parts.join('') : undefined
 }
 
 /**
