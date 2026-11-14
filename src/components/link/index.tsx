@@ -1,14 +1,27 @@
-import type { ComponentRef, Ref } from 'react'
-import type { TextProps as NativeTextProps, TextStyle } from 'react-native'
+import type { ComponentRef, ReactElement, ReactNode, Ref } from 'react'
+import type {
+  GestureResponderEvent,
+  TextProps as NativeTextProps,
+  StyleProp,
+  TextStyle,
+} from 'react-native'
 
-import { useState } from 'react'
-import { Text as NativeText, Platform, StyleSheet } from 'react-native'
+import { isValidElement, useState } from 'react'
+import {
+  Text as NativeText,
+  Platform,
+  Pressable,
+  StyleSheet,
+  useWindowDimensions,
+} from 'react-native'
 
+import { hitSlop } from '../../press'
 import { stylesOf as ringStylesOf } from '../../press/styles'
 import { useLinkPress } from '../../router'
 import { withOpacity } from '../../theme/color'
 import { useTheme } from '../../theme/scope'
 import { composeStyles, themedStyles } from '../../theme/styles'
+import { useTextLine } from '../../typography/size'
 
 // No Material Design page draws an inline link, so this takes web's reading:
 // the text button's label, the primary role on no container, with the
@@ -36,6 +49,18 @@ import { composeStyles, themedStyles } from '../../theme/styles'
 //   than over a transition.
 // - iOS's own pressed highlight is off, since web's link draws no pressed
 //   state; `suppressHighlighting={false}` turns it back on.
+//
+// **A link that is the whole of its Text is drawn as that Text.** Android
+// gives a span a node of its own only when it covers part of the text, so a
+// lone link, such as one of a row of footer links, was read as plain text.
+// The library's Text hands such a link its own props, and the link draws one
+// native Text: the sentence's type under the link's colour and rule. Android
+// gives a Text no click a screen reader can run, so on iOS and Android the
+// role, the name and the press sit on a view around that Text, which reaches
+// out to 48dp tall through `hitSlop`, as the library's other controls do. It
+// reaches up and down alone, so a press beside it is never taken for it. A
+// link that takes no press, one nested in a sentence, and the web's keep
+// them on the Text, with no reach.
 
 type LinkProps = Omit<NativeTextProps, 'disabled'> & {
   /**
@@ -104,6 +129,14 @@ const underlines = StyleSheet.create({
   none: { textDecorationLine: 'none' },
 })
 
+// The view a lone link reaches out from shrinks in a row, as the Text it
+// holds would, so a long link still wraps there.
+const own = StyleSheet.create({
+  reach: {
+    flexShrink: 1,
+  },
+})
+
 const stylesOf = themedStyles(({ colors, radii, stateLayerOpacity }) => {
   const disabledContent = withOpacity(
     colors.onSurface,
@@ -155,16 +188,97 @@ const stylesOf = themedStyles(({ colors, radii, stateLayerOpacity }) => {
  * followed, through the `RouterProvider` around the link or the platform.
  * `style`, `ref` and `testID` land on React Native's own Text.
  */
-function Link({
-  href,
-  isDisabled = false,
-  onPress,
-  style,
-  suppressHighlighting = true,
-  tone = 'primary',
-  underline = 'always',
-  ...props
-}: LinkProps) {
+function Link(props: LinkProps) {
+  return <NativeText {...useLink(props).text} />
+}
+
+/**
+ * A link drawn as the Text that holds it: the Text's own props and style
+ * under the link's, and the link's children as the Text has wrapped them.
+ */
+function LoneLink({
+  children,
+  link,
+  ...sentence
+}: NativeTextProps & {
+  readonly children: ReactNode
+  readonly link: LinkProps
+  readonly ref?: Ref<ComponentRef<typeof NativeText>>
+}) {
+  const { fontScale } = useWindowDimensions()
+  const nested = useTextLine() !== undefined
+  const { press, text } = useLink(link, sentence.style)
+
+  if (Platform.OS === 'web' || nested || press === undefined) {
+    return (
+      <NativeText {...sentence} {...text}>
+        {children}
+      </NativeText>
+    )
+  }
+
+  const lineHeight = StyleSheet.flatten(sentence.style)?.lineHeight ?? 0
+
+  // The view is the link, so the Text inside it only draws.
+  return (
+    <Pressable
+      accessibilityLabel={
+        text.accessibilityLabel ?? sentence.accessibilityLabel
+      }
+      aria-label={text['aria-label'] ?? sentence['aria-label']}
+      hitSlop={hitSlop(lineHeight * fontScale)}
+      onPress={press}
+      role="link"
+      style={own.reach}
+    >
+      <NativeText
+        {...sentence}
+        {...text}
+        accessibilityLabel={undefined}
+        aria-disabled={undefined}
+        aria-label={undefined}
+        onPress={undefined}
+        role={undefined}
+      >
+        {children}
+      </NativeText>
+    </Pressable>
+  )
+}
+
+/**
+ * The link a Text holds as its only child, which it then draws as itself, or
+ * `undefined` for any other children.
+ */
+function loneLinkOf(children: ReactNode): ReactElement<LinkProps> | undefined {
+  return isValidElement<LinkProps>(children) && children.type === Link
+    ? children
+    : undefined
+}
+
+/**
+ * A link's press, `undefined` while it takes none, and the props its native
+ * Text is drawn with, over the type of the sentence it stands for when it is
+ * the whole of one.
+ */
+function useLink(
+  {
+    href,
+    isDisabled = false,
+    onPress,
+    style,
+    suppressHighlighting = true,
+    tone = 'primary',
+    underline = 'always',
+    ...props
+  }: LinkProps,
+  sentence?: StyleProp<TextStyle>,
+): {
+  readonly press: ((event: GestureResponderEvent) => void) | undefined
+  readonly text: NativeTextProps & {
+    readonly ref?: Ref<ComponentRef<typeof NativeText>>
+  }
+} {
   const theme = useTheme()
   const press = useLinkPress(href, onPress)
   const [hoveredState, setHovered] = useState(false)
@@ -178,14 +292,16 @@ function Link({
       ? webPropsOf(isDisabled, setHovered, setRingShown)
       : undefined
 
-  return (
-    <NativeText
-      {...props}
-      {...web}
-      aria-disabled={isDisabled}
-      onPress={pressable ? press : undefined}
-      role="link"
-      style={composeStyles<TextStyle>(
+  return {
+    press: pressable ? press : undefined,
+    text: {
+      ...props,
+      ...web,
+      'aria-disabled': isDisabled,
+      onPress: pressable ? press : undefined,
+      role: 'link',
+      style: composeStyles<TextStyle>(
+        sentence,
         styles.base,
         styles[tone],
         underlines[underline],
@@ -194,10 +310,10 @@ function Link({
         isDisabled && styles.disabled,
         !isDisabled && ringShown && ringStylesOf(theme).ring,
         style,
-      )}
-      suppressHighlighting={suppressHighlighting}
-    />
-  )
+      ),
+      suppressHighlighting,
+    },
+  }
 }
 
 // The browser's events, read into the link's two states. Hover counts a mouse
@@ -236,4 +352,4 @@ function webPropsOf(
 
 export type { LinkProps, LinkTone, LinkUnderline }
 
-export { Link }
+export { Link, LoneLink, loneLinkOf }
