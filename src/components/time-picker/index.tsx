@@ -113,7 +113,8 @@ import { IconButton } from '../icon-button'
 // direction, so it is drawn and read in screen coordinates, three o'clock on
 // the right, whatever direction the layout around it runs. The row above it
 // follows the layout's own direction, so in a right-to-left layout the
-// period selector sits on the left.
+// period selector sits on the left, while the hour and the minute inside it
+// read left to right, as a time does in every locale.
 //
 // Twenty-four hours put the day's second half on an inner ring, 12 at its
 // top and 00 at the outer ring's, with no period selector, and whether there
@@ -210,7 +211,10 @@ const stylesOf = themedStyles(
         color: colors.onSurfaceVariant,
         width: sizing.controlXl,
       },
+      // The boxes' names, under the boxes, left to right as the time they
+      // name is in every locale.
       captions: {
+        direction: 'ltr',
         flexDirection: 'row',
         gap: COLON,
         marginTop: spacing.sm,

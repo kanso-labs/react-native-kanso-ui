@@ -1,5 +1,6 @@
 import type { ComponentRef, ReactNode } from 'react'
 import type { StyleProp, TextStyle, ViewProps, ViewStyle } from 'react-native'
+import type { TestInstance, TestNode } from 'test-renderer'
 
 import {
   CalendarDate,
@@ -130,6 +131,13 @@ function input() {
   })
 }
 
+function instance(node: null | TestNode | undefined): TestInstance {
+  if (node === null || node === undefined || typeof node === 'string') {
+    throw new TypeError('expected an element')
+  }
+  return node
+}
+
 function isMockedView(value: unknown): value is MockedView {
   return typeof value === 'object' && value !== null && 'focus' in value
 }
@@ -166,6 +174,15 @@ async function renderOnWeb(props: Partial<DateFieldProps> = {}) {
 }
 
 // The segment names in the order they are drawn.
+// The row a segment is drawn in: the nearest view around it that wraps.
+function rowOf(segment: ReturnType<typeof segmentOf>) {
+  let node = instance(segment.parent)
+  while (styleOf(node).flexWrap === undefined) {
+    node = instance(node.parent)
+  }
+  return node
+}
+
 function segmentNames() {
   return segments().map((segment) => nameOf(segment))
 }
@@ -427,6 +444,54 @@ describe('DateField', () => {
       expect(segmentOf('year').props.accessibilityHint).toBe(
         'Selected Date: September 15, 2026 Supporting line',
       )
+    })
+  })
+
+  describe('under right-to-left', () => {
+    it('lays out a left-to-right locale’s date left to right, from the layout’s start', async () => {
+      jest.replaceProperty(I18nManager, 'isRTL', true)
+      await renderField({ defaultValue: DATE })
+
+      expect(styleOf(rowOf(segments()[0]))).toMatchObject({
+        direction: 'ltr',
+        justifyContent: 'flex-end',
+      })
+    })
+
+    it('lays out a right-to-left locale’s date right to left', async () => {
+      jest.replaceProperty(I18nManager, 'isRTL', true)
+      await renderField({ defaultValue: DATE, locale: 'ar-EG' })
+
+      const row = styleOf(rowOf(segments()[0]))
+      expect(row.direction).toBe('rtl')
+      expect(row.justifyContent).toBeUndefined()
+    })
+
+    it('holds the hour and the minute left to right, in a right-to-left locale', async () => {
+      jest.replaceProperty(I18nManager, 'isRTL', true)
+      await renderField({
+        defaultValue: TIME,
+        granularity: 'minute',
+        locale: 'ar-EG',
+      })
+
+      const held = segments().filter(
+        (segment) => styleOf(instance(segment.parent)).direction === 'ltr',
+      )
+      expect(
+        held.map((segment): unknown => segment.props.accessibilityValue),
+      ).toEqual([
+        expect.objectContaining({ max: 12 }),
+        expect.objectContaining({ max: 59 }),
+      ])
+    })
+
+    it('leaves a left-to-right layout’s row where it starts', async () => {
+      await renderField({ defaultValue: DATE })
+
+      const row = styleOf(rowOf(segments()[0]))
+      expect(row.direction).toBe('ltr')
+      expect(row.justifyContent).toBeUndefined()
     })
   })
 

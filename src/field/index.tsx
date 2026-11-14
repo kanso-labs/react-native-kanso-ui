@@ -21,6 +21,7 @@ import {
 } from 'react'
 import {
   AccessibilityInfo,
+  I18nManager,
   Text as NativeText,
   Platform,
   Pressable,
@@ -884,8 +885,19 @@ function FieldMessage({
  * a row, clearing the label at the top where the box is filled, as a control
  * does: web's `FieldSegments`. One inside another is a row on the outer
  * one's line, which has already cleared the label.
+ *
+ * `direction` lays the row out in the order a locale writes its parts in,
+ * which a browser's bidirectional algorithm gives web's inline segments and
+ * a row of views has no other way to take: a date in English reads 9/15/2026
+ * in a right-to-left layout too. The row still starts at the layout's start.
  */
-function FieldSegments({ children }: { readonly children?: ReactNode }) {
+function FieldSegments({
+  children,
+  direction,
+}: {
+  readonly children?: ReactNode
+  readonly direction?: 'ltr' | 'rtl'
+}) {
   const box = use(BoxContext)
   const onLine = use(SegmentsLineContext)
   const theme = useTheme()
@@ -896,6 +908,7 @@ function FieldSegments({ children }: { readonly children?: ReactNode }) {
     <View
       style={composeStyles<ViewStyle>(
         styles.segments,
+        rowDirectionOf(direction),
         onLine ? styles.segmentsOfOne : undefined,
         box.underLabel && !onLine
           ? marginTopOf(theme.typography.bodySmallLineHeight * fontScale)
@@ -1423,6 +1436,21 @@ function outlineInset(spacing: ResolvedTheme['spacing'], icon: ReactNode) {
     (icon === undefined ? spacing.lg : spacing.md + ICON_SIZE + spacing.lg) -
     spacing.xs
   )
+}
+
+// A row laid out in `direction`. Where that is not the layout's, the row's
+// first part sits at its far side, so its parts are packed toward the end of
+// the row, which is the layout's start.
+function rowDirectionOf(
+  direction: 'ltr' | 'rtl' | undefined,
+): undefined | ViewStyle {
+  if (direction === undefined) {
+    return undefined
+  }
+
+  return direction === (I18nManager.isRTL ? 'rtl' : 'ltr')
+    ? { direction }
+    : { direction, justifyContent: 'flex-end' }
 }
 
 // The asterisk after a required field's label, which is how the text fields
