@@ -39,10 +39,13 @@ import { useTypeRole } from '../../typography/roles'
 // motion. It takes no press and draws no layer under it, so the screen stays
 // usable while it shows.
 //
-// **Touch has no hover, so a press held on the trigger for `delay` opens it**,
-// as Android's own tooltips open on a long press, and the press then ends
-// without pressing the trigger. A pointer resting on the trigger for `delay`
-// opens it as well, an iPad's or an Android mouse's. It closes `closeDelay`
+// **Touch has no hover, so a long press on the trigger opens it**, at the
+// platform's long-press time, React Native's 500ms, as Android's own
+// tooltips open on a long press, and the press then ends without pressing
+// the trigger. `delay` is React Aria's wait for a resting pointer, 1500ms,
+// and a held press made to wait that long read as nothing happening. A
+// pointer resting on the trigger for `delay` opens it as well, an iPad's or
+// an Android mouse's. It closes `closeDelay`
 // after the pointer leaves, or after a held press ends while no pointer is on
 // the trigger, and at once on a press of the trigger unless
 // `shouldCloseOnPress` is off. `trigger="focus"` leaves the pointer out, so
@@ -121,8 +124,9 @@ type TooltipProps = {
   /** Whether the tooltip starts open, when it keeps its own state. */
   readonly defaultOpen?: boolean
   /**
-   * How long a pointer rests on the trigger, or a press is held on it,
-   * before the tooltip opens, in milliseconds.
+   * How long a pointer rests on the trigger before the tooltip opens, in
+   * milliseconds. A press held on it opens it at the platform's long-press
+   * time instead.
    * @default 1500
    */
   readonly delay?: number
@@ -229,7 +233,6 @@ function Tooltip({
       isDisabled
         ? null
         : {
-            delayLongPress: delay,
             hint: label,
             onHoverIn: pointer
               ? () => {
@@ -258,7 +261,7 @@ function Tooltip({
             },
             ref: anchor,
           },
-    [delay, isDisabled, label, pointer, shouldCloseOnPress, state],
+    [isDisabled, label, pointer, shouldCloseOnPress, state],
   )
 
   // Mounted the moment it opens, and kept until its exit has run.
