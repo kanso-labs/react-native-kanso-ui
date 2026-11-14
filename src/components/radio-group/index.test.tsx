@@ -764,7 +764,9 @@ describe('RadioGroup', () => {
       )
 
       const items = child(group().children.at(1))
-      expect(styleOf(items)).toEqual({ flexDirection: 'column' })
+      // 8dp apart, so each row's 48dp reach meets the next one's rather than
+      // taking a press on the bottom of the row above.
+      expect(styleOf(items)).toEqual({ flexDirection: 'column', rowGap: 8 })
       expect(styleOf(child(items.children.at(0)))).toEqual({})
     })
 
@@ -779,8 +781,9 @@ describe('RadioGroup', () => {
       )
 
       const items = child(group().children.at(1))
+      // The other 8dp is the gap between every two buttons.
       expect(styleOf(child(items.children.at(0)))).toEqual({
-        marginBottom: spacing.md,
+        marginBottom: spacing.md - 8,
       })
       expect(styleOf(child(items.children.at(1)))).toEqual({})
 
@@ -809,6 +812,7 @@ describe('RadioGroup', () => {
         columnGap: spacing.lg,
         flexDirection: 'row',
         flexWrap: 'wrap',
+        rowGap: 8,
       })
       expect(styleOf(child(items.children.at(0)))).toEqual({ flexShrink: 1 })
     })

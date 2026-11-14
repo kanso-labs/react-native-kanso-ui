@@ -15,11 +15,12 @@ import { useCheckboxGroupState } from 'react-stately/useCheckboxGroupState'
 import type { CheckboxGroupContextValue } from '../../control/group'
 import type { ValidationResult } from '../../form'
 
-import { messageOf } from '../../control'
+import { LAYER_SIZE, messageOf } from '../../control'
 import { CheckboxGroupContext, createMembers } from '../../control/group'
 import { useErrorAnnouncement } from '../../field'
 import { useFieldValidation, useInsideForm } from '../../form'
 import { GROUP } from '../../group'
+import { TARGET_SIZE } from '../../press'
 import { withOpacity } from '../../theme/color'
 import { useTheme } from '../../theme/scope'
 import { composeStyles, themedStyles } from '../../theme/styles'
@@ -126,9 +127,12 @@ const ATOMIC = { 'aria-atomic': true } as const
 
 const stylesOf = themedStyles(({ colors, spacing, stateLayerOpacity }) =>
   StyleSheet.create({
-    // The group's checkboxes, one under another.
+    // The group's checkboxes, one under another, 8dp apart: each reaches 4dp
+    // past its 40dp layer to a 48dp target, and rows that touched let the
+    // lower one's reach take a press on the bottom of the one above.
     items: {
       flexDirection: 'column',
+      rowGap: TARGET_SIZE - LAYER_SIZE,
     },
     label: {
       color: colors.onSurfaceVariant,
