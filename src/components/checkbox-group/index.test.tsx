@@ -171,6 +171,24 @@ describe('CheckboxGroup', () => {
     })
   })
 
+  // Each row reaches 4dp past its 40dp layer, and rows that touched let the
+  // lower one's reach take a press on the bottom of the one above.
+  it('sets its checkboxes 8dp apart, so their 48dp reaches meet', async () => {
+    await render(
+      <CheckboxGroup label="Label">
+        <Items />
+      </CheckboxGroup>,
+    )
+
+    const items = screen.getByRole('checkbox', { name: 'First item' }).parent
+      ?.parent
+
+    expect(styleOf(items ?? { props: {} })).toMatchObject({
+      flexDirection: 'column',
+      rowGap: 8,
+    })
+  })
+
   describe('semantics', () => {
     it('is a group named by its label', async () => {
       await render(
