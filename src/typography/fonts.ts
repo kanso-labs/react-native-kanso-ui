@@ -45,14 +45,25 @@ function subscribe(listener: () => void) {
   }
 }
 
-// What a role draws in when its own family is not there: the platform's
-// system font, named rather than left unset, so a role nested in another's
-// text does not inherit the outer role's family.
-const SYSTEM_FONT = Platform.select({
-  android: 'sans-serif',
-  default: undefined,
-  ios: 'System',
-})
+/**
+ * What a role draws in when its own family is not there: the platform's
+ * system font, named rather than left unset, so a role nested in another's
+ * text does not inherit the outer role's family. Android draws its
+ * `sans-serif` at a weight of 500 or 600 exactly as at 400, so a role at
+ * either, which Material Design sets the titles and the labels in, names that
+ * font's medium face, `sans-serif-medium`, instead.
+ */
+function systemFontOf(weight: number | undefined): string | undefined {
+  if (Platform.OS === 'ios') {
+    return 'System'
+  }
+  if (Platform.OS !== 'android') {
+    return undefined
+  }
+  return weight !== undefined && weight >= 500 && weight < 700
+    ? 'sans-serif-medium'
+    : 'sans-serif'
+}
 
 // The faces iOS and Android draw a list's generic monospace family in, by the
 // names React Native takes for them: iOS's monospaced system face, which it
@@ -71,11 +82,14 @@ function cssStack(families: readonly string[]): string {
  * What a list draws in on iOS and Android when its first family is not
  * there: the platform's monospaced face for a list naming a monospace family,
  * as the mono token's does, so code keeps its columns, and the system font
- * for any other.
+ * for any other, at `weight`.
  */
-function fallbackOf(families: readonly string[]): string | undefined {
+function fallbackOf(
+  families: readonly string[],
+  weight: number | undefined,
+): string | undefined {
   if (!families.some((family) => MONOSPACE.has(family))) {
-    return SYSTEM_FONT
+    return systemFontOf(weight)
   }
 
   return Platform.OS === 'android' ? 'monospace' : 'ui-monospace'
@@ -87,7 +101,8 @@ function fallbackOf(families: readonly string[]): string | undefined {
  * On iOS and Android that is the list's first family when the app has
  * registered it with expo-font, under the name the token gives it. Otherwise
  * it is the platform's monospaced face for a monospace list, and the system
- * font for any other. Neither package ships a font, and React Native names
+ * font for any other, in its medium face on Android for a `weight` of 500 or
+ * 600, the weight React Native is handed beside the family. Neither package ships a font, and React Native names
  * one family rather than falling through a list, so the rest of the list is
  * the browser's alone. Under React Native Web the whole list goes to CSS, as
  * it does on kanso-ui.
@@ -96,7 +111,10 @@ function fallbackOf(families: readonly string[]): string | undefined {
  * next renders, which is what an app gating its first screen on `useFonts()`
  * already arranges.
  */
-function useFontFamily(families: readonly string[]): string | undefined {
+function useFontFamily(
+  families: readonly string[],
+  weight?: number,
+): string | undefined {
   const fonts = useSyncExternalStore(subscribe, snapshot)
 
   if (Platform.OS === 'web') {
@@ -107,7 +125,7 @@ function useFontFamily(families: readonly string[]): string | undefined {
 
   return first !== undefined && fonts?.isLoaded(first) === true
     ? first
-    : fallbackOf(families)
+    : fallbackOf(families, weight)
 }
 
 export { useFontFamily }

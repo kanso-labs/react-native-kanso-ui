@@ -9,8 +9,8 @@ const MONO = ['Roboto Mono', 'ui-monospace', 'SF Mono', 'Menlo', 'monospace']
 const SERIF = ['Roboto Serif', 'Iowan Old Style', 'Georgia', 'serif']
 
 // The import of expo-font has to have failed before the family is final.
-async function settled(families: readonly string[]) {
-  const { result } = await renderHook(() => useFontFamily(families))
+async function settled(families: readonly string[], weight?: number) {
+  const { result } = await renderHook(() => useFontFamily(families, weight))
   await act(async () => {
     await new Promise((resolve) => {
       setImmediate(resolve)
@@ -45,6 +45,37 @@ describe('useFontFamily', () => {
     jest.replaceProperty(Platform, 'OS', 'ios')
 
     expect(await settled(SERIF)).toBe('System')
+  })
+
+  // Android draws `sans-serif` at 500 and 600 exactly as at 400.
+  it.each([500, 600])(
+    'draws a weight of %i in Android’s medium system face',
+    async (weight) => {
+      jest.replaceProperty(Platform, 'OS', 'android')
+
+      expect(await settled(STACK, weight)).toBe('sans-serif-medium')
+    },
+  )
+
+  it.each([undefined, 400, 700])(
+    'draws a weight of %s in Android’s system font',
+    async (weight) => {
+      jest.replaceProperty(Platform, 'OS', 'android')
+
+      expect(await settled(STACK, weight)).toBe('sans-serif')
+    },
+  )
+
+  it('keeps a medium monospace list in Android’s monospace face', async () => {
+    jest.replaceProperty(Platform, 'OS', 'android')
+
+    expect(await settled(MONO, 500)).toBe('monospace')
+  })
+
+  it('draws every weight in iOS’s system font', async () => {
+    jest.replaceProperty(Platform, 'OS', 'ios')
+
+    expect(await settled(STACK, 500)).toBe('System')
   })
 
   it('hands React Native Web the whole list, as CSS writes it', async () => {
