@@ -1274,7 +1274,17 @@ describe('SegmentedButton', () => {
       })
       expect(styleOf(trailing)).toMatchObject({ flexShrink: 1 })
       expect(styleOf(label)).toMatchObject({ flexShrink: 0, minWidth: 0 })
-      expect(label.props.numberOfLines).toBe(1)
+    })
+
+    // At a large OS text size no label of three fits a phone on one line, so
+    // a label wraps onto a second, centred, before it is cut short.
+    it('wraps a label onto a second line before cutting it short', async () => {
+      await render(<Segments defaultSelectedKeys={FIRST} />)
+
+      const { label } = partsOf('First item')
+
+      expect(label.props.numberOfLines).toBe(2)
+      expect(styleOf(label)).toMatchObject({ textAlign: 'center' })
     })
 
     it('sets the label in label large, as it is measured', async () => {
