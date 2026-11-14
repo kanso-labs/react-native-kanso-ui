@@ -27,6 +27,7 @@ import {
   describedBy,
   LAYER_SIZE,
   messageOf,
+  useControlLine,
 } from '../../control'
 import { controlStylesOf } from '../../control/styles'
 import { GROUP } from '../../group'
@@ -292,6 +293,7 @@ function Radio({
   ...props
 }: RadioProps) {
   const theme = useTheme()
+  const line = useControlLine()
   const group = use(RadioGroupContext)
   const messageId = useId()
 
@@ -344,6 +346,7 @@ function Radio({
         <View
           style={composeStyles<ViewStyle>(
             controlStylesOf(theme).disc,
+            line.control,
             feedback.ring,
           )}
         >
@@ -364,7 +367,9 @@ function Radio({
             ) : null}
           </Animated.View>
         </View>
-        <ControlLabel isDisabled={isDisabled}>{children}</ControlLabel>
+        <ControlLabel isDisabled={isDisabled} line={line}>
+          {children}
+        </ControlLabel>
       </Pressable>
       <ControlMessage description={description} id={messageId} />
     </View>
