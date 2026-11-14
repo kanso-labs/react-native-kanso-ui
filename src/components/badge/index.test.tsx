@@ -153,21 +153,26 @@ describe('badge', () => {
       })
     })
 
-    it('stands 2dp above what it is on, its leading edge 12dp inside its end', async () => {
+    it('stands on a pin 14dp down what it is on, its leading edge 12dp inside its end', async () => {
       await render(
         <Badge count={3} testID="badge">
           {ICON}
         </Badge>,
       )
 
+      // A 16dp badge standing there tops out 2dp above the icon, as the page
+      // draws it, and a taller one, as a large OS text size makes it, rises
+      // above the icon rather than growing down over it.
       expect(styleOf(pin())).toMatchObject({
         end: 12,
+        height: 0,
         position: 'absolute',
-        top: -2,
+        top: 14,
         width: 0,
       })
       const style = styleOf(mark())
-      expect(style).toMatchObject({ position: 'absolute', start: 0, top: 0 })
+      expect(style).toMatchObject({ bottom: 0, position: 'absolute', start: 0 })
+      expect(style).not.toHaveProperty('top')
       expect(style).not.toHaveProperty('left')
     })
 
