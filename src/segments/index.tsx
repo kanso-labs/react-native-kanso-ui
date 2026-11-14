@@ -2,6 +2,7 @@ import type { Calendar } from '@internationalized/date'
 import type {
   ComponentRef,
   Dispatch,
+  ReactNode,
   Ref,
   RefObject,
   SetStateAction,
@@ -42,6 +43,7 @@ import {
   StyleSheet,
   TextInput,
   useWindowDimensions,
+  View,
 } from 'react-native'
 
 import type { FieldDescriptionPart } from '../field'
@@ -50,7 +52,7 @@ import type { LibraryMessages } from '../i18n/messages'
 
 import { startsWithIn } from '../autocomplete'
 import { descriptionOf, FieldSegments, requiredName } from '../field'
-import { messagesFor } from '../i18n'
+import { directionOf, messagesFor } from '../i18n'
 import { NumberParser } from '../number/parser'
 import { hitSlop } from '../press'
 import { useTheme } from '../theme/scope'
@@ -239,6 +241,11 @@ const ADJUSTABLE: readonly AccessibilityActionInfo[] = [
 // marks a locale sets a direction with.
 const INVISIBLE = /[\s\u061C\u200E\u200F\u202A-\u202E\u2066-\u2069]/gu
 
+// The marks React Stately puts around a time's parts: a left-to-right
+// isolate, and its end.
+const ISOLATE = '\u2066'
+const ISOLATE_END = '\u2069'
+
 // The text the hidden input starts from, which a backspace has something to
 // take from and which every key typed lands after.
 const SENTINEL = ' '
@@ -263,6 +270,13 @@ const styles = StyleSheet.create({
     start: 0,
     top: 0,
     width: 1,
+  },
+  // The run a time's parts are isolated in, laid out left to right in any
+  // locale, as the marks around it ask.
+  isolate: {
+    alignItems: 'center',
+    direction: 'ltr',
+    flexDirection: 'row',
   },
   // The date written out, in the document under React Native Web for the
   // first segment to point at, and drawn nowhere.
@@ -580,6 +594,38 @@ function inputOf({ input }: SegmentLineProps) {
   }
 }
 
+/**
+ * The segments' views, with a time's parts held in a row of their own laid
+ * out left to right. React Stately marks that run with a left-to-right
+ * isolate and its end, U+2066 and U+2069, so a browser draws a time as 9:30
+ * in a right-to-left locale too, and a row of views takes the marks for what
+ * they ask. The marks themselves are drawn as nothing.
+ */
+function isolatedOf(
+  segments: readonly DateSegment[],
+  views: readonly ReactNode[],
+): ReactNode[] {
+  const laid: ReactNode[] = []
+  let run: null | ReactNode[] = null
+
+  for (const [index, segment] of segments.entries()) {
+    if (segment.type === 'literal' && segment.text === ISOLATE) {
+      run = []
+    } else if (segment.type === 'literal' && segment.text === ISOLATE_END) {
+      laid.push(
+        <View key="isolate" style={styles.isolate}>
+          {run}
+        </View>,
+      )
+      run = null
+    } else {
+      ;(run ?? laid).push(views[index])
+    }
+  }
+
+  return run === null ? laid : [...laid, ...run]
+}
+
 // The keys a change to the hidden input's text hands over, read against the
 // text before it. A shorter text is one backspace, since the input shows no
 // caret and no menu to take more than one character at a time. A longer text
@@ -725,95 +771,102 @@ function SegmentLine(line: SegmentLineProps) {
   })
 
   return (
-    <FieldSegments>
-      {state.segments.map((segment, index) => {
-        if (!drawn(drawing, segment)) {
-          return null
-        }
+    <FieldSegments direction={directionOf(locale)}>
+      {isolatedOf(
+        state.segments,
+        state.segments.map((segment, index) => {
+          if (!drawn(drawing, segment)) {
+            return null
+          }
 
-        if (!segment.isEditable) {
+          if (!segment.isEditable) {
+            return (
+              <NativeText
+                aria-hidden={segment.type === 'literal'}
+                // A segment's place is its key, and a literal's its index, since
+                // a locale can put the same punctuation between several.
+                // oxlint-disable-next-line react/no-array-index-key -- see above
+                key={`${segment.type}-${index}`}
+                style={
+                  drawing === undefined
+                    ? composeStyles<TextStyle>(
+                        role,
+                        segment.type === 'literal' ? undefined : own.segment,
+                        state.isDisabled
+                          ? own.textDisabled
+                          : segment.type === 'literal'
+                            ? own.textMuted
+                            : own.text,
+                      )
+                    : drawing.literal
+                }
+              >
+                {segment.text}
+              </NativeText>
+            )
+          }
+
+          const focused = segment.type === active
+          // The field's description, and that it is required, are said on the
+          // first segment alone, so they are not heard again at every step,
+          // unless the field has an error.
+          const describes = isInvalid || segment.type === first?.type
+
           return (
-            <NativeText
-              aria-hidden={segment.type === 'literal'}
-              // A segment's place is its key, and a literal's its index, since
-              // a locale can put the same punctuation between several.
-              // oxlint-disable-next-line react/no-array-index-key -- see above
-              key={`${segment.type}-${index}`}
+            <Pressable
+              {...(Platform.OS === 'web'
+                ? webPropsOf(line, segment)
+                : undefined)}
+              {...(describes ? descriptionOf(parts) : undefined)}
+              {...webStateOf(isInvalid, state)}
+              accessibilityActions={canEdit ? ADJUSTABLE : undefined}
+              accessibilityRole={
+                Platform.OS === 'web' ? undefined : 'adjustable'
+              }
+              aria-disabled={state.isDisabled}
+              aria-label={requiredName(
+                `${words[nameOf(segment.type)]}, ${label}`,
+                describes && state.isRequired,
+                messages.required,
+              )}
+              aria-valuemax={segment.maxValue}
+              aria-valuemin={segment.minValue}
+              aria-valuenow={segment.value ?? undefined}
+              aria-valuetext={valueTextOf(segment, state, locale, words.empty)}
+              disabled={state.isDisabled}
+              hitSlop={drawing === undefined ? reach : undefined}
+              key={segment.type}
+              onAccessibilityAction={actionOf(line, segment)}
+              onPress={
+                Platform.OS === 'web' ? undefined : pressOf(line, segment.type)
+              }
+              ref={nodeOf(line, segment.type)}
+              role={Platform.OS === 'web' ? 'spinbutton' : undefined}
               style={
                 drawing === undefined
-                  ? composeStyles<TextStyle>(
-                      role,
-                      segment.type === 'literal' ? undefined : own.segment,
-                      state.isDisabled
-                        ? own.textDisabled
-                        : segment.type === 'literal'
-                          ? own.textMuted
-                          : own.text,
+                  ? composeStyles<ViewStyle>(
+                      own.segment,
+                      focused ? own.segmentFocused : undefined,
                     )
-                  : drawing.literal
+                  : drawing.box(segment.type, focused)
               }
             >
-              {segment.text}
-            </NativeText>
+              <NativeText
+                style={
+                  drawing === undefined
+                    ? composeStyles<TextStyle>(
+                        role,
+                        textStyleOf(own, segment, focused, state.isDisabled),
+                      )
+                    : drawing.text(segment.type, focused)
+                }
+              >
+                {segment.text}
+              </NativeText>
+            </Pressable>
           )
-        }
-
-        const focused = segment.type === active
-        // The field's description, and that it is required, are said on the
-        // first segment alone, so they are not heard again at every step,
-        // unless the field has an error.
-        const describes = isInvalid || segment.type === first?.type
-
-        return (
-          <Pressable
-            {...(Platform.OS === 'web' ? webPropsOf(line, segment) : undefined)}
-            {...(describes ? descriptionOf(parts) : undefined)}
-            {...webStateOf(isInvalid, state)}
-            accessibilityActions={canEdit ? ADJUSTABLE : undefined}
-            accessibilityRole={Platform.OS === 'web' ? undefined : 'adjustable'}
-            aria-disabled={state.isDisabled}
-            aria-label={requiredName(
-              `${words[nameOf(segment.type)]}, ${label}`,
-              describes && state.isRequired,
-              messages.required,
-            )}
-            aria-valuemax={segment.maxValue}
-            aria-valuemin={segment.minValue}
-            aria-valuenow={segment.value ?? undefined}
-            aria-valuetext={valueTextOf(segment, state, locale, words.empty)}
-            disabled={state.isDisabled}
-            hitSlop={drawing === undefined ? reach : undefined}
-            key={segment.type}
-            onAccessibilityAction={actionOf(line, segment)}
-            onPress={
-              Platform.OS === 'web' ? undefined : pressOf(line, segment.type)
-            }
-            ref={nodeOf(line, segment.type)}
-            role={Platform.OS === 'web' ? 'spinbutton' : undefined}
-            style={
-              drawing === undefined
-                ? composeStyles<ViewStyle>(
-                    own.segment,
-                    focused ? own.segmentFocused : undefined,
-                  )
-                : drawing.box(segment.type, focused)
-            }
-          >
-            <NativeText
-              style={
-                drawing === undefined
-                  ? composeStyles<TextStyle>(
-                      role,
-                      textStyleOf(own, segment, focused, state.isDisabled),
-                    )
-                  : drawing.text(segment.type, focused)
-              }
-            >
-              {segment.text}
-            </NativeText>
-          </Pressable>
-        )
-      })}
+        }),
+      )}
       {Platform.OS === 'web' ? (
         value === '' ? null : (
           <NativeText id={valueId} style={styles.notDrawn}>

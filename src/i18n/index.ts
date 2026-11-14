@@ -18,6 +18,42 @@ const TABLE = new Map(Object.entries(MESSAGES))
 // asks for it.
 const cache = new Map<string, LibraryMessages>()
 
+// The scripts and the languages written right to left, as React Aria's
+// `isRTL` lists them for an engine whose `Intl.Locale` has no text info.
+const RTL_SCRIPTS = new Set([
+  'Adlm',
+  'Arab',
+  'Hebr',
+  'Mand',
+  'Mend',
+  'Nkoo',
+  'Rohg',
+  'Samr',
+  'Syrc',
+  'Thaa',
+])
+const RTL_LANGUAGES = new Set([
+  'ae',
+  'ar',
+  'arc',
+  'bcc',
+  'bqi',
+  'ckb',
+  'dv',
+  'fa',
+  'glk',
+  'he',
+  'ku',
+  'mzn',
+  'nqo',
+  'pnb',
+  'ps',
+  'sd',
+  'ug',
+  'ur',
+  'yi',
+])
+
 /**
  * A column's width as its resize handle reads it, "120 pixels" in English,
  * in `locale` or the device's, with the width in the locale's digits.
@@ -29,6 +65,28 @@ function columnSizeFor(value: number, locale?: string): string {
     '{value}',
     formatCount(value, resolved),
   )
+}
+
+/**
+ * The direction `locale` writes in: right to left for a script or, where the
+ * locale names none, a language written that way, and left to right
+ * otherwise. Text says this for itself through the bidirectional algorithm,
+ * but a row of views has none, so a row that holds a locale's words in its
+ * order is laid out in this direction rather than the layout's.
+ */
+function directionOf(locale?: string): 'ltr' | 'rtl' {
+  // Read from the tag itself, since Hermes has no `Intl.Locale`: the language
+  // first, and a script, where there is one, as the four-letter subtag.
+  const [language = '', ...rest] = localeOf(locale).split(/[-_]/u)
+  const script = rest.find((subtag) => /^[a-z]{4}$/iu.test(subtag))
+
+  if (script !== undefined) {
+    const named = script[0].toUpperCase() + script.slice(1).toLowerCase()
+
+    return RTL_SCRIPTS.has(named) ? 'rtl' : 'ltr'
+  }
+
+  return RTL_LANGUAGES.has(language.toLowerCase()) ? 'rtl' : 'ltr'
 }
 
 /**
@@ -152,6 +210,7 @@ function sortedFor(
 
 export {
   columnSizeFor,
+  directionOf,
   limitFor,
   listFor,
   messagesFor,
