@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.12.3](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.12.2...v0.12.3) (2026-11-14)
+
+
+### Dependencies
+
+* update dependency eslint to v10.15.0 ([#594](https://github.com/kanso-labs/react-native-kanso-ui/issues/594)) ([eb07e81](https://github.com/kanso-labs/react-native-kanso-ui/commit/eb07e81b7c7ded5683c919e5ff390b94b3bcc9cd))
+* update dependency playwright to v1.65.1 ([#593](https://github.com/kanso-labs/react-native-kanso-ui/issues/593)) ([24eeb42](https://github.com/kanso-labs/react-native-kanso-ui/commit/24eeb4261e537fab8c357c0df4e29d72e4a1fe5e))
+
 ## [0.12.2](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.12.1...v0.12.2) (2026-11-13)
 
 
