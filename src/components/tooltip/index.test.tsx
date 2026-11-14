@@ -229,28 +229,26 @@ afterEach(() => {
 
 describe('Tooltip', () => {
   describe('a held press', () => {
-    it('opens it once the press has been held for delay', async () => {
+    // React Aria's 1500ms is a resting pointer's wait, and a held press made
+    // to wait that long read as nothing happening.
+    it('opens it at the platform’s long-press time', async () => {
       const user = setUpUser()
       await renderTooltip()
 
-      await user.longPress(trigger(), { duration: 1400 })
+      await user.longPress(trigger(), { duration: 400 })
 
       expect(shown()).toBe(false)
 
-      await user.longPress(trigger(), { duration: 1500 })
+      await user.longPress(trigger(), { duration: 600 })
 
       expect(shown()).toBe(true)
     })
 
-    it('takes its own delay', async () => {
+    it('keeps its own delay for a resting pointer, not a held press', async () => {
       const user = setUpUser()
-      await renderTooltip({ delay: 800 })
+      await renderTooltip({ delay: 2000 })
 
-      await user.longPress(trigger(), { duration: 700 })
-
-      expect(shown()).toBe(false)
-
-      await user.longPress(trigger(), { duration: 800 })
+      await user.longPress(trigger(), { duration: 600 })
 
       expect(shown()).toBe(true)
     })
