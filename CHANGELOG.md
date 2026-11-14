@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.4](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.12.3...v0.12.4) (2026-11-14)
+
+
+### Dependencies
+
+* update dependency playwright to v1.65.1 ([#617](https://github.com/kanso-labs/react-native-kanso-ui/issues/617)) ([b38520e](https://github.com/kanso-labs/react-native-kanso-ui/commit/b38520e809a5f2bf9c1ccda7280aa3b25aa0ee00))
+
 ## [0.12.3](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.12.2...v0.12.3) (2026-11-14)
 
 
