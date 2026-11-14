@@ -403,6 +403,33 @@ describe('DatePicker', () => {
       expect(dateNamed('Tuesday, September 15, 2026 selected')).toBeEnabled()
     })
 
+    // A landscape phone leaves less height than a calendar takes, and the
+    // last week was out of reach.
+    it('scrolls the calendar only while it is taller than the surface’s room', async () => {
+      await renderPicker()
+
+      await fireEvent.press(calendarButton())
+      await laidOut()
+
+      const scroll = child(surface().children.at(0))
+
+      expect(scroll.type).toBe('RCTScrollView')
+      expect(scroll.props.scrollEnabled).toBe(false)
+
+      await fireEvent(scroll, 'contentSizeChange', 360, 400)
+      await fireEvent(scroll, 'layout', {
+        nativeEvent: { layout: { height: 300, width: 360, x: 0, y: 0 } },
+      })
+
+      expect(scroll.props.scrollEnabled).toBe(true)
+
+      await fireEvent(scroll, 'layout', {
+        nativeEvent: { layout: { height: 400, width: 360, x: 0, y: 0 } },
+      })
+
+      expect(scroll.props.scrollEnabled).toBe(false)
+    })
+
     it('fades in once placed, and goes once its exit has run', async () => {
       await renderPicker()
 

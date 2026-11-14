@@ -1,5 +1,10 @@
 import type { ComponentRef, ReactNode, Ref, RefObject } from 'react'
-import type { HostInstance, View, ViewStyle } from 'react-native'
+import type {
+  HostInstance,
+  LayoutChangeEvent,
+  View,
+  ViewStyle,
+} from 'react-native'
 import type { AnimatedStyle } from 'react-native-reanimated'
 import type { EdgeInsets } from 'react-native-safe-area-context'
 
@@ -8,6 +13,7 @@ import {
   AccessibilityInfo,
   View as NativeView,
   Platform,
+  ScrollView,
   StyleSheet,
 } from 'react-native'
 import Animated, { useAnimatedStyle } from 'react-native-reanimated'
@@ -51,6 +57,11 @@ import { composeStyles, themedStyles } from '../theme/styles'
 // **The surface is the calendar's own fill and corner**, surface container
 // high at the large corner, at the third elevation, the docked and the modal
 // picker's level alike, so the calendar inside it draws no second edge.
+//
+// **It scrolls what it holds when the window is shorter than that**, as a
+// landscape phone's is under a two-month range, docked and modal alike, as
+// TimePicker's surface does. It scrolls only then, so a drag on the calendar
+// is never taken for a scroll while the whole of it is in sight.
 //
 // **It fades and scales in and out** as every anchored panel here does, from
 // the edge facing the field docked and from its own centre modal, and the
@@ -122,6 +133,13 @@ const stylesOf = themedStyles(({ colors, radii, shadows }: ResolvedTheme) =>
   }),
 )
 
+// Keeps the height of what a scroll view holds.
+function contentHeightTo(set: (height: number) => void) {
+  return (_width: number, height: number) => {
+    set(height)
+  }
+}
+
 // The surface docked under the field, in the overlay host above the screen:
 // placed at the field's start edge, flipped above it at the window's edge,
 // over a layer a press outside it lands on.
@@ -159,7 +177,11 @@ function PickerDocked({
           motion,
         )}
       >
-        <CalendarFocusContext value={setCell}>{children}</CalendarFocusContext>
+        <PickerScroll>
+          <CalendarFocusContext value={setCell}>
+            {children}
+          </CalendarFocusContext>
+        </PickerScroll>
       </Animated.View>
     </>
   )
@@ -215,9 +237,11 @@ function PickerModal({
             motion,
           )}
         >
-          <CalendarFocusContext value={setCell}>
-            {children}
-          </CalendarFocusContext>
+          <PickerScroll>
+            <CalendarFocusContext value={setCell}>
+              {children}
+            </CalendarFocusContext>
+          </PickerScroll>
         </Animated.View>
       </NativeView>
     </ModalWindow>
@@ -255,6 +279,25 @@ function PickerPopup({ trigger, ...props }: PickerPopupProps) {
 }
 
 /**
+ * What the surface holds, scrolled when it is taller than the room the
+ * surface has, and only then.
+ */
+function PickerScroll({ children }: { readonly children?: ReactNode }) {
+  const [content, setContent] = useState(0)
+  const [room, setRoom] = useState(0)
+
+  return (
+    <ScrollView
+      onContentSizeChange={contentHeightTo(setContent)}
+      onLayout={roomTo(setRoom)}
+      scrollEnabled={content > room}
+    >
+      {children}
+    </ScrollView>
+  )
+}
+
+/**
  * The button in the field's trailing slot that opens the calendar: the icon
  * buttons page's 40dp standard button holding the calendar icon, reporting
  * whether the calendar is open. A disabled or read-only field disables it,
@@ -288,6 +331,13 @@ function roomOf(insets: EdgeInsets, room: number): EdgeInsets {
     left: insets.left + room,
     right: insets.right + room,
     top: insets.top + room,
+  }
+}
+
+// Keeps the height a scroll view is laid out at.
+function roomTo(set: (height: number) => void) {
+  return (event: LayoutChangeEvent) => {
+    set(event.nativeEvent.layout.height)
   }
 }
 
