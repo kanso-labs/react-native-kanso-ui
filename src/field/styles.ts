@@ -172,6 +172,15 @@ const fieldStylesOf = themedStyles(
       labelTextOutlined: {
         paddingHorizontal: spacing.xs,
       },
+      // One line of a multi-line control's type, drawn in nothing and out of
+      // the layout, which sizes the control by the line the platform draws.
+      measure: {
+        opacity: 0,
+        pointerEvents: 'none',
+        position: 'absolute',
+        start: 0,
+        top: 0,
+      },
       // The line under the box: the message at the start, the counter at the
       // end, the page's 4dp under the box and 16dp between the two, indented
       // to the box's own padding so the message starts where the value does.
