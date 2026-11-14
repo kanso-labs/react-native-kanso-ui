@@ -209,11 +209,14 @@ function itemsOf(children: ReactNode, within: string): Cell[] {
 
 /**
  * A cell's share of a line as a style: an equal part of the room left after
- * the gaps, less the rounding the cells grow back from.
+ * the gaps, less the rounding the cells grow back from. It is the cell's
+ * width rather than its `flexBasis`: Android's layout wrapped an 868dp grid
+ * of three 273dp bases after two cells, sharing each line between them, and
+ * wraps by the width as it should.
  */
 function shareOf(room: number, columns: number, gap: number): ViewStyle {
   const share = (room - gap * (columns - 1)) / columns
-  return { flexBasis: Math.max(0, share - ROUNDING) }
+  return { width: Math.max(0, share - ROUNDING) }
 }
 
 // A layout handler handing the width it reports to `onMeasure`. Built by a
