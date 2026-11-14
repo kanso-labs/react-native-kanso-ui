@@ -156,6 +156,22 @@ describe('the structure', () => {
     expect(screen.getByRole('button', { name: 'First item' })).toBeTruthy()
   })
 
+  // At a large OS text size three labels outgrow a phone, and the row ran
+  // off the screen.
+  it.each(['standard', 'connected'] as const)(
+    'holds a %s row to its container, its buttons giving way so labels wrap',
+    async (variant) => {
+      await render(<Group variant={variant} />)
+
+      expect(styleOf(group())).toMatchObject({ maxWidth: '100%' })
+      for (const name of ['First item', 'Second item', 'Third item']) {
+        expect(styleOf(screen.getByRole('button', { name }))).toMatchObject({
+          flexShrink: 1,
+        })
+      }
+    },
+  )
+
   it('makes its buttons radios that it selects one of, given single', async () => {
     const onSelectionChange = jest.fn<(keys: Set<unknown>) => void>()
     await render(
