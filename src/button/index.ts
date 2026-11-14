@@ -142,8 +142,11 @@ type SlotTriggerProps = {
 }
 
 type ToggleState = {
+  readonly accessibilityRole?: 'togglebutton'
+  readonly 'aria-checked'?: boolean
   readonly 'aria-pressed'?: boolean
   readonly 'aria-selected'?: boolean
+  readonly role?: undefined
 }
 
 // The control height each size reads: the page's XS, S, M, L and XL, which
@@ -180,12 +183,26 @@ const PRESSED_CORNERS = {
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable)
 
 // Web's toggle reports `aria-pressed`, which React Native Web writes onto the
-// element. React Native has no pressed state to report, and reports the
-// selected one instead, which VoiceOver and TalkBack both read out.
-const toggleState = Platform.select<(selected: boolean) => ToggleState>({
-  default: (selected) => ({ 'aria-selected': selected }),
-  web: (selected) => ({ 'aria-pressed': selected }),
-})
+// element. React Native has no pressed state to report. Android has a toggle
+// button, which is checkable, so a toggle there is one, checked or not, and
+// TalkBack says it switches before it is pressed: the selected state it
+// reported before was read only while it was true, so an unselected toggle
+// read as an action button. `role` has no toggle button, so it is the
+// `accessibilityRole`, and the `role` that would win over it is cleared:
+// spread this after the control's own. VoiceOver reads the selected state,
+// so iOS reports that.
+function toggleState(selected: boolean): ToggleState {
+  if (Platform.OS === 'android') {
+    return {
+      accessibilityRole: 'togglebutton',
+      'aria-checked': selected,
+      role: undefined,
+    }
+  }
+  return Platform.OS === 'web'
+    ? { 'aria-pressed': selected }
+    : { 'aria-selected': selected }
+}
 
 const buttonStyles = StyleSheet.create({
   // Clips the state layer and the ripple to the corner as it morphs, and
