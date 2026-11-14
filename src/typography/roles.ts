@@ -104,7 +104,10 @@ const stylesOf = themedStyles(({ typography }) =>
  */
 function useTypeRole(role: TypeRole): StyleProp<TextStyle> {
   const theme = useTheme()
-  const family = useFontFamily(theme.typography[`${role}Font`])
+  const family = useFontFamily(
+    theme.typography[`${role}Font`],
+    nativeWeight(theme.typography[`${role}Weight`]),
+  )
 
   return composeStyles(stylesOf(theme)[role], familyStyle(family))
 }

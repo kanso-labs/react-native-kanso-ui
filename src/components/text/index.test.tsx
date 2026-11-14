@@ -4,7 +4,7 @@ import type { StyleProp, TextStyle } from 'react-native'
 import { afterEach, describe, expect, it, jest } from '@jest/globals'
 import { render, screen, waitFor } from '@testing-library/react-native'
 import { createRef } from 'react'
-import { Text as NativeText, StyleSheet } from 'react-native'
+import { Text as NativeText, Platform, StyleSheet } from 'react-native'
 
 import type { KuiTheme } from '../../tokens/defaults'
 import type { TypeRole } from '../../typography/roles'
@@ -66,8 +66,19 @@ function styleOf(element: {
   return StyleSheet.flatten([element.props.style]) ?? {}
 }
 
+// The face Android draws a role in while its family is not registered: the
+// system font's medium face for the roles at 500, and the system font for the
+// rest.
+const ANDROID_FACES: readonly (readonly [TypeRole, string])[] = [
+  ['labelLarge', 'sans-serif-medium'],
+  ['titleMedium', 'sans-serif-medium'],
+  ['bodyLarge', 'sans-serif'],
+  ['titleLarge', 'sans-serif'],
+]
+
 afterEach(() => {
   mockLoaded.clear()
+  jest.restoreAllMocks()
 })
 
 describe('Text', () => {
@@ -148,6 +159,24 @@ describe('Text', () => {
       expect(styleOf(screen.getByTestId('text')).fontFamily).toBe('System')
     })
   })
+
+  // Android draws `sans-serif` at 500 exactly as at 400, which would draw
+  // the titles and the labels as body text.
+  it.each(ANDROID_FACES)(
+    'draws %s in Android’s %s while the family is not registered',
+    async (variant, family) => {
+      jest.replaceProperty(Platform, 'OS', 'android')
+      await render(
+        <Text testID="text" variant={variant}>
+          Label
+        </Text>,
+      )
+
+      await waitFor(() => {
+        expect(styleOf(screen.getByTestId('text')).fontFamily).toBe(family)
+      })
+    },
+  )
 
   it('reaches every role in a family whose token is overridden', async () => {
     mockLoaded.add('Inter')
