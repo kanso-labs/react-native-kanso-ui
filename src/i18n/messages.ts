@@ -267,6 +267,16 @@ type LibraryMessages = {
   }
   /** What a ColorSwatch showing a fully transparent colour is called. */
   readonly transparent: string
+  /**
+   * A tree's row's level, said after its name, where `{level}` is the level
+   * from 1 at the top.
+   */
+  readonly treeLevel: string
+  /**
+   * A tree's row's place among the rows beside it, said after its level,
+   * where `{index}` is its place from 1 and `{count}` how many there are.
+   */
+  readonly treePosition: string
 }
 
 /**
@@ -366,6 +376,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       sortable: 'عمود قابل للترتيب',
     },
     transparent: 'شفاف',
+    treeLevel: 'المستوى {level}',
+    treePosition: '{index} من {count}',
   },
   'bg-BG': {
     back: 'Назад',
@@ -453,6 +465,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       sortable: 'сортираща колона',
     },
     transparent: 'прозрачен',
+    treeLevel: 'ниво {level}',
+    treePosition: '{index} от {count}',
   },
   'cs-CZ': {
     back: 'Zpět',
@@ -540,6 +554,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       sortable: 'sloupec s možností řazení',
     },
     transparent: 'průhledný',
+    treeLevel: 'úroveň {level}',
+    treePosition: '{index} z {count}',
   },
   'da-DK': {
     back: 'Tilbage',
@@ -626,6 +642,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       sortable: 'sorterbar kolonne',
     },
     transparent: 'gennemsigtig',
+    treeLevel: 'niveau {level}',
+    treePosition: '{index} af {count}',
   },
   'de-DE': {
     back: 'Zurück',
@@ -714,6 +732,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       sortable: 'sortierbare Spalte',
     },
     transparent: 'transparent',
+    treeLevel: 'Ebene {level}',
+    treePosition: '{index} von {count}',
   },
   'el-GR': {
     back: 'Πίσω',
@@ -801,6 +821,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       sortable: 'Στήλη διαλογής',
     },
     transparent: 'διαφανές',
+    treeLevel: 'επίπεδο {level}',
+    treePosition: '{index} από {count}',
   },
   'en-US': {
     back: 'Back',
@@ -886,6 +908,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       sortable: 'sortable column',
     },
     transparent: 'transparent',
+    treeLevel: 'level {level}',
+    treePosition: '{index} of {count}',
   },
   'es-ES': {
     back: 'Atrás',
@@ -973,6 +997,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       sortable: 'columna ordenable',
     },
     transparent: 'transparente',
+    treeLevel: 'nivel {level}',
+    treePosition: '{index} de {count}',
   },
   'et-EE': {
     back: 'Tagasi',
@@ -1059,6 +1085,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       sortable: 'sorditav veerg',
     },
     transparent: 'läbipaistev',
+    treeLevel: 'tase {level}',
+    treePosition: '{index}/{count}',
   },
   'fi-FI': {
     back: 'Takaisin',
@@ -1148,6 +1176,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       sortable: 'lajiteltava sarake',
     },
     transparent: 'läpinäkyvä',
+    treeLevel: 'taso {level}',
+    treePosition: '{index}/{count}',
   },
   'fr-FR': {
     back: 'Retour',
@@ -1237,6 +1267,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       sortable: 'colonne triable',
     },
     transparent: 'Transparent',
+    treeLevel: 'niveau {level}',
+    treePosition: '{index} sur {count}',
   },
   'he-IL': {
     back: 'חזרה',
@@ -1323,6 +1355,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       sortable: 'עמודה שניתן למיין',
     },
     transparent: 'שקוף',
+    treeLevel: 'רמה {level}',
+    treePosition: '{index} מתוך {count}',
   },
   'hr-HR': {
     back: 'Natrag',
@@ -1413,6 +1447,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       sortable: 'stupac koji se može razvrstati',
     },
     transparent: 'transparentno',
+    treeLevel: 'razina {level}',
+    treePosition: '{index} od {count}',
   },
   'hu-HU': {
     back: 'Vissza',
@@ -1501,6 +1537,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       sortable: 'rendezendő oszlop',
     },
     transparent: 'átlátszó',
+    treeLevel: '{level}. szint',
+    treePosition: '{index}/{count}',
   },
   'it-IT': {
     back: 'Indietro',
@@ -1588,6 +1626,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       sortable: 'colonna ordinabile',
     },
     transparent: 'trasparente',
+    treeLevel: 'livello {level}',
+    treePosition: '{index} di {count}',
   },
   'ja-JP': {
     back: '戻る',
@@ -1672,6 +1712,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       sortable: '並べ替え可能な列',
     },
     transparent: '透明',
+    treeLevel: 'レベル {level}',
+    treePosition: '{count} 件中 {index} 件目',
   },
   'ko-KR': {
     back: '뒤로',
@@ -1756,6 +1798,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       sortable: '정렬 가능한 열',
     },
     transparent: '투명도',
+    treeLevel: '수준 {level}',
+    treePosition: '{count}개 중 {index}번째',
   },
   'lt-LT': {
     back: 'Atgal',
@@ -1846,6 +1890,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       sortable: 'rikiuojamas stulpelis',
     },
     transparent: 'skaidrus',
+    treeLevel: 'lygis {level}',
+    treePosition: '{index} iš {count}',
   },
   'lv-LV': {
     back: 'Atpakaļ',
@@ -1934,6 +1980,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       sortable: 'kārtojamā kolonna',
     },
     transparent: 'caurspīdīgs',
+    treeLevel: 'līmenis {level}',
+    treePosition: '{index} no {count}',
   },
   'nb-NO': {
     back: 'Tilbake',
@@ -2019,6 +2067,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       sortable: 'kolonne som kan sorteres',
     },
     transparent: 'gjennomsiktig',
+    treeLevel: 'nivå {level}',
+    treePosition: '{index} av {count}',
   },
   'nl-NL': {
     back: 'Terug',
@@ -2105,6 +2155,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       sortable: 'sorteerbare kolom',
     },
     transparent: 'transparant',
+    treeLevel: 'niveau {level}',
+    treePosition: '{index} van {count}',
   },
   'pl-PL': {
     back: 'Wstecz',
@@ -2194,6 +2246,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       sortable: 'kolumna z możliwością sortowania',
     },
     transparent: 'przezroczysty',
+    treeLevel: 'poziom {level}',
+    treePosition: '{index} z {count}',
   },
   'pt-BR': {
     back: 'Voltar',
@@ -2282,6 +2336,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       sortable: 'coluna classificável',
     },
     transparent: 'transparente',
+    treeLevel: 'nível {level}',
+    treePosition: '{index} de {count}',
   },
   'pt-PT': {
     back: 'Voltar',
@@ -2369,6 +2425,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       sortable: 'Coluna ordenável',
     },
     transparent: 'transparente',
+    treeLevel: 'nível {level}',
+    treePosition: '{index} de {count}',
   },
   'ro-RO': {
     back: 'Înapoi',
@@ -2458,6 +2516,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       sortable: 'coloană sortabilă',
     },
     transparent: 'transparent',
+    treeLevel: 'nivelul {level}',
+    treePosition: '{index} din {count}',
   },
   'ru-RU': {
     back: 'Назад',
@@ -2546,6 +2606,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       sortable: 'сортируемый столбец',
     },
     transparent: 'прозрачный',
+    treeLevel: 'уровень {level}',
+    treePosition: '{index} из {count}',
   },
   'sk-SK': {
     back: 'Späť',
@@ -2633,6 +2695,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       sortable: 'zoraditeľný stĺpec',
     },
     transparent: 'transparentný',
+    treeLevel: 'úroveň {level}',
+    treePosition: '{index} z {count}',
   },
   'sl-SI': {
     back: 'Nazaj',
@@ -2723,6 +2787,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       sortable: 'razvrstljivi stolpec',
     },
     transparent: 'prozorno',
+    treeLevel: 'raven {level}',
+    treePosition: '{index} od {count}',
   },
   'sr-SP': {
     back: 'Nazad',
@@ -2809,6 +2875,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       sortable: 'kolona koja se može sortirati',
     },
     transparent: 'providno',
+    treeLevel: 'nivo {level}',
+    treePosition: '{index} od {count}',
   },
   'sv-SE': {
     back: 'Tillbaka',
@@ -2894,6 +2962,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       sortable: 'sorterbar kolumn',
     },
     transparent: 'genomskinlig',
+    treeLevel: 'nivå {level}',
+    treePosition: '{index} av {count}',
   },
   'tr-TR': {
     back: 'Geri',
@@ -2980,6 +3050,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       sortable: 'Sıralanabilir sütun',
     },
     transparent: 'saydam',
+    treeLevel: 'düzey {level}',
+    treePosition: '{count} öğeden {index}.',
   },
   'uk-UA': {
     back: 'Назад',
@@ -3070,6 +3142,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       sortable: 'сортувальний стовпець',
     },
     transparent: 'прозорий',
+    treeLevel: 'рівень {level}',
+    treePosition: '{index} з {count}',
   },
   'zh-CN': {
     back: '返回',
@@ -3154,6 +3228,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       sortable: '可排序的列',
     },
     transparent: '透明',
+    treeLevel: '第 {level} 级',
+    treePosition: '第 {index} 项，共 {count} 项',
   },
   'zh-TW': {
     back: '返回',
@@ -3238,6 +3314,8 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       sortable: '可排序的欄',
     },
     transparent: '透明',
+    treeLevel: '第 {level} 層',
+    treePosition: '第 {index} 項，共 {count} 項',
   },
 }
 

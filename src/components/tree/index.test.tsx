@@ -3,11 +3,18 @@ import type { StyleProp, TextStyle, ViewStyle } from 'react-native'
 import type { Key, Selection } from 'react-stately'
 import type { TestInstance, TestNode } from 'test-renderer'
 
-import { describe, expect, it, jest } from '@jest/globals'
+import { afterEach, describe, expect, it, jest } from '@jest/globals'
 import { checkPath, chevronEndPath } from '@kanso-labs/kanso-ui-core/glyphs'
 import { fireEvent, render, screen } from '@testing-library/react-native'
 import { createRef } from 'react'
-import { FlatList, I18nManager, StyleSheet, Text, View } from 'react-native'
+import {
+  FlatList,
+  I18nManager,
+  Platform,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native'
 import { getAnimatedStyle } from 'react-native-reanimated'
 
 import { Tree } from '.'
@@ -217,6 +224,10 @@ function styleOf(element: {
 function tree() {
   return screen.getByLabelText('Label')
 }
+
+afterEach(() => {
+  jest.restoreAllMocks()
+})
 
 describe('Tree', () => {
   describe('naming', () => {
@@ -837,6 +848,59 @@ describe('Tree', () => {
       const { accessibilityState }: { accessibilityState?: object } =
         rowOf('Fourth item').props
       expect(accessibilityState).toMatchObject({ expanded: undefined })
+    })
+
+    it("says each row's level and its place among the rows beside it", async () => {
+      await render(
+        <Tree aria-label="Label" defaultExpandedKeys={FIRST_AND_SECOND}>
+          {ROWS}
+        </Tree>,
+      )
+
+      expect(rowOf('First item').props.accessibilityHint).toBe(
+        'level 1, 1 of 2',
+      )
+      expect(rowOf('Second item').props.accessibilityHint).toBe(
+        'level 2, 1 of 2',
+      )
+      expect(rowOf('Third item').props.accessibilityHint).toBe(
+        'level 3, 1 of 1',
+      )
+      expect(rowOf('Fourth item').props.accessibilityHint).toBe(
+        'level 2, 2 of 2',
+      )
+      expect(rowOf('Fifth item').props.accessibilityHint).toBe(
+        'level 1, 2 of 2',
+      )
+    })
+
+    it('makes a row with nothing to do on a press one element, so its place is heard with it', async () => {
+      await render(<Tree aria-label="Label">{ROWS}</Tree>)
+
+      const row = rowOf('Fifth item')
+      expect(row.props.accessible).toBe(true)
+      expect(row.props.accessibilityHint).toBe('level 1, 2 of 2')
+    })
+
+    it('says the place in the language around it', async () => {
+      await render(
+        <I18nProvider locale="de-DE">
+          <Tree aria-label="Label" defaultExpandedKeys={FIRST}>
+            {ROWS}
+          </Tree>
+        </I18nProvider>,
+      )
+
+      expect(rowOf('Fourth item').props.accessibilityHint).toBe(
+        'Ebene 2, 2 von 2',
+      )
+    })
+
+    it('says no place on the web, where React Native Web draws no hint', async () => {
+      jest.replaceProperty(Platform, 'OS', 'web')
+      await render(<Tree aria-label="Label">{ROWS}</Tree>)
+
+      expect(rowOf('First item').props.accessibilityHint).toBeUndefined()
     })
 
     it('reports whether each row is selected', async () => {
