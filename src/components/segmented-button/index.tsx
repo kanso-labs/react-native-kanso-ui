@@ -91,8 +91,10 @@ import { useTypeRole } from '../../typography/roles'
 // is chosen is the same cut a moment later, and choosing should not turn the
 // glyphs off or on. The answer reads each label's own width against its
 // segment's, and neither changes with what is drawn, so dropping the glyphs
-// cannot turn them back on. Only past that is a label cut short, with an
-// ellipsis. The slot and the room around it ease over `durationShort2` on the
+// cannot turn them back on. Past that a label wraps onto a second line, and
+// the track grows past its 40dp to hold it, as a button's height floor lets
+// it: at a large OS text size no label of three fits a phone's width on one
+// line. Only past the second line is a label cut short, with an ellipsis. The slot and the room around it ease over `durationShort2` on the
 // standard curve, and the check opens from its centre.
 //
 // **The chosen container moves.** In a set that chooses one it is a view of
@@ -238,6 +240,9 @@ const GLYPH_SIZE = 18
 // The rule every segment draws.
 const RULE_WIDTH = 1
 
+// The lines a label wraps onto before it is cut short.
+const LABEL_LINES = 2
+
 const CHECK = <CheckGlyph />
 
 const GroupContext = createContext<GroupContextValue | null>(null)
@@ -274,10 +279,11 @@ const styles = StyleSheet.create({
     top: 0,
   },
   // A label holds its width while the spacers beside it give theirs back,
-  // and is cut short only at the width it is handed.
+  // and wraps only at the width it is handed, its lines centred.
   label: {
     flexShrink: 0,
     minWidth: 0,
+    textAlign: 'center',
   },
   // The labels measured off screen, at their own widths, for the basis.
   measurer: {
@@ -967,7 +973,7 @@ function SegmentedButtonSegment({
       </Animated.View>
       {labelled ? (
         <Animated.Text
-          numberOfLines={1}
+          numberOfLines={LABEL_LINES}
           style={composeStyles<AnimatedStyle<TextStyle>>(
             role,
             styles.label,
