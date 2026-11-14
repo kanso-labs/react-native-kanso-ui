@@ -122,6 +122,12 @@ const stylesOf = themedStyles(({ colors, radii, shadows }: ResolvedTheme) =>
       maxWidth: '100%',
       transformOrigin: 'center',
     },
+    // What the surface holds, as tall as it is and no taller: a scroll view
+    // grows by default, which stretched a modal surface to the window's full
+    // height under a calendar that fills only part of it.
+    scroll: {
+      flexGrow: 0,
+    },
     // The page's docked container: the calendar's own fill and corner, at
     // the third elevation, clipping the calendar to the corner.
     surface: {
@@ -283,6 +289,7 @@ function PickerPopup({ trigger, ...props }: PickerPopupProps) {
  * surface has, and only then.
  */
 function PickerScroll({ children }: { readonly children?: ReactNode }) {
+  const styles = stylesOf(useTheme())
   const [content, setContent] = useState(0)
   const [room, setRoom] = useState(0)
 
@@ -291,6 +298,7 @@ function PickerScroll({ children }: { readonly children?: ReactNode }) {
       onContentSizeChange={contentHeightTo(setContent)}
       onLayout={roomTo(setRoom)}
       scrollEnabled={content > room}
+      style={styles.scroll}
     >
       {children}
     </ScrollView>

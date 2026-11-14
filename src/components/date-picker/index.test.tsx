@@ -415,6 +415,9 @@ describe('DatePicker', () => {
 
       expect(scroll.type).toBe('RCTScrollView')
       expect(scroll.props.scrollEnabled).toBe(false)
+      // As tall as the calendar and no taller: a scroll view grows by
+      // default, which stretched a modal surface to the window's height.
+      expect(styleOf(scroll)).toMatchObject({ flexGrow: 0 })
 
       await fireEvent(scroll, 'contentSizeChange', 360, 400)
       await fireEvent(scroll, 'layout', {
