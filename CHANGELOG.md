@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.12.5](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.12.4...v0.12.5) (2026-11-14)
+
+
+### Bug Fixes
+
+* **button:** report a toggle as checkable on Android ([#627](https://github.com/kanso-labs/react-native-kanso-ui/issues/627)) ([bd1cda0](https://github.com/kanso-labs/react-native-kanso-ui/commit/bd1cda04cfd46a003348a58741b3e821f1f3b0fa))
+* **color-area:** keep both channel halves inside the plane for a screen reader ([#620](https://github.com/kanso-labs/react-native-kanso-ui/issues/620)) ([c9b42ba](https://github.com/kanso-labs/react-native-kanso-ui/commit/c9b42ba6a029b63842df75017aff1e9bb5de1d8c))
+* **field:** say a required field is required on iOS and Android ([#621](https://github.com/kanso-labs/react-native-kanso-ui/issues/621)) ([e8303e5](https://github.com/kanso-labs/react-native-kanso-ui/commit/e8303e5ada4094ba4c208872d5a93add36da02a1))
+* keep a named group's view on Android ([#626](https://github.com/kanso-labs/react-native-kanso-ui/issues/626)) ([10f8bc1](https://github.com/kanso-labs/react-native-kanso-ui/commit/10f8bc14c58b96783e6d31aa286eb581ade78577))
+* **link:** expose a link that fills its text to TalkBack ([#619](https://github.com/kanso-labs/react-native-kanso-ui/issues/619)) ([4411c44](https://github.com/kanso-labs/react-native-kanso-ui/commit/4411c44dd0b21a1b70e864d35abc22ba2efb1f2f))
+* **modal:** name a panel by its headline rather than by its content ([#628](https://github.com/kanso-labs/react-native-kanso-ui/issues/628)) ([1ad75d3](https://github.com/kanso-labs/react-native-kanso-ui/commit/1ad75d33466b3a6df66f778a4f79cc4b4cf00f4d))
+* **overlay:** hide the screen behind an open menu from screen readers ([#622](https://github.com/kanso-labs/react-native-kanso-ui/issues/622)) ([3167846](https://github.com/kanso-labs/react-native-kanso-ui/commit/3167846db77fab864cde8cc17dbbc9137108fbed))
+* **picker:** scroll the calendar's surface when the window is shorter than it ([#625](https://github.com/kanso-labs/react-native-kanso-ui/issues/625)) ([21c6b4f](https://github.com/kanso-labs/react-native-kanso-ui/commit/21c6b4f9dc38818c5207407b117d27704efe2c13))
+* **token-field:** keep the value whole when text arrives in a burst ([#623](https://github.com/kanso-labs/react-native-kanso-ui/issues/623)) ([f2847c3](https://github.com/kanso-labs/react-native-kanso-ui/commit/f2847c3fa6aa8cf91d8f2c410fa64beec9457b3b))
+* **typography:** draw the medium weight on Android ([#624](https://github.com/kanso-labs/react-native-kanso-ui/issues/624)) ([a3c75a3](https://github.com/kanso-labs/react-native-kanso-ui/commit/a3c75a31a0b6073315920251c951673f83eff275))
+
+
+### Dependencies
+
+* update dependency @kanso-labs/kanso-ui-core to v0.1.21 ([#655](https://github.com/kanso-labs/react-native-kanso-ui/issues/655)) ([049a723](https://github.com/kanso-labs/react-native-kanso-ui/commit/049a7237201b764effbc4ad47015f342f510675f))
+* update dependency @kanso-labs/kanso-ui-core to v0.1.21 ([#656](https://github.com/kanso-labs/react-native-kanso-ui/issues/656)) ([2fbca65](https://github.com/kanso-labs/react-native-kanso-ui/commit/2fbca65efeca46c2611a438fd3e8f5e22745afec))
+
 ## [0.12.4](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.12.3...v0.12.4) (2026-11-14)
 
 
