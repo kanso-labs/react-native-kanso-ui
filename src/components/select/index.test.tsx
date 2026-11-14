@@ -154,8 +154,10 @@ function anyButFirst(value: unknown) {
   return value === 'first' ? REFUSED : null
 }
 
+// Hidden from a screen reader while what it opens is open, so found with the
+// hidden elements.
 function box() {
-  return screen.getByTestId('select')
+  return screen.getByTestId('select', { includeHiddenElements: true })
 }
 
 // The chevron in the box: the view turning the glyph.

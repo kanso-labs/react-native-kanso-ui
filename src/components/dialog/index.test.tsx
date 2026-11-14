@@ -171,8 +171,9 @@ async function keyboardUp() {
 
 // The `Modal` the dialog is drawn in, which carries the back gesture and the
 // moment the dialog shows.
+// The Modal, around the view its overlay host keeps the window's content in.
 function modal() {
-  return child(screen.getByTestId('panel').parent?.parent ?? undefined)
+  return child(screen.getByTestId('panel').parent?.parent?.parent ?? undefined)
 }
 
 // Counts its mounts, so a case can tell a dialog kept on screen from one
@@ -239,7 +240,7 @@ function resize(width: number) {
 
 // The scrim, the first thing the `Modal` draws.
 function scrim() {
-  return child(modal().children[0])
+  return child(child(modal().children[0]).children[0])
 }
 
 // A user whose presses advance the fake clock.

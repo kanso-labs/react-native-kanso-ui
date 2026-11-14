@@ -94,8 +94,10 @@ function clip() {
   return childOf(fab(), 'expected the feedback to sit in a view')
 }
 
+// Hidden from a screen reader while what it opens is open, so found with the
+// hidden elements.
 function fab() {
-  return screen.getByTestId('fab')
+  return screen.getByTestId('fab', { includeHiddenElements: true })
 }
 
 // An icon of the app's own, which writes the colour and size its slot hands

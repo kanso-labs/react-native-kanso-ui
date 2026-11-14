@@ -218,8 +218,10 @@ function textStyleOf(element: {
   return StyleSheet.flatten([element.props.style]) ?? {}
 }
 
+// Hidden from a screen reader while what it opens is open, so found with the
+// hidden elements.
 function trigger() {
-  return screen.getByTestId('trigger')
+  return screen.getByTestId('trigger', { includeHiddenElements: true })
 }
 
 function withScope(children: ReactNode) {
@@ -747,8 +749,9 @@ describe('Popover', () => {
         'aria-modal': true,
         role: 'dialog',
       })
-      expect(panel().parent?.type).toBe('Modal')
-      expect(panel().parent?.props.visible).toBe(true)
+      // Around the view the Modal's overlay host keeps its content in.
+      expect(panel().parent?.parent?.type).toBe('Modal')
+      expect(panel().parent?.parent?.props.visible).toBe(true)
     })
 
     it('draws a modal scrim that takes presses and shows nothing', async () => {

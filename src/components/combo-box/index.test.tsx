@@ -381,6 +381,19 @@ describe('ComboBox', () => {
       expect(labelSize()).toBe(typography.bodySmallSize)
     })
 
+    // React Aria leaves the input in reach on web too, since it is still
+    // typed into while its list is open.
+    it('leaves the input and the chevron to a screen reader while the list is open', async () => {
+      await renderComboBox()
+
+      await fireEvent.press(chevron())
+      await laidOut()
+
+      expect(list()).toBeOnTheScreen()
+      expect(screen.getByLabelText('Label')).toBeOnTheScreen()
+      expect(chevron()).toBeExpanded()
+    })
+
     it('floats its label while the list is open', async () => {
       await renderComboBox()
 

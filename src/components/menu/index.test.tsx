@@ -291,8 +291,10 @@ function textStyleOf(element: {
   return StyleSheet.flatten([element.props.style]) ?? {}
 }
 
+// Hidden from a screen reader while what it opens is open, so found with the
+// hidden elements.
 function trigger() {
-  return screen.getByTestId('trigger')
+  return screen.getByTestId('trigger', { includeHiddenElements: true })
 }
 
 function withScope(children: ReactNode) {
@@ -454,7 +456,25 @@ describe('Menu', () => {
 
       await fireEvent.press(trigger())
 
-      expect(screen.getByRole('button', { expanded: true })).toBeTruthy()
+      expect(trigger()).toBeExpanded()
+    })
+
+    // A screen reader acts on what it reaches directly, so a swipe would
+    // leave an open menu and a double tap work the trigger under it.
+    it('keeps a screen reader from the screen behind it while open', async () => {
+      await renderMenu()
+
+      expect(screen.getByTestId('trigger')).toBeOnTheScreen()
+
+      await fireEvent.press(trigger())
+
+      expect(panel()).toBeOnTheScreen()
+      expect(trigger()).not.toBeVisible()
+      expect(screen.queryByTestId('trigger')).toBeNull()
+
+      await fireEvent.press(trigger())
+
+      expect(screen.getByTestId('trigger')).toBeOnTheScreen()
     })
 
     it('is drawn inside Menu', async () => {
@@ -504,7 +524,7 @@ describe('Menu', () => {
 
       await fireEvent.press(trigger())
 
-      expect(screen.getByRole('button', { expanded: true })).toBeTruthy()
+      expect(trigger()).toBeExpanded()
     })
 
     it('sits below the chip, lined up with its start', async () => {

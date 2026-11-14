@@ -348,7 +348,9 @@ describe('SearchView', () => {
       await renderView({ defaultOpen: true })
       await laidOut()
 
-      const scrim = modal().children.at(0)
+      // First in the view the Modal's overlay host keeps its content in.
+      const held = modal().children.at(0)
+      const scrim = typeof held === 'object' ? held.children.at(0) : undefined
 
       if (scrim === undefined || typeof scrim === 'string') {
         throw new TypeError('expected the scrim under the view')
