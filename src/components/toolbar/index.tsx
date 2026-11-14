@@ -76,12 +76,16 @@ const VERTICAL = { 'aria-orientation': 'vertical' } as const
 
 const stylesOf = themedStyles(({ colors, radii, spacing }) =>
   StyleSheet.create({
+    // Never wider than what holds it, so a bar of more than a phone has
+    // room for keeps its padding at both ends, and a control in it that
+    // shrinks, such as a field, gives way.
     base: {
       alignItems: 'center',
       alignSelf: 'flex-start',
       borderRadius: radii.pill,
       gap: spacing.sm,
       justifyContent: 'center',
+      maxWidth: '100%',
     },
     // The page's 64dp across the bar, and its 16dp of padding at the two
     // ends. A minimum rather than a fixed size, since a field or a button

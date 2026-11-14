@@ -20,9 +20,13 @@ const FOURTH = <CloseGlyph />
 
 const styles = StyleSheet.create({
   // Wide enough for a label and a value, as a field in a row has no width of
-  // its own to take.
+  // its own to take, and narrow enough that the bar fits a phone. It gives
+  // way to the bar's other controls where the bar has less room, as at a
+  // large OS text size.
   field: {
-    width: 200,
+    flexShrink: 1,
+    minWidth: 0,
+    width: 150,
   },
 })
 
