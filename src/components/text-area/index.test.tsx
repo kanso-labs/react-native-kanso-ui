@@ -236,6 +236,23 @@ describe('TextArea', () => {
       expect(style).not.toHaveProperty('minHeight')
     })
 
+    // Android scales a large text size's line height by less than the text
+    // size, so a line reckoned from the token times the scale was a third
+    // taller than the line drawn, and a text area showed a line too many.
+    it('sizes its rows by a line as the platform draws it, once measured', async () => {
+      await renderField({ autosize: false, rows: 3 })
+
+      const line = screen.getByText('X', { includeHiddenElements: true })
+
+      expect(line.props['aria-hidden']).toBe(true)
+
+      await fireEvent(line, 'layout', {
+        nativeEvent: { layout: { height: 36, width: 12, x: 0, y: 0 } },
+      })
+
+      expect(styleOf(input()).height).toBe(3 * 36)
+    })
+
     it('grows the box from the page height, its padding and the label line kept', async () => {
       await renderField()
 
