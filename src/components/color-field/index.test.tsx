@@ -102,8 +102,12 @@ function hostsOf(element: Host | undefined): Host[] {
   return element.children.filter((child) => typeof child !== 'string')
 }
 
+// The control by its label, which a required one says it is after on iOS
+// and Android.
 function input() {
-  return screen.getByLabelText('Label')
+  return (
+    screen.queryByLabelText('Label') ?? screen.getByLabelText('Label, required')
+  )
 }
 
 // The label as it is drawn, which is hidden from screen readers.

@@ -24,6 +24,7 @@ import type { TextFieldProps } from '.'
 
 import { TextField } from '.'
 import { useIconStyle } from '../../glyphs/icon-style'
+import { I18nProvider } from '../../i18n/provider'
 import { withOpacity } from '../../theme/color'
 import { scopeFor } from '../../theme/scope'
 
@@ -149,8 +150,12 @@ function indicator() {
   return hostsOf(box()).at(-2) ?? missing('indicator')
 }
 
+// The control by its label, which a required one says it is after on iOS
+// and Android.
 function input() {
-  return screen.getByLabelText('Label')
+  return (
+    screen.queryByLabelText('Label') ?? screen.getByLabelText('Label, required')
+  )
 }
 
 // The label as it is drawn, which is hidden from screen readers.
@@ -998,6 +1003,37 @@ describe('TextField', () => {
       expect(input().props).not.toHaveProperty('dir')
       expect(input().props).not.toHaveProperty('aria-invalid')
       expect(input().props).not.toHaveProperty('aria-required')
+    })
+
+    // Neither platform has a required state for a screen reader to report,
+    // so the control's name says it.
+    it('names a required field required on iOS and Android', async () => {
+      await renderField({ isRequired: true })
+
+      expect(input().props['aria-label']).toBe('Label, required')
+    })
+
+    it('says required in the provider’s locale', async () => {
+      await render(
+        <I18nProvider locale="de-DE">
+          <TextField isRequired label="Label" />
+        </I18nProvider>,
+      )
+
+      expect(screen.getByLabelText('Label, erforderlich')).toBeOnTheScreen()
+    })
+
+    it('names a field that is not required by its label alone', async () => {
+      await renderField()
+
+      expect(input().props['aria-label']).toBe('Label')
+    })
+
+    it('leaves the name to aria-required on the web', async () => {
+      jest.replaceProperty(Platform, 'OS', 'web')
+      await renderField({ isRequired: true })
+
+      expect(input().props['aria-label']).toBe('Label')
     })
   })
 })

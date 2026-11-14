@@ -128,8 +128,12 @@ function increase(name = 'Label') {
   return screen.getByLabelText(`Increase ${name}`)
 }
 
+// The control by its label, which a required one says it is after on iOS
+// and Android.
 function input() {
-  return screen.getByLabelText('Label')
+  return (
+    screen.queryByLabelText('Label') ?? screen.getByLabelText('Label, required')
+  )
 }
 
 function isDisabled(element: Host) {

@@ -815,6 +815,14 @@ describe('DateField', () => {
       ).toHaveLength(1)
     })
 
+    it('names its first segment required on iOS and Android, and no other', async () => {
+      await renderField({ isRequired: true })
+
+      expect(screen.getByLabelText('month, Label, required')).toBeOnTheScreen()
+      expect(screen.getByLabelText('day, Label')).toBeOnTheScreen()
+      expect(screen.getByLabelText('year, Label')).toBeOnTheScreen()
+    })
+
     it('floats the label over the placeholders, or keeps it small at the top', async () => {
       await renderField()
       expect(drawnLabel()).toMatchObject({
@@ -1218,7 +1226,9 @@ describe('DateField', () => {
 
       await submit()
 
-      expect(focus.moved).toStrictEqual(['month, Label'])
+      // Rendered on native first, where the first segment says the field is
+      // required.
+      expect(focus.moved).toStrictEqual(['month, Label, required'])
     })
 
     it('draws no hidden input', async () => {
