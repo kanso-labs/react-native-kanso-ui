@@ -31,6 +31,11 @@ const SPACED = { marginTop: 8 }
 // What Gesture Handler's helpers find a wheel's gestures by.
 const TEST_ID = 'wheel'
 
+// How far the default wheel's view reaches past its ring on every side: half
+// the 48dp target less half the 16dp band. A press is read in that view, so
+// the helpers below take a place on the ring and move it in by this much.
+const BEYOND = 16
+
 // Where a press on the default wheel lands at each hour of the clock, on
 // the middle of the band: 92dp out from the centre at 100, 100.
 const THREE = [192, 100] as const
@@ -56,9 +61,13 @@ async function drag(...along: (readonly [number, number])[]) {
   const last = along.at(-1) ?? first
   await act(() => {
     fireGestureHandler(getByGestureTestId(`${TEST_ID}-pan`), [
-      { state: State.BEGAN, x: first[0], y: first[1] },
-      ...along.map(([x, y]) => ({ state: State.ACTIVE, x, y })),
-      { state: State.END, x: last[0], y: last[1] },
+      { state: State.BEGAN, x: first[0] + BEYOND, y: first[1] + BEYOND },
+      ...along.map(([x, y]) => ({
+        state: State.ACTIVE,
+        x: x + BEYOND,
+        y: y + BEYOND,
+      })),
+      { state: State.END, x: last[0] + BEYOND, y: last[1] + BEYOND },
     ])
   })
 }
@@ -123,11 +132,13 @@ function heldDrag() {
 
   return {
     begin: async (x: number, y: number) => {
-      await send({ oldState: State.UNDETERMINED, state: State.BEGAN, x, y })
-      await send({ oldState: State.BEGAN, state: State.ACTIVE, x, y })
+      const at = { x: x + BEYOND, y: y + BEYOND }
+      await send({ oldState: State.UNDETERMINED, state: State.BEGAN, ...at })
+      await send({ oldState: State.BEGAN, state: State.ACTIVE, ...at })
     },
     end: async (x: number, y: number) => {
-      await send({ oldState: State.ACTIVE, state: State.END, x, y })
+      const at = { x: x + BEYOND, y: y + BEYOND }
+      await send({ oldState: State.ACTIVE, state: State.END, ...at })
     },
   }
 }
@@ -164,12 +175,13 @@ function styleOf(element: {
   return StyleSheet.flatten([element.props.style]) ?? {}
 }
 
-async function tap(x: number, y: number) {
+async function tap(x: number, y: number, beyond = BEYOND) {
+  const at = { x: x + beyond, y: y + beyond }
   await act(() => {
     fireGestureHandler(getByGestureTestId(`${TEST_ID}-tap`), [
-      { state: State.BEGAN, x, y },
-      { state: State.ACTIVE, x, y },
-      { state: State.END, x, y },
+      { state: State.BEGAN, ...at },
+      { state: State.ACTIVE, ...at },
+      { state: State.END, ...at },
     ])
   })
 }
@@ -195,13 +207,17 @@ afterEach(() => {
 
 describe('ColorWheel', () => {
   describe('the ring', () => {
-    it('is twice its outer radius across', async () => {
+    // The view reaches as far past the ring as the target does, since iOS
+    // and Android hand a view no touch outside its parent, and gives that
+    // back in its margin, so it takes the room the ring is drawn in.
+    it('is twice its outer radius across, reaching as far as its target', async () => {
       await render(<ColorWheel defaultValue={BLUE} testID={TEST_ID} />)
 
       expect(styleOf(screen.getByTestId(TEST_ID))).toStrictEqual({
         boxSizing: 'border-box',
-        height: 200,
-        width: 200,
+        height: 232,
+        margin: -BEYOND,
+        width: 232,
       })
     })
 
@@ -299,8 +315,8 @@ describe('ColorWheel', () => {
       )
 
       expect(styleOf(screen.getByTestId(TEST_ID))).toMatchObject({
-        height: 120,
-        width: 120,
+        height: 120 + 2 * BEYOND,
+        width: 120 + 2 * BEYOND,
       })
       expect(geometryOf(slice(10), 60).outer.at(0)).toBe(60)
       expect(geometryOf(slice(10), 60).inner.at(0)).toBe(44)
@@ -520,6 +536,12 @@ describe('ColorWheel', () => {
       await tap(100, 170)
 
       expect(hue()).toBe(90)
+
+      // 8dp past the ring's outer edge at three o'clock, still inside the
+      // target, and outside the ring's own frame.
+      await tap(208, 100)
+
+      expect(hue()).toBe(0)
     })
 
     it('counts a press anywhere on a band wider than the target', async () => {
@@ -533,8 +555,9 @@ describe('ColorWheel', () => {
         />,
       )
 
-      // 25dp from the centre, the band's inner edge at 20dp.
-      await tap(100, 125)
+      // 25dp from the centre, the band's inner edge at 20dp. A band wider
+      // than the target reaches no further than itself.
+      await tap(100, 125, 0)
 
       expect(hue()).toBe(90)
     })
@@ -677,7 +700,7 @@ describe('ColorWheel', () => {
 
       expect(styleOf(screen.getByTestId(TEST_ID))).toMatchObject({
         marginTop: 8,
-        width: 200,
+        width: 200 + 2 * BEYOND,
       })
       expect(ref.current).not.toBeNull()
     })
