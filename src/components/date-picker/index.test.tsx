@@ -415,6 +415,9 @@ describe('DatePicker', () => {
 
       expect(scroll.type).toBe('RCTScrollView')
       expect(scroll.props.scrollEnabled).toBe(false)
+      // As tall as the calendar and no taller: a scroll view grows by
+      // default, which stretched a modal surface to the window's height.
+      expect(styleOf(scroll)).toMatchObject({ flexGrow: 0 })
 
       await fireEvent(scroll, 'contentSizeChange', 360, 400)
       await fireEvent(scroll, 'layout', {
@@ -692,19 +695,64 @@ describe('DatePicker', () => {
       ])
     })
 
-    it('fills the segments with a date pressed in the calendar, and closes', async () => {
+    it('draws the page’s modal header over the calendar, holding the date', async () => {
       await renderPicker()
+      await fireEvent.press(calendarButton())
+
+      expect(screen.getByText('Select date')).toBeOnTheScreen()
+      expect(screen.getByText('Tue, Sep 15')).toBeOnTheScreen()
+      expect(screen.getByRole('button', { name: 'Cancel' })).toBeOnTheScreen()
+      expect(screen.getByRole('button', { name: 'OK' })).toBeOnTheScreen()
+    })
+
+    it('holds a pressed date as a draft until OK, which fills the segments and closes', async () => {
+      const onChange = jest.fn()
+      await renderPicker({ onChange })
       await fireEvent.press(calendarButton())
       await fireEvent.press(dateNamed('Sunday, September 20, 2026'))
 
+      expect(screen.getByText('Sun, Sep 20')).toBeOnTheScreen()
+      expect(shown()).toEqual(['9', '15', '2026'])
+      expect(onChange).not.toHaveBeenCalled()
+      expect(calendarButton()).toBeExpanded()
+
+      await fireEvent.press(screen.getByRole('button', { name: 'OK' }))
+
       expect(shown()).toEqual(['9', '20', '2026'])
+      expect(onChange).toHaveBeenCalledWith(new CalendarDate(2026, 9, 20))
       expect(calendarButton()).toBeCollapsed()
+    })
+
+    it('closes on Cancel with the field as it was', async () => {
+      const onChange = jest.fn()
+      await renderPicker({ onChange })
+      await fireEvent.press(calendarButton())
+      await fireEvent.press(dateNamed('Sunday, September 20, 2026'))
+      await fireEvent.press(screen.getByRole('button', { name: 'Cancel' }))
+
+      expect(shown()).toEqual(['9', '15', '2026'])
+      expect(onChange).not.toHaveBeenCalled()
+      expect(calendarButton()).toBeCollapsed()
+    })
+
+    it('names its actions and supporting text as it is told', async () => {
+      await renderPicker({
+        cancelLabel: 'Back',
+        confirmLabel: 'Done',
+        selectDateLabel: 'Choose a date',
+      })
+      await fireEvent.press(calendarButton())
+
+      expect(screen.getByText('Choose a date')).toBeOnTheScreen()
+      expect(screen.getByRole('button', { name: 'Back' })).toBeOnTheScreen()
+      expect(screen.getByRole('button', { name: 'Done' })).toBeOnTheScreen()
     })
 
     it('fills a time with midnight where neither the value nor placeholderValue holds one', async () => {
       await renderPicker({ defaultValue: undefined, granularity: 'minute' })
       await fireEvent.press(calendarButton())
       await fireEvent.press(dateNamed('Tuesday, October 20, 2026'))
+      await fireEvent.press(screen.getByRole('button', { name: 'OK' }))
 
       expect(shown()).toEqual(['10', '20', '2026', '12', '00', 'AM'])
     })
