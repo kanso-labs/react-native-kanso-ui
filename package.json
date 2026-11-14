@@ -1,6 +1,6 @@
 {
   "name": "@kanso-labs/react-native-kanso-ui",
-  "version": "0.12.2",
+  "version": "0.12.3",
   "description": "Kanso UI's Material Design components for React Native, themed through the same --kui-* design tokens as the web library",
   "keywords": [
     "react-native",
@@ -89,7 +89,7 @@
     "oxfmt": "0.78.0",
     "oxlint": "1.93.0",
     "oxlint-tsgolint": "7.0.2007",
-    "playwright": "1.65.1",
+    "playwright": "1.65.0",
     "publint": "0.3.25",
     "react": "19.3.1",
     "react-dom": "19.3.1",
