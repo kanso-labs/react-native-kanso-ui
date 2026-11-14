@@ -13,6 +13,7 @@ import {
 } from 'react-native'
 
 import { ChevronEndGlyph } from '../../glyphs'
+import { GROUP } from '../../group'
 import { hitSlop } from '../../press'
 import { useLinkPress } from '../../router'
 import { useTheme } from '../../theme/scope'
@@ -186,6 +187,7 @@ function Breadcrumbs({
 
   return (
     <View
+      {...GROUP}
       {...props}
       role="group"
       style={composeStyles<ViewStyle>(stylesOf(theme).root, style)}

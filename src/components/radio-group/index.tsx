@@ -29,6 +29,7 @@ import {
   messageOf,
 } from '../../control'
 import { controlStylesOf } from '../../control/styles'
+import { GROUP } from '../../group'
 import { hitSlop, usePressFeedback } from '../../press'
 import { withOpacity } from '../../theme/color'
 import { useTheme } from '../../theme/scope'
@@ -426,6 +427,7 @@ function RadioGroup({
 
   return (
     <View
+      {...GROUP}
       {...props}
       aria-labelledby={labelId}
       role="radiogroup"

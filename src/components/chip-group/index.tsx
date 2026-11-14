@@ -34,6 +34,7 @@ import {
 } from '../../chip'
 import { GLYPH_SIZE, RULE_WIDTH, stylesOf } from '../../chip/styles'
 import { CloseGlyph } from '../../glyphs'
+import { GROUP } from '../../group'
 import { useMessages } from '../../i18n/provider'
 import { TARGET_SIZE, usePressFeedback } from '../../press'
 import { useTheme } from '../../theme/scope'
@@ -337,6 +338,7 @@ function ChipGroup<T extends object = object>({
 
   return (
     <View
+      {...GROUP}
       {...props}
       aria-labelledby={labelId}
       role="group"

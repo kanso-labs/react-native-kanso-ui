@@ -39,6 +39,7 @@ import type { ResolvedTheme } from '../../theme/scope'
 import { toggleState } from '../../button'
 import { CheckGlyph } from '../../glyphs'
 import { IconStyleContext } from '../../glyphs/icon-style'
+import { GROUP } from '../../group'
 import { hitSlop, usePressFeedback } from '../../press'
 import { withOpacity } from '../../theme/color'
 import { useTheme } from '../../theme/scope'
@@ -753,6 +754,7 @@ function SegmentedButton({
 
   return (
     <View
+      {...GROUP}
       hitSlop={reachOf(theme)}
       role={single ? 'radiogroup' : 'toolbar'}
       {...props}

@@ -657,6 +657,8 @@ function CollectionView<T extends object = object>({
     <CollectionContext value={value}>
       <FlatList
         {...props}
+        // A list is a scroll view, which hands Android no `aria-label`.
+        accessibilityLabel={props.accessibilityLabel ?? props['aria-label']}
         contentContainerStyle={composeStyles<ViewStyle>(
           own.content,
           contentContainerStyle,

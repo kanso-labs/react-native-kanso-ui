@@ -50,6 +50,7 @@ import type { ResolvedTheme } from '../theme/scope'
 
 import { IconButton } from '../components/icon-button'
 import { ArrowDropDownGlyph, CheckGlyph, ChevronEndGlyph } from '../glyphs'
+import { scrollNameOf } from '../group'
 import { useWindowSizeClass } from '../hooks/useWindowSizeClass'
 import { messagesFor } from '../i18n'
 import { useFocusOnPlaced, useReturnFocus } from '../overlay/panel'
@@ -634,7 +635,7 @@ function MenuList({
 
   return (
     <ScrollView
-      aria-label={name}
+      {...scrollNameOf(name)}
       contentOffset={offsetOf(above, theme.sizing.controlMd)}
       nestedScrollEnabled
       role="radiogroup"

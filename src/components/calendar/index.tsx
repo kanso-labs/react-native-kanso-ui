@@ -11,6 +11,7 @@ import { View } from 'react-native'
 import { useCalendarState } from 'react-stately/useCalendarState'
 
 import { CalendarFrame, useRootStyle, visibleRangeOf } from '../../calendar'
+import { GROUP } from '../../group'
 import { useLocaleOf } from '../../i18n/provider'
 import { composeStyles } from '../../theme/styles'
 
@@ -174,6 +175,7 @@ function Calendar<T extends DateValue = DateValue>({
 
   return (
     <View
+      {...GROUP}
       aria-label={ariaLabel === undefined ? month : `${ariaLabel}, ${month}`}
       ref={ref}
       role="group"
