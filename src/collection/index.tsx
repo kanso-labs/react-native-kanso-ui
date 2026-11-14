@@ -40,6 +40,7 @@ import {
 import { useListState } from 'react-stately/useListState'
 
 import type { AutocompleteValue } from '../autocomplete'
+import type { LibraryMessages } from '../i18n/messages'
 import type { ResolvedTheme } from '../theme/scope'
 
 import { AutocompleteContext } from '../autocomplete'
@@ -974,6 +975,30 @@ function noop() {
 }
 
 /**
+ * Where a tree's row sits, in words: its level from 1 at the top, and its
+ * place among the rows beside it, "level 2, 1 of 3" in English.
+ */
+function placeOf<T>(
+  tree: TreeState<T>,
+  node: Node<T>,
+  messages: LibraryMessages,
+): string {
+  const siblings = [
+    ...(node.parentKey == null
+      ? tree.collection
+      : // oxlint-disable-next-line typescript/no-deprecated -- a tree's collection has no getChildren, and this is the field it reads a row's rows from itself
+        (tree.collection.getItem(node.parentKey)?.childNodes ?? [])),
+  ].filter((sibling) => sibling.type === 'item')
+  const index = siblings.findIndex((sibling) => sibling.key === node.key)
+  const level = messages.treeLevel.replace('{level}', String(node.level + 1))
+  const position = messages.treePosition
+    .replace('{index}', String(index + 1))
+    .replace('{count}', String(siblings.length))
+
+  return `${level}, ${position}`
+}
+
+/**
  * The press handler of a row: the call site's own handler, then the row's.
  * Built by a call rather than written inline at the prop, which is what
  * react-perf's no-new-function-as-prop is after.
@@ -1161,6 +1186,14 @@ function RowNode({ node }: { readonly node: Node<unknown> }) {
   // A tree's row with rows under it, which opens and closes.
   const branch = tree !== null && node.hasChildNodes
   const expanded = branch && tree.expandedKeys.has(key)
+  // A tree's row says where it sits after its name, on iOS and Android,
+  // where its indent is all that shows it: its level and its place among the
+  // rows beside it, which kanso-ui's rows say with React Aria's `aria-level`
+  // and `aria-posinset`. React Native Web draws no hint, so the web has none.
+  const place =
+    tree === null || Platform.OS === 'web'
+      ? undefined
+      : placeOf(tree, node, messages)
   const toggle = toggleOf(tree, key)
   const listAction = collection.onAction
   // A row with an `href` goes there. Otherwise, React Aria's rule for a tree
@@ -1276,6 +1309,8 @@ function RowNode({ node }: { readonly node: Node<unknown> }) {
     return drawnThrough(
       render,
       <View
+        accessibilityHint={place}
+        accessible={place === undefined ? undefined : true}
         aria-disabled={disabled || undefined}
         ref={rowRef}
         style={composeStyles<ViewStyle>(rowStyle, style)}
@@ -1289,6 +1324,7 @@ function RowNode({ node }: { readonly node: Node<unknown> }) {
   return drawnThrough(
     render,
     <Pressable
+      accessibilityHint={place}
       role={href === undefined ? 'button' : 'link'}
       {...props}
       {...(checks ? toggleState(selected) : undefined)}
