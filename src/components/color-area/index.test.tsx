@@ -76,6 +76,15 @@ async function drag(...along: (readonly [number, number])[]) {
   })
 }
 
+// The frame a screen reader's two halves sit in.
+function frame() {
+  const found = views(area()).at(2)
+  if (found === undefined) {
+    throw new TypeError('expected a frame')
+  }
+  return found
+}
+
 // The handle's hairline, inside the frame the two halves share.
 function hairline() {
   const found = screen
@@ -177,7 +186,7 @@ function ring() {
   return found
 }
 
-// The frame the handle and its two halves sit in.
+// The frame the handle sits in.
 function seat() {
   const found = views(area()).at(1)
   if (found === undefined) {
@@ -555,6 +564,7 @@ describe('ColorArea', () => {
         justifyContent: 'center',
         marginStart: -24,
         marginTop: -24,
+        pointerEvents: 'none',
         position: 'absolute',
         start: '40%',
         top: '25%',
@@ -615,7 +625,7 @@ describe('ColorArea', () => {
         />,
       )
 
-      const halves = views(seat())
+      const halves = views(frame())
       const first = halves.at(0)
       const second = halves.at(1)
       expect(first?.props['aria-label']).toBe('Saturation')
@@ -626,14 +636,58 @@ describe('ColorArea', () => {
         { name: 'increment' },
         { name: 'decrement' },
       ])
-      // The frame's full height: the seat centres what it holds, which left a
-      // half with nothing in it 0dp tall, and Android leaves a view with no
-      // height out of what a screen reader reaches.
+      // The frame's full height: a half holds nothing, and Android leaves a
+      // view with no height out of what a screen reader reaches.
       expect(styleOf(first ?? { props: {} })).toStrictEqual({
         alignSelf: 'stretch',
         flexGrow: 1,
       })
     })
+
+    it('outlines the handle in a 48dp frame centred on it', async () => {
+      await render(
+        <ColorArea
+          defaultValue="hsl(200, 40%, 75%)"
+          testID={TEST_ID}
+          xChannel="saturation"
+          yChannel="lightness"
+        />,
+      )
+      await layOut()
+
+      // 40% along and 25% down a 200dp plane, less half the frame.
+      expect(styleOf(frame())).toStrictEqual({
+        flexDirection: 'row',
+        height: 48,
+        position: 'absolute',
+        start: 56,
+        top: 26,
+        width: 48,
+      })
+    })
+
+    // Centred on a channel at the end of its range, half the frame lay past
+    // the plane, where Android clipped the half there to 0dp wide.
+    it.each([
+      ['the far corner', 'hsl(200, 100%, 0%)', '100%', SIDE - 48],
+      ['the near corner', 'hsl(200, 0%, 100%)', '0%', 0],
+    ])(
+      'keeps the frame inside the plane at %s, where the handle is',
+      async (_corner, value, handle, inside) => {
+        await render(
+          <ColorArea
+            defaultValue={value}
+            testID={TEST_ID}
+            xChannel="saturation"
+            yChannel="lightness"
+          />,
+        )
+        await layOut()
+
+        expect(styleOf(seat())).toMatchObject({ start: handle, top: handle })
+        expect(styleOf(frame())).toMatchObject({ start: inside, top: inside })
+      },
+    )
 
     it('says each channel’s value and the colour’s name', async () => {
       await render(

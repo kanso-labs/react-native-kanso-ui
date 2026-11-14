@@ -67,7 +67,11 @@ import { composeStyles, themedStyles } from '../../theme/styles'
 // a hidden range input per channel, and an element here adjusts in one
 // direction only, so the handle holds two adjustable halves, the start one
 // for the horizontal channel and the end one for the vertical, each named by
-// its channel, after `aria-label` when there is one. Each says its channel's
+// its channel, after `aria-label` when there is one. The halves sit in a
+// 48dp frame of their own, around the handle but kept inside the plane:
+// centred on a channel at either end of its range, half of the frame lay
+// past the plane's edge, and Android clipped the half there to 0dp wide,
+// which it leaves out of what a screen reader reaches. Each says its channel's
 // value and the colour's name, "100%, light vibrant cyan blue", in the
 // provider's locale. A press on the plane moves the handle there and a drag
 // carries it, setting both channels together, and `onChangeEnd` comes once
@@ -143,7 +147,7 @@ type Layer =
 const SLOP = 10
 
 // The frame a screen reader outlines the handle in, the sliders page's 48dp
-// target, centred on the handle.
+// target, around the handle.
 const TARGET = 48
 
 // The hues React Aria runs a hue axis through.
@@ -153,9 +157,15 @@ const BLACK = 'rgb(0, 0, 0)'
 const WHITE = 'rgb(255, 255, 255)'
 
 const styles = StyleSheet.create({
-  // One adjustable half of the handle's frame, the frame's full height. The
-  // seat centres what it holds, which left a half with nothing in it 0dp
-  // tall, and Android leaves a view with no height out of what a screen
+  // Where the two halves sit: the handle's frame, side by side across it.
+  frame: {
+    flexDirection: 'row',
+    height: TARGET,
+    position: 'absolute',
+    width: TARGET,
+  },
+  // One adjustable half of the frame, the frame's full height. A half holds
+  // nothing, and Android leaves a view with no height out of what a screen
   // reader reaches.
   half: {
     alignSelf: 'stretch',
@@ -166,24 +176,17 @@ const styles = StyleSheet.create({
     boxSizing: 'border-box',
     width: '100%',
   },
-  // Where the handle sits: the frame centred on the value, with the handle
-  // centred in it and the two halves side by side across it.
+  // Where the handle sits: a frame centred on the value, the handle centred
+  // in it and taking none of the plane's presses.
   seat: {
     alignItems: 'center',
-    flexDirection: 'row',
     height: TARGET,
     justifyContent: 'center',
     marginStart: -TARGET / 2,
     marginTop: -TARGET / 2,
+    pointerEvents: 'none',
     position: 'absolute',
     width: TARGET,
-  },
-  // The handle, over both halves and taking none of their presses.
-  thumb: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    pointerEvents: 'none',
-    ...StyleSheet.absoluteFill,
   },
 })
 
@@ -316,6 +319,17 @@ function ColorArea({
                 top: percentOf(y),
               })}
             >
+              <ColorThumb
+                color={state.getDisplayColor()}
+                dragging={state.isDragging}
+              />
+            </View>
+            <View
+              style={composeStyles<ViewStyle>(styles.frame, {
+                start: insideOf(x, size.width),
+                top: insideOf(y, size.height),
+              })}
+            >
               <Half
                 axis="x"
                 channel={channels.xChannel}
@@ -332,12 +346,6 @@ function ColorArea({
                 locale={locale}
                 state={state}
               />
-              <View style={styles.thumb}>
-                <ColorThumb
-                  color={state.getDisplayColor()}
-                  dragging={state.isDragging}
-                />
-              </View>
             </View>
           </View>
         </GestureDetector>
@@ -396,6 +404,12 @@ function Half({
       style={styles.half}
     />
   )
+}
+
+// Where the handle's frame starts along an axis `length` long, centred on
+// the fraction `at` of it as far as the plane's edges allow.
+function insideOf(at: number, length: number) {
+  return Math.max(0, Math.min(at * length - TARGET / 2, length - TARGET))
 }
 
 // React Aria's layers for the plane, from its useColorAreaGradient, bottom
