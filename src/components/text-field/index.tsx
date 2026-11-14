@@ -118,7 +118,8 @@ type TextFieldProps = Omit<
   readonly isReadOnly?: boolean
   /**
    * Marks the label with an asterisk, as the text fields page marks a field
-   * that must be filled.
+   * that must be filled, and says so to a screen reader: on the web from
+   * `aria-required`, and on iOS and Android as a word after the field's name.
    * @default false
    */
   readonly isRequired?: boolean

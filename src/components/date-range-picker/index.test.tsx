@@ -268,8 +268,15 @@ function resize(width: number) {
   Dimensions.set({ screen: metrics, window: metrics })
 }
 
+// A segment by its name, which a required field's first segment follows
+// with the word on iOS and Android.
 function segmentOf(name: string, date: 'End' | 'Start' = 'Start') {
-  return screen.getByLabelText(`${name}, ${date} Date, Label`)
+  const label = `${name}, ${date} Date, Label`
+
+  return (
+    screen.queryByLabelText(label) ??
+    screen.getByLabelText(`${label}, required`)
+  )
 }
 
 // The segments a person types into, in the order they are drawn.

@@ -1071,6 +1071,14 @@ describe('Select', () => {
       expect(onSubmit).toHaveBeenCalledWith({ items: FIRST_AND_THIRD })
     })
 
+    it('names a required box required on iOS and Android', async () => {
+      await renderSelect({ isRequired: true })
+
+      expect(
+        screen.getByRole('button', { name: 'Label Select an item, required' }),
+      ).toBe(box())
+    })
+
     it('holds a native form back while a required select has nothing chosen', async () => {
       const onSubmit = jest.fn()
       await render(

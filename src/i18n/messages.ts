@@ -3,56 +3,58 @@
 // selecting a list's row is called, what a Select shows while nothing is
 // chosen, the names of a ComboBox's list and the button opening it, how many
 // rows a search leaves, a calendar's, a date's segments, a field's character
-// limit, CopyField's button, the names of SearchField's clear button, a
-// SearchView's back button, Snackbar's close button, a chip's remove button,
-// NumberField's steppers, what opening and closing a tree's row is called, a
-// TimePicker's two headlines and two actions, what a ColorSwatch of a fully
-// transparent colour is called, a ColorSwatchPicker's name, what a carousel
-// calls itself, its items and its two buttons, and a table's sorting, resize
-// handles and select-all checkbox. Each one a call site might want in other
-// words stands behind a prop that names it otherwise: `pendingLabel` for the
-// ring, `aria-label` for the handle, the picker and a carousel's item,
-// `label` for the loading-more row, `renderEmptyState` for the empty one,
-// `selectLabel` for the selection, `placeholder` for a Select's empty value,
-// `characterLimitLabel` for the limit, `copyLabel` and `copiedLabel` for
-// CopyField, `clearLabel`, `backLabel`, `closeLabel` and `removeLabel` for the
-// four buttons, `decrementLabel` and `incrementLabel` for the steppers,
-// `selectTimeLabel`, `enterTimeLabel`, `cancelLabel` and `confirmLabel` for
-// the time picker, `colorName` for the swatch, `previousLabel` and
-// `nextLabel` for the carousel, and `resizeLabel` and `selectAllLabel` for a
-// table's handles and its select-all checkbox.
+// limit, what a required field says, CopyField's button, the names of
+// SearchField's clear button, a SearchView's back button, Snackbar's close
+// button, a chip's remove button, NumberField's steppers, what opening and
+// closing a tree's row is called, a TimePicker's two headlines and two actions,
+// what a ColorSwatch of a fully transparent colour is called, a
+// ColorSwatchPicker's name, what a carousel calls itself, its items and its two
+// buttons, and a table's sorting, resize handles and select-all checkbox. Each
+// one a call site might want in other words stands behind a prop that names it
+// otherwise: `pendingLabel` for the ring, `aria-label` for the handle, the
+// picker and a carousel's item, `label` for the loading-more row,
+// `renderEmptyState` for the empty one, `selectLabel` for the selection,
+// `placeholder` for a Select's empty value, `characterLimitLabel` for the
+// limit, `copyLabel` and `copiedLabel` for CopyField, `clearLabel`,
+// `backLabel`, `closeLabel` and `removeLabel` for the four buttons,
+// `decrementLabel` and `incrementLabel` for the steppers, `selectTimeLabel`,
+// `enterTimeLabel`, `cancelLabel` and `confirmLabel` for the time picker,
+// `colorName` for the swatch, `previousLabel` and `nextLabel` for the carousel,
+// and `resizeLabel` and `selectAllLabel` for a table's handles and its
+// select-all checkbox.
 //
 // Copied from kanso-ui's src/i18n/messages.ts, one entry per locale React Aria
 // ships, and kept in step with it by hand: the web library publishes no copy of
 // its table, and a word that differs between the two would name the same ring
 // two ways. The handle's name is this table's alone, since web's sheet draws
-// its handle as decoration and names nothing. `select` is React Aria's own word
-// for a grid list row's checkbox, which web's List takes from React Aria's
-// tables rather than its own, copied here so the two read the same, and
-// `selectPlaceholder` is what React Aria's Select, and so web's, shows while
-// nothing is chosen. `results` is React Aria's too, the count its ComboBox
-// announces, which Autocomplete and ComboBox announce as a search narrows a
-// list, and `showSuggestions` and `suggestions` are the names its ComboBox
-// gives the button that opens the list and the list itself. `calendar` is React
-// Aria's calendar dictionary, which web's Calendar reads, beside the names of
-// the month and year fields that web reads from the browser's
-// `Intl.DisplayNames` and Hermes lacks, written here from the same CLDR data.
-// `segments` is the same: the name of each part of a date, which web's date
-// field reads from `Intl.DisplayNames` too, beside the description of the date
-// it holds, from React Aria's date picker dictionary, and what an empty one
-// reads as, from its spin button dictionary. `clearSearch`, `close`,
-// `decrease`, `increase` and `remove` are React Aria's as well, from the
-// search field, toast, number field and tag dictionaries its own controls name
-// those buttons from on web, `collapse` and `expand` from its tree dictionary,
-// which names web's Tree chevron, `transparent` from its colour dictionary,
-// which names web's ColorSwatch when its colour has no alpha left,
-// `colorSwatches` from its components dictionary, which names web's
-// ColorSwatchPicker, and `table` from its table dictionary, which names web's
-// Table's sorting and select-all checkbox, beside the resize handle's name,
-// which React Aria Components' own dictionary gives web's handles. The others
-// were drafted for kanso-ui's table rather than taken from a translation
-// service, and each one wants a native speaker's eye before it is trusted; a
-// call site can always pass its own words through the prop.
+// its handle as decoration and names nothing, and so is `required`, since on
+// web the browser says a field is required from its `aria-required`. `select`
+// is React Aria's own word for a grid list row's checkbox, which web's List
+// takes from React Aria's tables rather than its own, copied here so the two
+// read the same, and `selectPlaceholder` is what React Aria's Select, and so
+// web's, shows while nothing is chosen. `results` is React Aria's too, the
+// count its ComboBox announces, which Autocomplete and ComboBox announce as a
+// search narrows a list, and `showSuggestions` and `suggestions` are the names
+// its ComboBox gives the button that opens the list and the list itself.
+// `calendar` is React Aria's calendar dictionary, which web's Calendar reads,
+// beside the names of the month and year fields that web reads from the
+// browser's `Intl.DisplayNames` and Hermes lacks, written here from the same
+// CLDR data. `segments` is the same: the name of each part of a date, which
+// web's date field reads from `Intl.DisplayNames` too, beside the description
+// of the date it holds, from React Aria's date picker dictionary, and what an
+// empty one reads as, from its spin button dictionary. `clearSearch`, `close`,
+// `decrease`, `increase` and `remove` are React Aria's as well, from the search
+// field, toast, number field and tag dictionaries its own controls name those
+// buttons from on web, `collapse` and `expand` from its tree dictionary, which
+// names web's Tree chevron, `transparent` from its colour dictionary, which
+// names web's ColorSwatch when its colour has no alpha left, `colorSwatches`
+// from its components dictionary, which names web's ColorSwatchPicker, and
+// `table` from its table dictionary, which names web's Table's sorting and
+// select-all checkbox, beside the resize handle's name, which React Aria
+// Components' own dictionary gives web's handles. The others were drafted for
+// kanso-ui's table rather than taken from a translation service, and each one
+// wants a native speaker's eye before it is trusted; a call site can always
+// pass its own words through the prop.
 
 type LibraryMessages = {
   /** What a SearchView's back button is called. */
@@ -158,6 +160,11 @@ type LibraryMessages = {
    * text.
    */
   readonly remove: string
+  /**
+   * What a required field's control says after its name and role on iOS and
+   * Android, where the platform has no required state to report.
+   */
+  readonly required: string
   /**
    * How many rows a search leaves, for a screen reader, in the plural
    * forms React Aria's table gives the locale; `{count}` is the number.
@@ -311,6 +318,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     noResults: 'لا توجد نتائج',
     previousSlide: 'الشريحة السابقة',
     remove: 'إزالة',
+    required: 'مطلوب',
     results: {
       one: '{count} خيار متاحة.',
       other: '{count} خيارات متاحة.',
@@ -396,6 +404,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     noResults: 'Няма резултати',
     previousSlide: 'Предишен слайд',
     remove: 'Премахване',
+    required: 'задължително',
     results: {
       one: '{count} опция на разположение.',
       other: '{count} опции на разположение.',
@@ -481,6 +490,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     noResults: 'Žádné výsledky',
     previousSlide: 'Předchozí snímek',
     remove: 'Odebrat',
+    required: 'povinné',
     results: {
       one: 'K dispozici je {count} možnost.',
       other: 'K dispozici jsou/je {count} možnosti/-í.',
@@ -563,6 +573,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     noResults: 'Ingen resultater',
     previousSlide: 'Forrige dias',
     remove: 'Fjern',
+    required: 'påkrævet',
     results: {
       one: '{count} mulighed tilgængelig.',
       other: '{count} muligheder tilgængelige.',
@@ -649,6 +660,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     noResults: 'Keine Ergebnisse',
     previousSlide: 'Vorherige Folie',
     remove: 'Entfernen',
+    required: 'erforderlich',
     results: {
       one: '{count} Option verfügbar.',
       other: '{count} Optionen verfügbar.',
@@ -736,6 +748,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     noResults: 'Δεν υπάρχουν αποτελέσματα',
     previousSlide: 'Προηγούμενη διαφάνεια',
     remove: 'Κατάργηση',
+    required: 'υποχρεωτικό',
     results: {
       one: '{count} επιλογή διαθέσιμες.',
       other: '{count} επιλογές  διαθέσιμες.',
@@ -819,6 +832,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     noResults: 'No results',
     previousSlide: 'Previous slide',
     remove: 'Remove',
+    required: 'required',
     results: {
       one: '{count} option available.',
       other: '{count} options available.',
@@ -904,6 +918,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     noResults: 'No hay resultados',
     previousSlide: 'Diapositiva anterior',
     remove: 'Quitar',
+    required: 'obligatorio',
     results: {
       one: '{count} opción disponible(s).',
       other: '{count} opciones disponible(s).',
@@ -988,6 +1003,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     noResults: 'Tulemusi pole',
     previousSlide: 'Eelmine slaid',
     remove: 'Eemalda',
+    required: 'kohustuslik',
     results: {
       one: '{count} valik saadaval.',
       other: '{count} valikud saadaval.',
@@ -1073,6 +1089,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     noResults: 'Ei tuloksia',
     previousSlide: 'Edellinen dia',
     remove: 'Poista',
+    required: 'pakollinen',
     results: {
       one: '{count} vaihtoehto saatavilla.',
       other: '{count} vaihtoehtoa saatavilla.',
@@ -1160,6 +1177,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     noResults: 'Aucun résultat',
     previousSlide: 'Diapositive précédente',
     remove: 'Supprimer',
+    required: 'obligatoire',
     results: {
       one: '{count} option disponible(s).',
       other: '{count} options disponible(s).',
@@ -1246,6 +1264,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     noResults: 'אין תוצאות',
     previousSlide: 'השקופית הקודמת',
     remove: 'הסר',
+    required: 'שדה חובה',
     results: {
       one: 'אפשרות {count} במצב זמין.',
       other: '{count} אפשרויות במצב זמין.',
@@ -1332,6 +1351,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     noResults: 'Nema rezultata',
     previousSlide: 'Prethodni slajd',
     remove: 'Ukloni',
+    required: 'obavezno',
     results: {
       one: 'Dostupno još: {count} opcija.',
       other: 'Dostupno još: {count} opcije/a.',
@@ -1418,6 +1438,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     noResults: 'Nincs találat',
     previousSlide: 'Előző dia',
     remove: 'Eltávolítás',
+    required: 'kötelező',
     results: {
       one: '{count} lehetőség áll rendelkezésre.',
       other: '{count} lehetőség áll rendelkezésre.',
@@ -1505,6 +1526,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     noResults: 'Nessun risultato',
     previousSlide: 'Diapositiva precedente',
     remove: 'Rimuovi',
+    required: 'obbligatorio',
     results: {
       one: '{count} opzione disponibile.',
       other: '{count} opzioni disponibili.',
@@ -1587,6 +1609,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     noResults: '結果がありません',
     previousSlide: '前のスライド',
     remove: '削除',
+    required: '必須',
     results: {
       one: '{count} 個のオプションを利用できます。',
       other: '{count} 個のオプションを利用できます。',
@@ -1669,6 +1692,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     noResults: '결과 없음',
     previousSlide: '이전 슬라이드',
     remove: '제거',
+    required: '필수',
     results: {
       one: '{count}개 옵션을 사용할 수 있습니다.',
       other: '{count}개 옵션을 사용할 수 있습니다.',
@@ -1756,6 +1780,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     noResults: 'Rezultatų nėra',
     previousSlide: 'Ankstesnė skaidrė',
     remove: 'Pašalinti',
+    required: 'privaloma',
     results: {
       one: 'Yra {count} parinktis.',
       other: 'Yra {count} parinktys (-ių).',
@@ -1843,6 +1868,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     noResults: 'Nav rezultātu',
     previousSlide: 'Iepriekšējais slaids',
     remove: 'Noņemt',
+    required: 'obligāts',
     results: {
       one: 'Pieejamo opciju skaits: {count} opcija.',
       other: 'Pieejamo opciju skaits: {count} opcijas.',
@@ -1925,6 +1951,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     noResults: 'Ingen resultater',
     previousSlide: 'Forrige lysbilde',
     remove: 'Fjern',
+    required: 'obligatorisk',
     results: {
       one: '{count} alternativ finnes.',
       other: '{count} alternativer finnes.',
@@ -2010,6 +2037,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     noResults: 'Geen resultaten',
     previousSlide: 'Vorige dia',
     remove: 'Verwijderen',
+    required: 'verplicht',
     results: {
       one: '{count} optie beschikbaar.',
       other: '{count} opties beschikbaar.',
@@ -2095,6 +2123,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     noResults: 'Brak wyników',
     previousSlide: 'Poprzedni slajd',
     remove: 'Usuń',
+    required: 'wymagane',
     results: {
       one: 'dostępna/dostępne(-nych) {count} opcja.',
       other: 'dostępna/dostępne(-nych) {count} opcje(-i).',
@@ -2182,6 +2211,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     noResults: 'Nenhum resultado',
     previousSlide: 'Slide anterior',
     remove: 'Remover',
+    required: 'obrigatório',
     results: {
       one: '{count} opção disponível.',
       other: '{count} opções disponível.',
@@ -2268,6 +2298,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     noResults: 'Nenhum resultado',
     previousSlide: 'Diapositivo anterior',
     remove: 'Eliminar',
+    required: 'obrigatório',
     results: {
       one: '{count} opção disponível.',
       other: '{count} opções disponível.',
@@ -2354,6 +2385,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     noResults: 'Niciun rezultat',
     previousSlide: 'Diapozitivul anterior',
     remove: 'Îndepărtaţi',
+    required: 'obligatoriu',
     results: {
       one: '{count} opțiune disponibile.',
       other: '{count} opțiuni disponibile.',
@@ -2441,6 +2473,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     noResults: 'Нет результатов',
     previousSlide: 'Предыдущий слайд',
     remove: 'Удалить',
+    required: 'обязательно',
     results: {
       one: '{count} параметр доступно.',
       other: '{count} параметров доступно.',
@@ -2526,6 +2559,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     noResults: 'Žiadne výsledky',
     previousSlide: 'Predchádzajúca snímka',
     remove: 'Odstrániť',
+    required: 'povinné',
     results: {
       one: '{count} možnosť k dispozícii.',
       other: '{count} možnosti/-í k dispozícii.',
@@ -2612,6 +2646,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     noResults: 'Ni rezultatov',
     previousSlide: 'Prejšnji diapozitiv',
     remove: 'Odstrani',
+    required: 'obvezno',
     results: {
       one: 'Na voljo je {count} opcija.',
       other: 'Na voljo je {count} opcije.',
@@ -2698,6 +2733,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     noResults: 'Nema rezultata',
     previousSlide: 'Prethodni slajd',
     remove: 'Ukloni',
+    required: 'obavezno',
     results: {
       one: 'Dostupno još: {count} opcija.',
       other: 'Dostupno još: {count} opcije/a.',
@@ -2781,6 +2817,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     noResults: 'Inga resultat',
     previousSlide: 'Föregående bild',
     remove: 'Ta bort',
+    required: 'obligatoriskt',
     results: {
       one: '{count} alternativ tillgängliga.',
       other: '{count} alternativ tillgängliga.',
@@ -2865,6 +2902,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     noResults: 'Sonuç yok',
     previousSlide: 'Önceki slayt',
     remove: 'Kaldır',
+    required: 'zorunlu',
     results: {
       one: '{count} seçenek kullanılabilir.',
       other: '{count} seçenekler kullanılabilir.',
@@ -2951,6 +2989,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     noResults: 'Немає результатів',
     previousSlide: 'Попередній слайд',
     remove: 'Вилучити',
+    required: 'обов’язково',
     results: {
       one: '{count} параметр доступно.',
       other: '{count} параметри(-ів) доступно.',
@@ -3035,6 +3074,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     noResults: '没有结果',
     previousSlide: '上一张',
     remove: '删除',
+    required: '必填',
     results: {
       one: '有 {count} 个选项可用。',
       other: '有 {count} 个选项可用。',
@@ -3117,6 +3157,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
     noResults: '沒有結果',
     previousSlide: '上一張',
     remove: '移除',
+    required: '必填',
     results: {
       one: '{count} 選項 可用。',
       other: '{count} 選項 可用。',

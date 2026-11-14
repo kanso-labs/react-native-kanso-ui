@@ -43,7 +43,7 @@ import type { ResolvedTheme } from '../theme/scope'
 import { useInsideForm } from '../form'
 import { IconStyleContext } from '../glyphs/icon-style'
 import { limitFor } from '../i18n'
-import { useLocaleOf } from '../i18n/provider'
+import { useLocaleOf, useMessages } from '../i18n/provider'
 import { formatCount } from '../number/count'
 import { usePressFeedback } from '../press'
 import { withOpacity } from '../theme/color'
@@ -416,6 +416,7 @@ function FieldBox({
   const theme = useTheme()
   const styles = fieldStylesOf(theme)
   const { fontScale } = useWindowDimensions()
+  const messages = useMessages()
   const [notch, setNotch] = useState(0)
   const { colors, radii, spacing, stateLayerOpacity, typography } = theme
   // The hover layer alone: a text field's box takes no pressed or focus
@@ -457,7 +458,9 @@ function FieldBox({
 
   return (
     <Pressable
-      {...(trigger === undefined ? NOT_A_CONTROL : triggerOf(trigger))}
+      {...(trigger === undefined
+        ? NOT_A_CONTROL
+        : triggerOf(trigger, isRequired, messages.required))}
       disabled={isDisabled}
       onHoverIn={feedback.handlers.onHoverIn}
       onHoverOut={feedback.handlers.onHoverOut}
@@ -605,6 +608,10 @@ function FieldBox({
  * error role for its caret while the field has an error, and draws a
  * placeholder in the muted role.
  *
+ * iOS and Android have no required state to report, so there a required
+ * field's control says so after its name, "Label, required", and React
+ * Native Web sets `aria-required` instead.
+ *
  * It is described by what it holds chosen, its prefix and its suffix, ahead
  * of what the field hands it in `described`, so a reader hears the options
  * chosen beside the text and the unit the value is read against as a sighted
@@ -637,6 +644,7 @@ function FieldInput({
   const { fontScale } = useWindowDimensions()
   const role = useTypeRole('bodyLarge')
   const mono = useFontFamily(theme.typography.fontFamilyMono)
+  const messages = useMessages()
   const id = useId()
   const { colors, stateLayerOpacity, typography } = theme
   const content = box.disabled
@@ -669,6 +677,11 @@ function FieldInput({
       ])}
       {...webStateOf(box)}
       aria-disabled={box.disabled}
+      aria-label={requiredName(
+        props['aria-label'],
+        box.required,
+        messages.required,
+      )}
       cursorColor={caret}
       multiline={multiline}
       placeholderTextColor={muted}
@@ -1406,17 +1419,36 @@ function FieldStroke({ color, sides, style, width }: FieldStrokeProps) {
 }
 
 /**
- * The box as the control: a button named by the trigger and described by the
- * line under the field, which a keyboard and a screen reader reach.
+ * A required field's control's name on iOS and Android, which have no
+ * required state to report: its own, then the locale's word for required,
+ * "Label, required". React Native Web sets `aria-required` instead, which the
+ * browser says, so there and for a field that is not required it is the
+ * name as it was.
  */
-function triggerOf({
-  described = NO_PARTS,
-  onPress: _onPress,
-  ...trigger
-}: FieldTriggerProps) {
+function requiredName<Name extends string | undefined>(
+  name: Name,
+  required: boolean,
+  word: string,
+): Name | string {
+  return required && Platform.OS !== 'web' && name !== undefined
+    ? `${name}, ${word}`
+    : name
+}
+
+/**
+ * The box as the control: a button named by the trigger, and said to be
+ * required where it is, and described by the line under the field, which a
+ * keyboard and a screen reader reach.
+ */
+function triggerOf(
+  { described = NO_PARTS, onPress: _onPress, ...trigger }: FieldTriggerProps,
+  required: boolean,
+  word: string,
+) {
   return {
     ...trigger,
     ...descriptionOf(described),
+    'aria-label': requiredName(trigger['aria-label'], required, word),
     role: 'button' as const,
   }
 }
@@ -1523,6 +1555,7 @@ export {
   FieldStroke,
   FieldValue,
   FieldWrap,
+  requiredName,
   useErrorAnnouncement,
   useFieldFocus,
   useStrokeMotion,

@@ -64,8 +64,13 @@ async function blur(element: Host) {
   await fireEvent(element, 'blur', {})
 }
 
+// A field's control by its label, which a required one says it is after on
+// iOS and Android.
 function control(label: string) {
-  return screen.getByLabelText(label)
+  return (
+    screen.queryByLabelText(label) ??
+    screen.getByLabelText(`${label}, required`)
+  )
 }
 
 // What a screen reader hears describing a field on iOS, which is where its

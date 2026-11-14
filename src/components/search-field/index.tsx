@@ -144,8 +144,9 @@ type SearchFieldProps = Omit<
    */
   readonly isDisabled?: boolean
   /**
-   * Whether the field has to be filled in, which a screen reader reads.
-   * Inside a `native` form, an empty one holds the submission back and shows
+   * Whether the field has to be filled in, which a screen reader reads: on
+   * the web from `aria-required`, and on iOS and Android as a word after the
+   * field's name, since neither has a required state. Inside a `native` form, an empty one holds the submission back and shows
    * its error once a submission is tried. The bar draws no label, so there
    * is no asterisk to show it.
    * @default false

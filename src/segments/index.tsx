@@ -48,7 +48,7 @@ import type { Focusable } from '../form'
 import type { LibraryMessages } from '../i18n/messages'
 
 import { startsWithIn } from '../autocomplete'
-import { descriptionOf, FieldSegments } from '../field'
+import { descriptionOf, FieldSegments, requiredName } from '../field'
 import { messagesFor } from '../i18n'
 import { NumberParser } from '../number/parser'
 import { useTheme } from '../theme/scope'
@@ -699,7 +699,8 @@ function SegmentLine(line: SegmentLineProps) {
   const theme = useTheme()
   const own = segmentStylesOf(theme)
   const role = useTypeRole('bodyLarge')
-  const words = messagesFor(locale).segments
+  const messages = messagesFor(locale)
+  const words = messages.segments
   const first = state.segments.find((segment) => typedInto(drawing, segment))
   const value = line.holding ?? valueOf(state, words)
   const valueId = `${id}-value`
@@ -750,8 +751,9 @@ function SegmentLine(line: SegmentLineProps) {
         }
 
         const focused = segment.type === active
-        // The field's description is said on the first segment alone, so it
-        // is not heard again at every step, unless the field has an error.
+        // The field's description, and that it is required, are said on the
+        // first segment alone, so they are not heard again at every step,
+        // unless the field has an error.
         const describes = isInvalid || segment.type === first?.type
 
         return (
@@ -762,7 +764,11 @@ function SegmentLine(line: SegmentLineProps) {
             accessibilityActions={canEdit ? ADJUSTABLE : undefined}
             accessibilityRole={Platform.OS === 'web' ? undefined : 'adjustable'}
             aria-disabled={state.isDisabled}
-            aria-label={`${words[nameOf(segment.type)]}, ${label}`}
+            aria-label={requiredName(
+              `${words[nameOf(segment.type)]}, ${label}`,
+              describes && state.isRequired,
+              messages.required,
+            )}
             aria-valuemax={segment.maxValue}
             aria-valuemin={segment.minValue}
             aria-valuenow={segment.value ?? undefined}
