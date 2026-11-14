@@ -14,7 +14,7 @@ import {
 
 import { ChevronEndGlyph } from '../../glyphs'
 import { GROUP } from '../../group'
-import { hitSlop } from '../../press'
+import { hitSlop, TARGET_SIZE } from '../../press'
 import { useLinkPress } from '../../router'
 import { useTheme } from '../../theme/scope'
 import { composeStyles, themedStyles } from '../../theme/styles'
@@ -183,6 +183,7 @@ function Breadcrumbs({
   ...props
 }: BreadcrumbsProps) {
   const theme = useTheme()
+  const { fontScale } = useWindowDimensions()
   const items = positionsOf(itemsOf(children), isDisabled, onAction)
 
   return (
@@ -190,7 +191,16 @@ function Breadcrumbs({
       {...GROUP}
       {...props}
       role="group"
-      style={composeStyles<ViewStyle>(stylesOf(theme).root, style)}
+      style={composeStyles<ViewStyle>(
+        stylesOf(theme).root,
+        Platform.OS === 'web'
+          ? undefined
+          : rowGapOf(
+              theme.typography.labelLargeLineHeight * fontScale,
+              theme.spacing.xs,
+            ),
+        style,
+      )}
     >
       {items.map(({ element, key, position }) => (
         <ItemContext key={key} value={position}>
@@ -338,6 +348,14 @@ function positionsOf(
       onAction,
     } satisfies ItemPosition,
   }))
+}
+
+// The gap between the rows of a trail that wraps, on iOS and Android, where
+// each crumb reaches up and down to 48dp: what a line leaves of 48dp, so the
+// rows' reaches meet edge to edge rather than the lower one's covering the
+// lower half of the row above. Never less than the gap between crumbs.
+function rowGapOf(line: number, gap: number): ViewStyle {
+  return { rowGap: Math.max(TARGET_SIZE - line, gap) }
 }
 
 Breadcrumbs.Item = BreadcrumbsItem
