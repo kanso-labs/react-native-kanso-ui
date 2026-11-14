@@ -1,5 +1,6 @@
 import type { ComponentRef, ReactElement, ReactNode } from 'react'
 import type { StyleProp, TextStyle } from 'react-native'
+import type { TestInstance } from 'test-renderer'
 
 import { afterEach, describe, expect, it, jest } from '@jest/globals'
 import {
@@ -9,7 +10,13 @@ import {
   within,
 } from '@testing-library/react-native'
 import { createRef } from 'react'
-import { Linking, Text as NativeText, Platform, StyleSheet } from 'react-native'
+import {
+  Dimensions,
+  Linking,
+  Text as NativeText,
+  Platform,
+  StyleSheet,
+} from 'react-native'
 
 import type { LinkTone, LinkUnderline } from '.'
 
@@ -20,7 +27,7 @@ import { scopeFor } from '../../theme/scope'
 import { Text } from '../text'
 
 const { theme } = scopeFor('light', {})
-const { colors, radii, stateLayerOpacity } = theme
+const { colors, radii, stateLayerOpacity, typography } = theme
 
 const DISABLED_CONTENT = withOpacity(
   colors.onSurface,
@@ -77,6 +84,24 @@ function focusWith(visible: boolean) {
 /** A key reaching the span, as React Native Web hands it on. */
 function keyDown(key: string, click: () => void, repeat = false) {
   return { currentTarget: { click }, key, repeat }
+}
+
+// A lone link, as a row of footer links holds, in the role they set it in.
+function Lone(props: { readonly isDisabled?: boolean }) {
+  return (
+    <Text testID="sentence" tone="muted" variant="bodyMedium">
+      <Link href="/first" testID="link" tone="inherit" {...props}>
+        Label
+      </Link>
+    </Text>
+  )
+}
+
+function parentOf(node: TestInstance) {
+  if (node.parent === null) {
+    throw new TypeError('expected a parent')
+  }
+  return node.parent
 }
 
 // Renders as React Native Web would be handed the link, and returns it.
@@ -281,6 +306,7 @@ describe('Link', () => {
     it('leaves the colour to the Text around it when told to inherit', async () => {
       await render(
         <Text tone="muted">
+          Supporting line with{' '}
           <Link href="/first" testID="link" tone="inherit">
             Label
           </Link>
@@ -288,6 +314,21 @@ describe('Link', () => {
       )
 
       expect(styleOf(screen.getByTestId('link'))).not.toHaveProperty('color')
+    })
+
+    it('draws in the colour of a Text it is the whole of when told to inherit', async () => {
+      await render(
+        <Text tone="muted">
+          <Link href="/first" testID="link" tone="inherit">
+            Label
+          </Link>
+        </Text>,
+      )
+
+      expect(styleOf(screen.getByTestId('link'))).toMatchObject({
+        color: colors.onSurfaceVariant,
+        textDecorationColor: colors.outline,
+      })
     })
   })
 
@@ -314,6 +355,130 @@ describe('Link', () => {
       expect(styleOf(screen.getByTestId('link'))).toMatchObject({
         textDecorationLine: 'underline',
       })
+    })
+  })
+
+  describe('as the whole of its Text', () => {
+    it('is drawn as one Text, in the Text’s type and its own colour', async () => {
+      await render(<Lone />)
+
+      const text = screen.getByTestId('link')
+
+      expect(text.type).toBe('Text')
+      expect(text.children).toEqual(['Label'])
+      expect(styleOf(text)).toMatchObject({
+        color: colors.onSurfaceVariant,
+        fontSize: typography.bodyMediumSize,
+        lineHeight: typography.bodyMediumLineHeight,
+        textDecorationColor: colors.outline,
+      })
+      expect(screen.queryByTestId('sentence')).toBeNull()
+    })
+
+    it('takes the Text’s own props where the link sets none', async () => {
+      await render(
+        <Text numberOfLines={1} testID="sentence">
+          <Link href="/first">Label</Link>
+        </Text>,
+      )
+
+      expect(screen.getByTestId('sentence').props).toMatchObject({
+        numberOfLines: 1,
+      })
+    })
+
+    // Android gives a Text no click a screen reader can run, so on native
+    // the link is the view around it, which takes a press as a Pressable
+    // does, and the Text inside it only draws.
+    it('is one link on native, the view around the Text', async () => {
+      await render(<Lone />)
+
+      const link = screen.getByRole('link', { name: 'Label' })
+      const text = screen.getByTestId('link')
+
+      expect(screen.getAllByRole('link')).toHaveLength(1)
+      expect(link.type).toBe('View')
+      expect(parentOf(text)).toBe(link)
+      expect(link).toBeEnabled()
+      expect(text.props.onPress).toBeUndefined()
+      expect(text.props).not.toHaveProperty('role')
+    })
+
+    it('takes its name from the link where the link gives one', async () => {
+      await render(
+        <Text>
+          <Link aria-label="First item" href="/first">
+            Label
+          </Link>
+        </Text>,
+      )
+
+      expect(screen.getByRole('link', { name: 'First item' })).toBeOnTheScreen()
+    })
+
+    it('follows its href through the router', async () => {
+      const navigate = jest.fn()
+
+      await render(
+        <Routed navigate={navigate}>
+          <Lone />
+        </Routed>,
+      )
+      await fireEvent.press(screen.getByRole('link', { name: 'Label' }))
+
+      expect(navigate.mock.calls).toEqual([['/first']])
+    })
+
+    it('reaches 48dp tall, and no further along the row', async () => {
+      await render(<Lone />)
+
+      // Half of what a line of body medium, at the device's text size,
+      // leaves of 48dp: 14dp above and below a 20dp line.
+      const { fontScale } = Dimensions.get('window')
+      const reach = (48 - typography.bodyMediumLineHeight * fontScale) / 2
+      const link = screen.getByRole('link', { name: 'Label' })
+
+      expect(link.props.hitSlop).toEqual({
+        bottom: reach,
+        left: 0,
+        right: 0,
+        top: reach,
+      })
+      expect(styleOf(link)).toEqual({ flexShrink: 1 })
+    })
+
+    it('is announced as a disabled link, on the Text, reaching no further', async () => {
+      await render(<Lone isDisabled />)
+
+      const link = screen.getByRole('link', { name: 'Label' })
+
+      expect(link).toBe(screen.getByTestId('link'))
+      expect(link).toBeDisabled()
+      expect(link.props.onPress).toBeUndefined()
+      expect(parentOf(link).props).not.toHaveProperty('hitSlop')
+    })
+
+    it('stays the Text inside a sentence, where it has no frame', async () => {
+      await render(
+        <Text>
+          Supporting line with <Lone />
+        </Text>,
+      )
+
+      const link = screen.getByRole('link', { name: 'Label' })
+
+      expect(link).toBe(screen.getByTestId('link'))
+      expect(parentOf(link).props).not.toHaveProperty('hitSlop')
+    })
+
+    it('stays the Text on the web', async () => {
+      jest.replaceProperty(Platform, 'OS', 'web')
+      await render(<Lone />)
+
+      const link = screen.getByRole('link', { name: 'Label' })
+
+      expect(link).toBe(screen.getByTestId('link'))
+      expect(parentOf(link).props).not.toHaveProperty('hitSlop')
     })
   })
 

@@ -1,4 +1,4 @@
-import type { ComponentRef, Ref } from 'react'
+import type { ComponentRef, ReactNode, Ref } from 'react'
 import type { TextProps as NativeTextProps, TextStyle } from 'react-native'
 
 import { useMemo, useState } from 'react'
@@ -15,6 +15,7 @@ import {
   TextSizeContext,
 } from '../../typography/size'
 import { holdsKeycap, sentenceLabel } from '../keycap'
+import { LoneLink, loneLinkOf } from '../link'
 
 // Tone is a separate axis from variant so the two compose freely: any of the
 // fifteen roles in any of these colours, the same set web's Text takes.
@@ -78,6 +79,10 @@ type TextProps = NativeTextProps & {
  * expo-font, and the system font otherwise. The OS text size scales every
  * role, as `allowFontScaling` leaves it.
  *
+ * A Text whose only child is a Link is drawn as that link, in the Text's
+ * role, so a screen reader finds the link on Android, where a span covering
+ * the whole of its text is given no node of its own.
+ *
  * Web's `render` and `block` have no counterpart: a native Text is a block
  * unless it sits inside another, and a heading is an `accessibilityRole`
  * rather than an element. `style`, `ref` and `testID` land on React Native's
@@ -120,22 +125,32 @@ function Text({
     props.accessibilityLabel ??
     (props['aria-label'] === undefined ? sentenceLabel(children) : undefined)
 
-  return (
-    <NativeText
-      {...props}
-      accessibilityLabel={label}
-      onTextLayout={keyed ? descentTo(setDescent, onTextLayout) : onTextLayout}
-      style={composed}
-    >
-      {plain ? (
-        children
-      ) : (
-        <TextSizeContext value={size}>
-          <TextLineContext value={line}>{children}</TextLineContext>
-        </TextSizeContext>
-      )}
-    </NativeText>
-  )
+  const lone = loneLinkOf(children)
+  const own = {
+    ...props,
+    accessibilityLabel: label,
+    onTextLayout: keyed ? descentTo(setDescent, onTextLayout) : onTextLayout,
+    style: composed,
+  }
+  // The children, or a lone link's, under the size and line set out above.
+  const content = (inner: ReactNode) =>
+    typeof inner === 'string' || typeof inner === 'number' ? (
+      inner
+    ) : (
+      <TextSizeContext value={size}>
+        <TextLineContext value={line}>{inner}</TextLineContext>
+      </TextSizeContext>
+    )
+
+  if (lone !== undefined) {
+    return (
+      <LoneLink {...own} link={lone.props}>
+        {content(lone.props.children)}
+      </LoneLink>
+    )
+  }
+
+  return <NativeText {...own}>{content(children)}</NativeText>
 }
 
 export type { TextProps }
