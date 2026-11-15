@@ -125,11 +125,19 @@ type ButtonGroupVariant = 'connected' | 'standard'
 type Press = { readonly delta: number; readonly index: number }
 
 const styles = StyleSheet.create({
-  // A row as wide as its buttons, as web's inline-flex group is.
+  // A row as wide as its buttons, as web's inline-flex group is, and never
+  // wider than what holds it: at a large OS text size three labels outgrow a
+  // phone, and the row ran off the screen.
   group: {
     alignItems: 'center',
     alignSelf: 'flex-start',
     flexDirection: 'row',
+    maxWidth: '100%',
+  },
+  // A button in the row gives way to the others' room, and its label wraps
+  // rather than running past the row's end, as a Button's label wraps.
+  item: {
+    flexShrink: 1,
   },
 })
 
@@ -342,6 +350,7 @@ function itemFor({
       selection,
       shift: 0,
       size,
+      style: styles.item,
     }
   }
 
@@ -357,6 +366,7 @@ function itemFor({
     selection,
     shift: shiftFor(index, count, press),
     size,
+    style: styles.item,
   }
 }
 
