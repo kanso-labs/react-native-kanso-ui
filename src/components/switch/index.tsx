@@ -33,6 +33,7 @@ import {
   describedBy,
   LAYER_SIZE,
   messageOf,
+  useControlLine,
 } from '../../control'
 import { controlStylesOf } from '../../control/styles'
 import { CheckGlyph } from '../../glyphs'
@@ -333,6 +334,7 @@ function Switch({
   ...props
 }: SwitchProps) {
   const theme = useTheme()
+  const line = useControlLine()
   const own = stylesOf(theme)
   const state = useToggleState({
     defaultSelected,
@@ -386,7 +388,7 @@ function Switch({
         onPress={drag.pressOf(state)}
         style={controlStylesOf(theme).row}
       >
-        <View style={styles.control}>
+        <View style={composeStyles<ViewStyle>(styles.control, line.control)}>
           <GestureDetector gesture={drag.gesture}>
             <View style={styles.drag}>
               <Animated.View
@@ -420,7 +422,9 @@ function Switch({
             </View>
           </GestureDetector>
         </View>
-        <ControlLabel isDisabled={isDisabled}>{children}</ControlLabel>
+        <ControlLabel isDisabled={isDisabled} line={line}>
+          {children}
+        </ControlLabel>
       </Pressable>
       <ControlMessage
         description={description}

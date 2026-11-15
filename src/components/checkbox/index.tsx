@@ -19,6 +19,7 @@ import {
   describedBy,
   LAYER_SIZE,
   messageOf,
+  useControlLine,
 } from '../../control'
 import { CheckboxBox } from '../../control/checkbox-box'
 import { CheckboxGroupContext } from '../../control/group'
@@ -162,6 +163,7 @@ function Checkbox({
   ...props
 }: CheckboxProps) {
   const theme = useTheme()
+  const line = useControlLine()
   const group = use(CheckboxGroupContext)
   const messageId = useId()
   const control = useRef<ComponentRef<typeof Pressable>>(null)
@@ -225,6 +227,7 @@ function Checkbox({
         <View
           style={composeStyles<ViewStyle>(
             controlStylesOf(theme).disc,
+            line.control,
             feedback.ring,
           )}
         >
@@ -238,7 +241,9 @@ function Checkbox({
             within={LAYER_SIZE}
           />
         </View>
-        <ControlLabel isDisabled={isDisabled}>{children}</ControlLabel>
+        <ControlLabel isDisabled={isDisabled} line={line}>
+          {children}
+        </ControlLabel>
       </Pressable>
       <ControlMessage description={description} error={error} id={messageId} />
     </View>

@@ -1,7 +1,19 @@
 import type { ReactNode } from 'react'
-import type { StyleProp, TextStyle, ViewProps, ViewStyle } from 'react-native'
+import type {
+  StyleProp,
+  TextLayoutEvent,
+  TextStyle,
+  ViewProps,
+  ViewStyle,
+} from 'react-native'
 
-import { Text as NativeText, Platform, View } from 'react-native'
+import { useState } from 'react'
+import {
+  Text as NativeText,
+  Platform,
+  useWindowDimensions,
+  View,
+} from 'react-native'
 
 import { useTheme } from '../theme/scope'
 import { composeStyles } from '../theme/styles'
@@ -16,6 +28,21 @@ type ControlLabelProps = {
    * @default false
    */
   readonly isDisabled?: boolean
+  /** Where the label's first line is set, from {@link useControlLine}. */
+  readonly line?: ControlLine
+}
+
+/**
+ * Where a control and its label's first line sit, so the one is centred on
+ * the other, from the line as it is drawn.
+ */
+type ControlLine = {
+  /** The control's offset, once the line is taller than the layer. */
+  readonly control: undefined | ViewStyle
+  /** The label's padding, half of what the layer has spare over its line. */
+  readonly label: TextStyle
+  /** Takes the first line's height as the label lays it out. */
+  readonly onTextLayout: (event: TextLayoutEvent) => void
 }
 
 type ControlMessageProps = {
@@ -49,7 +76,11 @@ const HIDDEN: ViewProps = {
  * without children, which is what a control labelled some other way, by
  * `aria-label` or a group's label, needs.
  */
-function ControlLabel({ children, isDisabled = false }: ControlLabelProps) {
+function ControlLabel({
+  children,
+  isDisabled = false,
+  line,
+}: ControlLabelProps) {
   const theme = useTheme()
   const own = controlStylesOf(theme)
   const role = useTypeRole('bodyLarge')
@@ -60,9 +91,11 @@ function ControlLabel({ children, isDisabled = false }: ControlLabelProps) {
 
   return (
     <NativeText
+      onTextLayout={line?.onTextLayout}
       style={composeStyles<TextStyle>(
         role,
         own.label,
+        line?.label,
         isDisabled ? own.labelDisabled : undefined,
       )}
     >
@@ -111,14 +144,6 @@ function ControlMessage({
   )
 }
 
-/**
- * How a control is described by the line under it, to spread onto the
- * control. On iOS and Android the message is the control's accessibility
- * hint, which VoiceOver and TalkBack read after its name and state, and
- * `ControlMessage` hides the line itself from them so it is not read twice.
- * React Native Web drops the hint, so there the control points at the line
- * with `aria-describedby`, as web's controls do.
- */
 function describedBy(id: string, message: string | undefined): DescribedBy {
   return Platform.OS === 'web'
     ? { 'aria-describedby': message === undefined ? undefined : id }
@@ -134,5 +159,51 @@ function messageOf(description: string | undefined, error: string | undefined) {
   return message === '' ? undefined : message
 }
 
-export { ControlLabel, ControlMessage, describedBy, LAYER_SIZE, messageOf }
-export type { ControlLabelProps, ControlMessageProps }
+/**
+ * How a control is described by the line under it, to spread onto the
+ * control. On iOS and Android the message is the control's accessibility
+ * hint, which VoiceOver and TalkBack read after its name and state, and
+ * `ControlMessage` hides the line itself from them so it is not read twice.
+ * React Native Web drops the hint, so there the control points at the line
+ * with `aria-describedby`, as web's controls do.
+ */
+/**
+ * Centres a control's label's first line on its 40dp layer, from the line as
+ * the platform draws it rather than the theme's line height: the label pads
+ * half of what the layer has spare over the line, and a line taller than the
+ * layer, as a large OS text size makes it, moves the control down half of
+ * what the line has spare over the layer instead. Android scales a large
+ * text size's line height by less than the scale, so the line is measured;
+ * until it is, it is the theme's line height at the OS text size.
+ */
+function useControlLine(): ControlLine {
+  const { typography } = useTheme()
+  const { fontScale } = useWindowDimensions()
+  const [drawn, setDrawn] = useState<number | undefined>(undefined)
+  const height = drawn ?? typography.bodyLargeLineHeight * fontScale
+
+  return {
+    control:
+      height > LAYER_SIZE
+        ? { marginTop: (height - LAYER_SIZE) / 2 }
+        : undefined,
+    label: { paddingVertical: Math.max(0, (LAYER_SIZE - height) / 2) },
+    onTextLayout: (event) => {
+      const first = event.nativeEvent.lines.at(0)
+
+      if (first !== undefined) {
+        setDrawn(first.height)
+      }
+    },
+  }
+}
+
+export {
+  ControlLabel,
+  ControlMessage,
+  describedBy,
+  LAYER_SIZE,
+  messageOf,
+  useControlLine,
+}
+export type { ControlLabelProps, ControlLine, ControlMessageProps }

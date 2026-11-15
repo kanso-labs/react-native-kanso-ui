@@ -157,6 +157,27 @@ afterEach(() => {
   jest.useRealTimers()
 })
 
+// The label's first line laid out at a height, as the platform draws it.
+async function laidOutLine(height: number) {
+  await fireEvent(screen.getByText('Label'), 'textLayout', {
+    nativeEvent: {
+      lines: [
+        {
+          ascender: 0,
+          capHeight: 0,
+          descender: 0,
+          height,
+          text: 'Label',
+          width: 40,
+          x: 0,
+          xHeight: 0,
+          y: 0,
+        },
+      ],
+    },
+  })
+}
+
 describe('Checkbox', () => {
   describe('semantics', () => {
     it('is announced as a checkbox named by its label', async () => {
@@ -609,6 +630,7 @@ describe('Checkbox', () => {
 
     it('sets the label in body large, its first line centred on the disc', async () => {
       await render(<Checkbox>Label</Checkbox>)
+      await laidOutLine(typography.bodyLargeLineHeight)
 
       expect(styleOf(screen.getByText('Label'))).toMatchObject({
         color: colors.onSurface,
@@ -620,6 +642,18 @@ describe('Checkbox', () => {
         minWidth: 0,
         paddingVertical: (40 - typography.bodyLargeLineHeight) / 2,
       })
+    })
+
+    // A large OS text size draws the line taller than the 40dp disc, and
+    // the disc stood at the top of the line rather than its middle.
+    it('moves the disc down to a first line taller than it', async () => {
+      await render(<Checkbox>Label</Checkbox>)
+      await laidOutLine(56)
+
+      expect(styleOf(screen.getByText('Label'))).toMatchObject({
+        paddingVertical: 0,
+      })
+      expect(styleOf(parts().disc)).toMatchObject({ marginTop: 8 })
     })
 
     it('sets the line under the label, in body small', async () => {
