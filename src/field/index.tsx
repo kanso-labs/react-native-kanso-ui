@@ -660,8 +660,16 @@ function FieldInput({
     ? marginTopOf(typography.bodySmallLineHeight * fontScale)
     : undefined
   const affixStyle = composeStyles<TextStyle>(role, colorOf(muted))
-  const lines =
-    typography.bodyLargeLineHeight * fontScale * (multiline ? rows : 1)
+  // A line as the platform draws it. Android scales a large text size's line
+  // height by less than the text size, so a line reckoned from the token
+  // times the scale was a third taller than the line drawn at 200%, and a
+  // text area showed a line more than it asked for. A multi-line control on
+  // iOS and Android measures one line drawn in its role, and is sized from
+  // that once it has.
+  const [drawnLine, setDrawnLine] = useState<number | undefined>(undefined)
+  const measures = multiline && Platform.OS !== 'web'
+  const line = drawnLine ?? typography.bodyLargeLineHeight * fontScale
+  const lines = line * (multiline ? rows : 1)
   const copied = multiline && autosize && Platform.OS === 'web'
   const extent = multiline && !autosize ? heightOf(lines) : minHeightOf(lines)
 
@@ -719,8 +727,25 @@ function FieldInput({
     )
   }
 
+  const measure = measures ? (
+    <NativeText
+      aria-hidden
+      onLayout={heightTo(setDrawnLine)}
+      style={composeStyles<TextStyle>(role, styles.measure)}
+    >
+      X
+    </NativeText>
+  ) : null
+
   if (!affixed && !holdsChosen) {
-    return control
+    return measures ? (
+      <>
+        {control}
+        {measure}
+      </>
+    ) : (
+      control
+    )
   }
 
   return (
@@ -751,6 +776,7 @@ function FieldInput({
           {suffix}
         </Affix>
       )}
+      {measure}
     </View>
   )
 }
@@ -1296,6 +1322,13 @@ function focusOf(control: RefObject<Focusable | null> | undefined) {
 
 function heightOf(height: number): ViewStyle {
   return { height }
+}
+
+// Keeps the height a view is laid out at.
+function heightTo(set: (height: number) => void) {
+  return (event: LayoutChangeEvent) => {
+    set(event.nativeEvent.layout.height)
+  }
 }
 
 function iconStyleOf(color: string): IconStyle {
