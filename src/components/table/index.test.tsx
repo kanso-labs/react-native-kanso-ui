@@ -1575,6 +1575,17 @@ describe('Table', () => {
       expect(screen.queryAllByRole('slider')).toHaveLength(0)
     })
 
+    // A handle is drawn as a 24dp strip, and a drag begun 18dp beside the
+    // edge left the column as it was.
+    it('reaches a handle’s drag 48dp across the header, centred on the edge', async () => {
+      await render(<Resizable />)
+      await layOut()
+
+      expect(getByGestureTestId('table-resize-colName').config.hitSlop).toEqual(
+        { left: 12, right: 12 },
+      )
+    })
+
     it('widens a column as its handle is dragged, and reports the widths', async () => {
       const onResize = jest.fn<(widths: Map<Key, ColumnSize>) => void>()
       const onResizeEnd = jest.fn<(widths: Map<Key, ColumnSize>) => void>()
