@@ -2,6 +2,7 @@ import { describe, expect, it } from '@jest/globals'
 
 import {
   columnSizeFor,
+  directionOf,
   limitFor,
   messagesFor,
   resultsFor,
@@ -200,6 +201,24 @@ describe('what a carousel’s item is called', () => {
   it('writes both numbers in the locale’s digits', () => {
     expect(slideLabelFor(2, 6, 'ar-EG')).toBe('٢ من ٦')
     expect(slideLabelFor(1200, 1500, 'en-US')).toBe('1,200 of 1,500')
+  })
+})
+
+describe('the direction a locale writes in', () => {
+  it.each([
+    ['en-US', 'ltr'],
+    ['ja-JP', 'ltr'],
+    ['ar-EG', 'rtl'],
+    ['he-IL', 'rtl'],
+    ['fa', 'rtl'],
+    ['ur-PK', 'rtl'],
+    // A script the tag names decides it over the language.
+    ['az-Arab-IR', 'rtl'],
+    ['pa-Arab', 'rtl'],
+    ['ku-Latn', 'ltr'],
+    ['zh_Hans_CN', 'ltr'],
+  ])('reads %s as %s', (locale, direction) => {
+    expect(directionOf(locale)).toBe(direction)
   })
 })
 

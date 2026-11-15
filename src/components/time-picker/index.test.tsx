@@ -1,6 +1,6 @@
 import type { ComponentRef, ReactNode } from 'react'
 import type { StyleProp, TextStyle, ViewStyle } from 'react-native'
-import type { TestInstance } from 'test-renderer'
+import type { TestInstance, TestNode } from 'test-renderer'
 
 import { CalendarDateTime, Time } from '@internationalized/date'
 import {
@@ -147,6 +147,13 @@ function input() {
     includeHiddenElements: true,
     normalizer: (text) => text,
   })
+}
+
+function instanceOf(node: null | TestNode | undefined): TestInstance {
+  if (node === null || node === undefined || typeof node === 'string') {
+    throw new TypeError('expected an element')
+  }
+  return node
 }
 
 function isIn(node: TestInstance, testID: string) {
@@ -703,6 +710,17 @@ describe('TimePicker', () => {
           includeHiddenElements: true,
         }),
       ).toBeOnTheScreen()
+    })
+
+    it('names the boxes left to right, under the hour and the minute they name', async () => {
+      await renderPicker()
+      await open()
+      await fireEvent.press(screen.getByRole('button', { name: 'Enter time' }))
+
+      const hour = within(container()).getByText('Hour', {
+        includeHiddenElements: true,
+      })
+      expect(styleOf(instanceOf(hour.parent)).direction).toBe('ltr')
     })
 
     it('raises the keyboard on the box the dial set, and takes the time typed', async () => {
