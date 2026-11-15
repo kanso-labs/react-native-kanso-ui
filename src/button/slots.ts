@@ -50,8 +50,11 @@ type ButtonSlotTrigger = {
  * take one too.
  */
 type ButtonTooltip = {
-  /** How long a press is held before it opens the tooltip, in milliseconds. */
-  readonly delayLongPress: number
+  /**
+   * How long a press is held before it opens the tooltip, in milliseconds.
+   * Left out, the platform's long-press time.
+   */
+  readonly delayLongPress?: number
   /** The tooltip's label, read after the button's name. */
   readonly hint: string
   readonly onHoverIn?: (() => void) | undefined
