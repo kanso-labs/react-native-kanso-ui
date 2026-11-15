@@ -31,7 +31,7 @@ import {
 } from '../../control'
 import { controlStylesOf } from '../../control/styles'
 import { GROUP } from '../../group'
-import { hitSlop, usePressFeedback } from '../../press'
+import { hitSlop, TARGET_SIZE, usePressFeedback } from '../../press'
 import { withOpacity } from '../../theme/color'
 import { useTheme } from '../../theme/scope'
 import { composeStyles, themedStyles } from '../../theme/styles'
@@ -184,26 +184,31 @@ const groupStylesOf = themedStyles(
   ({ colors, radii, spacing, stateLayerOpacity }) =>
     StyleSheet.create({
       // An option with a description, in a group one under another: 12dp
-      // after the description. The label is centred in its 40dp row, 8dp
-      // off its edge, so the description 4dp under the row sat 12dp from
-      // its own label's text and 8dp from the next one's, and read as the
-      // next option's. This leaves it 12dp from its own and 20dp from the
-      // next, and an option without one where it was.
+      // after the description, 8 of it the gap every option takes. The label
+      // is centred in its 40dp row, 8dp off its edge, so the description 4dp
+      // under the row sat 12dp from its own label's text and 8dp from the
+      // next one's, and read as the next option's. This leaves it 12dp from
+      // its own and 20dp from the next.
       described: {
-        marginBottom: spacing.md,
+        marginBottom: spacing.md - (TARGET_SIZE - LAYER_SIZE),
       },
       dot: {
         borderRadius: radii.circle,
       },
-      // The group's buttons, one under another.
+      // The group's buttons, one under another, 8dp apart: each reaches 4dp
+      // past its 40dp layer to a 48dp target, and rows that touched let the
+      // lower one's reach take a press on the bottom of the one above.
       items: {
         flexDirection: 'column',
+        rowGap: TARGET_SIZE - LAYER_SIZE,
       },
-      // Along a line instead, 16dp apart, wrapping when the line runs out.
+      // Along a line instead, 16dp apart, wrapping when the line runs out,
+      // its lines as far apart as the rows of a column.
       itemsHorizontal: {
         columnGap: spacing.lg,
         flexDirection: 'row',
         flexWrap: 'wrap',
+        rowGap: TARGET_SIZE - LAYER_SIZE,
       },
       label: {
         color: colors.onSurfaceVariant,
