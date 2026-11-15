@@ -71,6 +71,10 @@ function systemFontOf(weight: number | undefined): string | undefined {
 // face by the generic name the other uses.
 const MONOSPACE = new Set(['monospace', 'ui-monospace'])
 
+// The same for a serif: iOS's serif system face, which React Native names
+// `ui-serif`, and Android's `serif`.
+const SERIF = new Set(['serif', 'ui-serif'])
+
 /** A family list as CSS writes it, quoting the names with spaces in them. */
 function cssStack(families: readonly string[]): string {
   return families
@@ -81,18 +85,21 @@ function cssStack(families: readonly string[]): string {
 /**
  * What a list draws in on iOS and Android when its first family is not
  * there: the platform's monospaced face for a list naming a monospace family,
- * as the mono token's does, so code keeps its columns, and the system font
- * for any other, at `weight`.
+ * as the mono token's does, so code keeps its columns, the platform's serif
+ * face for a list naming a serif family, so a serif theme reads as one, and
+ * the system font for any other, at `weight`.
  */
 function fallbackOf(
   families: readonly string[],
   weight: number | undefined,
 ): string | undefined {
-  if (!families.some((family) => MONOSPACE.has(family))) {
-    return systemFontOf(weight)
+  if (families.some((family) => MONOSPACE.has(family))) {
+    return Platform.OS === 'android' ? 'monospace' : 'ui-monospace'
   }
-
-  return Platform.OS === 'android' ? 'monospace' : 'ui-monospace'
+  if (families.some((family) => SERIF.has(family))) {
+    return Platform.OS === 'android' ? 'serif' : 'ui-serif'
+  }
+  return systemFontOf(weight)
 }
 
 /**
@@ -100,8 +107,8 @@ function fallbackOf(
  *
  * On iOS and Android that is the list's first family when the app has
  * registered it with expo-font, under the name the token gives it. Otherwise
- * it is the platform's monospaced face for a monospace list, and the system
- * font for any other, in its medium face on Android for a `weight` of 500 or
+ * it is the platform's monospaced face for a monospace list, its serif face
+ * for a serif list, and the system font for any other, in its medium face on Android for a `weight` of 500 or
  * 600, the weight React Native is handed beside the family. Neither package ships a font, and React Native names
  * one family rather than falling through a list, so the rest of the list is
  * the browser's alone. Under React Native Web the whole list goes to CSS, as

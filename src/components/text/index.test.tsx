@@ -67,13 +67,15 @@ function styleOf(element: {
 }
 
 // The face Android draws a role in while its family is not registered: the
-// system font's medium face for the roles at 500, and the system font for the
-// rest.
+// system font's medium face for the plain roles at 500, the system font for
+// the other plain roles, and the serif face for the brand roles, whose
+// default stack is a serif.
 const ANDROID_FACES: readonly (readonly [TypeRole, string])[] = [
   ['labelLarge', 'sans-serif-medium'],
   ['titleMedium', 'sans-serif-medium'],
   ['bodyLarge', 'sans-serif'],
-  ['titleLarge', 'sans-serif'],
+  ['titleLarge', 'serif'],
+  ['displayLarge', 'serif'],
 ]
 
 afterEach(() => {

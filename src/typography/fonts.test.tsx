@@ -41,10 +41,23 @@ describe('useFontFamily', () => {
     expect(await settled(MONO)).toBe('monospace')
   })
 
-  it('draws a list naming no monospace family in the system font', async () => {
+  it('draws a list naming no monospace or serif family in the system font', async () => {
     jest.replaceProperty(Platform, 'OS', 'ios')
 
-    expect(await settled(SERIF)).toBe('System')
+    expect(await settled(STACK)).toBe('System')
+  })
+
+  // The Editorial scheme claims a serif and was drawn in the system sans.
+  it('draws a serif list in Android’s serif face when its first family is not there', async () => {
+    jest.replaceProperty(Platform, 'OS', 'android')
+
+    expect(await settled(SERIF)).toBe('serif')
+  })
+
+  it('draws a serif list in iOS’s serif system face when its first family is not there', async () => {
+    jest.replaceProperty(Platform, 'OS', 'ios')
+
+    expect(await settled(SERIF)).toBe('ui-serif')
   })
 
   // Android draws `sans-serif` at 500 and 600 exactly as at 400.
