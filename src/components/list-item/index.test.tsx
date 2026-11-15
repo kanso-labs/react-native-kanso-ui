@@ -11,6 +11,7 @@ import { ListItem } from '.'
 import { useIconStyle } from '../../glyphs/icon-style'
 import { withOpacity } from '../../theme/color'
 import { scopeFor } from '../../theme/scope'
+import { Checkbox } from '../checkbox'
 
 const { theme } = scopeFor('light', {})
 const { colors, sizing, spacing, stateLayerOpacity, typography } = theme
@@ -29,6 +30,10 @@ const PRESS = {
 const LEADING = <Text testID="leading">Lead</Text>
 const TRAILING = <Text testID="trailing">Trail</Text>
 const ICON = <Icon />
+const AVATAR = <View testID="avatar" />
+const COUNT = <Text>01</Text>
+const PICTURE = <View />
+const CONTROL = <Checkbox aria-label="Select" onChange={() => undefined} />
 const CALL_SITE = { marginTop: 4 }
 
 // What the slot hands an icon, written out where a case can read it.
@@ -294,6 +299,53 @@ describe('ListItem', () => {
       expect(row.props.role).toBeUndefined()
       expect(row.props.onClick).toBeUndefined()
       expect(row.props.onResponderRelease).toBeUndefined()
+    })
+
+    // Left as loose texts, Android read them by where they sit, so the
+    // trailing text came between the headline and its supporting line.
+    it('is one element, named by its lines and its trailing text in order', async () => {
+      await render(
+        <ListItem
+          leading={AVATAR}
+          overline="Overline"
+          supporting="Supporting line"
+          testID="row"
+          trailing={COUNT}
+        >
+          Headline
+        </ListItem>,
+      )
+
+      expect(screen.getByTestId('row').props).toMatchObject({
+        accessible: true,
+        'aria-label': 'Overline, Headline, Supporting line, 01',
+      })
+    })
+
+    it('leaves the name to the platform when a part is not text', async () => {
+      await render(
+        <ListItem testID="row" trailing={PICTURE}>
+          Headline
+        </ListItem>,
+      )
+
+      const row = screen.getByTestId('row')
+
+      expect(row.props.accessible).toBe(true)
+      expect(row.props['aria-label']).toBeUndefined()
+    })
+
+    it('stays ungrouped when a slot holds a control of its own', async () => {
+      await render(
+        <ListItem leading={CONTROL} testID="row">
+          Headline
+        </ListItem>,
+      )
+
+      const row = screen.getByTestId('row')
+
+      expect(row.props.accessible).toBe(false)
+      expect(screen.getByRole('checkbox', { name: 'Select' })).toBeOnTheScreen()
     })
 
     it('says it is disabled, and says nothing otherwise', async () => {

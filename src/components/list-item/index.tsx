@@ -6,10 +6,18 @@ import type {
   ViewStyle,
 } from 'react-native'
 
+import { isValidElement } from 'react'
 import { Pressable, View } from 'react-native'
 
+import { textOf } from '../../plain-text'
 import { usePressFeedback } from '../../press'
-import { RowContent, rowContentColor, rowStyleOf, rowStyles } from '../../row'
+import {
+  hasContent,
+  RowContent,
+  rowContentColor,
+  rowStyleOf,
+  rowStyles,
+} from '../../row'
 import { useTheme } from '../../theme/scope'
 import { composeStyles } from '../../theme/styles'
 
@@ -22,6 +30,15 @@ import { composeStyles } from '../../theme/styles'
 // is the view around it, a `View` that presents or a `Pressable` that
 // ripples, and the props that fill the slots. Both slots lie along the
 // writing direction, so they swap sides under right-to-left.
+//
+// **A row that presents is one element to a screen reader**, as Material
+// Design's list item is on Android and as an interactive row already is:
+// left as loose texts, Android read them by where they sit, so a trailing
+// "01" came between the headline and its supporting line. Its name is its
+// overline, headline, supporting line and trailing text, in that order, when
+// each is text, and the platform's reading of what it holds otherwise. A row
+// whose slot holds a control of its own, something pressed, chosen or
+// typed into, is left ungrouped, so the control stays a stop of its own.
 
 type InteractiveListItemForm = Omit<
   PressableProps,
@@ -139,7 +156,8 @@ function InteractiveListItem({
  * Which of the lists page's three items it is comes from what it holds: a
  * `supporting` line or an `overline` makes it the two-line item, and both
  * the three-line one. It is a `View` with no role unless `interactive`,
- * when it is a `Pressable` announced as a button. The press props belong to
+ * when it is a `Pressable` announced as a button. Either is one element to a
+ * screen reader, unless a slot holds a control of its own. The press props belong to
  * an interactive row alone. `style`, `ref` and `testID` land on the row's
  * own view.
  */
@@ -163,10 +181,15 @@ function StaticListItem({
   ...props
 }: ListItemBaseProps & StaticListItemForm) {
   const theme = useTheme()
+  const grouped = !holdsControl(leading) && !holdsControl(trailing)
 
   return (
     <View
+      accessible={grouped}
       aria-disabled={isDisabled || undefined}
+      aria-label={
+        grouped ? nameOf([overline, children, supporting, trailing]) : undefined
+      }
       {...props}
       style={composeStyles<ViewStyle>(
         rowStyleOf(theme, { overline, supporting }),
@@ -184,6 +207,59 @@ function StaticListItem({
       </RowContent>
     </View>
   )
+}
+
+// The props that make an element a control of its own: something pressed,
+// chosen or typed into.
+const CONTROL_PROPS = [
+  'defaultSelected',
+  'defaultValue',
+  'href',
+  'isSelected',
+  'onChange',
+  'onPress',
+  'onSelectionChange',
+  'onValueChange',
+  'value',
+]
+
+/** Whether a slot holds a control of its own, which keeps the row ungrouped. */
+function holdsControl(node: ReactNode): boolean {
+  if (Array.isArray(node)) {
+    return node.some((part: ReactNode) => holdsControl(part))
+  }
+  if (
+    !isValidElement<Record<string, unknown> & { children?: ReactNode }>(node)
+  ) {
+    return false
+  }
+  return (
+    CONTROL_PROPS.some((prop) => node.props[prop] !== undefined) ||
+    holdsControl(node.props.children)
+  )
+}
+
+/**
+ * A static row's name: the text of each part it holds, in reading order,
+ * when every part it holds is text, and `undefined` otherwise, which leaves
+ * the name to the platform's reading of the row.
+ */
+function nameOf(parts: readonly ReactNode[]): string | undefined {
+  const held = parts.filter((part) => hasContent(part))
+  const texts = held.map((part) => wordsOf(part))
+
+  return texts.every((text) => text !== undefined) && texts.length > 0
+    ? texts.join(', ')
+    : undefined
+}
+
+// What a part says: its text, or the text of the element holding it, as a
+// Text holds a trailing "01".
+function wordsOf(node: ReactNode): string | undefined {
+  if (isValidElement<{ children?: ReactNode }>(node)) {
+    return wordsOf(node.props.children)
+  }
+  return textOf(node)
 }
 
 export type { ListItemProps }
