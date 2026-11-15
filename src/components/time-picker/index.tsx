@@ -129,6 +129,13 @@ const OUTER_RING = 101
 const INNER_RING = 64
 const HANDLE = 24
 
+// How far the OS text size grows the dial's labels. The dial is drawn in dp,
+// so at 200% the 24-hour dial's inner ring ran into itself and into the
+// outer one. Its labels stay readable this far, 12 on the inner ring still
+// apart, and the dial is hidden from a screen reader, while the hour and
+// minute boxes above it carry the time at the full text size.
+const DIAL_TEXT_SCALE = 1.3
+
 // The page's measurements that are its own rather than the scale's: the
 // container's width, which is the 280dp time selector and the padding either
 // side, the dial variant's box height, the colon's width, the period
@@ -550,6 +557,7 @@ function Dial({
                 )}
               >
                 <NativeText
+                  maxFontSizeMultiplier={DIAL_TEXT_SCALE}
                   style={composeStyles<TextStyle>(
                     role,
                     label.isSelected

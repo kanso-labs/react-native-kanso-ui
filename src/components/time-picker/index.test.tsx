@@ -440,6 +440,20 @@ describe('TimePicker', () => {
   })
 
   describe('the dial', () => {
+    // The dial is drawn in dp, and at 200% the 24-hour dial's inner ring
+    // ran into itself and the outer one.
+    it('grows its labels with the OS text size no further than 130%', async () => {
+      await renderPicker({ hourCycle: 24 })
+      await open()
+
+      for (const label of ['00', '12', '13', '23']) {
+        expect(
+          screen.getByText(label, { includeHiddenElements: true }).props
+            .maxFontSizeMultiplier,
+        ).toBe(1.3)
+      }
+    })
+
     it('sets the hour where a drag lets go, then moves on to the minutes', async () => {
       await renderPicker()
       await open()
