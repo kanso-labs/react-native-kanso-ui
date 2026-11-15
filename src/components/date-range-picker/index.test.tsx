@@ -457,6 +457,23 @@ describe('DateRangePicker', () => {
       ])
     })
 
+    // At a large OS text size the two dates outgrow the line, which clipped
+    // the end date out of sight while it could still be typed into.
+    it('wraps the end date onto a further line whole, rather than clipping it', async () => {
+      await renderPicker()
+
+      const line = separator().parent
+      const [start, , end] = line?.children ?? []
+
+      expect(styleOf(line ?? { props: {} })).toMatchObject({
+        flexWrap: 'wrap',
+      })
+      expect(styleOf(line ?? { props: {} })).not.toHaveProperty('overflow')
+      for (const date of [start, end]) {
+        expect(styleOf(child(date))).toMatchObject({ flexWrap: 'nowrap' })
+      }
+    })
+
     it('draws the dash between the dates in the muted role, hidden from a screen reader', async () => {
       await renderPicker()
 

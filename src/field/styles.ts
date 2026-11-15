@@ -246,14 +246,20 @@ const fieldStylesOf = themedStyles(
         start: 0,
         top: 0,
       },
-      // A date or a time's segments on the value's line, in a row. Clipped
-      // at the box rather than wrapped, since every segment on the line is
-      // somewhere to type, so none of it can be drawn as though it were not
-      // there.
+      // A date or a time's segments on the value's line, in a row, which
+      // wraps onto a further line, and grows the box, once the box has no
+      // more room, as it has none at a large OS text size: every segment on
+      // the line is somewhere to type, so none of it can be cut off out of
+      // sight. A range's two dates each keep their segments on one line of
+      // their own, so a date moves to the next line whole.
       segments: {
         alignItems: 'center',
         flexDirection: 'row',
-        overflow: 'hidden',
+        flexWrap: 'wrap',
+      },
+      // One of a range's two dates, whose segments stay together.
+      segmentsOfOne: {
+        flexWrap: 'nowrap',
       },
       // A chosen field's placeholder under a resting label: out of sight and
       // still on its line, so the box keeps its height. Android draws text in

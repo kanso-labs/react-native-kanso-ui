@@ -870,6 +870,7 @@ function FieldSegments({ children }: { readonly children?: ReactNode }) {
     <View
       style={composeStyles<ViewStyle>(
         styles.segments,
+        onLine ? styles.segmentsOfOne : undefined,
         box.underLabel && !onLine
           ? marginTopOf(theme.typography.bodySmallLineHeight * fontScale)
           : undefined,
