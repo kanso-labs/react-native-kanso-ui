@@ -1,5 +1,47 @@
 # Changelog
 
+## [0.13.0](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.12.5...v0.13.0) (2026-11-15)
+
+
+### Features
+
+* **date-picker:** draw the modal date picker on a compact window, as web does ([#647](https://github.com/kanso-labs/react-native-kanso-ui/issues/647)) ([b478955](https://github.com/kanso-labs/react-native-kanso-ui/commit/b4789557ae86bcee801771998d5bacb0a5f108b3))
+
+
+### Bug Fixes
+
+* **app-bar:** keep a medium or large bar's icons in its top row ([#645](https://github.com/kanso-labs/react-native-kanso-ui/issues/645)) ([4c0340a](https://github.com/kanso-labs/react-native-kanso-ui/commit/4c0340a2ed8e166a3fdb129d5bfab43696408bb5))
+* **badge:** anchor a large badge by its bottom leading corner ([#639](https://github.com/kanso-labs/react-native-kanso-ui/issues/639)) ([76ca578](https://github.com/kanso-labs/react-native-kanso-ui/commit/76ca578a039dafd635174c709d50f2e5a53ebbd8))
+* **breadcrumbs:** space wrapped rows so their targets do not overlap ([#646](https://github.com/kanso-labs/react-native-kanso-ui/issues/646)) ([9f147a6](https://github.com/kanso-labs/react-native-kanso-ui/commit/9f147a6837e5dceec4633b2daaaa77d9b7258606))
+* **button-group:** keep a group within its container at large text sizes ([#633](https://github.com/kanso-labs/react-native-kanso-ui/issues/633)) ([b50d6b8](https://github.com/kanso-labs/react-native-kanso-ui/commit/b50d6b8954821920d05f51defef6554af0a58ae1))
+* **collection:** keep the unseen status out of TalkBack's reading order ([#651](https://github.com/kanso-labs/react-native-kanso-ui/issues/651)) ([1e2813a](https://github.com/kanso-labs/react-native-kanso-ui/commit/1e2813aa7a5f73a7402cbb24c841a7de05ec08ca))
+* **color-wheel:** take presses across the whole 48dp band ([#643](https://github.com/kanso-labs/react-native-kanso-ui/issues/643)) ([d73c6d2](https://github.com/kanso-labs/react-native-kanso-ui/commit/d73c6d2df95f663ebdd6e64f36993d986c290b49))
+* **control:** centre a label's first line on its control at large text sizes ([#638](https://github.com/kanso-labs/react-native-kanso-ui/issues/638)) ([e209bcb](https://github.com/kanso-labs/react-native-kanso-ui/commit/e209bcbd94f6876bfdb72c8b8be417f56c025430))
+* **control:** space stacked selection controls so their targets meet edge to edge ([#650](https://github.com/kanso-labs/react-native-kanso-ui/issues/650)) ([755161e](https://github.com/kanso-labs/react-native-kanso-ui/commit/755161e66d0a9c26e209099c6416ce38615424f0))
+* **currency:** keep the sign beside its amount under right-to-left ([#654](https://github.com/kanso-labs/react-native-kanso-ui/issues/654)) ([c3b643b](https://github.com/kanso-labs/react-native-kanso-ui/commit/c3b643b1ef5aa6fe760057daf6d2c65c8bd119da))
+* **date-range-picker:** keep both dates in sight at large text sizes ([#635](https://github.com/kanso-labs/react-native-kanso-ui/issues/635)) ([fd24c3a](https://github.com/kanso-labs/react-native-kanso-ui/commit/fd24c3a68dc959976244dca7946151bafd4dbe3d))
+* **dialog:** keep a basic dialog's margin clear of the system bars ([#658](https://github.com/kanso-labs/react-native-kanso-ui/issues/658)) ([f8630c6](https://github.com/kanso-labs/react-native-kanso-ui/commit/f8630c6f42d562ef71b65c6025458c9dbcf502de))
+* **feed:** count the columns from the room the grid measures on a device ([#657](https://github.com/kanso-labs/react-native-kanso-ui/issues/657)) ([a384061](https://github.com/kanso-labs/react-native-kanso-ui/commit/a384061426b1ffe68d8f92782eb833a2f20dfc3b))
+* **field:** size a multi-line control by the lines Android draws at large text sizes ([#637](https://github.com/kanso-labs/react-native-kanso-ui/issues/637)) ([e145031](https://github.com/kanso-labs/react-native-kanso-ui/commit/e1450317ff03033f9c037d063f06aa12b23a2c9d))
+* **list-item:** read a static row as one element in its reading order ([#630](https://github.com/kanso-labs/react-native-kanso-ui/issues/630)) ([c938c34](https://github.com/kanso-labs/react-native-kanso-ui/commit/c938c3486516840a8b35eca5ba81a97b9c685657))
+* **segmented-button:** wrap a label rather than cut it at large text sizes ([#632](https://github.com/kanso-labs/react-native-kanso-ui/issues/632)) ([da3d93c](https://github.com/kanso-labs/react-native-kanso-ui/commit/da3d93ceeaf2fe7fbcfde952709f81c87d0c16ad))
+* **segments:** give each date and time segment a 48dp target ([#642](https://github.com/kanso-labs/react-native-kanso-ui/issues/642)) ([53fa011](https://github.com/kanso-labs/react-native-kanso-ui/commit/53fa01103b4b6bb1eebc73ee3ad57f60c3e7b985))
+* **segments:** keep a date's and a time's segments in their locale's order under right-to-left ([#653](https://github.com/kanso-labs/react-native-kanso-ui/issues/653)) ([925c1ff](https://github.com/kanso-labs/react-native-kanso-ui/commit/925c1ffe7bf4b370a5a190f99f7d4d59be8a4cb8))
+* **table:** give a column's resize handle a 48dp target ([#644](https://github.com/kanso-labs/react-native-kanso-ui/issues/644)) ([af5b775](https://github.com/kanso-labs/react-native-kanso-ui/commit/af5b775d34234ca6ff5eda604507edd7f991bbb8))
+* **time-picker:** keep the dial's labels apart at large text sizes ([#636](https://github.com/kanso-labs/react-native-kanso-ui/issues/636)) ([ec22fb5](https://github.com/kanso-labs/react-native-kanso-ui/commit/ec22fb53a2ac7134d011b7f2ca5da543c91d659d))
+* **toolbar:** keep the bar and its controls within its container ([#634](https://github.com/kanso-labs/react-native-kanso-ui/issues/634)) ([2cadae6](https://github.com/kanso-labs/react-native-kanso-ui/commit/2cadae67eedf6dcecc39f5d5162c62bd0bb39567))
+* **tooltip:** open on a held press at the platform's long-press time ([#648](https://github.com/kanso-labs/react-native-kanso-ui/issues/648)) ([198fc56](https://github.com/kanso-labs/react-native-kanso-ui/commit/198fc56ff6c5df1499274a90f2210cf840cc2798))
+* **tree:** say a nested row's level to a screen reader ([#652](https://github.com/kanso-labs/react-native-kanso-ui/issues/652)) ([b9c9905](https://github.com/kanso-labs/react-native-kanso-ui/commit/b9c9905fc5300f82d5af74bb8ac31a6e04a6fde2))
+* **typography:** fall back to the platform's serif face for a serif font stack ([#640](https://github.com/kanso-labs/react-native-kanso-ui/issues/640)) ([0f26bc5](https://github.com/kanso-labs/react-native-kanso-ui/commit/0f26bc56e7e982ba1fd51e4e4844248e96c2293e))
+
+
+### Dependencies
+
+* update dependency @kanso-labs/kanso-ui-core to v0.1.22 ([#663](https://github.com/kanso-labs/react-native-kanso-ui/issues/663)) ([a1878cc](https://github.com/kanso-labs/react-native-kanso-ui/commit/a1878ccf104a2c3c154c80c5253de559914bca8d))
+* update dependency @kanso-labs/kanso-ui-core to v0.1.22 ([#664](https://github.com/kanso-labs/react-native-kanso-ui/issues/664)) ([2c045d3](https://github.com/kanso-labs/react-native-kanso-ui/commit/2c045d36dec1d244843e7c579d83a49630814568))
+* update dependency eslint-plugin-perfectionist to v5.14.0 ([#661](https://github.com/kanso-labs/react-native-kanso-ui/issues/661)) ([6c9d1ff](https://github.com/kanso-labs/react-native-kanso-ui/commit/6c9d1ff064536ef113ab73f0feaa9e6d761ae634))
+* update dependency lint-staged to v17.6.1 ([#660](https://github.com/kanso-labs/react-native-kanso-ui/issues/660)) ([d07e33e](https://github.com/kanso-labs/react-native-kanso-ui/commit/d07e33efb9fe6dffa8d94857cb739c7e4625d41a))
+
 ## [0.12.5](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.12.4...v0.12.5) (2026-11-15)
 
 
