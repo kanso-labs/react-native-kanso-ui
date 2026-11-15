@@ -6,19 +6,29 @@ import type {
   DatePickerStateOptions as StatelyDatePickerProps,
 } from 'react-stately/useDatePickerState'
 
-import { createCalendar } from '@internationalized/date'
+import {
+  createCalendar,
+  DateFormatter,
+  toCalendarDate,
+} from '@internationalized/date'
 import { useRef, useState } from 'react'
+import { View as NativeView, StyleSheet } from 'react-native'
 import { useDateFieldState } from 'react-stately/useDateFieldState'
 import { useDatePickerState } from 'react-stately/useDatePickerState'
 
 import type { FieldVariant } from '../../field'
 
+import { useWindowSizeClass } from '../../hooks/useWindowSizeClass'
 import { messagesFor } from '../../i18n'
 import { useLocaleOf } from '../../i18n/provider'
 import { PickerPopup, PickerTrigger } from '../../picker'
 import { fieldClockOf } from '../../segments/clock'
 import { SegmentedField } from '../../segments/field'
+import { useTheme } from '../../theme/scope'
+import { themedStyles } from '../../theme/styles'
+import { Button } from '../button'
 import { Calendar } from '../calendar'
+import { Text } from '../text'
 
 // kanso-ui's DatePicker, the date pickers page's picker: the date field a
 // date is typed into, with a calendar behind a button for picking it
@@ -44,6 +54,20 @@ import { Calendar } from '../calendar'
 // pairing the page draws: in a compact window the calendar opens as a
 // dialog, centred over a scrim, and from 600dp up it hangs under the field.
 // The two are src/picker's, which says why.
+//
+// **The modal is the page's modal picker, not the docked calendar centred**,
+// as on web. In a compact window the calendar opens under the modal's
+// header, `Select date` in label large over the date held in headline large,
+// both on surface variant, in a 120dp header padded 24dp at its start, 12dp
+// at its end, 16dp above and 12dp below, with an outline variant divider
+// under it, and over the Cancel and OK text buttons at the actions' end. A
+// date picked there is a draft: it moves the headline and the selection and
+// nothing else, OK writes it into the field, and Cancel, the back gesture or
+// a press on the scrim close the modal with the field as it was. Docked, the
+// header and the actions are not drawn and a pick is the answer. Two
+// departures from the page's modal, web's: no button switching the modal to
+// a text input, since the field under the scrim is that input, and with
+// nothing yet picked an empty headline, the header keeping its height.
 //
 // **Picking a date closes the calendar**, unless `shouldCloseOnSelect` says
 // otherwise. A screen reader goes to the date held as the calendar opens,
@@ -74,6 +98,16 @@ type DatePickerProps<T extends DateValue = DateValue> = Pick<
   | 'validate'
   | 'value'
 > & {
+  /**
+   * What the modal's dismissing action says. Left out, it is the word for
+   * cancel in the locale.
+   */
+  readonly cancelLabel?: string
+  /**
+   * What the modal's confirming action says. Left out, it is the word for
+   * OK in the locale.
+   */
+  readonly confirmLabel?: string
   /**
    * A hint shown under the field. Replaced by `error` when there is one, so
    * the two never stack.
@@ -146,6 +180,11 @@ type DatePickerProps<T extends DateValue = DateValue> = Pick<
   readonly onFocus?: () => void
   readonly ref?: Ref<ComponentRef<typeof View>>
   /**
+   * The modal's supporting text, above the date it holds. Left out, it is
+   * the locale's, "Select date" in English.
+   */
+  readonly selectDateLabel?: string
+  /**
    * Whether the calendar's header draws the month and the year as menu
    * buttons, each opening a list of them in the grid's place, as the docked
    * date picker's header does: see `Calendar`.
@@ -189,12 +228,16 @@ type DatePickerProps<T extends DateValue = DateValue> = Pick<
  * The segments are DateField's and the calendar is Calendar, so
  * `granularity`, `minValue`, `maxValue` and `isDateUnavailable` behave as
  * they do there. From the medium window size up the calendar is docked to
- * the field; below it, it opens centred over a scrim, which is the page's
- * modal picker.
+ * the field; below it, it opens centred over a scrim as the page's modal
+ * picker, under a headline holding the date picked, and only OK writes that
+ * date into the field. `cancelLabel`, `confirmLabel` and `selectDateLabel`
+ * name its two actions and its supporting text, as on web.
  *
  * `style`, `ref` and `testID` land on the picker as a whole.
  */
 function DatePicker<T extends DateValue = DateValue>({
+  cancelLabel,
+  confirmLabel,
   defaultOpen,
   defaultValue,
   firstDayOfWeek,
@@ -210,6 +253,7 @@ function DatePicker<T extends DateValue = DateValue>({
   onChange,
   onOpenChange,
   placeholderValue,
+  selectDateLabel,
   shouldCloseOnSelect,
   showMonthYearMenus = false,
   triggerLabel,
@@ -257,7 +301,8 @@ function DatePicker<T extends DateValue = DateValue>({
     validate: validate as StatelyDatePickerProps<DateValue>['validate'],
     value: state.value,
   })
-  const name = `${triggerLabel ?? messagesFor(writtenIn).segments.calendar} ${label}`
+  const messages = messagesFor(writtenIn)
+  const name = `${triggerLabel ?? messages.segments.calendar} ${label}`
 
   return (
     <>
@@ -288,23 +333,33 @@ function DatePicker<T extends DateValue = DateValue>({
         label={name}
         trigger={trigger}
       >
-        <Calendar
-          aria-label={label}
-          defaultFocusedValue={
-            state.dateValue === null ? placeholderValue : undefined
-          }
-          firstDayOfWeek={firstDayOfWeek}
-          isDateUnavailable={isDateUnavailable}
-          isDisabled={isDisabled}
-          isReadOnly={isReadOnly}
+        <DatePickerSurface
+          cancelLabel={cancelLabel ?? messages.cancel}
+          close={close}
+          commit={setDateValue}
+          confirmLabel={confirmLabel ?? messages.confirm}
           locale={writtenIn}
-          maxValue={maxValue}
-          minValue={minValue}
-          onChange={setDateValue}
-          showMonthYearMenus={showMonthYearMenus}
+          selectDateLabel={selectDateLabel ?? messages.selectDate}
           value={state.dateValue}
-          visibleDuration={visibleDuration}
-        />
+        >
+          {(held, pick) => (
+            <Calendar
+              aria-label={label}
+              defaultFocusedValue={held === null ? placeholderValue : undefined}
+              firstDayOfWeek={firstDayOfWeek}
+              isDateUnavailable={isDateUnavailable}
+              isDisabled={isDisabled}
+              isReadOnly={isReadOnly}
+              locale={writtenIn}
+              maxValue={maxValue}
+              minValue={minValue}
+              onChange={pick}
+              showMonthYearMenus={showMonthYearMenus}
+              value={held}
+              visibleDuration={visibleDuration}
+            />
+          )}
+        </DatePickerSurface>
       </PickerPopup>
     </>
   )
@@ -314,6 +369,120 @@ function DatePicker<T extends DateValue = DateValue>({
 // the prop, which is what react-perf's jsx-no-jsx-as-prop is after.
 function triggerOf(props: Parameters<typeof PickerTrigger>[0]) {
   return <PickerTrigger {...props} />
+}
+
+// The modal's measurements that are its own rather than the scale's: the
+// header's height, the page's.
+const HEADER_HEIGHT = 120
+
+const surfaceStylesOf = themedStyles(({ colors, spacing }) =>
+  StyleSheet.create({
+    // Cancel and OK at the actions' end, 8dp apart, with the calendar's own
+    // inline padding after them and 8dp under them.
+    actions: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+      justifyContent: 'flex-end',
+      paddingBottom: spacing.sm,
+      paddingEnd: spacing.md,
+    },
+    header: {
+      borderBottomColor: colors.outlineVariant,
+      borderBottomWidth: 1,
+      height: HEADER_HEIGHT,
+      justifyContent: 'space-between',
+      paddingBottom: spacing.md,
+      paddingEnd: spacing.md,
+      paddingStart: spacing.xl,
+      paddingTop: spacing.lg,
+    },
+  }),
+)
+
+// OK: writes the draft into the field, and closes the modal.
+function confirmOf(
+  draft: DateValue | null,
+  commit: (date: DateValue) => void,
+  close: () => void,
+) {
+  return () => {
+    if (draft !== null) {
+      commit(draft)
+    }
+    close()
+  }
+}
+
+/**
+ * What the calendar's surface holds, mounted each time it opens: in a compact
+ * window the modal picker's header, the calendar and its actions, with the
+ * date it was opened on as its draft, which a pick moves and OK writes into
+ * the field; docked, the calendar alone, where a pick is the answer.
+ */
+function DatePickerSurface({
+  cancelLabel,
+  children,
+  close,
+  commit,
+  confirmLabel,
+  locale,
+  selectDateLabel,
+  value,
+}: {
+  readonly cancelLabel: string
+  /** The calendar, given the date it holds and what a pick does. */
+  readonly children: (
+    held: DateValue | null,
+    pick: (date: DateValue) => void,
+  ) => ReactNode
+  readonly close: () => void
+  readonly commit: (date: DateValue) => void
+  readonly confirmLabel: string
+  readonly locale: string
+  readonly selectDateLabel: string
+  readonly value: DateValue | null
+}): ReactNode {
+  const own = surfaceStylesOf(useTheme())
+  const modal = useWindowSizeClass() === 'compact'
+  const [draft, setDraft] = useState(value)
+
+  if (!modal) {
+    return children(value, commit)
+  }
+
+  return (
+    <>
+      <NativeView style={own.header}>
+        <Text tone="muted" variant="labelLarge">
+          {selectDateLabel}
+        </Text>
+        <Text tone="muted" variant="headlineLarge">
+          {draft === null ? '' : headlineOf(draft, locale)}
+        </Text>
+      </NativeView>
+      {children(draft, setDraft)}
+      <NativeView style={own.actions}>
+        <Button onPress={close} variant="text">
+          {cancelLabel}
+        </Button>
+        <Button onPress={confirmOf(draft, commit, close)} variant="text">
+          {confirmLabel}
+        </Button>
+      </NativeView>
+    </>
+  )
+}
+
+// The date the modal holds, as web's headline writes it: "Tue, Sep 15" in
+// English.
+function headlineOf(date: DateValue, locale: string) {
+  return new DateFormatter(locale, {
+    calendar: date.calendar.identifier,
+    day: 'numeric',
+    month: 'short',
+    timeZone: 'UTC',
+    weekday: 'short',
+  }).format(toCalendarDate(date).toDate('UTC'))
 }
 
 export type { DatePickerProps }

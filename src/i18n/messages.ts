@@ -32,17 +32,18 @@
 // is React Aria's own word for a grid list row's checkbox, which web's List
 // takes from React Aria's tables rather than its own, copied here so the two
 // read the same, and `selectPlaceholder` is what React Aria's Select, and so
-// web's, shows while nothing is chosen. `results` is React Aria's too, the
-// count its ComboBox announces, which Autocomplete and ComboBox announce as a
-// search narrows a list, and `showSuggestions` and `suggestions` are the names
-// its ComboBox gives the button that opens the list and the list itself.
-// `calendar` is React Aria's calendar dictionary, which web's Calendar reads,
-// beside the names of the month and year fields that web reads from the
-// browser's `Intl.DisplayNames` and Hermes lacks, written here from the same
-// CLDR data. `segments` is the same: the name of each part of a date, which
-// web's date field reads from `Intl.DisplayNames` too, beside the description
-// of the date it holds, from React Aria's date picker dictionary, and what an
-// empty one reads as, from its spin button dictionary. `clearSearch`, `close`,
+// web's, shows while nothing is chosen, and `selectDate` the supporting text of
+// web's modal DatePicker. `results` is React Aria's too, the count its ComboBox
+// announces, which Autocomplete and ComboBox announce as a search narrows a
+// list, and `showSuggestions` and `suggestions` are the names its ComboBox
+// gives the button that opens the list and the list itself. `calendar` is React
+// Aria's calendar dictionary, which web's Calendar reads, beside the names of
+// the month and year fields that web reads from the browser's
+// `Intl.DisplayNames` and Hermes lacks, written here from the same CLDR data.
+// `segments` is the same: the name of each part of a date, which web's date
+// field reads from `Intl.DisplayNames` too, beside the description of the date
+// it holds, from React Aria's date picker dictionary, and what an empty one
+// reads as, from its spin button dictionary. `clearSearch`, `close`,
 // `decrease`, `increase` and `remove` are React Aria's as well, from the search
 // field, toast, number field and tag dictionaries its own controls name those
 // buttons from on web, `collapse` and `expand` from its tree dictionary, which
@@ -212,6 +213,11 @@ type LibraryMessages = {
   }
   /** What selecting a list's row is called, beside its checkbox. */
   readonly select: string
+  /**
+   * The supporting text over a modal DatePicker's headline, React Aria's
+   * date picker's own words.
+   */
+  readonly selectDate: string
   /** What a Select shows while nothing is chosen. */
   readonly selectPlaceholder: string
   /**
@@ -342,6 +348,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'السنة',
     },
     select: 'تحديد',
+    selectDate: 'اختر التاريخ',
     selectPlaceholder: 'حدد عنصرًا',
     selectTime: 'اختر الوقت',
     showSuggestions: 'عرض المقترحات',
@@ -428,6 +435,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'година',
     },
     select: 'Изберете',
+    selectDate: 'Изберете дата',
     selectPlaceholder: 'Изберете предмет',
     selectTime: 'Изберете час',
     showSuggestions: 'Покажи предложения',
@@ -514,6 +522,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'rok',
     },
     select: 'Vybrat',
+    selectDate: 'Vyberte datum',
     selectPlaceholder: 'Vyberte položku',
     selectTime: 'Vyberte čas',
     showSuggestions: 'Zobrazit doporučení',
@@ -597,6 +606,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'år',
     },
     select: 'Vælg',
+    selectDate: 'Vælg dato',
     selectPlaceholder: 'Vælg et element',
     selectTime: 'Vælg tidspunkt',
     showSuggestions: 'Vis forslag',
@@ -684,6 +694,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'Jahr',
     },
     select: 'Auswählen',
+    selectDate: 'Datum auswählen',
     selectPlaceholder: 'Element wählen',
     selectTime: 'Uhrzeit auswählen',
     showSuggestions: 'Empfehlungen anzeigen',
@@ -772,6 +783,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'έτος',
     },
     select: 'Επιλογή',
+    selectDate: 'Επιλογή ημερομηνίας',
     selectPlaceholder: 'Επιλέξτε ένα αντικείμενο',
     selectTime: 'Επιλογή ώρας',
     showSuggestions: 'Προβολή προτάσεων',
@@ -856,6 +868,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'year',
     },
     select: 'Select',
+    selectDate: 'Select date',
     selectPlaceholder: 'Select an item',
     selectTime: 'Select time',
     showSuggestions: 'Show suggestions',
@@ -942,6 +955,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'año',
     },
     select: 'Seleccionar',
+    selectDate: 'Seleccionar fecha',
     selectPlaceholder: 'Seleccionar un artículo',
     selectTime: 'Seleccionar hora',
     showSuggestions: 'Mostrar sugerencias',
@@ -1027,6 +1041,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'aasta',
     },
     select: 'Vali',
+    selectDate: 'Vali kuupäev',
     selectPlaceholder: 'Valige üksus',
     selectTime: 'Vali kellaaeg',
     showSuggestions: 'Kuva soovitused',
@@ -1113,6 +1128,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'vuosi',
     },
     select: 'Valitse',
+    selectDate: 'Valitse päivämäärä',
     selectPlaceholder: 'Valitse kohde',
     selectTime: 'Valitse aika',
     showSuggestions: 'Näytä ehdotukset',
@@ -1201,6 +1217,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'année',
     },
     select: 'Sélectionner',
+    selectDate: 'Sélectionner une date',
     selectPlaceholder: 'Sélectionner un élément',
     selectTime: 'Sélectionner l’heure',
     showSuggestions: 'Afficher les suggestions',
@@ -1288,6 +1305,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'שנה',
     },
     select: 'בחר',
+    selectDate: 'בחירת תאריך',
     selectPlaceholder: 'בחר פריט',
     selectTime: 'בחירת שעה',
     showSuggestions: 'הצג הצעות',
@@ -1375,6 +1393,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'godina',
     },
     select: 'Odaberite',
+    selectDate: 'Odaberite datum',
     selectPlaceholder: 'Odaberite stavku',
     selectTime: 'Odaberite vrijeme',
     showSuggestions: 'Prikaži prijedloge',
@@ -1462,6 +1481,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'év',
     },
     select: 'Kijelölés',
+    selectDate: 'Dátum kiválasztása',
     selectPlaceholder: 'Válasszon ki egy elemet',
     selectTime: 'Időpont kiválasztása',
     showSuggestions: 'Javaslatok megjelenítése',
@@ -1550,6 +1570,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'anno',
     },
     select: 'Seleziona',
+    selectDate: 'Seleziona la data',
     selectPlaceholder: 'Seleziona un elemento',
     selectTime: 'Seleziona l’ora',
     showSuggestions: 'Mostra suggerimenti',
@@ -1633,6 +1654,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: '年',
     },
     select: '選択',
+    selectDate: '日付を選択',
     selectPlaceholder: '項目を選択',
     selectTime: '時刻を選択',
     showSuggestions: '候補を表示',
@@ -1716,6 +1738,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: '년',
     },
     select: '선택',
+    selectDate: '날짜 선택',
     selectPlaceholder: '항목 선택',
     selectTime: '시간 선택',
     showSuggestions: '제안 사항 표시',
@@ -1804,6 +1827,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'metai',
     },
     select: 'Pasirinkti',
+    selectDate: 'Pasirinkite datą',
     selectPlaceholder: 'Pasirinkite elementą',
     selectTime: 'Pasirinkite laiką',
     showSuggestions: 'Rodyti pasiūlymus',
@@ -1892,6 +1916,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'gads',
     },
     select: 'Atlasīt',
+    selectDate: 'Izvēlieties datumu',
     selectPlaceholder: 'Izvēlēties vienumu',
     selectTime: 'Izvēlieties laiku',
     showSuggestions: 'Rādīt ieteikumus',
@@ -1975,6 +2000,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'år',
     },
     select: 'Velg',
+    selectDate: 'Velg dato',
     selectPlaceholder: 'Velg et element',
     selectTime: 'Velg klokkeslett',
     showSuggestions: 'Vis forslag',
@@ -2061,6 +2087,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'jaar',
     },
     select: 'Selecteren',
+    selectDate: 'Datum selecteren',
     selectPlaceholder: 'Selecteer een item',
     selectTime: 'Tijd selecteren',
     showSuggestions: 'Suggesties weergeven',
@@ -2147,6 +2174,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'rok',
     },
     select: 'Zaznacz',
+    selectDate: 'Wybierz datę',
     selectPlaceholder: 'Wybierz element',
     selectTime: 'Wybierz godzinę',
     showSuggestions: 'Wyświetlaj sugestie',
@@ -2235,6 +2263,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'ano',
     },
     select: 'Selecionar',
+    selectDate: 'Selecione a data',
     selectPlaceholder: 'Selecione um item',
     selectTime: 'Selecione o horário',
     showSuggestions: 'Mostrar sugestões',
@@ -2322,6 +2351,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'ano',
     },
     select: 'Selecionar',
+    selectDate: 'Selecionar a data',
     selectPlaceholder: 'Selecione um item',
     selectTime: 'Selecionar a hora',
     showSuggestions: 'Apresentar sugestões',
@@ -2409,6 +2439,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'an',
     },
     select: 'Selectare',
+    selectDate: 'Selectați data',
     selectPlaceholder: 'Selectați un element',
     selectTime: 'Selectați ora',
     showSuggestions: 'Afișare sugestii',
@@ -2497,6 +2528,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'год',
     },
     select: 'Выбрать',
+    selectDate: 'Выберите дату',
     selectPlaceholder: 'Выберите элемент',
     selectTime: 'Выберите время',
     showSuggestions: 'Показать предложения',
@@ -2583,6 +2615,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'rok',
     },
     select: 'Vybrať',
+    selectDate: 'Vyberte dátum',
     selectPlaceholder: 'Vyberte položku',
     selectTime: 'Vyberte čas',
     showSuggestions: 'Zobraziť návrhy',
@@ -2670,6 +2703,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'leto',
     },
     select: 'Izberite',
+    selectDate: 'Izberite datum',
     selectPlaceholder: 'Izberite element',
     selectTime: 'Izberite čas',
     showSuggestions: 'Prikaži predloge',
@@ -2757,6 +2791,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'година',
     },
     select: 'Izaberite',
+    selectDate: 'Izaberite datum',
     selectPlaceholder: 'Izaberite stavku',
     selectTime: 'Izaberite vreme',
     showSuggestions: 'Prikaži predloge',
@@ -2841,6 +2876,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'år',
     },
     select: 'Markera',
+    selectDate: 'Välj datum',
     selectPlaceholder: 'Välj en artikel',
     selectTime: 'Välj tid',
     showSuggestions: 'Visa förslag',
@@ -2926,6 +2962,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'yıl',
     },
     select: 'Seç',
+    selectDate: 'Tarihi seçin',
     selectPlaceholder: 'Bir öğe seçin',
     selectTime: 'Saati seçin',
     showSuggestions: 'Önerileri göster',
@@ -3013,6 +3050,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: 'рік',
     },
     select: 'Вибрати',
+    selectDate: 'Виберіть дату',
     selectPlaceholder: 'Виберіть елемент',
     selectTime: 'Виберіть час',
     showSuggestions: 'Показати пропозиції',
@@ -3098,6 +3136,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: '年',
     },
     select: '选择',
+    selectDate: '选择日期',
     selectPlaceholder: '选择一个项目',
     selectTime: '选择时间',
     showSuggestions: '显示建议',
@@ -3181,6 +3220,7 @@ const MESSAGES: Readonly<Record<string, LibraryMessages>> = {
       year: '年',
     },
     select: '選取',
+    selectDate: '選取日期',
     selectPlaceholder: '選取項目',
     selectTime: '選取時間',
     showSuggestions: '顯示建議',
