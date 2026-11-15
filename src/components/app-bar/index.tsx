@@ -33,6 +33,13 @@ import { Text } from '../text'
 // so a headline that wraps, or a larger text size the device asks for, makes
 // the bar taller rather than being cut off.
 //
+// The small bar is one row: the leading slot, the text and the trailing slot
+// side by side in a 64dp strip. The flexible bars are two, as Material Design
+// lays them out and web does: that same strip holding the slots alone, and
+// the text under it across the whole measure, at the bar's bottom, so the
+// icons stay in the top row however far the headline wraps. Collapsing draws
+// the small bar.
+//
 // The bar paints its surface from the screen's top edge, under the status
 // bar, and keeps its contents inside the safe area: a `SafeAreaView` pads it
 // by the status bar, the notch and a rounded corner wherever the bar meets
@@ -73,13 +80,21 @@ const HEIGHTS = {
   sm: { plain: COLLAPSED_BLOCK_SIZE, withSubtitle: COLLAPSED_BLOCK_SIZE },
 } as const
 
-// One type role per size, as Material Design's own title tokens alias the
-// type scale rather than giving sizes of their own. A collapsed bar takes the
+// One type role per size, as Material Design's own title tokens,
+// `md.comp.app-bar.<size>.title.font`, alias the type scale rather than
+// giving sizes of their own, and as web takes them. A collapsed bar takes the
 // small one's.
 const HEADLINE_ROLES: Readonly<Record<AppBarSize, TypeRole>> = {
-  lg: 'headlineMedium',
-  md: 'headlineSmall',
+  lg: 'displaySmall',
+  md: 'headlineMedium',
   sm: 'titleLarge',
+}
+
+// The subtitle's role, by the same tokens' `subtitle.font`.
+const SUBTITLE_ROLES: Readonly<Record<AppBarSize, TypeRole>> = {
+  lg: 'titleMedium',
+  md: 'labelLarge',
+  sm: 'labelMedium',
 }
 
 // The bar's sides as well as its top, so a landscape notch is cleared too.
@@ -89,6 +104,14 @@ const EDGES: readonly Edge[] = ['left', 'right', 'top']
 const styles = StyleSheet.create({
   center: {
     textAlign: 'center',
+  },
+  // A flexible bar: the strip, then the text under it.
+  column: {
+    width: '100%',
+  },
+  // Between a flexible bar's slots, holding them at either end.
+  gap: {
+    flexGrow: 1,
   },
   // Drawn over what follows it, so whatever strays past the scroll view's
   // top edge, an overscroll or a shadow, passes beneath the bar.
@@ -120,6 +143,11 @@ const stylesOf = themedStyles(({ sizing, spacing }) =>
       gap: TARGET_SIZE - sizing.controlSm,
       paddingHorizontal: (TARGET_SIZE - sizing.controlSm) / 2,
     },
+    // A flexible bar's top row: the small bar's 64dp strip, holding the
+    // slots alone.
+    strip: {
+      height: COLLAPSED_BLOCK_SIZE,
+    },
     // The text takes the room the slots leave, and wraps inside it.
     text: {
       flexGrow: 1,
@@ -127,6 +155,14 @@ const stylesOf = themedStyles(({ sizing, spacing }) =>
       justifyContent: 'center',
       minWidth: 0,
       paddingVertical: spacing.sm,
+    },
+    // A flexible bar's text, under the strip across the whole measure and at
+    // the bar's bottom: 12dp under it, which with the strip and a line of
+    // the headline comes to the spec's 112dp and 120dp.
+    textBelow: {
+      flexGrow: 1,
+      justifyContent: 'flex-end',
+      paddingBottom: spacing.md,
     },
   }),
 )
@@ -201,8 +237,10 @@ type AppBarProps = Omit<ViewProps, 'children'> & {
   /**
    * `sm` is Material Design's small bar, 64dp; `md` and `lg` are its medium
    * and large flexible bars, 112dp and 120dp, or 136dp and 152dp with a
-   * subtitle, which hug their text. The headline is title large, headline
-   * small and headline medium in turn.
+   * subtitle, which hug their text, with the icons in a 64dp top row and the
+   * text under it. The headline is title large, headline medium and display
+   * small in turn, and the subtitle label medium, label large and title
+   * medium.
    * @default 'sm'
    */
   readonly size?: AppBarSize
@@ -266,8 +304,39 @@ function AppBar({
   const hasLeading = hasContent(leading)
   const hasTrailing = hasContent(trailing)
   const showsSubtitle = hasContent(subtitle) && !collapse
-  const heights = HEIGHTS[collapse ? 'sm' : size]
+  const drawn = collapse ? 'sm' : size
+  const heights = HEIGHTS[drawn]
   const fill = useFill(scrolled)
+  const twoRows = drawn !== 'sm'
+  const minHeight = showsSubtitle ? heights.withSubtitle : heights.plain
+  const leadingSlot = hasLeading ? (
+    <Slot color={theme.colors.onSurface}>{leading}</Slot>
+  ) : null
+  const trailingSlot = hasTrailing ? (
+    <Slot color={theme.colors.onSurfaceVariant}>{trailing}</Slot>
+  ) : null
+  const words = (
+    <>
+      {hasContent(headline) ? (
+        <Text
+          role="heading"
+          style={align === 'center' ? styles.center : undefined}
+          variant={HEADLINE_ROLES[drawn]}
+        >
+          {headline}
+        </Text>
+      ) : null}
+      {showsSubtitle ? (
+        <Text
+          style={align === 'center' ? styles.center : undefined}
+          tone="muted"
+          variant={SUBTITLE_ROLES[drawn]}
+        >
+          {subtitle}
+        </Text>
+      ) : null}
+    </>
+  )
 
   return (
     <Animated.View
@@ -279,41 +348,45 @@ function AppBar({
       )}
     >
       <SafeArea contentStyle={styles.safeArea} edges={EDGES}>
-        <View
-          style={composeStyles<ViewStyle>(styles.row, own.row, {
-            maxWidth: contentMaxInlineSize,
-            minHeight: showsSubtitle ? heights.withSubtitle : heights.plain,
-            paddingEnd: edgePadding(inset, hasTrailing),
-            paddingStart: edgePadding(inset, hasLeading),
-          })}
-        >
-          {hasLeading ? (
-            <Slot color={theme.colors.onSurface}>{leading}</Slot>
-          ) : null}
-          <View style={own.text}>
-            {hasContent(headline) ? (
-              <Text
-                role="heading"
-                style={align === 'center' ? styles.center : undefined}
-                variant={HEADLINE_ROLES[collapse ? 'sm' : size]}
-              >
-                {headline}
-              </Text>
-            ) : null}
-            {showsSubtitle ? (
-              <Text
-                style={align === 'center' ? styles.center : undefined}
-                tone="muted"
-                variant="bodyMedium"
-              >
-                {subtitle}
-              </Text>
-            ) : null}
+        {twoRows ? (
+          <View
+            style={composeStyles<ViewStyle>(styles.column, {
+              maxWidth: contentMaxInlineSize,
+              minHeight,
+            })}
+          >
+            <View
+              style={composeStyles<ViewStyle>(styles.row, own.row, own.strip, {
+                paddingEnd: edgePadding(inset, hasTrailing),
+                paddingStart: edgePadding(inset, hasLeading),
+              })}
+            >
+              {leadingSlot}
+              <View style={styles.gap} />
+              {trailingSlot}
+            </View>
+            <View
+              style={composeStyles<ViewStyle>(own.textBelow, {
+                paddingHorizontal: inset,
+              })}
+            >
+              {words}
+            </View>
           </View>
-          {hasTrailing ? (
-            <Slot color={theme.colors.onSurfaceVariant}>{trailing}</Slot>
-          ) : null}
-        </View>
+        ) : (
+          <View
+            style={composeStyles<ViewStyle>(styles.row, own.row, {
+              maxWidth: contentMaxInlineSize,
+              minHeight,
+              paddingEnd: edgePadding(inset, hasTrailing),
+              paddingStart: edgePadding(inset, hasLeading),
+            })}
+          >
+            {leadingSlot}
+            <View style={own.text}>{words}</View>
+            {trailingSlot}
+          </View>
+        )}
       </SafeArea>
     </Animated.View>
   )

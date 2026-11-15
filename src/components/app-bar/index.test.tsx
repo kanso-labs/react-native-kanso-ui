@@ -56,11 +56,21 @@ const SIZES: [
   NonNullable<AppBarProps['size']>,
   number,
   number,
-  'headlineMedium' | 'headlineSmall' | 'titleLarge',
+  'displaySmall' | 'headlineMedium' | 'titleLarge',
 ][] = [
   ['sm', 64, 64, 'titleLarge'],
-  ['md', 112, 136, 'headlineSmall'],
-  ['lg', 120, 152, 'headlineMedium'],
+  ['md', 112, 136, 'headlineMedium'],
+  ['lg', 120, 152, 'displaySmall'],
+]
+
+// Each size and the size its subtitle is set at.
+const SUBTITLES: readonly (readonly [
+  NonNullable<AppBarProps['size']>,
+  number,
+])[] = [
+  ['sm', typography.labelMediumSize],
+  ['md', typography.labelLargeSize],
+  ['lg', typography.titleMediumSize],
 ]
 
 // A theme of its own, which nothing else renders under.
@@ -171,14 +181,43 @@ describe('AppBar', () => {
       expect(screen.getByRole('button', { name: 'Search' })).toBeTruthy()
     })
 
-    it('draws a subtitle under the headline', async () => {
-      await renderBar({ size: 'md', subtitle: 'Supporting line' })
+    it.each(SUBTITLES)(
+      'draws a subtitle under the headline, at %s in its own role',
+      async (size, fontSize) => {
+        await renderBar({ size, subtitle: 'Supporting line' })
 
-      expect(textStyleOf(screen.getByText('Supporting line'))).toMatchObject({
-        color: colors.onSurfaceVariant,
-        fontSize: typography.bodyMediumSize,
-      })
-    })
+        expect(textStyleOf(screen.getByText('Supporting line'))).toMatchObject({
+          color: colors.onSurfaceVariant,
+          fontSize,
+        })
+      },
+    )
+
+    // In one row centred in a 120dp bar, the icons floated at mid-height and
+    // moved as the headline wrapped.
+    it.each(['md', 'lg'] as const)(
+      'keeps the slots in a 64dp strip above the text at %s',
+      async (size) => {
+        await renderBar({ leading: BACK, size, trailing: SEARCH })
+
+        // The nearest view around the back button 64dp tall.
+        let strip: null | TestInstance = screen.getByRole('button', {
+          name: 'Back',
+        })
+        while (strip !== null && styleOf(strip).height !== 64) {
+          strip = strip.parent
+        }
+        const below = headline().parent
+
+        expect(styleOf(strip ?? { props: {} })).toMatchObject({ height: 64 })
+        expect(strip?.parent).toBe(below?.parent)
+        expect(strip?.parent?.children.indexOf(strip)).toBe(0)
+        expect(styleOf(below ?? { props: {} })).toMatchObject({
+          justifyContent: 'flex-end',
+          paddingBottom: spacing.md,
+        })
+      },
+    )
 
     it('wraps a long headline rather than truncating it', async () => {
       await renderBar()
