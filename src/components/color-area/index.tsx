@@ -55,13 +55,24 @@ import { composeStyles, themedStyles } from '../../theme/styles'
 //   moves along each axis alone, so it is drawn as the row along its bottom
 //   with the row along its top over it, faded in from the bottom.
 //
-// **A channel missing from the value's space throws, and alpha is a channel
-// here only in RGB, as on web.** A hex or `rgb()` value is read as RGB, which
-// has no saturation, so `xChannel="saturation"` against one throws rather
-// than converting; `colorSpace` converts it. Asked for alpha in HSL or HSB,
-// React Aria draws the two channels alpha is not instead and says nothing,
-// and so does this. In RGB the handle moves alpha, and the plane still does
-// not thin, since React Aria's layers are opaque.
+// **A channel missing from the value's space throws, as on web.** A hex or
+// `rgb()` value is read as RGB, which has no saturation, so
+// `xChannel="saturation"` against one throws rather than converting;
+// `colorSpace` converts it.
+//
+// **Alpha belongs on a `ColorSlider` beside the plane, never on an axis, as
+// on web.** React Aria paints the plane from the two axis channels and one
+// more, the first of the space's colour channels the axes leave over, held
+// at the value's own. With alpha on an axis that leaves two colour channels
+// over, so the second is never painted: against `rgba(0, 170, 255, 0.6)` with
+// red and alpha on the axes, the plane runs from `rgb(0, 170, 0)` to
+// `rgb(255, 170, 0)` with no blue anywhere, while the handle shows the light
+// blue the value is. Nor does an alpha axis thin the plane, since React
+// Aria's layers are opaque. In HSL or HSB it is not even that: React Aria
+// draws the saturation and lightness plane instead and says nothing, and so
+// does this. Neither throws the way an unknown channel does, which is why it
+// is written down here. The `Alpha` story, and ColorPicker, put the alpha on
+// a slider holding the same value.
 //
 // **A screen reader adjusts each channel apart.** React Aria gives the plane
 // a hidden range input per channel, and an element here adjusts in one
@@ -252,8 +263,11 @@ function adjustOf(state: ColorAreaState, axis: 'x' | 'y', isDisabled: boolean) {
  * naming one against it throws rather than converting. Pass `colorSpace` to
  * convert it, or give the value in the space you mean to work in.
  *
- * **`alpha` is a channel here only in RGB.** Asked for it in HSL, the plane
- * quietly draws saturation and lightness instead, as React Aria's does.
+ * **Give `alpha` to a `ColorSlider` holding the same value, not to an axis.**
+ * On an axis in RGB the plane leaves one of the colour channels out, and so
+ * shows colours the value does not have while the handle shows the one it
+ * does; in HSL the plane quietly draws saturation and lightness instead, as
+ * React Aria's does. Neither says so.
  *
  * A press on the plane moves the handle there, and a drag carries it. A
  * screen reader adjusts each channel apart, through two halves of the
