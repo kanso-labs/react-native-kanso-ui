@@ -112,6 +112,13 @@ describe('Toolbar', () => {
   })
 
   describe('layout', () => {
+    // A bar of more than a phone has room for ran past the screen's edge.
+    it('is never wider than what holds it', async () => {
+      await render(<Toolbar aria-label="Label" testID="bar" />)
+
+      expect(styleOf(bar())).toMatchObject({ maxWidth: '100%' })
+    })
+
     it('lays a horizontal bar out as the page measures it', async () => {
       await render(<Toolbar aria-label="Label" testID="bar" />)
 
