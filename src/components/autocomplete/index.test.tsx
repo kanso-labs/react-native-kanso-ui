@@ -376,8 +376,8 @@ describe('autocomplete', () => {
   })
 
   describe('the count', () => {
-    it('says how many rows are left in a polite live region', async () => {
-      jest.replaceProperty(Platform, 'OS', 'android')
+    it('says how many rows are left in a polite live region on the web', async () => {
+      jest.replaceProperty(Platform, 'OS', 'web')
       await render(<Search />)
 
       const status = statusOf('3 options available.')
@@ -396,7 +396,7 @@ describe('autocomplete', () => {
     })
 
     it('counts the rows inside sections, and not their headings', async () => {
-      jest.replaceProperty(Platform, 'OS', 'android')
+      jest.replaceProperty(Platform, 'OS', 'web')
       await render(<Search>{SECTIONS}</Search>)
 
       expect(screen.getByText('3 options available.')).toBeTruthy()
@@ -411,12 +411,30 @@ describe('autocomplete', () => {
     })
 
     it('says a search left none in the empty row’s words', async () => {
-      jest.replaceProperty(Platform, 'OS', 'android')
+      jest.replaceProperty(Platform, 'OS', 'web')
       await render(<Search renderEmptyState={renderEmptyState} />)
 
       await fireEvent.changeText(field(), 'zzz')
 
       expect(statusOf('No results').props['aria-live']).toBe('polite')
+    })
+
+    // A live region on Android was a text node of its own, which TalkBack
+    // stopped on as it moved through the list.
+    it('says it on Android through AccessibilityInfo, drawing nothing', async () => {
+      jest.replaceProperty(Platform, 'OS', 'android')
+      const announce = jest
+        .spyOn(AccessibilityInfo, 'announceForAccessibility')
+        .mockImplementation(() => undefined)
+      announce.mockClear()
+      await render(<Search />)
+
+      expect(screen.queryByText('3 options available.')).toBe(null)
+
+      await fireEvent.changeText(field(), 'Ada')
+
+      expect(announce).toHaveBeenLastCalledWith('1 option available.')
+      expect(screen.queryByText('1 option available.')).toBe(null)
     })
 
     it('says it on iOS as it changes, and not as the list mounts', async () => {
@@ -444,7 +462,7 @@ describe('autocomplete', () => {
     })
 
     it('draws no status in a list outside an Autocomplete', async () => {
-      jest.replaceProperty(Platform, 'OS', 'android')
+      jest.replaceProperty(Platform, 'OS', 'web')
       await render(<List aria-label="People">{PEOPLE}</List>)
 
       expect(screen.queryByText(/available/u)).toBe(null)

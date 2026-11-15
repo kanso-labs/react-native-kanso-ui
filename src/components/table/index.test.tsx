@@ -1495,8 +1495,8 @@ describe('Table', () => {
       expect(onSortChange).toHaveBeenLastCalledWith(SORTED_DOWN)
     })
 
-    it('says how the rows are sorted once they are, on Android in a live region', async () => {
-      jest.replaceProperty(Platform, 'OS', 'android')
+    it('says how the rows are sorted once they are, on the web in a live region', async () => {
+      jest.replaceProperty(Platform, 'OS', 'web')
       const { rerender } = await render(<Sortable />)
 
       expect(screen.queryByText(/sorted by/)).toBeNull()
@@ -1528,7 +1528,7 @@ describe('Table', () => {
     })
 
     it('names a sorted column by its key when no column has it', async () => {
-      jest.replaceProperty(Platform, 'OS', 'android')
+      jest.replaceProperty(Platform, 'OS', 'web')
       await render(<Sortable sortDescriptor={GONE} />)
 
       expect(
