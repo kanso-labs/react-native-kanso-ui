@@ -9,6 +9,10 @@ import { themedStyles } from '../../theme/styles'
 const OVERLAP = 12
 const RISE = 2
 
+// How far down the icon the large badge's bottom edge sits: the 14dp the
+// page gives, the 16dp badge less the 2dp it stands above.
+const DROP = 14
+
 // The small badge's side, and the large badge's least height and width.
 const SMALL_SIZE = 6
 const LARGE_SIZE = 16
@@ -36,26 +40,30 @@ const styles = StyleSheet.create({
   },
   // The large badge over the top trailing corner of what it is drawn on,
   // hung from its pin's leading edge, from which it runs toward the end
-  // however long its count. It is out of the pin's flow so that Yoga
+  // however long its count, and standing on the pin, so a badge taller than
+  // 16dp, as a large OS text size makes it, rises above the icon rather than
+  // growing down over it. It is out of the pin's flow so that Yoga
   // measures it at its count's own width: in the flow it was handed the
   // pin's width, which is none, and "999+" wrapped one character to a line,
   // measured on an iPhone.
   over: {
+    bottom: 0,
     position: 'absolute',
     start: 0,
-    top: 0,
   },
-  // Where the large badge's leading edge goes: a pin of no width 12dp inside
-  // the trailing edge and 2dp above the top, so the badge it holds starts
-  // where web's `calc(100% - 12px)` places it. A percentage inset would do it
+  // Where the large badge's bottom leading corner goes: a pin of no size
+  // 12dp inside the trailing edge and 14dp below the top, so the badge it
+  // holds starts where web's `calc(100% - 12px)` places it, and ends where
+  // the page puts its bottom edge. A percentage inset would do it
   // in one step on web, but React Native lays out with Yoga's errata, which
   // read a percentage on an absolute child against the room its parent was
   // offered rather than the parent's own box: `start: '100%'` put the badge
   // at the far edge of the row its icon sat in, measured on an iPhone.
   pin: {
     end: OVERLAP,
+    height: 0,
     position: 'absolute',
-    top: -RISE,
+    top: DROP,
     width: 0,
   },
   // The small badge's 6dp square.

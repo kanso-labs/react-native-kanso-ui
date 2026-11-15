@@ -871,7 +871,7 @@ describe('NavigationBar', () => {
       expect(markOf('First item').children).toHaveLength(0)
     })
 
-    it('draws the large badge holding a number, 2dp above the icon and 12dp in', async () => {
+    it('draws the large badge holding a number, its bottom 14dp down the icon and 12dp in', async () => {
       await renderBar({ items: { first: { badge: 3 } } })
 
       expect(styleOf(markOf('First item'))).toMatchObject({
@@ -883,7 +883,7 @@ describe('NavigationBar', () => {
       expect(styleOf(pinOf('First item'))).toMatchObject({
         end: 12,
         position: 'absolute',
-        top: -2,
+        top: 14,
         width: 0,
       })
       const count = countOf('First item')
