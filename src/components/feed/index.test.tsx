@@ -26,13 +26,6 @@ afterEach(() => {
   Dimensions.set(INITIAL)
 })
 
-// What each cell starts at before it grows to its share, in a room of
-// `room` laid into `columns`: an equal part of what the gaps leave, half a
-// dp under it.
-function basisOf(room: number, columns: number) {
-  return (room - GAP * (columns - 1)) / columns - 0.5
-}
-
 function cells() {
   return grid().children.map(child)
 }
@@ -79,6 +72,13 @@ function styleOf(element: {
   return StyleSheet.flatten([element.props.style]) ?? {}
 }
 
+// What each cell starts at before it grows to its share, in a room of
+// `room` laid into `columns`: an equal part of what the gaps leave, half a
+// dp under it.
+function widthOf(room: number, columns: number) {
+  return (room - GAP * (columns - 1)) / columns - 0.5
+}
+
 // The window as the platform reports it, which is the room the feed guesses
 // before its first layout.
 function windowAt(width: number) {
@@ -98,11 +98,11 @@ describe('feed', () => {
       // need 792dp.
       await layOut(600)
       expect(labels()).toEqual([...LABELS, null, null])
-      expect(styleOf(cells()[0]).flexBasis).toBe(basisOf(600, 3))
+      expect(styleOf(cells()[0]).width).toBe(widthOf(600, 3))
 
       await layOut(792)
       expect(labels()).toEqual(LABELS)
-      expect(styleOf(cells()[0]).flexBasis).toBe(basisOf(792, 4))
+      expect(styleOf(cells()[0]).width).toBe(widthOf(792, 4))
     })
 
     it('counts a column that exactly fits, gaps included', async () => {
@@ -113,10 +113,10 @@ describe('feed', () => {
       )
 
       await layOut(180 * 2 + GAP)
-      expect(styleOf(cells()[0]).flexBasis).toBe(basisOf(180 * 2 + GAP, 2))
+      expect(styleOf(cells()[0]).width).toBe(widthOf(180 * 2 + GAP, 2))
 
       await layOut(180 * 2 + GAP - 1)
-      expect(styleOf(cells()[0]).flexBasis).toBe(basisOf(180 * 2 + GAP - 1, 1))
+      expect(styleOf(cells()[0]).width).toBe(widthOf(180 * 2 + GAP - 1, 1))
     })
 
     it('grows each cell to its share and lets it shrink past its content', async () => {
@@ -145,7 +145,7 @@ describe('feed', () => {
 
       await layOut(200)
       expect(labels()).toEqual(['First item', 'Second item'])
-      expect(styleOf(cells()[0]).flexBasis).toBe(basisOf(200, 1))
+      expect(styleOf(cells()[0]).width).toBe(widthOf(200, 1))
     })
 
     it('reads a share of the room as the minimum', async () => {
@@ -158,7 +158,7 @@ describe('feed', () => {
       // Two halves leave no room for the gap between them, so one column.
       await layOut(1200)
       expect(labels()).toEqual(['First item', 'Second item', 'Third item'])
-      expect(styleOf(cells()[0]).flexBasis).toBe(basisOf(1200, 1))
+      expect(styleOf(cells()[0]).width).toBe(widthOf(1200, 1))
     })
 
     it('keeps the empty cells of a short line rather than stretching what it holds', async () => {
@@ -171,7 +171,7 @@ describe('feed', () => {
       await layOut(900)
       expect(labels()).toEqual(['First item', 'Second item', null, null])
       for (const cell of cells()) {
-        expect(styleOf(cell).flexBasis).toBe(basisOf(900, 4))
+        expect(styleOf(cell).width).toBe(widthOf(900, 4))
       }
     })
 
@@ -179,7 +179,7 @@ describe('feed', () => {
       await render(<Feed testID="feed">{items()}</Feed>)
 
       await layOut(180 * 3 + GAP * 2)
-      expect(styleOf(cells()[0]).flexBasis).toBe(basisOf(180 * 3 + GAP * 2, 3))
+      expect(styleOf(cells()[0]).width).toBe(widthOf(180 * 3 + GAP * 2, 3))
     })
   })
 
@@ -192,7 +192,7 @@ describe('feed', () => {
         </Feed>,
       )
 
-      expect(styleOf(cells()[0]).flexBasis).toBe(basisOf(180 * 2 + GAP, 2))
+      expect(styleOf(cells()[0]).width).toBe(widthOf(180 * 2 + GAP, 2))
     })
 
     it('follows the room it is given rather than the window', async () => {
@@ -204,7 +204,7 @@ describe('feed', () => {
       )
 
       await layOut(300)
-      expect(styleOf(cells()[0]).flexBasis).toBe(basisOf(300, 1))
+      expect(styleOf(cells()[0]).width).toBe(widthOf(300, 1))
     })
 
     it('measures a grid spanning its content box, whatever it aligns to', async () => {
