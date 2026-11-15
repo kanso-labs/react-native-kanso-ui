@@ -12,7 +12,7 @@ import {
 } from '@jest/globals'
 import { render, screen, waitFor } from '@testing-library/react-native'
 import { createRef } from 'react'
-import { StyleSheet, View } from 'react-native'
+import { I18nManager, StyleSheet, View } from 'react-native'
 
 import type { CurrencyProps, CurrencySignDisplay } from '.'
 import type { KuiTheme } from '../../tokens/defaults'
@@ -97,6 +97,7 @@ afterAll(() => {
 
 afterEach(() => {
   mockLoaded.clear()
+  jest.restoreAllMocks()
 })
 
 type Case = {
@@ -336,6 +337,34 @@ describe('Currency', () => {
     })
 
     it('leaves the rest of the formatted value alone', async () => {
+      await setup({ value: -12.5 })
+
+      expect(currencyText()).toBe(`${MINUS}$12.50`)
+    })
+  })
+
+  describe('under a layout in the other direction', () => {
+    it('holds an English amount left to right in a right-to-left layout, so its minus leads', async () => {
+      jest.replaceProperty(I18nManager, 'isRTL', true)
+      await setup({ value: -128.4 })
+
+      // Written as escapes, since the marks draw as nothing.
+      expect(currencyText()).toBe(`\u2066${MINUS}$128.40\u2069`)
+    })
+
+    it('leaves an Arabic amount to the marks its formatter writes', async () => {
+      jest.replaceProperty(I18nManager, 'isRTL', true)
+      await setup({ locale: 'ar-EG', value: 5 })
+
+      expect(currencyText()).toBe(
+        new Intl.NumberFormat('ar-EG', {
+          currency: 'USD',
+          style: 'currency',
+        }).format(5),
+      )
+    })
+
+    it('leaves an amount whose locale runs with the layout as it is', async () => {
       await setup({ value: -12.5 })
 
       expect(currencyText()).toBe(`${MINUS}$12.50`)

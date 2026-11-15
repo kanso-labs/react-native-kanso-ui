@@ -1,8 +1,9 @@
 import type { ComponentRef, Ref } from 'react'
 import type { TextProps as NativeTextProps, TextStyle } from 'react-native'
 
-import { Text as NativeText, StyleSheet } from 'react-native'
+import { I18nManager, Text as NativeText, StyleSheet } from 'react-native'
 
+import { directionOf } from '../../i18n'
 import { useLocaleOf } from '../../i18n/provider'
 import { useTheme } from '../../theme/scope'
 import { composeStyles, themedStyles } from '../../theme/styles'
@@ -45,6 +46,11 @@ const stylesOf = themedStyles(({ colors, typography }) =>
 const MINUS_SIGN = '\u2212'
 
 const PLUS_SIGN = '+'
+
+// The marks that hold a left-to-right amount in that direction: the
+// isolate, and its end.
+const LEFT_TO_RIGHT = '\u2066'
+const ISOLATE_END = '\u2069'
 
 // The minus a locale writes, which is the hyphen in most and U+2212 already in
 // a few, such as Swedish and Persian.
@@ -151,9 +157,23 @@ function Currency({
         style,
       )}
     >
-      {amount.text}
+      {isolatedIn(amount.text, directionOf(writtenIn))}
     </NativeText>
   )
+}
+
+/**
+ * A left-to-right locale's amount held in that direction, in a right-to-left
+ * layout. Its sign and symbol take their side from the text around them, so
+ * an English amount there would read $128.40− without it. An isolate holds it
+ * whole inside a Text around it too, which a style on this Text alone could
+ * not. A right-to-left locale's amount needs none: its formatter writes the
+ * direction marks that place its sign in a paragraph of either direction.
+ */
+function isolatedIn(text: string, direction: 'ltr' | 'rtl'): string {
+  return direction === 'ltr' && I18nManager.isRTL
+    ? `${LEFT_TO_RIGHT}${text}${ISOLATE_END}`
+    : text
 }
 
 // Constructing an Intl.NumberFormat resolves the locale, loads the currency's
