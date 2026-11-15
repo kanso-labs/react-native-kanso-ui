@@ -8,6 +8,7 @@
     "android": "expo start --android --localhost",
     "export": "expo export",
     "ios": "expo start --ios",
+    "postinstall": "patch-package",
     "start": "expo start",
     "typecheck": "tsc --noEmit"
   },
@@ -35,6 +36,7 @@
   },
   "devDependencies": {
     "@types/react": "19.3.0",
+    "patch-package": "8.0.1",
     "typescript": "6.0.3"
   }
 }

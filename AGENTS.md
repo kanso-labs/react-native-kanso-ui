@@ -339,6 +339,19 @@ reports the bundle built while Expo Go sits at "Bundling 79%", with
 8081 over adb, so the emulator reads Metro at `127.0.0.1`. The emulator has to
 be running first, and Expo finds `adb` through `ANDROID_HOME`.
 
+**A TalkBack pass runs in the gallery as it is, with the device UI on.** Its
+collapsed sheet's backdrop, from `@gorhom/bottom-sheet`, filled the screen as
+"Bottom sheet backdrop, Button", and TalkBack landed on it rather than on the
+story. `patches/@storybook+react-native-ui+10.7.1.patch` in the app takes it out
+of the accessibility tree, and `patch-package` applies it on install through the
+app's `postinstall`. Metro reads the package's `src`, through its `react-native`
+field, so the patch changes that as well as `dist`; a bump of
+`@storybook/react-native-ui` fails the install until the patch is redone or
+dropped. Turning the device UI off is no way round it: Storybook's own safe-area
+wrapper is then `accessible`, so the whole story is one element. The emulator's
+TalkBack takes none of the swipes adb sends, so the pass is a person's: pick the
+story through the sheet or the Storybook channel, then swipe through it.
+
 ## Workflows and checks
 
 `Build`, `Lint` and `Test` run on every pull request and on pushes to `main`,

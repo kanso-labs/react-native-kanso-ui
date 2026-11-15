@@ -1,0 +1,28 @@
+diff --git a/node_modules/@storybook/react-native-ui/dist/index.js b/node_modules/@storybook/react-native-ui/dist/index.js
+index 3222c8d..3d94560 100644
+--- a/node_modules/@storybook/react-native-ui/dist/index.js
++++ b/node_modules/@storybook/react-native-ui/dist/index.js
+@@ -1317,6 +1317,9 @@ const BottomSheetBackdropComponent = (backdropComponentProps) => {
+ 	});
+ 	return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_gorhom_bottom_sheet.BottomSheetBackdrop, {
+ 		...backdropComponentProps,
++		accessibilityLabel: null,
++		accessibilityRole: null,
++		accessible: false,
+ 		appearsOnIndex: 0,
+ 		disappearsOnIndex: -1,
+ 		pressBehavior: "close",
+diff --git a/node_modules/@storybook/react-native-ui/src/MobileMenuDrawer.tsx b/node_modules/@storybook/react-native-ui/src/MobileMenuDrawer.tsx
+index 0116ec3..222dc8e 100644
+--- a/node_modules/@storybook/react-native-ui/src/MobileMenuDrawer.tsx
++++ b/node_modules/@storybook/react-native-ui/src/MobileMenuDrawer.tsx
+@@ -39,6 +39,9 @@ export const BottomSheetBackdropComponent = (backdropComponentProps: BottomSheet
+   return (
+     <BottomSheetBackdrop
+       {...backdropComponentProps}
++      accessibilityLabel={null}
++      accessibilityRole={null}
++      accessible={false}
+       appearsOnIndex={0}
+       disappearsOnIndex={-1}
+       pressBehavior={'close'}
