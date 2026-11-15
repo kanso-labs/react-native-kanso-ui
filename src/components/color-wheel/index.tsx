@@ -51,7 +51,11 @@ import { composeStyles, themedStyles } from '../../theme/styles'
 // the target Material Design asks a touch to have, so a press or a drag that
 // begins within 24dp of the band's middle, or anywhere on a wider band, moves
 // the handle there, and one beginning in the hole or a corner moves nothing.
-// Once begun, a drag follows the angle wherever it goes, as web's does.
+// Once begun, a drag follows the angle wherever it goes, as web's does. The
+// target reaches past the ring's outer edge, and iOS and Android hand a view
+// no touch outside its parent, so the wheel's own view reaches that far too,
+// with a negative margin as wide, so it takes the room the ring is drawn in
+// and no more.
 //
 // **A screen reader adjusts the handle**, named "Hue", or by `aria-label` in
 // its place, as React Aria names it, and hears the hue and its name, "200°,
@@ -136,6 +140,10 @@ const styles = StyleSheet.create({
   thumb: {
     pointerEvents: 'none',
   },
+  // The ring and its handle, inside the reach the wheel's view takes.
+  wheel: {
+    position: 'absolute',
+  },
 })
 
 const stylesOf = themedStyles(({ stateLayerOpacity }) =>
@@ -218,10 +226,14 @@ function ColorWheel({
   const innerRadius = Math.max(0, outerRadius - thickness)
   // The middle of the band, which is where the handle rides.
   const thumbRadius = (innerRadius + outerRadius) / 2
+  const reach = Math.max(outerRadius - innerRadius, TARGET) / 2
+  // How far the target reaches past the ring's outer edge.
+  const beyond = Math.max(0, reach - (outerRadius - thumbRadius))
   const gesture = useWheelGesture({
+    beyond,
     isDisabled,
     outerRadius,
-    reach: Math.max(outerRadius - innerRadius, TARGET) / 2,
+    reach,
     state,
     testID,
     thumbRadius,
@@ -235,7 +247,11 @@ function ColorWheel({
       ref={ref}
       style={composeStyles<ViewStyle>(
         styles.root,
-        { height: outerRadius * 2, width: outerRadius * 2 },
+        {
+          height: (outerRadius + beyond) * 2,
+          margin: -beyond,
+          width: (outerRadius + beyond) * 2,
+        },
         isDisabled ? own.disabled : undefined,
         style,
       )}
@@ -243,31 +259,42 @@ function ColorWheel({
     >
       <GestureHandlerRootView style={StyleSheet.absoluteFill}>
         <GestureDetector gesture={gesture}>
+          {/* The view a press is read in, the whole of the reach, with the
+              ring and its handle inside it. */}
           <View style={StyleSheet.absoluteFill}>
-            <Ring innerRadius={innerRadius} outerRadius={outerRadius} />
             <View
-              accessibilityActions={ADJUSTABLE}
-              accessible
-              aria-disabled={isDisabled}
-              aria-label={ariaLabel ?? color.getChannelName('hue', locale)}
-              aria-valuemax={maxValue}
-              aria-valuemin={minValue}
-              aria-valuenow={state.hue}
-              aria-valuetext={`${color.formatChannelValue('hue', locale)}, ${color.getHueName(locale)}`}
-              onAccessibilityAction={adjustOf(state, isDisabled)}
-              role="slider"
-              style={composeStyles<ViewStyle>(styles.seat, {
-                // `start` turns over right to left, so the handle is put
-                // back where its hue is.
-                start: outerRadius + (I18nManager.isRTL ? -x : x),
-                top: outerRadius + y,
+              style={composeStyles<ViewStyle>(styles.wheel, {
+                height: outerRadius * 2,
+                start: beyond,
+                top: beyond,
+                width: outerRadius * 2,
               })}
             >
-              <View style={styles.thumb}>
-                <ColorThumb
-                  color={state.getDisplayColor()}
-                  dragging={state.isDragging}
-                />
+              <Ring innerRadius={innerRadius} outerRadius={outerRadius} />
+              <View
+                accessibilityActions={ADJUSTABLE}
+                accessible
+                aria-disabled={isDisabled}
+                aria-label={ariaLabel ?? color.getChannelName('hue', locale)}
+                aria-valuemax={maxValue}
+                aria-valuemin={minValue}
+                aria-valuenow={state.hue}
+                aria-valuetext={`${color.formatChannelValue('hue', locale)}, ${color.getHueName(locale)}`}
+                onAccessibilityAction={adjustOf(state, isDisabled)}
+                role="slider"
+                style={composeStyles<ViewStyle>(styles.seat, {
+                  // `start` turns over right to left, so the handle is put
+                  // back where its hue is.
+                  start: outerRadius + (I18nManager.isRTL ? -x : x),
+                  top: outerRadius + y,
+                })}
+              >
+                <View style={styles.thumb}>
+                  <ColorThumb
+                    color={state.getDisplayColor()}
+                    dragging={state.isDragging}
+                  />
+                </View>
               </View>
             </View>
           </View>
@@ -336,6 +363,7 @@ function sliceOf(hue: number, innerRadius: number, outerRadius: number) {
  * Both run on the JavaScript thread, since every move sets React state.
  */
 function useWheelGesture({
+  beyond,
   isDisabled,
   outerRadius,
   reach,
@@ -343,6 +371,8 @@ function useWheelGesture({
   testID,
   thumbRadius,
 }: {
+  /** How far the view taking presses reaches past the ring on every side. */
+  readonly beyond: number
   readonly isDisabled: boolean
   readonly outerRadius: number
   readonly reach: number
@@ -355,16 +385,19 @@ function useWheelGesture({
   // lets no ref reach them.
   const held: SharedValue<boolean> = useSharedValue(false)
 
+  // The wheel's centre, in the view taking presses.
+  const centre = outerRadius + beyond
+
   function reaches(x: number, y: number) {
-    const distance = Math.hypot(x - outerRadius, y - outerRadius)
+    const distance = Math.hypot(x - centre, y - centre)
     return Math.abs(distance - thumbRadius) <= reach
   }
 
   // Sets the hue from a press's angle. The very centre has none, and moves
   // nothing.
   function setFrom(x: number, y: number) {
-    const across = x - outerRadius
-    const down = y - outerRadius
+    const across = x - centre
+    const down = y - centre
     const distance = Math.hypot(across, down)
     if (distance > 0) {
       state.setHueFromPoint(across, down, distance)
