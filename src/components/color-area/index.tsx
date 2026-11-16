@@ -182,6 +182,25 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     flexGrow: 1,
   },
+  // The plane and the handle, one layer to fade while disabled. A layer
+  // drawn offscreen is cut at its own edges, and the handle at an edge of
+  // the plane hangs half its frame past it, so the layer reaches that far
+  // past the plane on every side, and holds the plane at its own size inside.
+  layer: {
+    bottom: -TARGET / 2,
+    end: -TARGET / 2,
+    pointerEvents: 'none',
+    position: 'absolute',
+    start: -TARGET / 2,
+    top: -TARGET / 2,
+  },
+  layerInset: {
+    bottom: TARGET / 2,
+    end: TARGET / 2,
+    position: 'absolute',
+    start: TARGET / 2,
+    top: TARGET / 2,
+  },
   root: {
     aspectRatio: 1,
     boxSizing: 'border-box',
@@ -314,29 +333,38 @@ function ColorArea({
   return (
     <View
       ref={ref}
-      style={composeStyles<ViewStyle>(
-        styles.root,
-        isDisabled ? own.disabled : undefined,
-        style,
-      )}
+      style={composeStyles<ViewStyle>(styles.root, style)}
       testID={testID}
     >
       <GestureHandlerRootView style={StyleSheet.absoluteFill}>
         <GestureDetector gesture={gesture}>
           <View onLayout={sizeTo(setSize)} style={StyleSheet.absoluteFill}>
-            <View style={own.plane}>
-              <Plane layers={layersOf(state)} />
-            </View>
             <View
-              style={composeStyles<ViewStyle>(styles.seat, {
-                start: percentOf(x),
-                top: percentOf(y),
-              })}
+              // Faded as one layer while disabled, as web's is: Android
+              // otherwise fades each view under it on its own, and the plane
+              // shows through the handle drawn over it.
+              needsOffscreenAlphaCompositing={isDisabled}
+              style={composeStyles<ViewStyle>(
+                styles.layer,
+                isDisabled ? own.disabled : undefined,
+              )}
             >
-              <ColorThumb
-                color={state.getDisplayColor()}
-                dragging={state.isDragging}
-              />
+              <View style={styles.layerInset}>
+                <View style={own.plane}>
+                  <Plane layers={layersOf(state)} />
+                </View>
+                <View
+                  style={composeStyles<ViewStyle>(styles.seat, {
+                    start: percentOf(x),
+                    top: percentOf(y),
+                  })}
+                >
+                  <ColorThumb
+                    color={state.getDisplayColor()}
+                    dragging={state.isDragging}
+                  />
+                </View>
+              </View>
             </View>
             <View
               style={composeStyles<ViewStyle>(styles.frame, {

@@ -671,6 +671,10 @@ describe('ColorWheel', () => {
       expect(styleOf(screen.getByTestId(TEST_ID))).toMatchObject({
         opacity: stateLayerOpacity.disabledContent,
       })
+      // As one layer, so the ring does not show through the handle.
+      expect(
+        screen.getByTestId(TEST_ID).props.needsOffscreenAlphaCompositing,
+      ).toBe(true)
       expect(screen.getByRole('slider')).toBeDisabled()
       expect(getByGestureTestId(`${TEST_ID}-pan`).config).toMatchObject({
         enabled: false,

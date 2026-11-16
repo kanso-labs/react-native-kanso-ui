@@ -244,6 +244,10 @@ function ColorWheel({
 
   return (
     <View
+      // Faded as one layer while disabled, as web's is: Android otherwise
+      // fades each view under it on its own, and the ring shows through the
+      // handle drawn over it.
+      needsOffscreenAlphaCompositing={isDisabled}
       ref={ref}
       style={composeStyles<ViewStyle>(
         styles.root,

@@ -717,6 +717,8 @@ describe('ColorSlider', () => {
       expect(styleOf(area())).toMatchObject({
         opacity: stateLayerOpacity.disabledContent,
       })
+      // As one layer, so the strip does not show through the handle.
+      expect(area().props.needsOffscreenAlphaCompositing).toBe(true)
       expect(styleOf(hiddenText('Label')).opacity).toBeUndefined()
       expect(screen.getByRole('slider')).toBeDisabled()
       expect(getByGestureTestId(`${TEST_ID}-pan`).config).toMatchObject({
