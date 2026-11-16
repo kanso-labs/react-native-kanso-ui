@@ -76,9 +76,19 @@ async function drag(...along: (readonly [number, number])[]) {
   })
 }
 
-// The frame a screen reader's two halves sit in.
+// The layer the plane and the handle are faded as one in.
+function fadeLayer() {
+  const found = views(area()).at(0)
+  if (found === undefined) {
+    throw new TypeError('expected a layer')
+  }
+  return found
+}
+
+// The frame a screen reader's two halves sit in, after the layer that holds
+// the plane and the handle.
 function frame() {
-  const found = views(area()).at(2)
+  const found = views(area()).at(1)
   if (found === undefined) {
     throw new TypeError('expected a frame')
   }
@@ -118,6 +128,15 @@ function heldDrag() {
       await send({ oldState: State.ACTIVE, state: State.END, x, y })
     },
   }
+}
+
+// The view inside the fading layer, at the plane's own size.
+function inset() {
+  const found = views(fadeLayer()).at(0)
+  if (found === undefined) {
+    throw new TypeError('expected an inset')
+  }
+  return found
 }
 
 // The plane's layers, bottom first: a fill's colour, or a gradient's
@@ -171,7 +190,7 @@ function paintOf(element: {
 
 // The view the plane is drawn in, clipped to its corner.
 function plane() {
-  const found = views(area()).at(0)
+  const found = views(inset()).at(0)
   if (found === undefined) {
     throw new TypeError('expected a plane')
   }
@@ -188,7 +207,7 @@ function ring() {
 
 // The frame the handle sits in.
 function seat() {
-  const found = views(area()).at(1)
+  const found = views(inset()).at(1)
   if (found === undefined) {
     throw new TypeError('expected a seat')
   }
@@ -999,8 +1018,22 @@ describe('ColorArea', () => {
       )
       await layOut()
 
-      expect(styleOf(screen.getByTestId(TEST_ID))).toMatchObject({
+      // As one layer, so the plane does not show through the handle, which
+      // reaches half the handle's 48dp frame past the plane, so the layer
+      // does not cut the handle at an edge.
+      expect(styleOf(fadeLayer())).toMatchObject({
+        bottom: -24,
+        end: -24,
         opacity: stateLayerOpacity.disabledContent,
+        start: -24,
+        top: -24,
+      })
+      expect(fadeLayer().props.needsOffscreenAlphaCompositing).toBe(true)
+      expect(styleOf(inset())).toMatchObject({
+        bottom: 24,
+        end: 24,
+        start: 24,
+        top: 24,
       })
       expect(screen.getByRole('slider', { name: 'Saturation' })).toBeDisabled()
       expect(screen.getByRole('slider', { name: 'Lightness' })).toBeDisabled()

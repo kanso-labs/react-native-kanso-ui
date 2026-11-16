@@ -312,6 +312,10 @@ function ColorSlider({
       >
         <GestureDetector gesture={gesture}>
           <View
+            // Faded as one layer while disabled, as web's is: Android
+            // otherwise fades each view under it on its own, and the strip
+            // shows through the handle drawn over it.
+            needsOffscreenAlphaCompositing={isDisabled}
             onLayout={lengthTo(setLength, vertical)}
             style={composeStyles<ViewStyle>(
               styles.area,
