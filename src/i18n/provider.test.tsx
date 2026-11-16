@@ -237,7 +237,10 @@ describe('I18nProvider', () => {
       await renderIn('de-DE', <Button isPending>Label</Button>)
 
       expect(
-        screen.getByRole('progressbar', { name: 'Wird geladen' }),
+        screen.getByRole('progressbar', {
+          includeHiddenElements: true,
+          name: 'Wird geladen',
+        }),
       ).toBeTruthy()
     })
 

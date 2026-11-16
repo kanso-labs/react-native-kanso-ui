@@ -216,9 +216,10 @@ function layer() {
   return view
 }
 
-// The ring a pending button draws, found as a screen reader finds it.
+// The ring a pending button draws, which iOS and Android keep from a screen
+// reader.
 function ring(name = 'Loading') {
-  return screen.getByRole('progressbar', { name })
+  return screen.getByRole('progressbar', { includeHiddenElements: true, name })
 }
 
 // What the ring's svg is drawn at, and the colour of each of its arcs.

@@ -281,9 +281,10 @@ function layer() {
   return view
 }
 
-// The ring a pending button draws, found as a screen reader finds it.
+// The ring a pending button draws, which iOS and Android keep from a screen
+// reader.
 function ring(name = 'Loading') {
-  return screen.getByRole('progressbar', { name })
+  return screen.getByRole('progressbar', { includeHiddenElements: true, name })
 }
 
 // What the ring's svg is drawn at, and the colour of each of its arcs.
@@ -921,6 +922,22 @@ describe('the pending state', () => {
     await render(<Button isPending>Label</Button>)
 
     expect(ring(name)).toBeTruthy()
+  })
+
+  // The button carries the name and the busy state, so a ring a screen reader
+  // could reach would be a second stop inside it, saying the name again.
+  it('keeps the ring out of what a screen reader reaches on iOS and Android', async () => {
+    await render(<Button isPending>Label</Button>)
+
+    expect(screen.queryByRole('progressbar')).toBeNull()
+    expect(ring()).toBeTruthy()
+  })
+
+  it('leaves the ring a progress bar inside the button under React Native Web', async () => {
+    jest.replaceProperty(Platform, 'OS', 'web')
+    await render(<Button isPending>Label</Button>)
+
+    expect(screen.getByRole('progressbar', { name: 'Loading' })).toBeTruthy()
   })
 
   it('reports itself busy, as a button still', async () => {

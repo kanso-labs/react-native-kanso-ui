@@ -83,6 +83,11 @@ function PendingContent({
  * filled button is the fill itself. `diameter` is what the content it
  * replaces measures, the label's type size on Button and the icon on
  * IconButton, which is what web's `1em` reads in each.
+ *
+ * On iOS and Android the ring is hidden from a screen reader: the button
+ * already carries its name and its busy state, and the ring would be a
+ * second stop inside it saying the name again. Under React Native Web it
+ * stays a progress bar inside the button, as web's is.
  */
 function PendingRing({
   color,
@@ -97,6 +102,7 @@ function PendingRing({
     <View style={pendingStyles.ring}>
       <IconStyleContext value={slotOf(color, diameter)}>
         <ProgressIndicator
+          {...(Platform.OS === 'web' ? undefined : CONCEALED)}
           aria-label={label}
           diameter={`${diameter}px`}
           isIndeterminate
