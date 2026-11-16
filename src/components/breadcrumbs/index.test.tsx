@@ -70,9 +70,10 @@ function parentOf(node: TestInstance) {
   return node.parent
 }
 
-// The view a crumb takes its 48dp reach from, around the crumb's label.
+// The view around a crumb's label: the one its 48dp reach is taken from, or
+// the one a disabled crumb is an element of its own in.
 function reachOf(name: string) {
-  return parentOf(parentOf(screen.getByRole('link', { name })))
+  return parentOf(parentOf(textOf(name)))
 }
 
 function Routed({
@@ -378,6 +379,31 @@ describe('Breadcrumbs', () => {
       expect(reachOf('First item').props.hitSlop).toBeUndefined()
     })
 
+    // A link inside text is a link on iOS and Android only while it can be
+    // followed, so there a disabled crumb is held in an element of its own.
+    it('keeps each disabled crumb a disabled link to a screen reader, apart from the current item', async () => {
+      await render(<Trail isDisabled />)
+
+      for (const name of ['First item', 'Second item']) {
+        const { props } = reachOf(name)
+        expect([props.role, props.accessible, props['aria-disabled']]).toEqual([
+          'link',
+          true,
+          true,
+        ])
+      }
+      // The current item is text alone, in the item's own view.
+      expect(textOf('Third item').props.role).toBeUndefined()
+      expect(parentOf(textOf('Third item')).props.role).toBeUndefined()
+    })
+
+    it('leaves a disabled crumb its link alone under React Native Web', async () => {
+      Platform.OS = 'web'
+      await render(<Trail isDisabled />)
+
+      expect(reachOf('First item').props.role).toBeUndefined()
+    })
+
     it('disables every link while the trail is disabled', async () => {
       const navigate = jest.fn()
       const onAction = jest.fn()
@@ -388,14 +414,13 @@ describe('Breadcrumbs', () => {
         </Routed>,
       )
 
-      const links = screen.getAllByRole('link')
+      const links = [textOf('First item'), textOf('Second item')]
 
-      expect(links).toHaveLength(2)
       expect(links.map((link) => link.props['aria-disabled'] === true)).toEqual(
         [true, true],
       )
-      await fireEvent.press(screen.getByRole('link', { name: 'First item' }))
-      await fireEvent.press(screen.getByRole('link', { name: 'Second item' }))
+      await fireEvent.press(textOf('First item'))
+      await fireEvent.press(textOf('Second item'))
       expect(navigate).not.toHaveBeenCalled()
       expect(onAction).not.toHaveBeenCalled()
     })
@@ -456,9 +481,9 @@ describe('Breadcrumbs', () => {
     it('draws a disabled link at the disabled opacity', async () => {
       await render(<Trail isDisabled />)
 
-      expect(
-        styleOf(screen.getByRole('link', { name: 'First item' })).color,
-      ).toBe(withOpacity(colors.onSurface, stateLayerOpacity.disabledContent))
+      expect(styleOf(textOf('First item')).color).toBe(
+        withOpacity(colors.onSurface, stateLayerOpacity.disabledContent),
+      )
     })
 
     it('draws the chevron at 18dp in the muted role', async () => {

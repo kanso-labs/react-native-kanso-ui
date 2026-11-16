@@ -55,6 +55,12 @@ import { Link } from '../link'
 // link inside it. The web keeps the link alone, where a pointer needs no
 // reach and the view would take a click the link already takes.
 //
+// **A disabled crumb is still a link to a screen reader.** On iOS and Android
+// a link inside text is a link only while it can be followed, so a disabled
+// one read as plain text, the same as the current item. There the crumb is
+// held in a view that is one element of its own, a link marked disabled,
+// which tells a disabled trail's links from the screen you are on.
+//
 // The trail is one group named by its `aria-label`, and it wraps onto further
 // lines rather than running off the edge.
 
@@ -105,6 +111,14 @@ const ItemContext = createContext<ItemPosition>({
 
 // What marks the current item on the web, where a screen reader reads it.
 const CURRENT_PAGE = { 'aria-current': 'page' } as const
+
+// What a disabled crumb is to a screen reader on iOS and Android: one
+// element, a link that cannot be followed.
+const DISABLED_LINK = {
+  accessible: true,
+  'aria-disabled': true,
+  role: 'link',
+} as const
 
 // 18dp, a step under the 20dp the menus page gives the same glyph, as web's
 // is: a separator inside a row of label large links sits heavier than the
@@ -266,6 +280,10 @@ function BreadcrumbsItem({
             >
               {crumbOf(label, { action, children, href, isDisabled })}
             </Pressable>
+          ) : Platform.OS !== 'web' && isDisabled ? (
+            <View {...DISABLED_LINK} collapsable={false} style={own.reach}>
+              {crumbOf(label, { action, children, href, isDisabled })}
+            </View>
           ) : (
             crumbOf(label, { action, children, href, isDisabled })
           )}
