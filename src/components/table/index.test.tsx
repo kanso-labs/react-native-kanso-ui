@@ -924,7 +924,9 @@ describe('Table', () => {
       expect(screen.getByText('Third item')).toBeTruthy()
     })
 
-    it('sets a cell’s text in body medium, padded 16dp each side', async () => {
+    // 8dp above and below keeps text that wraps clear of the rules, and a
+    // line of body medium and that padding stay inside the 52dp row.
+    it('sets a cell’s text in body medium, padded 16dp each side and 8dp above and below', async () => {
       await render(<Basic />)
 
       expect(styleOf(screen.getByText('First item'))).toMatchObject({
@@ -934,7 +936,11 @@ describe('Table', () => {
       expect(styleOf(cellOf('First item'))).toMatchObject({
         justifyContent: 'center',
         paddingHorizontal: spacing.lg,
+        paddingVertical: spacing.sm,
       })
+      expect(
+        typography.bodyMediumLineHeight + 2 * spacing.sm,
+      ).toBeLessThanOrEqual(52)
     })
 
     // Stretched, a Tag in a Status column was drawn as a bar across it.

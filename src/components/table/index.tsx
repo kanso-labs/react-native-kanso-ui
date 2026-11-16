@@ -244,10 +244,14 @@ const stylesOf = themedStyles(({ colors, sizing, spacing }: ResolvedTheme) =>
     // two columns. What a cell holds keeps its own width, as it does in a
     // web table's cell, rather than stretching across the column: a Tag
     // there is drawn around its label, not as a bar the column's width.
+    // 8dp above and below keeps text that wraps clear of the rules, at a
+    // large text size above all; one line and that padding stay inside the
+    // 52dp row.
     cell: {
       alignItems: 'flex-start',
       justifyContent: 'center',
       paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.sm,
     },
     // What the body shows in place of rows: muted, padded and centred, as
     // web's box is.
