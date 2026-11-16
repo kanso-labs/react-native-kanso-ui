@@ -753,7 +753,7 @@ function FieldInput({
     <View
       style={composeStyles<ViewStyle>(
         styles.affixLine,
-        multiline || Platform.OS !== 'ios' ? undefined : CENTRED,
+        multiline || Platform.OS === 'web' ? undefined : CENTRED,
         clearance,
       )}
     >
@@ -1092,12 +1092,15 @@ const SHRINKS: TextStyle = { flexShrink: 1 }
 // height, and iOS centres one line down the control.
 const UNSPACED: TextStyle = { lineHeight: undefined }
 
-// How a one-line control on iOS lines up with the text beside it: centred
-// rather than on a baseline. Yoga reads the control's baseline from its value
-// laid out at its top, while iOS draws one line centred down the control, so
-// lining the two up by baseline drew the value 2dp below a prefix and a
-// suffix, measured on an iPhone. They are one line of the same type and as
-// tall as each other, so centring them shares their baseline.
+// How a one-line control on iOS and Android lines up with the text beside
+// it: centred rather than on a baseline. Yoga reads the control's baseline
+// from its value laid out at its top, while both platforms draw one line
+// centred down the control, so lining the two up by baseline drew the value
+// 2dp below a prefix and a suffix on an iPhone, and 6dp below them on
+// Android at twice the text size, where Android draws a line shorter than
+// the type's line height scaled. They are one line of the same type, so
+// centring them shares their baseline. The web keeps the baseline, which a
+// browser reads from the text itself.
 const CENTRED: ViewStyle = { alignItems: 'center' }
 
 // How many characters' width a control holding chosen options keeps beside

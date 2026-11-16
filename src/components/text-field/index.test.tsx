@@ -766,8 +766,21 @@ describe('TextField', () => {
       })
     })
 
-    it('lines its value up with a prefix and a suffix by baseline on Android', async () => {
+    // Android draws one line centred down the control too, and at a large
+    // text size a line shorter than the scaled line height, so a baseline
+    // read from the top put the value below a prefix and a suffix.
+    it('centres its value beside a prefix and a suffix on Android', async () => {
       jest.replaceProperty(Platform, 'OS', 'android')
+      await renderField({ prefix: 'Prefix', suffix: 'Suffix' })
+
+      expect(styleOf(affixLineOf(input()))).toMatchObject({
+        alignItems: 'center',
+        flexDirection: 'row',
+      })
+    })
+
+    it('lines its value up with a prefix and a suffix by baseline on the web', async () => {
+      jest.replaceProperty(Platform, 'OS', 'web')
       await renderField({ prefix: 'Prefix', suffix: 'Suffix' })
 
       expect(styleOf(affixLineOf(input()))).toMatchObject({
