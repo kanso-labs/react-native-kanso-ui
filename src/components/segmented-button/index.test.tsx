@@ -1180,6 +1180,24 @@ describe('SegmentedButton', () => {
       )
     })
 
+    it('holds a segment with no label at least the 48dp target wide', async () => {
+      await render(
+        <SegmentedButton aria-label="Label">
+          <SegmentedButton.Segment
+            aria-label="First item"
+            icon={ICON}
+            id="first"
+          />
+          <SegmentedButton.Segment id="second">
+            Second item
+          </SegmentedButton.Segment>
+        </SegmentedButton>,
+      )
+
+      expect(styleOf(segment('First item')).minWidth).toBe(48)
+      expect(styleOf(segment('Second item')).minWidth).toBe(0)
+    })
+
     it('measures a label again when it changes width', async () => {
       await render(<Segments />)
       await measure()

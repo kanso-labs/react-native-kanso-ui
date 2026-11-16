@@ -40,7 +40,7 @@ import { toggleState } from '../../button'
 import { CheckGlyph } from '../../glyphs'
 import { IconStyleContext } from '../../glyphs/icon-style'
 import { GROUP } from '../../group'
-import { hitSlop, usePressFeedback } from '../../press'
+import { hitSlop, TARGET_SIZE, usePressFeedback } from '../../press'
 import { withOpacity } from '../../theme/color'
 import { useTheme } from '../../theme/scope'
 import { composeStyles, themedStyles } from '../../theme/styles'
@@ -114,7 +114,8 @@ import { useTypeRole } from '../../typography/roles'
 // The state layer, the ripple and the focus ring are src/press's, in the
 // label's colour, over the chosen container. A segment's target reaches 4dp
 // above and below the 40dp track, to the page's 48dp, and not across, since
-// the segments sit flush.
+// the segments sit flush. A segment with an icon and no label, which its
+// padding and its 18dp icon make 44dp wide, is held at 48dp wide instead.
 //
 // **Disabled is the page's colour at an opacity, translucent**, as a
 // button's is: the label on-surface at `disabledContent`, and the rule and a
@@ -331,6 +332,10 @@ const stylesOf = themedStyles(({ colors, radii, sizing, spacing }) =>
     // The first segment draws the leading rule the others leave to it.
     first: {
       borderStartWidth: RULE_WIDTH,
+    },
+    // An icon with no label, as wide as the target a press needs.
+    iconOnly: {
+      minWidth: TARGET_SIZE,
     },
     segment: {
       alignItems: 'center',
@@ -925,6 +930,7 @@ function SegmentedButtonSegment({
       onPress={toggleThen(group.state, id, onPress)}
       style={composeStyles<ViewStyle>(
         own.segment,
+        labelled ? undefined : own.iconOnly,
         first ? own.first : undefined,
         corners,
         disabled
