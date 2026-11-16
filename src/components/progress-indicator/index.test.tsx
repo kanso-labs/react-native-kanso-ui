@@ -99,14 +99,15 @@ function arcs() {
   return pathsIn(indicator())
 }
 
-// The indeterminate line's row, its track and its two bars.
+// The indeterminate line's row, the three pieces of its track and its two
+// bars.
 function bars() {
   const row = child(line().children.at(0))
   return {
-    primary: child(row.children.at(1)),
+    pieces: [0, 1, 2].map((index) => child(row.children.at(index))),
+    primary: child(row.children.at(3)),
     row,
-    secondary: child(row.children.at(2)),
-    track: child(row.children.at(0)),
+    secondary: child(row.children.at(4)),
   }
 }
 
@@ -503,7 +504,8 @@ describe('ProgressIndicator', () => {
         <ProgressIndicator buffer={70} isIndeterminate label="Label" />,
       )
 
-      expect(child(line().children.at(0)).children).toHaveLength(3)
+      // The track's three pieces and the two bars, and no buffer's dots.
+      expect(child(line().children.at(0)).children).toHaveLength(5)
     })
   })
 
@@ -559,17 +561,70 @@ describe('ProgressIndicator', () => {
           <ProgressIndicator isIndeterminate label="Label" tone="inherit" />,
         ),
       )
-      const { primary, secondary, track } = bars()
+      const { pieces, primary, secondary } = bars()
 
       expect(fillOf(primary)).toBe(SLOT)
       expect(fillOf(secondary)).toBe(SLOT)
-      expect(fillOf(track)).toBe(withOpacity(SLOT, 0.25))
+      for (const piece of pieces) {
+        expect(fillOf(piece)).toBe(withOpacity(SLOT, 0.25))
+      }
     })
 
     it('scales its bars from their own start', async () => {
       await render(<ProgressIndicator isIndeterminate label="Label" />)
 
       expect(styleOf(bars().primary).transformOrigin).toBe('left center')
+    })
+
+    // The determinate line keeps a 4dp gap between its parts, and the
+    // indeterminate one keeps it between each bar and the track, at every
+    // moment of a pass.
+    it('leaves the track 4dp clear of each bar as they cross the row', async () => {
+      await render(<ProgressIndicator isIndeterminate label="Label" />)
+      await layOut()
+
+      // What is drawn at twenty moments of a pass: the stretch of the row
+      // each bar that shows covers, and each piece of the track.
+      const frames: { drawn: number[][]; taken: number[][] }[] = []
+      await act(() => {
+        for (let moment = 0; moment < 20; moment += 1) {
+          const { pieces, primary, secondary } = bars()
+          const taken = [primary, secondary]
+            .map((bar) => {
+              const moved = transformOf(getAnimatedStyle(bar))
+              const start = Number(moved.translateX)
+              const end = start + Number(moved.scaleX) * WIDTH
+              return [Math.max(0, start), Math.min(WIDTH, end)]
+            })
+            .filter(([from, to]) => to > from)
+          const drawn = pieces
+            .map((piece) => {
+              const { left, width } = getAnimatedStyle(piece)
+              return [Number(left), Number(left) + Number(width)]
+            })
+            .filter(([from, to]) => to > from)
+          frames.push({ drawn, taken })
+          jest.advanceTimersByTime(100)
+        }
+      })
+
+      expect(frames.some(({ taken }) => taken.length > 0)).toBe(true)
+      for (const { drawn, taken } of frames) {
+        // No piece reaches within 4dp of a bar.
+        for (const [from, to] of drawn) {
+          for (const [start, end] of taken) {
+            expect(to <= start - 4 + 0.5 || from >= end + 4 - 0.5).toBe(true)
+          }
+        }
+        // And every point of the row is a piece's or a bar's and its gap.
+        for (let x = 0.5; x < WIDTH; x += 1) {
+          const inPiece = drawn.some(([from, to]) => x >= from && x <= to)
+          const nearBar = taken.some(
+            ([start, end]) => x >= start - 4 - 0.5 && x <= end + 4 + 0.5,
+          )
+          expect(inPiece || nearBar).toBe(true)
+        }
+      }
     })
 
     it('mirrors the row under a right-to-left layout', async () => {
