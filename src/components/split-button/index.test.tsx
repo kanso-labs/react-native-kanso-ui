@@ -448,6 +448,22 @@ describe('the corners', () => {
 
   // Start and end rather than left and right, which is what turns the round
   // ends over with the layout's direction.
+  // A label grown with the OS text size makes the action half the taller, so
+  // the row stretches both, and the ends round off at the height it measures.
+  it('keeps both halves one height, round at the height the row measures', async () => {
+    await renderSplit()
+
+    expect(styleOf(group()).alignItems).toBe('stretch')
+
+    await fireEvent(group(), 'layout', {
+      nativeEvent: { layout: { height: 80, width: 200, x: 0, y: 0 } },
+    })
+    await advance(motion.durationShort2)
+
+    expect(cornersOf(action())).toMatchObject({ start: [40, 40] })
+    expect(cornersOf(trigger())).toMatchObject({ end: [40, 40] })
+  })
+
   it('keeps the round ends at the outer edges, whichever way the layout runs', async () => {
     await renderSplit()
 

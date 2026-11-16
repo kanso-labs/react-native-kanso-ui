@@ -1,5 +1,10 @@
 import type { ComponentRef, ReactNode, Ref } from 'react'
-import type { StyleProp, ViewProps, ViewStyle } from 'react-native'
+import type {
+  LayoutChangeEvent,
+  StyleProp,
+  ViewProps,
+  ViewStyle,
+} from 'react-native'
 import type { Key } from 'react-stately'
 
 import { createContext, use, useState } from 'react'
@@ -41,6 +46,11 @@ import { Menu } from '../menu'
 // it opens, when the inner corners round off entirely. The page keeps the
 // colours as they are while the menu is open and lays the pressed state
 // layer over them, which the half draws for as long as the menu shows.
+//
+// **The two halves are one height.** A label that grows with the OS text
+// size makes the action half taller than the chevron's, so the row stretches
+// both to its own height, and the round ends are half the height the row
+// measures, never less than half the size's.
 //
 // Both halves take the variant the root names, out of Button's four with a
 // container: the page gives text no split button. The paddings are the
@@ -113,15 +123,16 @@ const CHEVRONS: Readonly<Record<ControlSize, ReactNode>> = {
 
 // What the root hands its two halves, as `contextOf` builds it.
 const SplitButtonContext = createContext<{
+  readonly height: number | undefined
   readonly size: ControlSize
   readonly variant: SplitButtonVariant
-}>({ size: 'md', variant: 'filled' })
+}>({ height: undefined, size: 'md', variant: 'filled' })
 
 // A row as wide as its halves, 2dp apart, as web's inline-flex group is.
 const groupOf = themedStyles(({ spacing }) =>
   StyleSheet.create({
     group: {
-      alignItems: 'center',
+      alignItems: 'stretch',
       alignSelf: 'flex-start',
       flexDirection: 'row',
       gap: spacing.xxs,
@@ -147,13 +158,9 @@ const trailingPaddings = {
   open: StyleSheet.create(paddingsBy({ lg: 0, md: 0, xl: 0, xs: 0, xxl: 0 })),
 }
 
-// The three corners at each size: where the halves meet at rest and while a
-// half is active, and the round end, half the button's height. Not the
-// pill: a corner larger than half its side scales down every corner beside
-// it, so a pill end beside a 4dp inner corner would shrink the inner one.
-const cornersOf = themedStyles(({ radii, sizing }: ResolvedTheme) => {
-  const round = (size: ControlSize) => sizing[HEIGHTS[size]] / 2
-
+// The two corners at each size where the halves meet, at rest and while a
+// half is active.
+const cornersOf = themedStyles(({ radii }: ResolvedTheme) => {
   return {
     active: { lg: radii.md, md: radii.md, xl: 20, xs: radii.sm, xxl: 20 },
     inner: {
@@ -162,13 +169,6 @@ const cornersOf = themedStyles(({ radii, sizing }: ResolvedTheme) => {
       xl: radii.sm,
       xs: radii.xs,
       xxl: radii.md,
-    },
-    round: {
-      lg: round('lg'),
-      md: round('md'),
-      xl: round('xl'),
-      xs: round('xs'),
-      xxl: round('xxl'),
     },
   } satisfies Record<string, Readonly<Record<ControlSize, number>>>
 })
@@ -181,13 +181,15 @@ const cornersOf = themedStyles(({ radii, sizing }: ResolvedTheme) => {
 function actionItemOf(
   theme: ResolvedTheme,
   size: ControlSize,
+  height: number | undefined,
 ): ButtonGroupItem {
   const corners = cornersOf(theme)
+  const round = roundOf(theme, size, height)
 
   return {
     corners: ({ active }: GroupButtonState) => ({
       end: active ? corners.active[size] : corners.inner[size],
-      start: corners.round[size],
+      start: round,
     }),
     isDisabled: false,
     keepsTarget: false,
@@ -210,8 +212,24 @@ function changeThen(
 }
 
 // What the root hands its two halves.
-function contextOf(size: ControlSize, variant: SplitButtonVariant) {
-  return { size, variant }
+function contextOf(
+  height: number | undefined,
+  size: ControlSize,
+  variant: SplitButtonVariant,
+) {
+  return { height, size, variant }
+}
+
+// A layout handler keeping the height the row is laid out at, then the call
+// site's own handler.
+function heightThen(
+  setHeight: (height: number) => void,
+  onLayout: ViewProps['onLayout'],
+) {
+  return (event: LayoutChangeEvent) => {
+    setHeight(event.nativeEvent.layout.height)
+    onLayout?.(event)
+  }
 }
 
 // The trailing half's place in the pair: the round end at the end, and the
@@ -221,17 +239,15 @@ function menuItemOf(
   theme: ResolvedTheme,
   size: ControlSize,
   open: boolean,
+  height: number | undefined,
 ): ButtonGroupItem {
   const corners = cornersOf(theme)
+  const round = roundOf(theme, size, height)
 
   return {
     corners: ({ active }: GroupButtonState) => ({
-      end: corners.round[size],
-      start: open
-        ? corners.round[size]
-        : active
-          ? corners.active[size]
-          : corners.inner[size],
+      end: round,
+      start: open ? round : active ? corners.active[size] : corners.inner[size],
     }),
     held: open,
     isDisabled: false,
@@ -259,6 +275,18 @@ function paddingsBy(offset: Readonly<Record<ControlSize, number>>) {
   }
 }
 
+// The round end: half the pair's height, as the row measures it, and half
+// the size's until it has. Not the pill: a corner larger than half its side
+// scales down every corner beside it, so a pill end beside a 4dp inner
+// corner would shrink the inner one.
+function roundOf(
+  { sizing }: ResolvedTheme,
+  size: ControlSize,
+  height: number | undefined,
+) {
+  return Math.max(sizing[HEIGHTS[size]], height ?? 0) / 2
+}
+
 /**
  * An action and a menu of alternatives beside it, drawn as one control.
  *
@@ -275,13 +303,15 @@ function paddingsBy(offset: Readonly<Record<ControlSize, number>>) {
  */
 function SplitButton({
   children,
+  onLayout,
   size = 'md',
   style,
   variant = 'filled',
   ...props
 }: SplitButtonProps) {
   const theme = useTheme()
-  const context = contextOf(size, variant)
+  const [height, setHeight] = useState<number>()
+  const context = contextOf(height, size, variant)
 
   return (
     <SplitButtonContext value={context}>
@@ -289,6 +319,7 @@ function SplitButton({
         {...GROUP}
         role="group"
         {...props}
+        onLayout={heightThen(setHeight, onLayout)}
         style={composeStyles<ViewStyle>(groupOf(theme).group, style)}
       >
         {children}
@@ -303,10 +334,10 @@ function SplitButton({
  */
 function SplitButtonAction(props: SplitButtonActionProps) {
   const theme = useTheme()
-  const { size, variant } = use(SplitButtonContext)
+  const { height, size, variant } = use(SplitButtonContext)
 
   return (
-    <ButtonGroupItemContext value={actionItemOf(theme, size)}>
+    <ButtonGroupItemContext value={actionItemOf(theme, size, height)}>
       <Button {...props} variant={variant} />
     </ButtonGroupItemContext>
   )
@@ -326,13 +357,13 @@ function SplitButtonMenu({
   onOpenChange,
 }: SplitButtonMenuProps) {
   const theme = useTheme()
-  const { size, variant } = use(SplitButtonContext)
+  const { height, size, variant } = use(SplitButtonContext)
   const [ownOpen, setOwnOpen] = useState(defaultOpen)
   const open = isOpen ?? ownOpen
 
   return (
     <Menu isOpen={open} onOpenChange={changeThen(setOwnOpen, onOpenChange)}>
-      <ButtonGroupItemContext value={menuItemOf(theme, size, open)}>
+      <ButtonGroupItemContext value={menuItemOf(theme, size, open, height)}>
         <Button
           aria-label={label}
           icon={CHEVRONS[size]}
