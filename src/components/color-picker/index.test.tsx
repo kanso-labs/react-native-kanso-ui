@@ -303,14 +303,29 @@ describe('ColorPicker', () => {
         paddingVertical: spacing.sm,
       })
       expect(
-        styleOf(screen.getByRole('img', { name: nameOf(PURPLE) })),
+        styleOf(
+          screen.getByRole('img', {
+            includeHiddenElements: true,
+            name: nameOf(PURPLE),
+          }),
+        ),
       ).toMatchObject({ height: 24, width: 24 })
       expect(
-        styleOf(screen.getByRole('img', { name: nameOf(PURPLE) })).opacity,
+        styleOf(
+          screen.getByRole('img', {
+            includeHiddenElements: true,
+            name: nameOf(PURPLE),
+          }),
+        ).opacity,
       ).toBeUndefined()
-      expect(fillOf(screen.getByRole('img', { name: nameOf(PURPLE) }))).toBe(
-        parseColor(PURPLE).toString('css'),
-      )
+      expect(
+        fillOf(
+          screen.getByRole('img', {
+            includeHiddenElements: true,
+            name: nameOf(PURPLE),
+          }),
+        ),
+      ).toBe(parseColor(PURPLE).toString('css'))
       expect(styleOf(screen.getByText('Label'))).toMatchObject({
         color: colors.onSurface,
         fontSize: typography.labelLargeSize,
@@ -329,6 +344,20 @@ describe('ColorPicker', () => {
       })
     })
 
+    // The trigger's name already says the colour, so a swatch a screen reader
+    // could reach would be a second stop inside it, saying the colour again.
+    it('hides its swatch from a screen reader', async () => {
+      await renderPicker()
+
+      expect(screen.queryByRole('img', { name: nameOf(PURPLE) })).toBeNull()
+      expect(
+        screen.getByRole('img', {
+          includeHiddenElements: true,
+          name: nameOf(PURPLE),
+        }),
+      ).toBeOnTheScreen()
+    })
+
     it('shows the colour the picker holds, and follows it', async () => {
       const view = await renderPicker({
         defaultValue: undefined,
@@ -344,7 +373,12 @@ describe('ColorPicker', () => {
       )
 
       expect(trigger(`Label, ${nameOf(RED)}`)).toBeOnTheScreen()
-      expect(screen.getByRole('img', { name: nameOf(RED) })).toBeOnTheScreen()
+      expect(
+        screen.getByRole('img', {
+          includeHiddenElements: true,
+          name: nameOf(RED),
+        }),
+      ).toBeOnTheScreen()
     })
 
     it('calls a colour with no alpha left transparent', async () => {
@@ -384,7 +418,12 @@ describe('ColorPicker', () => {
       await renderPicker({ isDisabled: true })
 
       expect(
-        styleOf(screen.getByRole('img', { name: nameOf(PURPLE) })).opacity,
+        styleOf(
+          screen.getByRole('img', {
+            includeHiddenElements: true,
+            name: nameOf(PURPLE),
+          }),
+        ).opacity,
       ).toBe(stateLayerOpacity.disabledContent)
     })
 
