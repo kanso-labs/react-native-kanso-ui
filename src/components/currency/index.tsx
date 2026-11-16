@@ -128,6 +128,10 @@ type ResolvedFormat = {
  * the app has registered it with expo-font, and the platform's monospaced
  * face until then, with tabular figures either way.
  *
+ * An amount is never the part of a row that gives way: a figure cut short
+ * reads as another figure, so give the Text holding it `flexShrink: 0` and let
+ * the label beside it shrink and wrap instead.
+ *
  * Web's `render` has no counterpart. `style`, `ref` and `testID` land on React
  * Native's own Text.
  */

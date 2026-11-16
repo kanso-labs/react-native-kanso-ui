@@ -24,6 +24,15 @@ const LEDGER = [
 ] as const
 
 const styles = StyleSheet.create({
+  // An amount keeps its whole width, so a row short of room takes it from
+  // the label beside it.
+  amount: {
+    flexShrink: 0,
+  },
+  // The label gives way to the amount, wrapping onto a further line.
+  label: {
+    flexShrink: 1,
+  },
   // Narrow enough that the label and the amount read as one row.
   ledger: {
     width: 300,
@@ -89,9 +98,17 @@ const InALedger: Story = {
     <Card style={styles.ledger} variant="outlined">
       <Stack gap="sm">
         {LEDGER.map(([label, value]) => (
-          <Stack align="center" direction="row" justify="between" key={label}>
-            <Text variant="bodyMedium">{label}</Text>
-            <Text variant="bodyMedium">
+          <Stack
+            align="center"
+            direction="row"
+            gap="md"
+            justify="between"
+            key={label}
+          >
+            <Text style={styles.label} variant="bodyMedium">
+              {label}
+            </Text>
+            <Text style={styles.amount} variant="bodyMedium">
               <Currency {...args} value={value} />
             </Text>
           </Stack>
