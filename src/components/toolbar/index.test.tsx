@@ -178,7 +178,9 @@ describe('Toolbar', () => {
       })
     })
 
-    it('leaves a control its own colours', async () => {
+    // Compose's floating toolbar draws a vibrant bar's icons in on primary
+    // container; a standard IconButton has no container of its own to keep.
+    it('draws a standard icon button on the vibrant bar in on primary container', async () => {
       await render(
         <Toolbar aria-label="Label" tone="vibrant">
           <PlusGlyph testID="bare" />
@@ -189,6 +191,44 @@ describe('Toolbar', () => {
       )
 
       expect(svgOf('bare').props.color).toBe(colors.onPrimaryContainer)
+      expect(svgOf('button').props.color).toBe(colors.onPrimaryContainer)
+    })
+
+    it('leaves every other control its own colours', async () => {
+      await render(
+        <>
+          <Toolbar aria-label="Label" tone="vibrant">
+            <IconButton aria-label="Filled" variant="filled">
+              <PlusGlyph testID="filled" />
+            </IconButton>
+            <IconButton aria-label="Disabled" isDisabled>
+              <PlusGlyph testID="disabled" />
+            </IconButton>
+          </Toolbar>
+          <Toolbar aria-label="Label">
+            <IconButton aria-label="Neutral">
+              <PlusGlyph testID="neutral" />
+            </IconButton>
+          </Toolbar>
+        </>,
+      )
+
+      expect(svgOf('filled').props.color).toBe(colors.onPrimary)
+      expect(svgOf('disabled').props.color).not.toBe(colors.onPrimaryContainer)
+      expect(svgOf('neutral').props.color).toBe(colors.onSurfaceVariant)
+    })
+
+    it('leaves an icon button in a dialog opened from the vibrant bar its own colour', async () => {
+      await render(
+        <Toolbar aria-label="Label" tone="vibrant">
+          <Dialog.Content defaultOpen>
+            <IconButton aria-label="Add">
+              <PlusGlyph testID="button" />
+            </IconButton>
+          </Dialog.Content>
+        </Toolbar>,
+      )
+
       expect(svgOf('button').props.color).toBe(colors.onSurfaceVariant)
     })
 

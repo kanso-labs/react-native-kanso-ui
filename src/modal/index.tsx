@@ -32,6 +32,7 @@ import type { ResolvedTheme } from '../theme/scope'
 
 import { AnimatedPressable } from '../button'
 import { ButtonSlotContext, ButtonTooltipContext } from '../button/slots'
+import { StandardIconColorContext } from '../button/standard'
 import { OverlayHost } from '../overlay'
 import { textOf } from '../plain-text'
 import { SeparatorOrientationContext } from '../separator'
@@ -179,28 +180,31 @@ function ModalWindow({
           hosts included, so a button in a snackbar raised from the surface
           opens nothing; only the surface's buttons take the close slot. Nor
           does a button in it take the tooltip of the one that opened it, nor
-          a rule in it run the way the toolbar that opened it set. */}
+          a rule in it run the way the toolbar that opened it set, or an
+          icon button in it take the colour that toolbar gives its own. */}
       <ButtonSlotContext value={null}>
         <ButtonTooltipContext value={null}>
           <SeparatorOrientationContext value={null}>
-            <OverlayHost>
-              {/* A screen reader and a keyboard skip the scrim: the first
+            <StandardIconColorContext value={null}>
+              <OverlayHost>
+                {/* A screen reader and a keyboard skip the scrim: the first
               closes the surface with the back or escape gesture, the second
               with Escape. React Native Web's Pressable is a tab stop unless
               told otherwise, whatever `focusable` says. */}
-              <AnimatedPressable
-                accessible={false}
-                aria-hidden
-                focusable={false}
-                onPress={onScrimPress}
-                style={composeStyles<AnimatedStyle<ViewStyle>>(
-                  styles.scrim,
-                  scrim,
-                )}
-                tabIndex={-1}
-              />
-              {children}
-            </OverlayHost>
+                <AnimatedPressable
+                  accessible={false}
+                  aria-hidden
+                  focusable={false}
+                  onPress={onScrimPress}
+                  style={composeStyles<AnimatedStyle<ViewStyle>>(
+                    styles.scrim,
+                    scrim,
+                  )}
+                  tabIndex={-1}
+                />
+                {children}
+              </OverlayHost>
+            </StandardIconColorContext>
           </SeparatorOrientationContext>
         </ButtonTooltipContext>
       </ButtonSlotContext>
