@@ -378,9 +378,17 @@ const styles = StyleSheet.create({
     height: THICKNESS,
     overflow: 'hidden',
   },
-  // The track behind the indeterminate line's bars.
+  // The track behind the wavy indeterminate line's wave.
   track: {
     ...StyleSheet.absoluteFill,
+  },
+  // A piece of the flat indeterminate line's track, placed between the bars
+  // as they move.
+  trackPiece: {
+    height: THICKNESS,
+    left: 0,
+    position: 'absolute',
+    top: 0,
   },
   // A wave over the line: the row's whole box, mirrored under a right-to-left
   // layout so it starts at the start of the line.
@@ -684,10 +692,16 @@ function IndeterminateBars({
 }
 
 /**
- * The line indeterminate: the track, with two bars crossing it, or for the
- * wavy shape two stretches of a wave crossing it where the bars would be. The
- * row is mirrored under a right-to-left layout, which makes the sweep travel
- * the way the line reads while the bars move as Material's keyframes say.
+ * The line indeterminate: two bars crossing the track, or for the wavy shape
+ * two stretches of a wave crossing it where the bars would be. The row is
+ * mirrored under a right-to-left layout, which makes the sweep travel the
+ * way the line reads while the bars move as Material's keyframes say.
+ *
+ * The flat line's track is the pieces the bars leave of the row, each 4dp
+ * clear of the bar beside it, the gap the determinate line keeps between its
+ * parts, as web's indeterminate line draws it. The wave's stretches are
+ * placed from each bar's start rather than about it, so the wavy line keeps
+ * its whole track under the wave, as web's does.
  */
 function IndeterminateLine({
   colors,
@@ -709,11 +723,17 @@ function IndeterminateLine({
   return (
     <>
       <View style={composeStyles<ViewStyle>(styles.row, own.row, mirrored)}>
-        <View
-          style={composeStyles<ViewStyle>(styles.track, fillOf(colors.track))}
-        />
-        {waves ? null : (
-          <IndeterminateBars clock={clock} colors={colors} width={width} />
+        {waves ? (
+          <View
+            style={composeStyles<ViewStyle>(styles.track, fillOf(colors.track))}
+          />
+        ) : (
+          <>
+            <TrackPiece clock={clock} colors={colors} index={0} width={width} />
+            <TrackPiece clock={clock} colors={colors} index={1} width={width} />
+            <TrackPiece clock={clock} colors={colors} index={2} width={width} />
+            <IndeterminateBars clock={clock} colors={colors} width={width} />
+          </>
         )}
       </View>
       {waves ? (
@@ -968,10 +988,78 @@ function strokeOf(color: string) {
   } as const
 }
 
+/** One of the pieces `trackPiecesAt` leaves, or nothing where there are fewer. */
+function TrackPiece({
+  clock,
+  colors,
+  index,
+  width,
+}: {
+  readonly clock: SharedValue<number>
+  readonly colors: IndicatorColors
+  readonly index: number
+  readonly width: number
+}) {
+  const own = stylesOf(useTheme())
+  const place = useAnimatedStyle(() => {
+    'worklet'
+    const pieces = trackPiecesAt(clock.get(), width)
+    if (index >= pieces.length) {
+      return { left: 0, width: 0 }
+    }
+    const [from, to] = pieces[index]
+    return { left: from, width: to - from }
+  })
+
+  return (
+    <Animated.View
+      style={composeStyles<AnimatedStyle<ViewStyle>>(
+        styles.trackPiece,
+        own.bar,
+        fillOf(colors.track),
+        place,
+      )}
+    />
+  )
+}
+
 /**
  * A bar of the indeterminate line where the clock has it: its start, and its
  * scale from there, both as web's keyframes give them in shares of the row.
  */
+/**
+ * The pieces of the flat indeterminate line's track at `time`: the row less
+ * each bar that shows, and the gap either side of it, from the row's start.
+ * Two bars leave three pieces at most.
+ */
+function trackPiecesAt(time: number, width: number) {
+  'worklet'
+  const taken: [number, number][] = []
+  for (const bar of [PRIMARY_BAR, SECONDARY_BAR]) {
+    const from = (bar.start + keyframeAt(bar.translate, time)) * width
+    const to = from + keyframeAt(bar.scale, time) * width
+    if (Math.min(width, to) > Math.max(0, from)) {
+      taken.push([Math.max(0, from) - GAP, Math.min(width, to) + GAP])
+    }
+  }
+  if (taken.length === 2 && taken[1][0] < taken[0][0]) {
+    taken.reverse()
+  }
+
+  const pieces: [number, number][] = []
+  let at = 0
+  for (const [from, to] of taken) {
+    if (from > at) {
+      pieces.push([at, from])
+    }
+    at = Math.max(at, to)
+  }
+  if (at < width) {
+    pieces.push([at, width])
+  }
+  return pieces
+}
+
 function useBarStyle(clock: SharedValue<number>, bar: Bar, width: number) {
   return useAnimatedStyle(() => {
     'worklet'
