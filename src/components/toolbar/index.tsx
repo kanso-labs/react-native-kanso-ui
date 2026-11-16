@@ -5,6 +5,7 @@ import { Platform, StyleSheet, View } from 'react-native'
 
 import type { IconStyle } from '../../glyphs/icon-style'
 
+import { StandardIconColorContext } from '../../button/standard'
 import { IconStyleContext } from '../../glyphs/icon-style'
 import { GROUP } from '../../group'
 import { SeparatorOrientationContext } from '../../separator'
@@ -23,7 +24,10 @@ import { composeStyles, themedStyles } from '../../theme/styles'
 // bar holds: on-surface variant, and on-primary container. `tone` spells the
 // standard one `neutral`, the word every `tone` in the library uses for its
 // neutral role. That role reaches a bare icon placed in the bar through
-// `useIconStyle()`, while a control keeps its own colours.
+// `useIconStyle()`. A control keeps its own colours, except a standard
+// IconButton on the vibrant bar, whose icon and state layer take on primary
+// container, as Compose's floating toolbar draws them; on the neutral bar
+// its own on-surface variant is already the bar's.
 //
 // **A rule inside it runs across the bar, not along it.** The bar tells a
 // `Separator` among its controls to run the other way, so a rule between two
@@ -168,22 +172,26 @@ function Toolbar({
       value={orientation === 'horizontal' ? 'vertical' : 'horizontal'}
     >
       <IconStyleContext value={iconStyleOf(content)}>
-        <View
-          {...GROUP}
-          role="toolbar"
-          {...(Platform.OS === 'web' && orientation === 'vertical'
-            ? VERTICAL
-            : undefined)}
-          {...props}
-          style={composeStyles<ViewStyle>(
-            own.base,
-            own[orientation],
-            own[tone],
-            style,
-          )}
+        <StandardIconColorContext
+          value={tone === 'vibrant' ? theme.colors.onPrimaryContainer : null}
         >
-          {children}
-        </View>
+          <View
+            {...GROUP}
+            role="toolbar"
+            {...(Platform.OS === 'web' && orientation === 'vertical'
+              ? VERTICAL
+              : undefined)}
+            {...props}
+            style={composeStyles<ViewStyle>(
+              own.base,
+              own[orientation],
+              own[tone],
+              style,
+            )}
+          >
+            {children}
+          </View>
+        </StandardIconColorContext>
       </IconStyleContext>
     </SeparatorOrientationContext>
   )

@@ -35,13 +35,14 @@ import {
   groupWidthThen,
   useGroupShift,
 } from '../../button/group'
-import { palettesOf } from '../../button/palettes'
+import { palette, palettesOf } from '../../button/palettes'
 import {
   BUSY,
   PendingContent,
   PendingRing,
   usePending,
 } from '../../button/pending'
+import { StandardIconColorContext } from '../../button/standard'
 import { IconStyleContext } from '../../glyphs/icon-style'
 import { hitSlop, TARGET_SIZE, usePressFeedback } from '../../press'
 import { useTheme } from '../../theme/scope'
@@ -306,14 +307,18 @@ function IconButton({
   })
   const toggles = isToggle || membership !== undefined
   const selected = membership?.selected ?? action.selected
+  const surfaceColor = use(StandardIconColorContext)
+  const paletteName = isDisabled
+    ? DISABLED[variant]
+    : toggles
+      ? TOGGLE_PALETTES[variant][selected ? 'selected' : 'unselected']
+      : variant
+  // A surface that gives its standard icon buttons a role of its own, as a
+  // vibrant Toolbar does, draws the icon and its state layer in it.
   const colors =
-    palettesOf(theme)[
-      isDisabled
-        ? DISABLED[variant]
-        : toggles
-          ? TOGGLE_PALETTES[variant][selected ? 'selected' : 'unselected']
-          : variant
-    ]
+    paletteName === 'standard' && surfaceColor !== null
+      ? palette(surfaceColor)
+      : palettesOf(theme)[paletteName]
 
   // The width a standard group widens the button from, recorded as it is
   // laid out, before the press feedback that tells the group of a press.

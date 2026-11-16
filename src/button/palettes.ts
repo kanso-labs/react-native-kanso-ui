@@ -103,5 +103,5 @@ const palettesOf = themedStyles(
   },
 )
 
-export { palettesOf }
+export { palette, palettesOf }
 export type { Palette, PaletteName }
