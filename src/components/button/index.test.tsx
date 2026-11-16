@@ -493,6 +493,8 @@ describe('the sizes', () => {
     },
   )
 
+  // Inside the padding on every side, so an outlined button whose label
+  // wraps is as tall as a filled one, as well as as wide.
   it.each(SIZES)(
     'draws an outlined %s rule inside the padding',
     async (size, metrics, _role, _icon, width) => {
@@ -505,6 +507,7 @@ describe('the sizes', () => {
       expect(styleOf(button())).toMatchObject({
         borderWidth: width,
         paddingHorizontal: metrics.paddingHorizontal - width,
+        paddingVertical: metrics.paddingVertical - width,
       })
     },
   )

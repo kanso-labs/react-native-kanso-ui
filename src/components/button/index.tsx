@@ -272,6 +272,20 @@ const styles = StyleSheet.create({
   },
 })
 
+// Each size's block padding, which keeps a wrapped label off the pill's
+// edge; see `sizesOf`.
+function blockPaddings({
+  spacing,
+}: ResolvedTheme): Readonly<Record<ButtonSize, number>> {
+  return {
+    lg: spacing.md,
+    md: spacing.sm,
+    xl: spacing.xl,
+    xs: spacing.xs,
+    xxl: spacing.xxl,
+  }
+}
+
 // Each size's inline padding. The two largest are literals: 48 and 64 are not
 // steps of the spacing scale, and the scale should not grow to fit one
 // component. `xs` pads 12 a side, the extra-small token set's leading and
@@ -296,6 +310,7 @@ const shadowsOf = themedStyles(({ shadows }) =>
 // line still draws exactly the page's height.
 const sizesOf = themedStyles((theme) => {
   const { sizing, spacing } = theme
+  const block = blockPaddings(theme)
   const inline = inlinePaddings(theme)
 
   return StyleSheet.create({
@@ -303,45 +318,48 @@ const sizesOf = themedStyles((theme) => {
       gap: spacing.sm,
       minHeight: sizing.controlLg,
       paddingHorizontal: inline.lg,
-      paddingVertical: spacing.md,
+      paddingVertical: block.lg,
     },
     md: {
       gap: spacing.sm,
       minHeight: sizing.controlSm,
       paddingHorizontal: inline.md,
-      paddingVertical: spacing.sm,
+      paddingVertical: block.md,
     },
     xl: {
       gap: spacing.md,
       minHeight: sizing.controlXl,
       paddingHorizontal: inline.xl,
-      paddingVertical: spacing.xl,
+      paddingVertical: block.xl,
     },
     xs: {
       gap: spacing.sm,
       minHeight: sizing.controlXs,
       paddingHorizontal: inline.xs,
-      paddingVertical: spacing.xs,
+      paddingVertical: block.xs,
     },
     xxl: {
       gap: spacing.lg,
       minHeight: sizing.controlXxl,
       paddingHorizontal: inline.xxl,
-      paddingVertical: spacing.xxl,
+      paddingVertical: block.xxl,
     },
   })
 })
 
-// The outlined button draws its rule inside the width the other variants
+// The outlined button draws its rule inside the size the other variants
 // take, as the page's buttons do: the padding gives up what the rule takes,
-// so an outlined and a filled button with one label are one width.
+// on every side, so an outlined and a filled button with one label are one
+// width, and one height too once the label wraps past the height's floor.
 const outlinedSizesOf = themedStyles((theme) => {
+  const block = blockPaddings(theme)
   const inline = inlinePaddings(theme)
 
   function outlined(size: ButtonSize): ViewStyle {
     return {
       borderWidth: OUTLINE_WIDTHS[size],
       paddingHorizontal: inline[size] - OUTLINE_WIDTHS[size],
+      paddingVertical: block[size] - OUTLINE_WIDTHS[size],
     }
   }
 
