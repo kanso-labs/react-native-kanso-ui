@@ -627,11 +627,16 @@ describe('TextField', () => {
       expect(styleOf(box()).backgroundColor).toBe('transparent')
     })
 
-    it('cuts the notch as wide as the measured label once it floats', async () => {
+    // A label cut short with an ellipsis fills the width it is given, so
+    // the notch is the line it draws and the notch's 4dp either side.
+    it('cuts the notch as wide as the line the label draws once it floats', async () => {
       const { rerender } = await renderField({ variant: 'outlined' })
       const measure = hostsOf(hostsOf(column())[1])[0]
       await fireEvent(measure, 'layout', {
-        nativeEvent: { layout: { height: 16, width: 40, x: 0, y: 0 } },
+        nativeEvent: { layout: { height: 16, width: 120, x: 0, y: 0 } },
+      })
+      await fireEvent(measure, 'textLayout', {
+        nativeEvent: { lines: [{ width: 40 - 2 * spacing.xs }] },
       })
 
       const [start, notch, end] = outline()
@@ -642,6 +647,18 @@ describe('TextField', () => {
       expect(styleOf(notch.piece).width).toBe(0)
 
       await rerender({ defaultValue: 'Value', variant: 'outlined' })
+      await fireEvent(input(), 'focus', {})
+
+      expect(styleOf(outline()[1].piece).width).toBe(40)
+    })
+
+    it('cuts the notch as wide as the label’s box under React Native Web', async () => {
+      jest.replaceProperty(Platform, 'OS', 'web')
+      await renderField({ defaultValue: 'Value', variant: 'outlined' })
+      const measure = hostsOf(hostsOf(column())[1])[0]
+      await fireEvent(measure, 'layout', {
+        nativeEvent: { layout: { height: 16, width: 40, x: 0, y: 0 } },
+      })
       await fireEvent(input(), 'focus', {})
 
       expect(styleOf(outline()[1].piece).width).toBe(40)

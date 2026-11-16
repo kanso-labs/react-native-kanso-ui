@@ -4,6 +4,7 @@ import type {
   LayoutChangeEvent,
   StyleProp,
   TextInputProps,
+  TextLayoutEvent,
   TextStyle,
   ViewProps,
   ViewStyle,
@@ -1398,7 +1399,11 @@ function minWidthOf(minWidth: number): ViewStyle {
 
 /**
  * The label's text in its floated type, out of sight, measured for the
- * outlined box's notch.
+ * outlined box's notch. On iOS and Android it is measured by the line it
+ * draws: a Text cut short with an ellipsis fills the width it is given
+ * rather than the width it draws, so a notch measured from its box ran on
+ * past the ellipsis. React Native Web reports no lines, and there the text's
+ * box is what it draws.
  */
 function NotchMeasure({
   children,
@@ -1411,7 +1416,8 @@ function NotchMeasure({
   readonly isRequired: boolean
   readonly onMeasure: (width: number) => void
 }) {
-  const styles = fieldStylesOf(useTheme())
+  const theme = useTheme()
+  const styles = fieldStylesOf(theme)
   const small = useTypeRole(floatingLabel ? 'bodySmall' : 'labelMedium')
 
   return (
@@ -1425,7 +1431,9 @@ function NotchMeasure({
     >
       <NativeText
         numberOfLines={1}
-        onLayout={widthTo(onMeasure)}
+        {...(Platform.OS === 'web'
+          ? { onLayout: widthTo(onMeasure) }
+          : { onTextLayout: lineWidthTo(onMeasure, theme.spacing.xs) })}
         style={composeStyles<TextStyle>(small, styles.labelTextOutlined)}
       >
         {children}
@@ -1490,6 +1498,18 @@ function FieldStroke({ color, sides, style, width }: FieldStrokeProps) {
       style={composeStyles<AnimatedStyle<ViewStyle>>(style, stroke)}
     />
   )
+}
+
+// A text layout handler handing the widest line it drew, and `padding` either
+// side of it, to `onMeasure`.
+function lineWidthTo(onMeasure: (width: number) => void, padding: number) {
+  return (event: TextLayoutEvent) => {
+    const widest = Math.max(
+      0,
+      ...event.nativeEvent.lines.map((line) => line.width),
+    )
+    onMeasure(widest + 2 * padding)
+  }
 }
 
 /**
