@@ -23,6 +23,7 @@ import type { ResolvedTheme } from '../../theme/scope'
 
 import { IconStyleContext } from '../../glyphs/icon-style'
 import { useLocaleOf } from '../../i18n/provider'
+import { TARGET_SIZE } from '../../press'
 import {
   ADJUSTABLE,
   adjustOf,
@@ -57,6 +58,11 @@ import { useTypeRole } from '../../typography/roles'
 // | md   | 40dp  | 12dp   | 52dp   | 24dp       |
 // | lg   | 56dp  | 16dp   | 68dp   | 24dp       |
 // | xl   | 96dp  | 28dp   | 108dp  | 32dp       |
+//
+// A press lands on a strip as thick as the handle is long, and never thinner
+// than the page's 48dp target, so at xs and sm, whose handle is 44dp, the
+// strip reaches 2dp past it on each side, with the track and the handle
+// centred on it.
 //
 // The handle stays 4dp wide, the corners against it 2dp and the space beside
 // it 6dp at every size.
@@ -433,7 +439,8 @@ function Handle({
   readonly state: SliderState
   readonly vertical: boolean
 }) {
-  const own = stylesOf(useTheme())
+  const theme = useTheme()
+  const own = stylesOf(theme)
   const labelRole = useTypeRole('labelLarge')
   const dragging = state.isThumbDragging(index)
   const narrowing = useHandleMotion(dragging, vertical)
@@ -471,6 +478,7 @@ function Handle({
             vertical ? styles.indicatorVertical : styles.indicatorHorizontal,
             own.indicator,
             vertical ? own.indicatorVertical : undefined,
+            indicatorGapOf(metrics, theme, vertical),
           )}
         >
           <NativeText
@@ -485,7 +493,7 @@ function Handle({
   )
 }
 
-// The handle's length across the track, which is the strip's own thickness.
+// The handle's length across the track.
 function handleLengthOf({ handle }: Metrics, vertical: boolean): ViewStyle {
   return vertical ? { width: handle } : { height: handle }
 }
@@ -512,6 +520,22 @@ function iconPlaceOf(
 
 function iconStyleOf(color: string, size: number): IconStyle {
   return { color, size }
+}
+
+// The value's gap from the handle, which its frame spans the strip, so the
+// gap is 12dp from the handle rather than from a strip reaching past it.
+function indicatorGapOf(
+  metrics: Metrics,
+  { spacing }: ResolvedTheme,
+  vertical: boolean,
+): undefined | ViewStyle {
+  const past = (stripOf(metrics) - metrics.handle) / 2
+  if (past === 0) {
+    return undefined
+  }
+  return vertical
+    ? { marginEnd: spacing.md - past }
+    : { marginBottom: spacing.md - past }
 }
 
 // The corners a part turns to a handle, at whichever of its ends meets one.
@@ -584,11 +608,12 @@ function partColourOf(
 // A part's thickness and corner, centred in the strip the handle's length
 // takes.
 function partOf(
-  { corner, handle, track }: Metrics,
+  metrics: Metrics,
   { radii }: ResolvedTheme,
   vertical: boolean,
 ): ViewStyle {
-  const across = (handle - track) / 2
+  const { corner, track } = metrics
+  const across = (stripOf(metrics) - track) / 2
   return vertical
     ? { borderRadius: radii[corner], start: across, width: track }
     : { borderRadius: radii[corner], height: track, top: across }
@@ -920,13 +945,20 @@ function Stops({
   )
 }
 
-// The strip the handles are placed along: as long across as the handle, so a
-// press anywhere on it lands on the slider. Gesture Handler's root view,
-// sized to the strip rather than to the screen it fills by default.
-function trackOf({ handle }: Metrics, vertical: boolean): ViewStyle {
+// How thick the strip a press lands on is: as long across as the handle,
+// and never under the 48dp target.
+function stripOf({ handle }: Metrics): number {
+  return Math.max(handle, TARGET_SIZE)
+}
+
+// The strip the handles are placed along, so a press anywhere on it lands on
+// the slider. Gesture Handler's root view, sized to the strip rather than to
+// the screen it fills by default.
+function trackOf(metrics: Metrics, vertical: boolean): ViewStyle {
+  const strip = stripOf(metrics)
   return vertical
-    ? { flexGrow: 1, minHeight: 0, width: handle }
-    : { height: handle }
+    ? { flexGrow: 1, minHeight: 0, width: strip }
+    : { height: strip }
 }
 
 // The handle narrowing to 2dp while it is dragged, over the short2 duration

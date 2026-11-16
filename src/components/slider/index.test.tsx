@@ -696,7 +696,8 @@ describe('Slider', () => {
         borderRadius: radii.pill,
         bottom: '100%',
         height: 44,
-        marginBottom: spacing.md,
+        // 12dp from the handle, which the 48dp strip reaches 2dp past.
+        marginBottom: spacing.md - 2,
         minWidth: 48,
         paddingHorizontal: spacing.md,
         position: 'absolute',
@@ -743,7 +744,7 @@ describe('Slider', () => {
       expect(style).toMatchObject({
         end: '100%',
         marginBottom: 0,
-        marginEnd: spacing.md,
+        marginEnd: spacing.md - 2,
       })
       expect(style.bottom).toBeUndefined()
       await send('onGestureHandlerStateChange', {
@@ -830,7 +831,7 @@ describe('Slider', () => {
         overflow: 'hidden',
         position: 'absolute',
         start: '0%',
-        top: 14,
+        top: 16,
       })
       expect(styleOf(child(active)).borderTopStartRadius).toBeUndefined()
       expect(styleOf(child(after))).toMatchObject({
@@ -917,7 +918,7 @@ describe('Slider', () => {
         bottom: '0%',
         marginBottom: 0,
         marginTop: 8,
-        start: 14,
+        start: 16,
         top: '60%',
         width: 16,
       })
@@ -936,19 +937,21 @@ describe('Slider', () => {
       })
       expect(styleOf(child(area().parent))).toMatchObject({
         flexGrow: 1,
-        width: 44,
+        width: 48,
       })
     })
 
-    it.each<[SliderSize, number, number, number]>([
-      ['xs', 16, radii.sm, 44],
-      ['sm', 24, radii.sm, 44],
-      ['md', 40, radii.md, 52],
-      ['lg', 56, radii.lg, 68],
-      ['xl', 96, radii.xl, 108],
+    // The strip a press lands on is the handle's length, and never under the
+    // 48dp target, with the track centred on it.
+    it.each<[SliderSize, number, number, number, number]>([
+      ['xs', 16, radii.sm, 44, 48],
+      ['sm', 24, radii.sm, 44, 48],
+      ['md', 40, radii.md, 52, 52],
+      ['lg', 56, radii.lg, 68, 68],
+      ['xl', 96, radii.xl, 108, 108],
     ])(
-      'draws %s with a %pdp track, a %pdp corner and a %pdp handle',
-      async (size, track, corner, handle) => {
+      'draws %s with a %pdp track, a %pdp corner and a %pdp handle on a %pdp strip',
+      async (size, track, corner, handle, strip) => {
         await render(
           <Slider
             defaultValue={40}
@@ -961,10 +964,10 @@ describe('Slider', () => {
         expect(styleOf(child(partsOf()[0]))).toMatchObject({
           borderRadius: corner,
           height: track,
-          top: (handle - track) / 2,
+          top: (strip - track) / 2,
         })
         expect(styleOf(handleOf())).toMatchObject({ height: handle })
-        expect(styleOf(child(area().parent))).toMatchObject({ height: handle })
+        expect(styleOf(child(area().parent))).toMatchObject({ height: strip })
       },
     )
   })
