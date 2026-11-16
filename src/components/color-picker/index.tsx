@@ -253,13 +253,18 @@ function ColorPicker({
         testID={testID}
       >
         {feedback.layer}
-        <ColorSwatch
-          color={state.color}
-          style={composeStyles<ViewStyle>(
-            styles.swatch,
-            isDisabled ? styles.swatchDisabled : undefined,
-          )}
-        />
+        {/* The trigger's name already says the colour, so the swatch is
+            hidden rather than read as an image of its own inside it, as
+            ColorSwatchPicker's item hides its swatch. */}
+        <NativeView aria-hidden>
+          <ColorSwatch
+            color={state.color}
+            style={composeStyles<ViewStyle>(
+              styles.swatch,
+              isDisabled ? styles.swatchDisabled : undefined,
+            )}
+          />
+        </NativeView>
         <Text
           style={composeStyles<TextStyle>(labelRole, {
             color: isDisabled
