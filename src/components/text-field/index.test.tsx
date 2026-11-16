@@ -560,6 +560,20 @@ describe('TextField', () => {
       expect(styleOf(input())).toMatchObject({ color: colors.onSurface })
     })
 
+    // The floated label straddles the outline, so half its line would hang
+    // out of the field, toward whatever is above it.
+    it('keeps room above the outlined box for half the floated label’s line', async () => {
+      await renderField({ variant: 'outlined' })
+
+      expect(styleOf(box()).marginTop).toBe(
+        (typography.bodySmallLineHeight * FONT_SCALE) / 2,
+      )
+
+      await renderField()
+
+      expect(styleOf(box()).marginTop).toBeUndefined()
+    })
+
     it('draws the outlined box 1dp in the outline role, 2dp in primary while focused', async () => {
       await renderField({ variant: 'outlined' })
 

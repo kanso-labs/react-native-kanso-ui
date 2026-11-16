@@ -66,6 +66,12 @@ import { fieldStylesOf } from './styles'
 // thickens the same way, and its label floats up onto the outline, cutting a
 // notch in it.
 //
+// **An outlined box keeps room above it for the floated label**, which
+// straddles the outline: half the label's line, 8dp at the default text size
+// and growing with it, as Compose's outlined field pads its top. Without it
+// the label hangs out of the field, and at a large text size reaches the
+// field above. Web's outlined box keeps no such room.
+//
 // **The label floats by changing its type and its place**, eased by
 // Reanimated over `durationShort3` on the standard curve, as web transitions
 // them: body large on the value's line while the field is empty and
@@ -473,6 +479,9 @@ function FieldBox({
         leading === undefined ? undefined : styles.boxLeading,
         trailing === undefined ? undefined : styles.boxTrailing,
         outlined ? styles.boxOutlined : undefined,
+        outlined
+          ? marginTopOf((typography.bodySmallLineHeight * fontScale) / 2)
+          : undefined,
         isDisabled && !outlined ? styles.boxDisabled : undefined,
         minHeightOf(
           outlined
