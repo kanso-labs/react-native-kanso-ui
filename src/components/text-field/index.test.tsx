@@ -128,6 +128,12 @@ function slots() {
 const LEADING = <IconProbe testID="leading" />
 const TRAILING = <IconProbe testID="trailing" />
 
+// A prefix or a suffix as it is drawn, which iOS and Android hear in the
+// control's hint rather than where it is.
+function affix(text: string) {
+  return screen.getByText(text, { includeHiddenElements: true })
+}
+
 // The line holding the control between its prefix and its suffix.
 function affixLineOf(control: Host): Host {
   if (!control.parent) {
@@ -288,6 +294,19 @@ describe('TextField', () => {
     await fireEvent.press(box())
 
     expect(focus).toHaveBeenCalledTimes(1)
+  })
+
+  // React Native gave the box, which a Pressable hands an accessibility
+  // state, a description made of the text inside it on Android, so it was a
+  // stop of its own reading what the control's hint reads.
+  it('leaves the box out of what a screen reader reaches, which reaches the control', async () => {
+    await renderField({ prefix: 'Prefix', suffix: 'Suffix' })
+
+    expect(box().props).toMatchObject({
+      accessible: false,
+      focusable: false,
+      importantForAccessibility: 'no',
+    })
   })
 
   describe('label', () => {
@@ -773,7 +792,7 @@ describe('TextField', () => {
       })
       expect(styleOf(input()).lineHeight).toBeUndefined()
       // The prefix is text, which iOS centres in its line.
-      expect(styleOf(screen.getByText('Prefix'))).toMatchObject({
+      expect(styleOf(affix('Prefix'))).toMatchObject({
         lineHeight: typography.bodyLargeLineHeight,
       })
     })
@@ -823,17 +842,17 @@ describe('TextField', () => {
     it('fades the prefix and suffix in once the label has floated', async () => {
       await renderField({ prefix: 'Prefix', suffix: 'Suffix' })
 
-      expect(styleOf(screen.getByText('Prefix'))).toMatchObject({
+      expect(styleOf(affix('Prefix'))).toMatchObject({
         color: colors.onSurfaceVariant,
         opacity: 0,
       })
-      expect(styleOf(screen.getByText('Suffix'))).toMatchObject({ opacity: 0 })
+      expect(styleOf(affix('Suffix'))).toMatchObject({ opacity: 0 })
 
       await fireEvent(input(), 'focus', {})
       await advance(motion.durationShort3)
 
-      expect(styleOf(screen.getByText('Prefix'))).toMatchObject({ opacity: 1 })
-      expect(styleOf(screen.getByText('Suffix'))).toMatchObject({ opacity: 1 })
+      expect(styleOf(affix('Prefix'))).toMatchObject({ opacity: 1 })
+      expect(styleOf(affix('Suffix'))).toMatchObject({ opacity: 1 })
     })
   })
 
@@ -905,6 +924,23 @@ describe('TextField', () => {
         'Prefix Suffix Supporting line',
       )
     })
+
+    // Read as the hint, the prefix and the suffix were read again where they
+    // are drawn, and on Android in the box's description too.
+    it.each(['ios', 'android'] as const)(
+      'hides the prefix and suffix from a screen reader on %s, which hears them in the hint',
+      async (os) => {
+        jest.replaceProperty(Platform, 'OS', os)
+        await renderField({ prefix: 'Prefix', suffix: 'Suffix' })
+        await fireEvent(input(), 'focus', {})
+
+        expect(input().props.accessibilityHint).toBe('Prefix Suffix')
+        expect(screen.queryByText('Prefix')).toBeNull()
+        expect(screen.queryByText('Suffix')).toBeNull()
+        expect(affix('Prefix').props['aria-hidden']).toBe(true)
+        expect(affix('Suffix').props['aria-hidden']).toBe(true)
+      },
+    )
 
     it('says the limit once, after the description', async () => {
       const { rerender } = await renderField({
@@ -1016,8 +1052,9 @@ describe('TextField', () => {
               ?.props.children,
         ),
       ).toEqual(['Prefix', 'Supporting line', 'Up to 20 characters'])
-      // The description is read where it is drawn.
+      // The description and the prefix are read where they are drawn.
       expect(screen.getByText('Supporting line')).toBeTruthy()
+      expect(screen.getByText('Prefix')).toBeTruthy()
     })
 
     it('marks the control invalid and required', async () => {
