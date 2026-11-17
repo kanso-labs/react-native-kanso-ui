@@ -43,6 +43,15 @@ const PRESS = {
   nativeEvent: {},
 }
 
+// What an item draws, the first view in it.
+function contentOf(name: string) {
+  const content = views(radio(name)).at(0)
+  if (content === undefined) {
+    throw new TypeError('expected the contents')
+  }
+  return content
+}
+
 // The picker, which is the element rendered. A container is never an
 // accessibility element of its own, since iOS would then read it as one and
 // hide its swatches, so it is not one Testing Library finds by role.
@@ -95,10 +104,12 @@ function radio(name: string) {
   return screen.getByRole('radio', { name })
 }
 
-// The ring an item draws around its swatch, which is the view after the one
-// holding what it draws.
+// The ring an item draws around its swatch: a view after the one holding
+// what it draws, with a border, which the slash over a disabled one has not.
 function ringOf(name: string) {
-  return views(radio(name)).at(1)
+  return views(radio(name))
+    .slice(1)
+    .find((view) => styleOf(view).borderWidth !== undefined)
 }
 
 // The style of that ring, for an item that draws one.
@@ -108,6 +119,14 @@ function ringStyleOf(name: string) {
     throw new TypeError('expected a ring')
   }
   return styleOf(ring)
+}
+
+// The slash over a disabled swatch: the view after the contents holding the
+// svg it is drawn in.
+function slashOf(name: string) {
+  return views(radio(name))
+    .slice(1)
+    .find((view) => styleOf(view).overflow === 'hidden')
 }
 
 function styleOf(element: {
@@ -268,10 +287,40 @@ describe('ColorSwatchPicker', () => {
       expect(
         screen.getByRole('radio', { disabled: true, name: NAMES[GREY] }),
       ).toBeTruthy()
-      expect(styleOf(radio(NAMES[GREY]))).toMatchObject({
+      // What it draws fades, and the slash over it does not.
+      expect(styleOf(contentOf(NAMES[GREY]))).toMatchObject({
         opacity: stateLayerOpacity.disabledContent,
       })
-      expect(styleOf(radio(NAMES[PURPLE])).opacity).toBeUndefined()
+      expect(styleOf(radio(NAMES[GREY])).opacity).toBeUndefined()
+      expect(styleOf(contentOf(NAMES[PURPLE])).opacity).toBeUndefined()
+    })
+
+    // A faded colour reads as a paler choice, so it is slashed as well, from
+    // the bottom start corner to the top end one, as web's is.
+    it('slashes a disabled swatch in on surface, edged in surface', async () => {
+      await render(
+        <Picker defaultValue={PURPLE}>
+          <ColorSwatchPicker.Item color={PURPLE} />
+          <ColorSwatchPicker.Item color={GREY} isDisabled />
+        </Picker>,
+      )
+
+      expect(slashOf(NAMES[PURPLE])).toBeUndefined()
+      const slash = slashOf(NAMES[GREY])
+      if (slash === undefined) {
+        throw new TypeError('expected a slash')
+      }
+      const lines = slash.queryAll((node) => node.type === 'RNSVGLine')
+      expect(
+        lines.map((line): unknown[] => [line.props.strokeWidth, line.props.y1]),
+      ).toEqual([
+        [5, '100%'],
+        [2, '100%'],
+      ])
+      expect(styleOf(slash)).toMatchObject({
+        borderRadius: 4,
+        overflow: 'hidden',
+      })
     })
   })
 

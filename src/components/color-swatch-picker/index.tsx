@@ -10,6 +10,7 @@ import type { ColorPickerState } from 'react-stately/useColorPickerState'
 
 import { createContext, use } from 'react'
 import { Pressable, StyleSheet, View } from 'react-native'
+import Svg, { Line } from 'react-native-svg'
 import { useColorPickerState } from 'react-stately/useColorPickerState'
 
 import { GROUP } from '../../group'
@@ -48,6 +49,13 @@ import { ColorSwatch } from '../color-swatch'
 //
 // **Focus is an outline further out**, 2dp of primary 6dp from the swatch,
 // so a swatch that is chosen and focused keeps both rings.
+//
+// **A disabled swatch is slashed, not only faded.** Fading it changes the
+// colour it shows, and that colour is what it offers, so a faded swatch
+// reads as a paler choice rather than none. As web's does, it is faded under
+// a slash from its bottom start corner to its top end one: 2dp of on surface
+// edged 1.5dp of surface either side, so it reads over any colour, and
+// unfaded itself.
 //
 // The value is React Stately's colour picker state, as React Aria's own
 // picker holds it, and an item stands for its colour in hexadecimal with its
@@ -129,6 +137,7 @@ const styles = StyleSheet.create({
 
 const stylesOf = themedStyles(({ colors, radii, spacing, stateLayerOpacity }) =>
   StyleSheet.create({
+    // A disabled swatch's contents, faded under the slash, which is not.
     disabled: {
       opacity: stateLayerOpacity.disabledContent,
     },
@@ -166,8 +175,24 @@ const stylesOf = themedStyles(({ colors, radii, spacing, stateLayerOpacity }) =>
     selected: {
       borderColor: colors.primary,
     },
+    // The slash over a disabled swatch, cut to the swatch's corner.
+    slash: {
+      borderRadius: radii.xs,
+      bottom: 0,
+      left: 0,
+      overflow: 'hidden',
+      pointerEvents: 'none',
+      position: 'absolute',
+      right: 0,
+      top: 0,
+    },
   }),
 )
+
+// The slash's line and the edge either side of it, as web's gradient draws
+// them: 2dp of on surface inside 5dp of surface.
+const SLASH_WIDTH = 2
+const SLASH_EDGE_WIDTH = 5
 
 const REACH = hitSlop(SWATCH, SWATCH)
 
@@ -306,15 +331,36 @@ function ColorSwatchPickerItem({
       style={composeStyles<ViewStyle>(
         styled.item,
         feedback.ring === undefined ? undefined : styled.focused,
-        isDisabled ? styled.disabled : undefined,
         style,
       )}
     >
-      <View aria-hidden>
+      <View aria-hidden style={isDisabled ? styled.disabled : undefined}>
         <SwatchColorContext value={color}>
           {children ?? <ColorSwatch />}
         </SwatchColorContext>
       </View>
+      {isDisabled ? (
+        <View aria-hidden style={styled.slash}>
+          <Svg height="100%" width="100%">
+            <Line
+              stroke={theme.colors.surface}
+              strokeWidth={SLASH_EDGE_WIDTH}
+              x1="0%"
+              x2="100%"
+              y1="100%"
+              y2="0%"
+            />
+            <Line
+              stroke={theme.colors.onSurface}
+              strokeWidth={SLASH_WIDTH}
+              x1="0%"
+              x2="100%"
+              y1="100%"
+              y2="0%"
+            />
+          </Svg>
+        </View>
+      ) : null}
       {ring === undefined ? null : (
         <View style={composeStyles<ViewStyle>(styled.ring, ring)} />
       )}
