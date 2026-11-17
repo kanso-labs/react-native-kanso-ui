@@ -35,6 +35,7 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
+  useWindowDimensions,
   View,
 } from 'react-native'
 import Animated, {
@@ -83,6 +84,13 @@ import { Badge } from '../badge'
 // its line. A label that fits is centred at its own width as before, since
 // the room is a negative margin, which the label takes only where it needs
 // it.
+//
+// **A label keeps to two lines, or one under a stacked icon, until the
+// device's text is enlarged.** Then a tab in a bar of equal sections lets
+// its label take the lines it needs, and the tab and the bar grow to hold
+// it, as web's do once its text is enlarged: a label cut short there is the
+// name a reader asked to see larger. A scrollable bar's tab keeps its limit,
+// since it can grow along the bar to 264dp before it needs another line.
 //
 // **The bar is equal sections unless `layout` says otherwise.**
 // `layout="scrollable"` gives each tab its label's width, between 72dp and
@@ -1007,9 +1015,12 @@ function ListTab({
     selected,
   })
   const after = stacked ? null : badgeFor(badge)
+  const { fontScale } = useWindowDimensions()
+  const wraps = fontScale > 1 && bar.layout === 'fixed'
   const text = (
     <NativeText
-      numberOfLines={stacked ? 1 : 2}
+      android_hyphenationFrequency={wraps ? 'normal' : undefined}
+      numberOfLines={wraps ? undefined : stacked ? 1 : 2}
       style={composeStyles<TextStyle>(
         role,
         styles.text,
