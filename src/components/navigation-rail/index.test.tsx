@@ -17,7 +17,14 @@ import {
   screen,
   within,
 } from '@testing-library/react-native'
-import { I18nManager, Pressable, StyleSheet, Text, View } from 'react-native'
+import {
+  Dimensions,
+  I18nManager,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native'
 import { getAnimatedStyle } from 'react-native-reanimated'
 
 import type { NavigationRailItemProps } from '.'
@@ -73,7 +80,13 @@ type ItemOverrides = Partial<
   Record<'first' | 'second' | 'third', Partial<NavigationRailItemProps>>
 >
 
+const INITIAL = {
+  screen: Dimensions.get('screen'),
+  window: Dimensions.get('window'),
+}
+
 afterEach(() => {
+  Dimensions.set(INITIAL)
   jest.restoreAllMocks()
   mockReducedMotion = false
   mockTimings.length = 0
@@ -83,6 +96,15 @@ afterEach(() => {
 beforeEach(() => {
   jest.useFakeTimers()
 })
+
+// The device's text size, as the platform reports it, which Jest's own
+// window sets at twice the default.
+function atFontScale(fontScale: number) {
+  Dimensions.set({
+    screen: { ...INITIAL.screen, fontScale },
+    window: { ...INITIAL.window, fontScale },
+  })
+}
 
 function child(node: TestNode | undefined): TestInstance {
   if (node === undefined || typeof node === 'string') {
@@ -457,6 +479,30 @@ describe('NavigationRail', () => {
       expect(getAnimatedStyle(child(surface.children[1]))).toMatchObject({
         height: side,
       })
+    })
+  })
+
+  describe('with the text enlarged', () => {
+    it('keeps a label on one line at the device’s own text size', async () => {
+      atFontScale(1)
+      await renderRail()
+
+      expect(labelOf('First item').props.numberOfLines).toBe(1)
+    })
+
+    it('lets a collapsed destination’s label wrap, centred', async () => {
+      atFontScale(2)
+      await renderRail()
+
+      expect(labelOf('First item').props.numberOfLines).toBeUndefined()
+      expect(textStyleOf(labelOf('First item')).textAlign).toBe('center')
+    })
+
+    it('keeps an expanded destination’s label on one line', async () => {
+      atFontScale(2)
+      await renderRail({ isExpanded: true })
+
+      expect(labelOf('First item').props.numberOfLines).toBe(1)
     })
   })
 

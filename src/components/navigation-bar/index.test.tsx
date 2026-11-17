@@ -104,6 +104,15 @@ beforeEach(() => {
   jest.useFakeTimers()
 })
 
+// The device's text size, as the platform reports it, which Jest's own
+// window sets at twice the default.
+function atFontScale(fontScale: number) {
+  Dimensions.set({
+    screen: { ...Dimensions.get('screen'), fontScale },
+    window: { ...Dimensions.get('window'), fontScale },
+  })
+}
+
 function child(node: TestNode | undefined): TestInstance {
   if (node === undefined || typeof node === 'string') {
     throw new TypeError('expected a view')
@@ -305,9 +314,12 @@ async function renderTabs({
 }
 
 // The window as the platform reports it when it changes, which is what the
-// size class follows.
+// size class follows. The text size a case set stays as it is.
 function resize(width: number) {
-  Dimensions.set({ ...INITIAL, window: { ...INITIAL.window, width } })
+  Dimensions.set({
+    screen: Dimensions.get('screen'),
+    window: { ...Dimensions.get('window'), width },
+  })
 }
 
 // The row the destinations are laid out in, inside the safe area.
@@ -692,12 +704,36 @@ describe('NavigationBar', () => {
     })
 
     it('sets the label in label medium, on one line', async () => {
+      atFontScale(1)
       await renderBar()
 
       expect(textStyleOf(labelOf('First item'))).toMatchObject({
         fontSize: typography.labelMediumSize,
         lineHeight: typography.labelMediumLineHeight,
       })
+      expect(labelOf('First item').props.numberOfLines).toBe(1)
+    })
+
+    // An ellipsis would cut the name a reader asked to see larger, so a
+    // vertical destination's label takes the lines it needs, as web's does.
+    it('lets a vertical destination’s label wrap, centred, once the text is enlarged', async () => {
+      atFontScale(1.3)
+      await renderBar()
+
+      expect(labelOf('First item').props.numberOfLines).toBeUndefined()
+      expect(textStyleOf(labelOf('First item')).textAlign).toBe('center')
+      // From the top, the end of the reversed column, so the indicators stay
+      // on one line when one label wraps onto more lines than another.
+      expect(styleOf(tab('First item'))).toMatchObject({
+        flexDirection: 'column-reverse',
+        justifyContent: 'flex-end',
+      })
+    })
+
+    it('keeps a pill’s label on one line however large the text', async () => {
+      atFontScale(2)
+      await renderBar({ width: MEDIUM })
+
       expect(labelOf('First item').props.numberOfLines).toBe(1)
     })
   })
