@@ -14,7 +14,7 @@ import {
   useMemo,
   useState,
 } from 'react'
-import { Pressable, StyleSheet, View } from 'react-native'
+import { Platform, Pressable, StyleSheet, View } from 'react-native'
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -28,6 +28,7 @@ import type { ResolvedTheme } from '../../theme/scope'
 
 import { DisclosureGroupStateContext } from '../../disclosure'
 import { ExpandChevron } from '../../disclosure/chevron'
+import { useTitleName } from '../../modal'
 import { usePressFeedback } from '../../press'
 import { RowContent, rowContentColor, rowStyleOf, rowStyles } from '../../row'
 import { useTheme } from '../../theme/scope'
@@ -101,6 +102,9 @@ const styles = StyleSheet.create({
 type DisclosureContextValue = {
   readonly header: string
   readonly isDisabled: boolean
+  /** The header's headline as text, which names the panel. */
+  readonly name: string | undefined
+  readonly setName: (name: string | undefined) => void
   readonly state: DisclosureState
 }
 
@@ -207,10 +211,11 @@ function Disclosure({
     onExpandedChange: expandedChangeOf(group, key, onExpandedChange),
   })
   const header = useId()
+  const [name, setName] = useState<string | undefined>(undefined)
   const disabled = isDisabled || (group?.isDisabled ?? false)
   const value = useMemo<DisclosureContextValue>(
-    () => ({ header, isDisabled: disabled, state }),
-    [disabled, header, state],
+    () => ({ header, isDisabled: disabled, name, setName, state }),
+    [disabled, header, name, state],
   )
 
   return (
@@ -235,12 +240,15 @@ function DisclosureHeader({
   supporting,
   testID,
 }: DisclosureHeaderProps) {
-  const { header, isDisabled, state } = useDisclosure('Disclosure.Header')
+  const { header, isDisabled, setName, state } =
+    useDisclosure('Disclosure.Header')
   const theme = useTheme()
   const feedback = usePressFeedback({
     color: rowContentColor(theme, { isDisabled }),
     disabled: isDisabled,
   })
+
+  useTitleName(setName, children)
 
   return (
     <Pressable
@@ -275,6 +283,12 @@ function DisclosureHeader({
 /**
  * What the section shows while it is open. Its content sits 16dp in, lined
  * up with the headline above it, and it is named by the header.
+ *
+ * Android only links the views `aria-labelledby` names, and fills the name of
+ * a view with a role and no label from the text of what it holds, so the
+ * panel was named by its whole body. The header's headline, when it is text,
+ * is the panel's label on iOS and Android, as a modal surface takes its
+ * title's; on web `aria-labelledby` names it.
  */
 function DisclosurePanel({
   children,
@@ -283,7 +297,7 @@ function DisclosurePanel({
   style,
   testID,
 }: DisclosurePanelProps) {
-  const { header, state } = useDisclosure('Disclosure.Panel')
+  const { header, name, state } = useDisclosure('Disclosure.Panel')
   const { isExpanded } = state
   const theme = useTheme()
   const own = stylesOf(theme)
@@ -366,6 +380,7 @@ function DisclosurePanel({
   return (
     <Animated.View
       aria-hidden={!isExpanded}
+      aria-label={Platform.OS === 'web' ? undefined : name}
       aria-labelledby={header}
       ref={ref}
       role={role}

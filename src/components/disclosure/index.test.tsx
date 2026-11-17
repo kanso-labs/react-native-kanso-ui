@@ -12,7 +12,7 @@ import {
 } from '@jest/globals'
 import { act, fireEvent, render, screen } from '@testing-library/react-native'
 import { createRef } from 'react'
-import { I18nManager, StyleSheet, Text, View } from 'react-native'
+import { I18nManager, Platform, StyleSheet, Text, View } from 'react-native'
 import { getAnimatedStyle } from 'react-native-reanimated'
 
 import type { DisclosureProps } from '.'
@@ -310,6 +310,38 @@ describe('Disclosure', () => {
 
       expect(panel().props['aria-labelledby']).toBe(header().props.id)
       expect(header().props.id).toEqual(expect.any(String))
+    })
+
+    // Android fills a view with a role and no label from the text it holds,
+    // so the panel was named by its whole body.
+    it("gives the panel its headline's text as a label", async () => {
+      await renderDisclosure({ defaultExpanded: true })
+
+      expect(panel().props['aria-label']).toBe('Headline')
+    })
+
+    it('labels the panel from a headline that is not text by nothing', async () => {
+      await render(
+        <Disclosure defaultExpanded>
+          <Disclosure.Header testID="header">
+            <Text>Headline</Text>
+          </Disclosure.Header>
+          <Disclosure.Panel testID="panel">
+            <Text>Supporting line</Text>
+          </Disclosure.Panel>
+        </Disclosure>,
+      )
+
+      expect(panel().props['aria-label']).toBe(undefined)
+      expect(panel().props['aria-labelledby']).toBe(header().props.id)
+    })
+
+    it('leaves the name to aria-labelledby on web', async () => {
+      jest.replaceProperty(Platform, 'OS', 'web')
+      await renderDisclosure({ defaultExpanded: true })
+
+      expect(panel().props['aria-label']).toBe(undefined)
+      expect(panel().props['aria-labelledby']).toBe(header().props.id)
     })
   })
 
