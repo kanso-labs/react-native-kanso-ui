@@ -15,6 +15,7 @@ import {
   it,
   jest,
 } from '@jest/globals'
+import { composeStories } from '@storybook/react'
 import { act, fireEvent, render, screen } from '@testing-library/react-native'
 import { createRef } from 'react'
 import { StyleSheet, View } from 'react-native'
@@ -24,12 +25,15 @@ import { parseColor } from 'react-stately'
 import type { ColorFieldProps } from '.'
 
 import { ColorField } from '.'
+import preview from '../../../.storybook/preview'
 import { I18nProvider } from '../../i18n/provider'
 import { scopeFor } from '../../theme/scope'
 import { Button } from '../button'
 import { ColorSwatch } from '../color-swatch'
 import { Form } from '../form'
+import * as stories from './index.stories'
 
+const { WithSwatch } = composeStories(stories, preview)
 const { theme } = scopeFor('light', {})
 const { colors, motion, typography } = theme
 
@@ -706,5 +710,24 @@ describe('ColorField', () => {
         expect(onSubmit).toHaveBeenCalledWith({ color: submitted })
       },
     )
+  })
+})
+
+// The story a reader learns the swatch from, so it has to show what the
+// component's comment says a swatch in the leading slot is for.
+describe('the WithSwatch story', () => {
+  it('turns the swatch to the colour typed once the field reads it', async () => {
+    await render(<WithSwatch />)
+
+    expect(screen.getByRole('img', { name: 'dark purple' })).toBeOnTheScreen()
+
+    await fireEvent(input(), 'focus', {})
+    await type('#00658F')
+    await blur()
+
+    expect(valueOf()).toBe('#00658F')
+    expect(
+      screen.getByRole('img', { name: 'dark cyan blue' }),
+    ).toBeOnTheScreen()
   })
 })
