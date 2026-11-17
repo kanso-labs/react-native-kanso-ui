@@ -667,6 +667,38 @@ describe('ComboBox', () => {
       expect(input().props.value).toBe('')
     })
 
+    // Read as the hint, the options were read again where they are drawn,
+    // and on Android in the box's description too.
+    it.each(['ios', 'android'] as const)(
+      'hides the chosen options from a screen reader on %s, which hears them in the hint',
+      async (os) => {
+        jest.replaceProperty(Platform, 'OS', os)
+        await renderComboBox<'multiple'>({
+          defaultValue: FIRST_AND_THIRD,
+          selectionMode: 'multiple',
+        })
+
+        expect(screen.queryByText('First item and Third item')).toBeNull()
+        expect(
+          shownText('First item and Third item').props['aria-hidden'],
+        ).toBe(true)
+      },
+    )
+
+    it('points the input at the chosen options on the web, where they are read as drawn', async () => {
+      jest.replaceProperty(Platform, 'OS', 'web')
+      await renderComboBox<'multiple'>({
+        defaultValue: FIRST_AND_THIRD,
+        selectionMode: 'multiple',
+      })
+
+      const chosen = screen.getByText('First item and Third item')
+
+      expect(String(input().props['aria-describedby']).split(' ')).toContain(
+        chosen.props.id,
+      )
+    })
+
     // From its own width, a browser's input shrank alongside the options and
     // cut them short, "First item a…", with the line half empty.
     it('gives the chosen options their width first, and the input what is left, 3em at least', async () => {

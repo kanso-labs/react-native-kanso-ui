@@ -626,8 +626,10 @@ function FieldBox({
  * It is described by what it holds chosen, its prefix and its suffix, ahead
  * of what the field hands it in `described`, so a reader hears the options
  * chosen beside the text and the unit the value is read against as a sighted
- * one sees them on the value's line: on iOS and Android as its hint, and
- * under React Native Web through `aria-describedby`, which drops the hint.
+ * one sees them on the value's line: on iOS and Android as its hint, so the
+ * texts drawn beside it are hidden from VoiceOver and TalkBack there rather
+ * than read a second time, and under React Native Web through
+ * `aria-describedby`, which drops the hint and points at those texts.
  *
  * `multiline` makes it a text area, `rows` lines of body large tall at the
  * least, its text from the top. iOS and Android grow a multi-line input with
@@ -769,6 +771,7 @@ function FieldInput({
     >
       {holdsChosen ? (
         <NativeText
+          {...(Platform.OS === 'web' ? undefined : HIDDEN)}
           id={`${id}-chosen`}
           numberOfLines={1}
           style={composeStyles<TextStyle>(role, colorOf(content), SHRINKS)}
@@ -1061,8 +1064,9 @@ function useFieldFocus({
 // React Native's types carry no `aria-atomic`, which React Native Web takes.
 const ATOMIC = { 'aria-atomic': true } as const
 
-// What hides a part of the line under a field from VoiceOver and TalkBack,
-// where the control reads it out as its hint.
+// What hides a text the control reads out as its hint from VoiceOver and
+// TalkBack: a part of the line under a field, or what is drawn beside the
+// control on its line.
 const HIDDEN = { 'aria-hidden': true } as const
 
 // What leaves the control's writing direction to the page under React Native
@@ -1074,7 +1078,16 @@ const INHERITS_DIRECTION = { dir: null } as const
 
 // A box around a control of its own: the press lands on the box and moves
 // focus to the control, which is what a screen reader and a keyboard reach.
-const NOT_A_CONTROL = { accessible: false, focusable: false } as const
+// On Android the box is no node of its own either. A Pressable always hands
+// its view an accessibility state, and React Native gives a view with one and
+// no name a description made of the text inside it, which made the box a
+// TalkBack stop of its own, reading the text on the value's line again, or a
+// token field's words between its pills out of their place among them.
+const NOT_A_CONTROL = {
+  accessible: false,
+  focusable: false,
+  importantForAccessibility: 'no',
+} as const
 
 // The limit under React Native Web: in the document for the control to point
 // at, and drawn nowhere.
@@ -1119,7 +1132,9 @@ const CHOSEN_ROOM = 3
 
 /**
  * A prefix or a suffix, faded in once the label has floated and out when it
- * comes back to rest, over the label's own `durationShort3`.
+ * comes back to rest, over the label's own `durationShort3`. On iOS and
+ * Android it is hidden from VoiceOver and TalkBack, which hear it in the
+ * control's hint.
  */
 function Affix({
   children,
@@ -1148,6 +1163,7 @@ function Affix({
 
   return (
     <Animated.Text
+      {...(Platform.OS === 'web' ? undefined : HIDDEN)}
       id={id}
       style={composeStyles<AnimatedStyle<TextStyle>>(style, fade)}
     >
