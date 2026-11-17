@@ -9,8 +9,10 @@ import { Avatar } from '../avatar'
 import { Text } from '../text'
 
 // Hoisted so neither the keys nor the slots are new values on every render,
-// which is what react-perf's array and JSX rules are after.
-const ADA = <Avatar name="Ada Lovelace" size="sm" />
+// which is what react-perf's array and JSX rules are after. Each avatar sits
+// beside the name it stands for, so it is decorative: a screen reader reads
+// the name once.
+const ADA = <Avatar decorative name="Ada Lovelace" size="sm" />
 const COUNT_ONE = (
   <Text tone="muted" variant="labelMedium">
     01
@@ -22,7 +24,7 @@ const COUNT_TWO = (
   </Text>
 )
 const FIRST_AND_THIRD = ['first', 'third']
-const GRACE = <Avatar name="Grace Hopper" size="sm" />
+const GRACE = <Avatar decorative name="Grace Hopper" size="sm" />
 const SECOND = ['second']
 const THIRD = ['third']
 

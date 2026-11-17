@@ -122,3 +122,29 @@ describe.each(ROUTED)('%s', (file) => {
     },
   )
 })
+
+// The stories whose rows and cards set an avatar or a product icon beside the
+// name it stands for. Each marks it decorative, so a screen reader reads the
+// name once rather than landing on an image named for the text beside it.
+const NAMED_BESIDE = [
+  'components/disclosure/index.stories.tsx',
+  'components/feed/index.stories.tsx',
+  'components/list-box/index.stories.tsx',
+  'components/list/index.stories.tsx',
+].map((file) => path.normalize(file))
+
+describe.each(NAMED_BESIDE)('%s', (file) => {
+  it.each(storiesIn(file, 'light'))(
+    'draws no image named by the text beside it in %s',
+    async (_, Story) => {
+      await render(<Story />)
+
+      const repeated = screen
+        .queryAllByRole('img')
+        .map((image) => String(image.props['aria-label']))
+        .filter((name) => screen.queryAllByText(name).length > 0)
+
+      expect(repeated).toStrictEqual([])
+    },
+  )
+})
