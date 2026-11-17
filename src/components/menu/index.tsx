@@ -170,7 +170,7 @@ const stylesOf = themedStyles(
       header: {
         color: colors.onSurfaceVariant,
         paddingBottom: spacing.xxs,
-        paddingHorizontal: spacing.lg,
+        paddingHorizontal: spacing.md,
         paddingTop: spacing.md,
       },
       // The ring on its own, centred in a row an item's height.

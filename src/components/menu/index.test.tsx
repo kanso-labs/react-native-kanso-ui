@@ -1023,7 +1023,7 @@ describe('Menu', () => {
         color: colors.onSurfaceVariant,
         fontSize: theme.typography.titleSmallSize,
         paddingBottom: spacing.xxs,
-        paddingHorizontal: spacing.lg,
+        paddingHorizontal: spacing.md,
         paddingTop: spacing.md,
       })
     })
@@ -1085,6 +1085,13 @@ describe('Menu', () => {
 
       expect(textStyleOf(screen.getByText('No results'))).toMatchObject({
         color: colors.onSurfaceVariant,
+      })
+      // In a row inset as an item is, so it starts where a label would.
+      const row = screen.getByText('No results').parent
+
+      expect(row === null ? {} : styleOf(row)).toMatchObject({
+        minHeight: sizing.rowXs,
+        paddingHorizontal: spacing.md,
       })
     })
 
@@ -1269,7 +1276,10 @@ describe('Menu', () => {
       })
     })
 
-    it('draws each item 48dp tall in label large, inset 16dp', async () => {
+    // The menus page's 12dp, where the lists page's row gives 16: from the
+    // surface's edge to the item's content at either end, and from the
+    // leading icon to the label.
+    it('draws each item 48dp tall in label large, inset 12dp', async () => {
       await render(
         withScope(
           <Menu defaultOpen>
@@ -1284,11 +1294,12 @@ describe('Menu', () => {
       )
 
       expect(styleOf(screen.getByTestId('first'))).toMatchObject({
-        gap: spacing.lg,
+        gap: spacing.md,
         minHeight: sizing.rowXs,
-        paddingHorizontal: spacing.lg,
+        paddingHorizontal: spacing.md,
         paddingVertical: spacing.md,
       })
+      expect(spacing.md).toBe(12)
       expect(textStyleOf(screen.getByText('First item'))).toMatchObject({
         color: colors.onSurface,
         fontSize: theme.typography.labelLargeSize,

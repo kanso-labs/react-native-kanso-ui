@@ -10,9 +10,12 @@ import { themedStyles } from '../theme/styles'
 // and the text, and a height per spec page and line count. Each height is a
 // `minHeight`, since the lines inside are set in type roles whose sizes are
 // tokens, and a larger OS text size grows the row rather than clipping it.
-// The navigation drawer page gives its row the lists page's 56dp too, with a
-// menu's label large label, and marks the current one with a secondary
-// container pill held 12dp off each edge, as web's drawer row does.
+// The menus page gives a menu item 12dp of inline padding and of room after
+// its leading icon where the lists page gives 16, as Compose's
+// `DropdownMenuItem` does. The navigation drawer page gives its row the
+// lists page's 56dp too, with a menu's label large label, and marks the
+// current one with a secondary container pill held 12dp off each edge, as
+// web's drawer row does.
 
 /**
  * Which spec page's row this is: the lists page's, the menus page's or the
@@ -60,9 +63,13 @@ const rowStylesOf = themedStyles(
         gap: spacing.xxs,
         minWidth: 0,
       },
-      // The menus page's item.
+      // The menus page's item height, and its 12dp: between the surface's
+      // edge and the item's content at either end, and between the leading
+      // icon and the label, where the lists page's row gives 16.
       menu: {
+        gap: spacing.md,
         minHeight: sizing.rowXs,
+        paddingHorizontal: spacing.md,
       },
       muted: {
         color: colors.onSurfaceVariant,
