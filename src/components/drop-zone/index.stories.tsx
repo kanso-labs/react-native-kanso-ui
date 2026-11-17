@@ -15,6 +15,12 @@ import { Text } from '../text'
 const IMAGES = ['image/png', 'image/jpeg']
 
 const styles = StyleSheet.create({
+  // Holds the picker's button at its own width rather than stretching it
+  // across the canvas, as any view in a React Native column is, so the story
+  // shows FileTrigger leaving its child's size alone, as Button's stories do.
+  hug: {
+    alignItems: 'flex-start',
+  },
   // Web's width, so the two Storybooks draw the target at one size.
   width: {
     maxWidth: 420,
@@ -33,6 +39,10 @@ const meta = {
 type Story = StoryObj<typeof meta>
 
 /* oxlint-disable react-perf/jsx-no-new-function-as-prop -- the handlers set the story's own state */
+
+function Hug({ children }: { readonly children: ReactNode }) {
+  return <View style={styles.hug}>{children}</View>
+}
 
 // What a screen actually builds: a target that takes a drop, with a picker
 // inside it for the person who would rather press a button. On iOS and
@@ -102,9 +112,11 @@ const Disabled: Story = {
 // is why the two are separate exports.
 const StandalonePicker: Story = {
   render: () => (
-    <FileTrigger acceptedFileTypes={IMAGES} allowsMultiple>
-      <Button variant="outlined">Choose images</Button>
-    </FileTrigger>
+    <Hug>
+      <FileTrigger acceptedFileTypes={IMAGES} allowsMultiple>
+        <Button variant="outlined">Choose images</Button>
+      </FileTrigger>
+    </Hug>
   ),
 }
 

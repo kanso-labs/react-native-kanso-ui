@@ -9,6 +9,7 @@ import {
   it,
   jest,
 } from '@jest/globals'
+import { composeStories } from '@storybook/react'
 import {
   act,
   cleanup,
@@ -23,6 +24,7 @@ import type { DragTypes, DropEvent, DropOperation } from '../../drop'
 import type { PickedFile } from '../../files'
 
 import { DropZone, FileTrigger } from '.'
+import preview from '../../../.storybook/preview'
 import { isFileDropItem } from '../../drop'
 import { ThemeScope } from '../../theme-scope'
 import { withOpacity } from '../../theme/color'
@@ -30,6 +32,7 @@ import { scopeFor } from '../../theme/scope'
 import { Button } from '../button'
 import { Chip } from '../chip'
 import { IconButton } from '../icon-button'
+import * as stories from './index.stories'
 
 type Asset = {
   readonly fileName?: null | string
@@ -1029,5 +1032,22 @@ describe('FileTrigger’s camera', () => {
     )
 
     expect(onSelect).not.toHaveBeenCalled()
+  })
+})
+
+describe('the StandalonePicker story', () => {
+  const { StandalonePicker } = composeStories(stories, preview)
+
+  // A column stretches what it holds, so a button drawn straight on the
+  // canvas took the canvas's width, which read as FileTrigger stretching it.
+  it('holds the button at its own width', async () => {
+    await render(<StandalonePicker />)
+
+    const { parent } = screen.getByRole('button', { name: 'Choose images' })
+
+    if (parent === null) {
+      throw new TypeError('expected the button to sit in a view')
+    }
+    expect(styleOf(parent).alignItems).toBe('flex-start')
   })
 })
