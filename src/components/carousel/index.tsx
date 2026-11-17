@@ -464,7 +464,10 @@ function Carousel({
 
 /**
  * One item. It is named by which of how many it is — "2 of 6" — unless it is
- * given an `aria-label` of its own.
+ * given an `aria-label` of its own. Give it one where what it holds fades
+ * out as the mask closes: Android leaves a view drawn at opacity 0 out of
+ * its accessibility tree, so text faded that way is not read, and an item
+ * named by its place alone is only "2 of 6" to TalkBack.
  *
  * `style`, `ref` and `testID` land on the item, the view with the corner that
  * cuts what it holds to the width it is drawn at.

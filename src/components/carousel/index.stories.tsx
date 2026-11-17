@@ -89,8 +89,12 @@ function Tile({
   )
 }
 
+// Each item is named by its label as well as drawing it. The label fades
+// out as the mask closes over it, and Android leaves a view at opacity 0 out
+// of its accessibility tree, so an item named only by its place would be
+// "2 of 6" and nothing more to TalkBack.
 const ITEMS = LABELS.map((label, index) => (
-  <Carousel.Item key={label}>
+  <Carousel.Item aria-label={label} key={label}>
     {(state) => <Tile {...state} index={index} label={label} />}
   </Carousel.Item>
 ))
