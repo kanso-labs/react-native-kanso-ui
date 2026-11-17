@@ -30,10 +30,18 @@ const styles = StyleSheet.create({
   list: {
     width: 320,
   },
-  // One card of a row, a fixed width each, which the row stretches to the
-  // tallest, as a feed's row does.
+  // One card of a row, which the row stretches to the tallest, as a feed's
+  // row does. The cards share the row equally, up to the 160 each that web's
+  // story gives them, so three sit on one line on a phone. A fixed width
+  // wrapped the third onto a line of its own, where nothing stretched it.
+  // Web's grid wraps a card rather than narrow it below the width that holds
+  // its headline on one line. That would wrap here too, so the row keeps
+  // its cards and, at a large text size, the headline breaks inside its card
+  // instead.
   slot: {
-    width: 160,
+    flexBasis: 0,
+    flexGrow: 1,
+    maxWidth: 160,
   },
   // A card fills the column it sits in, so every sample needs one narrower
   // than the canvas to read as a card rather than a band.
@@ -132,7 +140,7 @@ const Link: Story = {
 // Each draws its content at the top, under its padding, whichever it is.
 const Stretched: Story = {
   render: () => (
-    <Stack direction="row" gap="md" wrap>
+    <Stack direction="row" gap="md">
       <Card style={styles.slot}>
         <Stack gap="xs">
           <Text variant="titleMedium">Headline</Text>
@@ -156,7 +164,7 @@ const Stretched: Story = {
 // card flat. Each takes no press.
 const Disabled: Story = {
   render: () => (
-    <Stack direction="row" gap="md" wrap>
+    <Stack direction="row" gap="md">
       {VARIANTS.map((variant) => (
         <Card
           interactive
