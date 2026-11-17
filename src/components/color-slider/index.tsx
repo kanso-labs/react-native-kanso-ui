@@ -16,6 +16,7 @@ import { Chequer } from '../../chequer'
 import { ColorThumb } from '../../color-thumb'
 import { HIDDEN } from '../../glyphs/hidden'
 import { useLocaleOf } from '../../i18n/provider'
+import { TARGET_SIZE } from '../../press'
 import {
   ADJUSTABLE,
   adjustOf,
@@ -31,13 +32,19 @@ import { useTypeRole } from '../../typography/roles'
 
 // kanso-ui's ColorSlider: the sliders page's track, carrying one channel of
 // a colour instead of an active and an inactive part. The page's 16dp strip
-// with its 8dp corner, centred in the 44dp a handle takes, and the same
-// label-large label above it, with the value at the far end of its line in
-// body-small in on surface variant, so it reads as a readout rather than a
+// with its 8dp corner, centred in the 48dp target a press lands in, and the
+// same label-large label above it, with the value at the far end of its line
+// in body-small in on surface variant, so it reads as a readout rather than a
 // second label. The gradient along the strip is React Aria's, stop for stop:
 // the channel's range through the colour, with the hue running through its
 // six primaries and lightness through the colour at its middle, so what runs
 // along the strip is the channel rather than anything chosen here.
+//
+// The strip's room across is 48dp where web keeps the 44dp a handle takes,
+// so a press lands anywhere in the page's 48dp target, as it does on Slider
+// and ColorWheel. Android delivers no touch outside the view a gesture is
+// attached to, so the room is the gesture's view's own size rather than a
+// `hitSlop` reaching past it.
 //
 // Three things depart from the page, each because a colour slider shows a
 // value the page's slider does not have, and each as web departs.
@@ -45,7 +52,7 @@ import { useTypeRole } from '../../typography/roles'
 // **The handle is a circle carrying the colour, not the page's 4dp bar.** It
 // has to show the value it sits on, and 4dp of a colour is not a colour
 // anyone can read. It is the ringed handle in src/color-thumb, centred in the
-// page's 44dp.
+// 48dp across the strip.
 //
 // **There is no value indicator.** The page's label floats a number over the
 // handle; here the readout beside the label already says it, and the handle
@@ -122,11 +129,10 @@ type ColorSliderProps = {
   readonly value?: Color | string
 }
 
-// The page's strip, and the room above and below it that makes up the 44dp
-// a press lands in.
+// The page's strip, and the room above and below it that makes up the 48dp
+// target a press lands in.
 const STRIP = 16
-const TARGET = 44
-const MARGIN = (TARGET - STRIP) / 2
+const MARGIN = (TARGET_SIZE - STRIP) / 2
 
 /** A vertical slider's height when the call site gives it none. */
 const VERTICAL_HEIGHT = 240
@@ -135,7 +141,7 @@ const VERTICAL_HEIGHT = 240
 const HUES = [0, 60, 120, 180, 240, 300, 360]
 
 const styles = StyleSheet.create({
-  // What a press is read along: the whole of the 44dp.
+  // What a press is read along: the whole of the 48dp.
   area: {
     flexGrow: 1,
   },
@@ -155,7 +161,7 @@ const styles = StyleSheet.create({
     alignItems: 'baseline',
     flexDirection: 'row',
   },
-  // The strip, across the middle of the 44dp. It clips the gradient and the
+  // The strip, across the middle of the 48dp. It clips the gradient and the
   // chequer to its corners.
   strip: {
     end: 0,
@@ -174,12 +180,12 @@ const styles = StyleSheet.create({
     width: STRIP,
   },
   track: {
-    height: TARGET,
+    height: TARGET_SIZE,
   },
   trackVertical: {
     flexGrow: 1,
     minHeight: 0,
-    width: TARGET,
+    width: TARGET_SIZE,
   },
 })
 

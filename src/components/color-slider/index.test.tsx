@@ -28,8 +28,8 @@ const TRANSLUCENT = 'hsla(200, 100%, 50%, 0.4)'
 const LENGTH = 360
 const VERTICAL_LENGTH = 240
 
-// Across the strip, where a press lands.
-const ACROSS = 22
+// Across the strip, where a press lands: the middle of its 48dp.
+const ACROSS = 24
 
 // A style a call site hands the slider.
 const OFFSET = { marginTop: 4 }
@@ -164,8 +164,8 @@ async function layOut(length = LENGTH, vertical = false) {
   await fireEvent(area(), 'layout', {
     nativeEvent: {
       layout: {
-        height: vertical ? length : 44,
-        width: vertical ? 44 : length,
+        height: vertical ? length : 48,
+        width: vertical ? 48 : length,
         x: 0,
         y: 0,
       },
@@ -300,14 +300,15 @@ describe('ColorSlider', () => {
   })
 
   describe('the track', () => {
-    it('draws the page’s 16dp strip with its corner, centred in the 44dp a press lands in', async () => {
+    it('draws the page’s 16dp strip with its corner, centred in the 48dp target a press lands in', async () => {
       await render(
         <ColorSlider channel="hue" defaultValue={BLUE} testID={TEST_ID} />,
       )
 
       expect(styleOf(area().parent ?? { props: {} })).toMatchObject({
-        height: 44,
+        height: 48,
       })
+      expect(styleOf(area())).toMatchObject({ flexGrow: 1 })
       expect(styleOf(strip())).toStrictEqual({
         borderRadius: radii.sm,
         end: 0,
@@ -315,7 +316,7 @@ describe('ColorSlider', () => {
         overflow: 'hidden',
         position: 'absolute',
         start: 0,
-        top: 14,
+        top: 16,
       })
     })
 
@@ -732,7 +733,7 @@ describe('ColorSlider', () => {
   })
 
   describe('vertical', () => {
-    it('stands the strip up, 16dp across, in a slider 240dp tall', async () => {
+    it('stands the strip up, 16dp across in the 48dp target, in a slider 240dp tall', async () => {
       await render(
         <ColorSlider
           channel="hue"
@@ -749,14 +750,14 @@ describe('ColorSlider', () => {
       expect(styleOf(area().parent ?? { props: {} })).toMatchObject({
         flexGrow: 1,
         minHeight: 0,
-        width: 44,
+        width: 48,
       })
       expect(styleOf(strip())).toStrictEqual({
         borderRadius: radii.sm,
         bottom: 0,
         overflow: 'hidden',
         position: 'absolute',
-        start: 14,
+        start: 16,
         top: 0,
         width: 16,
       })
