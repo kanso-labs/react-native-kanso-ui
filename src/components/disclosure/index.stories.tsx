@@ -15,8 +15,9 @@ const styles = StyleSheet.create({
 })
 
 // Hoisted so the slot is one stable element per render, which is what
-// react-perf's no-jsx-as-prop is after.
-const ADA = <Avatar name="Ada Lovelace" size="sm" />
+// react-perf's no-jsx-as-prop is after. The avatar sits beside the name it
+// stands for, so it is decorative: a screen reader reads the name once.
+const ADA = <Avatar decorative name="Ada Lovelace" size="sm" />
 
 const BODY = (
   <Text tone="muted" variant="bodyMedium">

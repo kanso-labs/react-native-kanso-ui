@@ -38,12 +38,14 @@ const stylesOf = themedStyles(({ colors }) =>
 )
 
 // Hoisted so neither the keys nor the slots are new values on every render,
-// which is what react-perf's array and JSX rules are after.
-const ADA = <Avatar name="Ada Lovelace" />
+// which is what react-perf's array and JSX rules are after. Each avatar sits
+// beside the name it stands for, so it is decorative: a screen reader reads
+// the name once.
+const ADA = <Avatar decorative name="Ada Lovelace" />
 const AMOUNT_ONE = <Currency locale="en-US" value={1250} />
 const AMOUNT_TWO = <Currency locale="en-US" value={480} />
 const FIRST_AND_THIRD = ['first', 'third']
-const GRACE = <Avatar name="Grace Hopper" tone="tertiary" />
+const GRACE = <Avatar decorative name="Grace Hopper" tone="tertiary" />
 const SECOND = ['second']
 
 // A list reads its parts straight off its children, so the rows are an

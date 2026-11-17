@@ -61,8 +61,10 @@ function ItemCard({
   return (
     <Card style={styles.fill} variant="outlined">
       <Stack align="start" gap="xs">
+        {/* The mark sits beside the name it stands for, so it is
+            decorative: a screen reader reads the name once. */}
         <Stack align="center" direction="row" gap="md">
-          <ProductIcon name={label} size="sm" src={MARK} />
+          <ProductIcon decorative name={label} size="sm" src={MARK} />
           <Text variant="titleSmall">{label}</Text>
         </Stack>
         <Text tone="muted" variant="bodySmall">
