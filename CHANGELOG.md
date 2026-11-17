@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.13.2](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.13.1...v0.13.2) (2026-11-17)
+
+
+### Dependencies
+
+* update dependency react-native-reanimated to v4.7.2 ([#692](https://github.com/kanso-labs/react-native-kanso-ui/issues/692)) ([dc952cc](https://github.com/kanso-labs/react-native-kanso-ui/commit/dc952cc30ce26018749e2a9c928dd447a2a40d3a))
+
 ## [0.13.1](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.13.0...v0.13.1) (2026-11-17)
 
 
