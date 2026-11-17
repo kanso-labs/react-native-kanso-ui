@@ -1,5 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react'
+import type { Color } from 'react-stately'
 
+import { useState } from 'react'
 import { StyleSheet } from 'react-native'
 
 import { ColorField } from '.'
@@ -26,13 +28,32 @@ const meta = {
 
 type Story = StoryObj<typeof meta>
 
+// The swatch the field leads with, showing the colour it holds, or a
+// transparent one while it holds none.
+function swatchOf(color: Color | null | string) {
+  return <ColorSwatch color={color ?? undefined} style={styles.swatch} />
+}
+
 const Default: Story = {}
 
 // Its own story because a swatch beside the value is what makes the field
-// show the colour, and it is the call site's to pass.
+// show the colour, and it is the call site's to pass. The story holds the
+// value and hands it to both, so the swatch follows the colour typed once the
+// field reads it, on leaving the field or pressing return.
 const WithSwatch: Story = {
-  args: {
-    leadingIcon: <ColorSwatch color={PURPLE} style={styles.swatch} />,
+  render: function Render({ defaultValue, ...args }) {
+    const [value, setValue] = useState<Color | null | string>(
+      defaultValue ?? null,
+    )
+
+    return (
+      <ColorField
+        {...args}
+        leadingIcon={swatchOf(value)}
+        onChange={setValue}
+        value={value}
+      />
+    )
   },
 }
 
