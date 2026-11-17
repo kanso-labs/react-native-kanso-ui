@@ -10,6 +10,7 @@ import {
   it,
   jest,
 } from '@jest/globals'
+import { composeStories } from '@storybook/react'
 import { act, fireEvent, render, screen } from '@testing-library/react-native'
 import { createRef } from 'react'
 import {
@@ -28,6 +29,7 @@ import type { CarouselItemRenderProps, CarouselLayout, CarouselProps } from '.'
 import { Carousel } from '.'
 import { I18nProvider } from '../../i18n/provider'
 import { scopeFor } from '../../theme/scope'
+import * as stories from './index.stories'
 
 // What the next carousel the device draws is told about reduced motion.
 let mockReducedMotion = false
@@ -706,6 +708,24 @@ describe('carousel', () => {
             (_label, index): unknown => item(index).props['aria-label'],
           ),
         ).toEqual(['1 of 6', '2 of 6', '3 of 6', '4 of 6', '5 of 6', '6 of 6'])
+      },
+    )
+  })
+
+  // The stories are the pattern people copy. Each item there is named by its
+  // label, which TalkBack would otherwise lose on every item whose label has
+  // faded to opacity 0.
+  describe('the stories', () => {
+    it.each(Object.entries(composeStories(stories)))(
+      'names each item of %s by its label',
+      async (_, Story) => {
+        await render(<Story />)
+
+        expect(
+          LABELS.map(
+            (label): unknown => screen.getByLabelText(label).props.role,
+          ),
+        ).toEqual(LABELS.map(() => 'group'))
       },
     )
   })
