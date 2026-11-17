@@ -106,7 +106,7 @@ const WithError: Story = {
 const WithMinValue: Story = {
   args: {
     defaultOpen: true,
-    description: 'from the 8th',
+    description: 'Supporting line',
     minValue: MIN,
   },
   parameters: FRAMED,
