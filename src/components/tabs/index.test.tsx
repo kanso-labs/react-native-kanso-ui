@@ -12,7 +12,14 @@ import {
 } from '@jest/globals'
 import { act, fireEvent, render, screen } from '@testing-library/react-native'
 import { createRef } from 'react'
-import { I18nManager, ScrollView, StyleSheet, Text, View } from 'react-native'
+import {
+  Dimensions,
+  I18nManager,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native'
 import { getAnimatedStyle } from 'react-native-reanimated'
 
 import type { TabsProps, TabsTabProps } from '.'
@@ -311,10 +318,25 @@ beforeEach(() => {
   scrollTo().mockClear()
 })
 
+const INITIAL = {
+  screen: Dimensions.get('screen'),
+  window: Dimensions.get('window'),
+}
+
 afterEach(() => {
+  Dimensions.set(INITIAL)
   jest.useRealTimers()
   mockReducedMotion = false
 })
+
+// The device's text size, as the platform reports it, which Jest's own
+// window sets at twice the default.
+function atFontScale(fontScale: number) {
+  Dimensions.set({
+    screen: { ...INITIAL.screen, fontScale },
+    window: { ...INITIAL.window, fontScale },
+  })
+}
 
 describe('Tabs', () => {
   describe('selection', () => {
@@ -532,6 +554,7 @@ describe('Tabs', () => {
     })
 
     it('sets the label in title small, centred, on two lines at most', async () => {
+      atFontScale(1)
       await renderTabs()
 
       const text = screen.getByText('First item')
@@ -540,6 +563,22 @@ describe('Tabs', () => {
         textAlign: 'center',
       })
       expect(text.props.numberOfLines).toBe(2)
+    })
+
+    // A label cut short is the name a reader asked to see larger, so a bar
+    // of equal sections lets it take the lines it needs, as web's does.
+    it('lets a fixed tab’s label take the lines it needs once the text is enlarged', async () => {
+      atFontScale(2)
+      await renderTabs()
+
+      expect(screen.getByText('First item').props.numberOfLines).toBeUndefined()
+    })
+
+    it('keeps a scrollable tab’s label to two lines however large the text', async () => {
+      atFontScale(2)
+      await renderTabs({ layout: 'scrollable' })
+
+      expect(screen.getByText('First item').props.numberOfLines).toBe(2)
     })
 
     it('puts its focus ring inside the tab', async () => {
@@ -692,6 +731,7 @@ describe('Tabs', () => {
 
   describe('icons', () => {
     it('stacks a primary tab’s icon over its label, and the tab grows to 64dp', async () => {
+      atFontScale(1)
       await renderTabs({ tabs: { first: { icon: ICON } } })
 
       expect(styleOf(tab('First item')).minHeight).toBe(64)
@@ -703,6 +743,7 @@ describe('Tabs', () => {
     })
 
     it('sets a secondary tab’s icon before its label, 8dp from it, at 48dp', async () => {
+      atFontScale(1)
       await renderTabs({
         tabs: { first: { icon: ICON } },
         variant: 'secondary',
