@@ -126,8 +126,6 @@ type DetailPaneProps = {
   readonly children?: string
 }
 
-/* oxlint-enable react-perf/jsx-no-jsx-as-prop */
-
 // Built by a call rather than written inline at the prop, which is what
 // react-perf's jsx-no-new-function-as-prop is after; the React Compiler
 // memoises the result on its inputs.
@@ -208,6 +206,7 @@ function Navigated() {
     />
   )
 }
+/* oxlint-enable react-perf/jsx-no-jsx-as-prop */
 
 const meta = {
   args: {
