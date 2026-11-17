@@ -17,6 +17,7 @@ import {
   it,
   jest,
 } from '@jest/globals'
+import { composeStories } from '@storybook/react'
 import {
   act,
   fireEvent,
@@ -45,6 +46,7 @@ import { ThemeScope } from '../../theme-scope'
 import { scopeFor } from '../../theme/scope'
 import { Button } from '../button'
 import { ListBox } from '../list-box'
+import * as stories from './index.stories'
 
 // What the next view the device draws is told about reduced motion.
 let mockReducedMotion = false
@@ -850,5 +852,32 @@ describe('SearchView', () => {
 
       expect(screen.queryByTestId('panel')).toBeNull()
     })
+  })
+
+  // The stories are the pattern people copy, so their results act as an
+  // app's do: each is a button named by its row, and picking one closes the
+  // view.
+  describe('the stories', () => {
+    it.each(Object.entries(composeStories(stories)))(
+      'closes %s from a press on a result',
+      async (_, Story) => {
+        await render(withScope(<Story />))
+
+        const search = screen.getByRole('button', { name: 'Search' })
+
+        expect(search.props.accessibilityState).toMatchObject({
+          expanded: true,
+        })
+
+        await fireEvent.press(
+          screen.getByRole('button', { name: /^Second item/ }),
+        )
+
+        expect(
+          screen.getByRole('button', { name: 'Search' }).props
+            .accessibilityState,
+        ).toMatchObject({ expanded: false })
+      },
+    )
   })
 })
