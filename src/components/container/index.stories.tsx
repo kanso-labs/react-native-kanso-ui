@@ -23,11 +23,16 @@ const stylesOf = themedStyles(({ colors, radii, spacing }) =>
       borderRadius: radii.md,
       paddingVertical: spacing.md,
     },
+    // Stands in for the container's content, with a dashed rule along its
+    // edge. The text is held in from the rule as the outlined Card below
+    // holds its own, so it does not touch the rule and the two samples'
+    // text lines up.
     ruled: {
       backgroundColor: colors.surfaceContainerLow,
       borderColor: colors.outline,
       borderStyle: 'dashed',
       borderWidth: 1,
+      paddingHorizontal: spacing.lg,
       paddingVertical: spacing.md,
     },
   }),
