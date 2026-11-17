@@ -1,5 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react'
 
+import { useState } from 'react'
+
 import { SearchView } from '.'
 import { SearchGlyph } from '../../glyphs'
 import { IconButton } from '../icon-button'
@@ -18,6 +20,37 @@ const RESULTS = [
     Third item
   </ListBox.Item>,
 ]
+
+// Built by a call rather than written inline at the prop, which is what
+// react-perf's jsx-no-new-function-as-prop is after; the React Compiler
+// memoises the result on its inputs.
+function closeWith(setOpen: (isOpen: boolean) => void) {
+  return () => {
+    setOpen(false)
+  }
+}
+
+// The view and what opens it, open from the start. A result is what a search
+// is for, so picking one closes the view, as an app's does once it has gone
+// where the result leads; that makes each result a button, where a ListBox
+// that neither selects nor acts draws its rows as text. The story holds the
+// open state for it, as an app would.
+function Search() {
+  const [isOpen, setOpen] = useState(true)
+
+  return (
+    <SearchView isOpen={isOpen} onOpenChange={setOpen}>
+      <IconButton aria-label="Search">
+        <SearchGlyph />
+      </IconButton>
+      <SearchView.Content label="Search" placeholder="Supporting text">
+        <ListBox aria-label="Results" onAction={closeWith(setOpen)}>
+          {RESULTS}
+        </ListBox>
+      </SearchView.Content>
+    </SearchView>
+  )
+}
 
 // Each story opens its view as it renders, so on the Overview page it is
 // drawn in a frame of its own, sized to hold it, rather than over the page.
@@ -38,16 +71,7 @@ type Story = StoryObj<typeof meta>
 // that opened it, as wide as the page allows, with the results under the
 // header's divider. Typing into it narrows them.
 const Default: Story = {
-  render: () => (
-    <SearchView defaultOpen>
-      <IconButton aria-label="Search">
-        <SearchGlyph />
-      </IconButton>
-      <SearchView.Content label="Search" placeholder="Supporting text">
-        <ListBox aria-label="Results">{RESULTS}</ListBox>
-      </SearchView.Content>
-    </SearchView>
-  ),
+  render: () => <Search />,
 }
 
 // The full-screen view, which a compact window draws: square, with its 72dp
