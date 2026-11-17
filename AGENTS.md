@@ -411,7 +411,7 @@ failed upload does not fail the build**: an invalid token logs
 rather than the check mark. The bundle carries the declaration files beside the
 JavaScript, which is why its status in `.github/codecov.yml` is informational.
 
-**Releases are cut by release-please**, once a day at 09:00 UTC, from
+**Releases are cut by release-please**, once a day at 12:15 UTC, from
 `release-please.yaml`. It publishes through npm's trusted publishing, so this
 repository holds no npm token, and then publishes the same tarball to GitHub
 Packages with `GITHUB_TOKEN`, only once npm has taken it. A trusted publisher is
