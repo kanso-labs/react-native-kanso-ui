@@ -169,6 +169,23 @@ async function choose(headline: string) {
   await fireEvent.press(optionOf(headline), PRESS)
 }
 
+// The Text the chosen options are drawn in, found by the id the input is
+// described by on the web. On Android it holds them in a Text of its own.
+function chosenView() {
+  const view = screen.root
+    ?.queryAll(
+      (element) =>
+        typeof element.props.id === 'string' &&
+        element.props.id.endsWith('-chosen'),
+    )
+    .at(0)
+
+  if (view === undefined) {
+    throw new TypeError('expected the field to draw the chosen options')
+  }
+  return view
+}
+
 // What the chevron tells a screen reader about whether the list is open.
 function expanded() {
   const state: unknown = chevron().props.accessibilityState
@@ -679,9 +696,7 @@ describe('ComboBox', () => {
         })
 
         expect(screen.queryByText('First item and Third item')).toBeNull()
-        expect(
-          shownText('First item and Third item').props['aria-hidden'],
-        ).toBe(true)
+        expect(chosenView().props['aria-hidden']).toBe(true)
       },
     )
 
@@ -697,6 +712,52 @@ describe('ComboBox', () => {
       expect(String(input().props['aria-describedby']).split(' ')).toContain(
         chosen.props.id,
       )
+    })
+
+    // Android measured the ellipsis in the view's own size, which React
+    // Native hands it unscaled, and drew it in the text's, so at twice the
+    // text size the ellipsis lost its last dot, "First item, ..".
+    it('measures the ellipsis on Android in the size the options are drawn at', async () => {
+      jest.replaceProperty(Platform, 'OS', 'android')
+      const metrics = { fontScale: 2, height: 800, scale: 1, width: 400 }
+      Dimensions.set({ screen: metrics, window: metrics })
+      await renderComboBox<'multiple'>({
+        defaultValue: FIRST_AND_THIRD,
+        selectionMode: 'multiple',
+      })
+
+      const chosen = chosenView()
+      const [options] = chosen.children
+
+      expect(chosen.props.numberOfLines).toBe(1)
+      expect(styleOf(chosen)).toMatchObject({
+        fontSize: 2 * typography.bodyLargeSize,
+        letterSpacing: 2 * typography.bodyLargeTracking,
+      })
+      expect(typeof options === 'string' ? {} : styleOf(options)).toMatchObject(
+        {
+          fontSize: typography.bodyLargeSize,
+          letterSpacing: typography.bodyLargeTracking,
+          lineHeight: typography.bodyLargeLineHeight,
+        },
+      )
+    })
+
+    it('draws the options in body large as they are on iOS', async () => {
+      const metrics = { fontScale: 2, height: 800, scale: 1, width: 400 }
+      Dimensions.set({ screen: metrics, window: metrics })
+      await renderComboBox<'multiple'>({
+        defaultValue: FIRST_AND_THIRD,
+        selectionMode: 'multiple',
+      })
+
+      const chosen = chosenView()
+
+      expect(chosen.children).toEqual(['First item and Third item'])
+      expect(styleOf(chosen)).toMatchObject({
+        fontSize: typography.bodyLargeSize,
+        letterSpacing: typography.bodyLargeTracking,
+      })
     })
 
     // From its own width, a browser's input shrank alongside the options and

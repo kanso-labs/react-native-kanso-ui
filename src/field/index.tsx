@@ -774,9 +774,20 @@ function FieldInput({
           {...(Platform.OS === 'web' ? undefined : HIDDEN)}
           id={`${id}-chosen`}
           numberOfLines={1}
-          style={composeStyles<TextStyle>(role, colorOf(content), SHRINKS)}
+          style={composeStyles<TextStyle>(
+            role,
+            colorOf(content),
+            SHRINKS,
+            Platform.OS === 'android'
+              ? ellipsisTypeOf(typography, fontScale)
+              : undefined,
+          )}
         >
-          {chosen}
+          {Platform.OS === 'android' ? (
+            <NativeText style={role}>{chosen}</NativeText>
+          ) : (
+            chosen
+          )}
         </NativeText>
       ) : null}
       {prefix === undefined ? null : (
@@ -1354,6 +1365,27 @@ function descriptionOf(
   const said = parts.map((part) => part.text).filter((text) => text !== '')
 
   return said.length === 0 ? undefined : { accessibilityHint: said.join(' ') }
+}
+
+/**
+ * The type of the chosen options' own view on Android, which its ellipsis
+ * alone is measured in: body large at the device's text size. React Native
+ * hands a Text's view its size unscaled, and Android keeps a line cut short
+ * the room for its ellipsis measured in the view's own size while drawing
+ * it in the size of the text, so at twice the text size the ellipsis drew
+ * twice as wide as the room it was kept and lost its last dot past the
+ * view's edge, "First item, ..". Scaled, the room kept is the room drawn in.
+ * The options themselves sit in a Text inside, in body large, which React
+ * Native scales as it scales any text.
+ */
+function ellipsisTypeOf(
+  typography: ResolvedTheme['typography'],
+  fontScale: number,
+): TextStyle {
+  return {
+    fontSize: typography.bodyLargeSize * fontScale,
+    letterSpacing: typography.bodyLargeTracking * fontScale,
+  }
 }
 
 function focusOf(control: RefObject<Focusable | null> | undefined) {
