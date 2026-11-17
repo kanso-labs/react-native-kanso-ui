@@ -31,12 +31,18 @@ const styles = StyleSheet.create({
     flexShrink: 0,
     justifyContent: 'center',
   },
-  // The label never wraps: a destination's name is a word or two, and one
-  // broken over two lines would push its neighbours apart. Cut short with an
-  // ellipsis where the destination is narrower than it.
+  // The label keeps to one line at the device's own text size: a
+  // destination's name is a word or two, and one broken over two lines would
+  // push its neighbours apart. Cut short with an ellipsis where the
+  // destination is narrower than it.
   label: {
     flexShrink: 1,
     maxWidth: '100%',
+  },
+  // A vertical destination's label once the text is enlarged, on as many
+  // lines as it takes, each centred under the indicator.
+  labelWrapped: {
+    textAlign: 'center',
   },
 })
 
@@ -110,13 +116,18 @@ const stylesOf = themedStyles(({ radii, spacing }) =>
     // its share, and there labels cut short on a phone ran into each other
     // with nothing between, "First destin…Second de…". A label that fits is
     // centred as before.
+    //
+    // Its content starts at the top, which is the end of a reversed column,
+    // so once enlarged text wraps one label onto more lines than its
+    // neighbours', every indicator stays on one line across the bar and the
+    // labels hang under them.
     vertical: {
       alignItems: 'center',
       flexBasis: 0,
       flexDirection: 'column-reverse',
       flexGrow: 1,
       gap: spacing.xs,
-      justifyContent: 'center',
+      justifyContent: 'flex-end',
       minWidth: 0,
       paddingHorizontal: spacing.xs,
       paddingVertical: VERTICAL_PADDING,

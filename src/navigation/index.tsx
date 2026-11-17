@@ -9,7 +9,12 @@ import type {
 import type { AnimatedStyle } from 'react-native-reanimated'
 
 import { createContext, use, useEffect } from 'react'
-import { Text as NativeText, Pressable, View } from 'react-native'
+import {
+  Text as NativeText,
+  Pressable,
+  useWindowDimensions,
+  View,
+} from 'react-native'
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -267,8 +272,13 @@ function iconStyleOf(color: ColorValue): IconStyle {
 }
 
 /**
- * A destination's label, on one line: in label large in an expanded rail,
- * and in label medium everywhere else.
+ * A destination's label: in label large in an expanded rail, and in label
+ * medium everywhere else. It keeps to one line, cut short with an ellipsis,
+ * until the device's text is enlarged. Then a vertical destination's label,
+ * in the bar or a collapsed rail, takes as many lines as it needs, centred,
+ * and the destination grows to hold it, as web's does once its text is
+ * enlarged: an ellipsis there would cut the name a reader asked to see
+ * larger. A pill is as wide as its label, and keeps its one line.
  */
 function Label({
   children,
@@ -283,13 +293,19 @@ function Label({
 }) {
   const theme = useTheme()
   const role = useTypeRole(form === 'expanded' ? 'labelLarge' : 'labelMedium')
+  const { fontScale } = useWindowDimensions()
+  const wraps = fontScale > 1 && (form === 'vertical' || form === 'collapsed')
 
   return (
     <NativeText
-      numberOfLines={1}
-      style={composeStyles<TextStyle>(role, styles.label, {
-        color: labelColorOf(theme, form, isDisabled, selected),
-      })}
+      android_hyphenationFrequency={wraps ? 'normal' : undefined}
+      numberOfLines={wraps ? undefined : 1}
+      style={composeStyles<TextStyle>(
+        role,
+        styles.label,
+        wraps ? styles.labelWrapped : undefined,
+        { color: labelColorOf(theme, form, isDisabled, selected) },
+      )}
     >
       {children}
     </NativeText>
