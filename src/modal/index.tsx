@@ -323,9 +323,9 @@ function useReturnFocus(present: boolean, outer: ModalTrigger | null) {
 }
 
 /**
- * The text a surface's headline holds, which names the surface, kept with
- * `setName` while the headline is drawn: its children when they are text,
- * and nothing otherwise, which leaves the name to `aria-labelledby`.
+ * The text a headline holds, which names the surface or panel it heads, kept
+ * with `setName` while the headline is drawn: its children when they are
+ * text, and nothing otherwise, which leaves the name to `aria-labelledby`.
  */
 function useTitleName(
   setName: (name: string | undefined) => void,
