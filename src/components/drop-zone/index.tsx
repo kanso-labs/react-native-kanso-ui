@@ -62,9 +62,14 @@ import { useTypeRole } from '../../typography/roles'
 // what the target holds, so a button inside it still takes its own presses,
 // and VoiceOver reaches both rather than one.
 //
-// Disabled is web's: the rule and the label in on surface at the disabled
-// content opacity, over the surface, so a dashed rule at full strength stops
-// reading as somewhere to aim at, and nothing is taken.
+// Disabled keeps the surface, takes nothing, and fades what is drawn on it to
+// the disabled content opacity, so a dashed rule at full strength stops
+// reading as somewhere to aim at. The label is web's, on surface at that
+// opacity. **The rule departs from web's**, which is on surface at that
+// opacity too: over the surface that stands out more than the enabled outline
+// variant rule, in either scheme, the reverse of fading it. Here it is the
+// outline variant at the disabled opacity, fainter than the enabled rule in
+// either scheme.
 //
 // FileTrigger renders nothing of its own. The Button, IconButton, Fab or Chip
 // it wraps opens the chooser through src/button's default slot, the way a
@@ -78,6 +83,10 @@ const stylesOf = themedStyles(
   ({ colors, radii, spacing, stateLayerOpacity }) => {
     const disabled = withOpacity(
       colors.onSurface,
+      stateLayerOpacity.disabledContent,
+    )
+    const disabledRule = withOpacity(
+      colors.outlineVariant,
       stateLayerOpacity.disabledContent,
     )
 
@@ -121,7 +130,7 @@ const stylesOf = themedStyles(
         padding: spacing.xl,
       },
       rootDisabled: {
-        borderColor: disabled,
+        borderColor: disabledRule,
       },
       rootOver: {
         backgroundColor: colors.primaryContainer,

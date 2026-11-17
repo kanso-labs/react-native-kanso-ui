@@ -17,13 +17,14 @@ import {
   screen,
 } from '@testing-library/react-native'
 import { createRef } from 'react'
-import { Platform, StyleSheet, View } from 'react-native'
+import { Platform, processColor, StyleSheet, View } from 'react-native'
 
 import type { DragTypes, DropEvent, DropOperation } from '../../drop'
 import type { PickedFile } from '../../files'
 
 import { DropZone, FileTrigger } from '.'
 import { isFileDropItem } from '../../drop'
+import { ThemeScope } from '../../theme-scope'
 import { withOpacity } from '../../theme/color'
 import { scopeFor } from '../../theme/scope'
 import { Button } from '../button'
@@ -107,6 +108,11 @@ const DISABLED = withOpacity(
   stateLayerOpacity.disabledContent,
 )
 
+const DISABLED_RULE = withOpacity(
+  colors.outlineVariant,
+  stateLayerOpacity.disabledContent,
+)
+
 // Where a press lands on the target.
 const PRESS = {
   currentTarget: { measure: () => undefined },
@@ -133,6 +139,38 @@ const CANCELLED: Picked = { assets: null, canceled: true }
 
 type Host = ReturnType<typeof screen.getByTestId>
 
+// A colour's red, green and blue out of 255, and its alpha out of 1.
+function channelsOf(color: unknown): [number, number, number, number] {
+  const processed = typeof color === 'string' ? processColor(color) : null
+
+  if (typeof processed !== 'number') {
+    throw new TypeError(`${String(color)} is not a colour`)
+  }
+
+  const argb = processed >>> 0
+
+  return [
+    (argb >>> 16) & 255,
+    (argb >>> 8) & 255,
+    argb & 255,
+    (argb >>> 24) / 255,
+  ]
+}
+
+// The contrast a rule drawn in `color` makes against the surface it is drawn
+// over, by WCAG's relative luminance: the lower, the fainter it reads.
+function contrastOver(color: unknown, surface: string): number {
+  const [red, green, blue, alpha] = channelsOf(color)
+  const under = channelsOf(surface)
+  const seen = [red, green, blue].map(
+    (channel, index) => channel * alpha + under[index] * (1 - alpha),
+  )
+  const lighter = Math.max(luminanceOf(seen), luminanceOf(under))
+  const darker = Math.min(luminanceOf(seen), luminanceOf(under))
+
+  return (lighter + 0.05) / (darker + 0.05)
+}
+
 function dropOf(onDrop: jest.Mock<(event: DropEvent) => void>) {
   const event = onDrop.mock.calls.at(0)?.[0]
 
@@ -144,6 +182,16 @@ function dropOf(onDrop: jest.Mock<(event: DropEvent) => void>) {
 
 function label() {
   return screen.getByText(LABEL, { includeHiddenElements: true })
+}
+
+function luminanceOf(channels: readonly number[]): number {
+  const [red = 0, green = 0, blue = 0] = channels.map((channel) => {
+    const value = channel / 255
+
+    return value <= 0.039_28 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4
+  })
+
+  return 0.2126 * red + 0.7152 * green + 0.0722 * blue
 }
 
 function pressTarget() {
@@ -490,11 +538,33 @@ describe('the disabled DropZone', () => {
 
     expect(styleOf(zone())).toMatchObject({
       backgroundColor: colors.surface,
-      borderColor: DISABLED,
+      borderColor: DISABLED_RULE,
       borderStyle: 'dashed',
     })
     expect(styleOf(label()).color).toBe(DISABLED)
   })
+
+  // On surface at the disabled opacity, web's rule, stands out more over the
+  // surface than the enabled outline variant rule, in either scheme.
+  it.each(['light', 'dark'] as const)(
+    'draws its rule fainter than an enabled one in the %s scheme',
+    async (scheme) => {
+      const { surface } = scopeFor(scheme, {}).theme.colors
+      await render(
+        <ThemeScope scheme={scheme}>
+          <DropZone label="Enabled" testID="enabled" />
+          <DropZone isDisabled label="Disabled" testID="disabled" />
+        </ThemeScope>,
+      )
+
+      const enabled = styleOf(screen.getByTestId('enabled')).borderColor
+      const disabled = styleOf(screen.getByTestId('disabled')).borderColor
+
+      expect(contrastOver(disabled, surface)).toBeLessThan(
+        contrastOver(enabled, surface),
+      )
+    },
+  )
 
   it('is announced as disabled, and opens nothing', async () => {
     const onDrop = jest.fn<(event: DropEvent) => void>()
