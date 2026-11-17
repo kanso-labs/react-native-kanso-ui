@@ -22,6 +22,7 @@ import {
   render,
   screen,
   userEvent,
+  within,
 } from '@testing-library/react-native'
 import { createRef, useCallback, useEffect, useState } from 'react'
 import {
@@ -174,6 +175,16 @@ async function keyboardUp() {
 // The Modal, around the view its overlay host keeps the window's content in.
 function modal() {
   return child(screen.getByTestId('panel').parent?.parent?.parent ?? undefined)
+}
+
+// Where in a row of parts one of them is drawn: the index of the row's child
+// that is or holds it.
+function placeIn(row: TestInstance, part: TestInstance) {
+  let node = part
+  while (node.parent !== row) {
+    node = child(node.parent ?? undefined)
+  }
+  return row.children.indexOf(node)
 }
 
 // Counts its mounts, so a case can tell a dialog kept on screen from one
@@ -837,20 +848,23 @@ describe('Dialog', () => {
       )
     })
 
-    it('draws the header and the actions as 56dp bars with dividers', async () => {
+    // The header is the page's 56dp bar over a divider, and the actions are
+    // drawn in it rather than in a bar of their own.
+    it('draws a 56dp header holding the actions', async () => {
       await renderDialog({}, { defaultOpen: true })
 
-      expect(styleOf(screen.getByTestId('header'))).toMatchObject({
+      const header = screen.getByTestId('header')
+      const footer = styleOf(screen.getByTestId('footer'))
+
+      expect(styleOf(header)).toMatchObject({
         borderBottomColor: colors.outlineVariant,
         borderBottomWidth: 1,
         minHeight: sizing.rowSm,
       })
-      expect(styleOf(screen.getByTestId('footer'))).toMatchObject({
-        borderTopColor: colors.outlineVariant,
-        borderTopWidth: 1,
-        minHeight: sizing.rowSm,
-      })
       expect(sizing.rowSm).toBe(56)
+      expect(within(header).getByTestId('footer')).toBeTruthy()
+      expect(footer.borderTopWidth).toBe(undefined)
+      expect(footer.minHeight).toBe(undefined)
     })
 
     it('keeps its content inside the safe area', async () => {
@@ -903,6 +917,163 @@ describe('Dialog', () => {
     })
   })
 
+  // The page's full-screen dialog has no action bar: its header leads with
+  // the close button, follows it with the headline, and ends in the
+  // confirming action as a text button. Every case here writes the close
+  // button after the headline, as a call site writes it for the basic
+  // dialog, where it trails.
+  describe('the full-screen header', () => {
+    beforeEach(() => {
+      resize(COMPACT)
+    })
+
+    it('leads with the close button and ends in the actions', async () => {
+      await renderDialog({}, { defaultOpen: true })
+
+      const header = screen.getByTestId('header')
+
+      expect([
+        placeIn(header, screen.getByRole('button', { name: 'Close' })),
+        placeIn(header, screen.getByText('Headline')),
+        placeIn(header, screen.getByTestId('footer')),
+      ]).toEqual([0, 1, 2])
+    })
+
+    // The headline is the part of the row that grows and gives way, so the
+    // actions keep their width at the trailing end, inside the header's
+    // 24dp, and 8dp apart.
+    it('gives the headline the room between them', async () => {
+      await renderDialog({}, { defaultOpen: true })
+
+      const footer = styleOf(screen.getByTestId('footer'))
+
+      expect(textStyleOf(screen.getByText('Headline'))).toMatchObject({
+        flexGrow: 1,
+        flexShrink: 1,
+      })
+      expect(footer).toMatchObject({
+        flexDirection: 'row',
+        flexShrink: 0,
+        gap: spacing.sm,
+      })
+      expect(footer.padding).toBe(undefined)
+      expect(styleOf(screen.getByTestId('header')).paddingHorizontal).toBe(
+        spacing.xl,
+      )
+    })
+
+    // No bar below: the body is the container's last part.
+    it('draws nothing below the body', async () => {
+      await renderDialog({}, { defaultOpen: true })
+
+      const panel = screen.getByTestId('panel')
+
+      expect(placeIn(panel, screen.getByTestId('body'))).toBe(
+        panel.children.length - 1,
+      )
+    })
+
+    it('closes from an action drawn in it', async () => {
+      const user = setUpUser()
+      const onOpenChange = jest.fn()
+      await render(
+        <Dialog defaultOpen onOpenChange={onOpenChange}>
+          <Button>Open</Button>
+          <Dialog.Content>
+            <Dialog.Header>
+              <Dialog.Title>Headline</Dialog.Title>
+            </Dialog.Header>
+            <Dialog.Footer>
+              <Button slot="close">Confirm</Button>
+            </Dialog.Footer>
+          </Dialog.Content>
+        </Dialog>,
+      )
+
+      await user.press(screen.getByRole('button', { name: 'Confirm' }))
+
+      expect(onOpenChange).toHaveBeenLastCalledWith(false)
+    })
+
+    // Above the breakpoint the dialog is the basic one, and an alert dialog
+    // is the basic one at every width: the close button trails the headline
+    // and the actions are below the body, where the call site wrote them.
+    it.each([
+      {
+        dialog: 'a dialog above the breakpoint',
+        role: 'dialog',
+        width: MEDIUM,
+      },
+      {
+        dialog: 'an alert dialog in a compact window',
+        role: 'alertdialog',
+        width: COMPACT,
+      },
+    ] as const)('leaves $dialog as written', async ({ role, width }) => {
+      resize(width)
+      await renderDialog({ role }, { defaultOpen: true })
+
+      const header = screen.getByTestId('header')
+      const panel = screen.getByTestId('panel')
+
+      expect(within(header).queryByTestId('footer')).toBe(null)
+      expect([
+        placeIn(header, screen.getByText('Headline')),
+        placeIn(header, screen.getByRole('button', { name: 'Close' })),
+      ]).toEqual([0, 1])
+      expect(placeIn(panel, screen.getByTestId('footer'))).toBe(
+        placeIn(panel, screen.getByTestId('body')) + 1,
+      )
+    })
+
+    // With no header to take them, the actions keep their 56dp bar over a
+    // divider, below the body.
+    it('keeps the action bar in a dialog with no header', async () => {
+      await render(
+        <Dialog.Content defaultOpen testID="panel">
+          <Dialog.Body testID="body">Supporting text</Dialog.Body>
+          <Dialog.Footer testID="footer">
+            <Button slot="close">Cancel</Button>
+          </Dialog.Footer>
+        </Dialog.Content>,
+      )
+
+      const panel = screen.getByTestId('panel')
+
+      expect(styleOf(screen.getByTestId('footer'))).toMatchObject({
+        borderTopColor: colors.outlineVariant,
+        borderTopWidth: 1,
+        minHeight: sizing.rowSm,
+      })
+      expect(placeIn(panel, screen.getByTestId('footer'))).toBe(
+        panel.children.length - 1,
+      )
+      expect(bodyStyle().paddingBottom).toBe(0)
+    })
+
+    // Crossing the breakpoint moves the actions between the two places.
+    it('moves the actions back below the body as the window widens', async () => {
+      await renderDialog({}, { defaultOpen: true })
+
+      expect(
+        within(screen.getByTestId('header')).queryByTestId('footer'),
+      ).not.toBe(null)
+
+      await act(() => {
+        resize(MEDIUM)
+      })
+
+      const panel = screen.getByTestId('panel')
+
+      expect(within(screen.getByTestId('header')).queryByTestId('footer')).toBe(
+        null,
+      )
+      expect(placeIn(panel, screen.getByTestId('footer'))).toBe(
+        panel.children.length - 1,
+      )
+    })
+  })
+
   describe('the body', () => {
     it('draws a string in body medium on on-surface variant', async () => {
       await renderDialog({}, { defaultOpen: true })
@@ -949,12 +1120,14 @@ describe('Dialog', () => {
       })
     })
 
-    it('keeps 24dp under the header full screen', async () => {
+    // Full screen the actions are drawn in the header, so the body is the
+    // part at the bottom end, and takes its 24dp.
+    it('keeps 24dp under the header and at its end full screen', async () => {
       resize(COMPACT)
       await renderDialog({}, { defaultOpen: true })
 
       expect(bodyStyle()).toMatchObject({
-        paddingBottom: 0,
+        paddingBottom: spacing.xl,
         paddingTop: spacing.xl,
       })
     })

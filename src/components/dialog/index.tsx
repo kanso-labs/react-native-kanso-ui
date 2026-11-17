@@ -12,7 +12,9 @@ import type {
 import type { AnimatedStyle } from 'react-native-reanimated'
 
 import {
+  Children,
   createContext,
+  isValidElement,
   use,
   useCallback,
   useEffect,
@@ -66,17 +68,29 @@ import { useTypeRole } from '../../typography/roles'
 // centred over the scrim 24dp inside the device's safe area, with 24dp of
 // padding all round, 16dp between the headline and the body and 24dp between
 // the body and the actions. In a compact window, below 600dp, the same dialog
-// fills the window as the page's full-screen dialog: square corners, a 56dp
-// header with the headline in title large and a divider under it, and a 56dp
-// action bar over a divider, both inside the device's safe area.
+// fills the window as the page's full-screen dialog: square corners and a
+// 56dp header over a divider, inside the device's safe area, which leads with
+// the close button, follows it with the headline in title large, and ends in
+// the confirming action as a text button, with no action bar below the body.
+//
+// The full-screen header is drawn from the same parts as the basic dialog, so
+// a call site writes the dialog once. Whatever the header holds besides its
+// `Dialog.Title`, which is where a call site puts the close button, is drawn
+// before the title there, though written after it for the basic dialog, where
+// it trails. And `Dialog.Footer`'s actions are drawn at the header's trailing
+// end rather than in a bar, inside the header's view, so a screen reader
+// reaches them after the close button and the headline and before the body,
+// in the order they are drawn. A dialog with no header keeps the footer as a
+// 56dp action bar over a divider, since nothing above the body can take its
+// actions.
 //
 // **It stays above the software keyboard.** While one is up the basic dialog
 // is centred in the room above it, and the full-screen one pads its bottom by
-// as much of the screen as the keyboard covers, so its actions and a field
-// focused in it are not hidden behind the keyboard. On Android a `Modal`
-// reports the keyboard to React Native only through
-// react-native-keyboard-controller, which src/overlay/keyboard.ts reads where
-// the app installs it.
+// as much of the screen as the keyboard covers, so the end of its body, the
+// actions of one with no header, and a field focused in it are not hidden
+// behind the keyboard. On Android a `Modal` reports the keyboard to React
+// Native only through react-native-keyboard-controller, which
+// src/overlay/keyboard.ts reads where the app installs it.
 //
 // An alert dialog, `role="alertdialog"`, is a question with two or three
 // answers rather than a task, and stays the basic dialog at every width, as
@@ -143,14 +157,24 @@ const stylesOf = themedStyles(
         justifyContent: 'flex-end',
         padding: spacing.xl,
       },
-      // Full screen, the actions are the page's bottom action bar: 56dp at
-      // least, over a divider, so an action whose label wraps grows the bar
-      // rather than meeting the divider.
+      // Full screen, in a dialog with no header to take them, the actions are
+      // a bottom action bar: 56dp at least, over a divider, so an action whose
+      // label wraps grows the bar rather than meeting the divider.
       actionsFull: {
         borderTopColor: colors.outlineVariant,
         borderTopWidth: 1,
         minHeight: sizing.rowSm,
         paddingVertical: spacing.xs,
+      },
+      // The actions full screen, drawn at the header's trailing end after the
+      // headline, 8dp apart as in the basic dialog, and never narrower than
+      // they are, since the headline is the part of that row that gives way.
+      // The header's own padding is their inset from the container's edge.
+      actionsInHeader: {
+        alignItems: 'center',
+        flexDirection: 'row',
+        flexShrink: 0,
+        gap: spacing.sm,
       },
       // The text a body is handed as a string, in the page's body medium on
       // on-surface variant, which is what web's body sets for its text.
@@ -225,6 +249,12 @@ const stylesOf = themedStyles(
         color: colors.onSurface,
         flexShrink: 1,
       },
+      // Full screen it takes the room between the close button and the
+      // actions, so its text starts beside the close button and the actions
+      // sit at the trailing end.
+      titleFull: {
+        flexGrow: 1,
+      },
     }),
 )
 
@@ -234,6 +264,8 @@ type DialogLayout = {
   readonly basic: boolean
   readonly parts: Readonly<Record<DialogPart, number>>
   readonly register: (part: DialogPart) => () => void
+  /** Hands the header the footer's actions, to draw full screen. */
+  readonly setActions: (actions: ReactNode) => void
   /** Keeps the headline's text, which names the dialog. */
   readonly setName: (name: string | undefined) => void
   readonly setTitle: (node: HostInstance | null) => void
@@ -242,6 +274,9 @@ type DialogLayout = {
 
 type DialogPart = 'footer' | 'header' | 'title'
 
+// The footer's actions, while the full-screen header draws them: apart from
+// the layout, so the footer handing them over is not drawn again for it.
+const DialogActionsContext = createContext<ReactNode>(null)
 const DialogLayoutContext = createContext<DialogLayout | null>(null)
 const DialogTriggerContext = createContext<ModalTrigger | null>(null)
 
@@ -300,18 +335,28 @@ type DialogTitleProps = Omit<TextProps, 'role'> & {
   readonly ref?: Ref<HostInstance>
 }
 
+// Whether the footer's actions are drawn in the header: full screen, in a
+// dialog with a header to take them.
+function actionsInHeader({ basic, parts }: DialogLayout) {
+  return !basic && parts.header > 0
+}
+
 // The body's padding. The page's 24dp all round is spent by whichever part
 // is at each end, so the body takes the top of it when no header is there
-// and the bottom when no footer is. Full screen, it keeps 24dp under the
-// header's divider as well, which is the content padding the page gives the
-// full-screen dialog.
+// and the bottom when no footer is below it. Full screen, it keeps 24dp
+// under the header's divider as well, which is the content padding the page
+// gives the full-screen dialog; and the footer is drawn in the header there,
+// which leaves the body at the bottom end with the 24dp of it.
 function bodyPaddingOf(
-  { basic, parts }: DialogLayout,
+  layout: DialogLayout,
   spacing: ResolvedTheme['spacing'],
 ): ViewStyle {
+  const { basic, parts } = layout
+
   return {
     gap: spacing.lg,
-    paddingBottom: parts.footer > 0 ? 0 : spacing.xl,
+    paddingBottom:
+      parts.footer > 0 && !actionsInHeader(layout) ? 0 : spacing.xl,
     paddingHorizontal: spacing.xl,
     paddingTop: basic && parts.header > 0 ? 0 : spacing.xl,
   }
@@ -324,16 +369,28 @@ function bodyPaddingOf(
  * stays the basic one at every width. Pass `isOpen` with `onOpenChange` to
  * hold the open state, or `defaultOpen` to let it keep its own.
  *
+ * Full screen, the header leads with its close button and ends in the
+ * footer's actions, and there is no action bar: the full-screen dialog's
+ * dismissive action is its close button, and its confirming one a text
+ * button at the header's trailing end. A dialog that fills a phone's window
+ * therefore gives its footer the confirming action alone, as below; a Cancel
+ * beside it would be drawn in the header too.
+ *
  * ```tsx
  * <Dialog>
  *   <Button>Open</Button>
  *   <Dialog.Content>
  *     <Dialog.Header>
  *       <Dialog.Title>Headline</Dialog.Title>
+ *       <IconButton aria-label="Close" slot="close">
+ *         <CloseGlyph />
+ *       </IconButton>
  *     </Dialog.Header>
  *     <Dialog.Body>Supporting text</Dialog.Body>
  *     <Dialog.Footer>
- *       <Button slot="close" variant="text">Cancel</Button>
+ *       <Button onPress={confirm} slot="close" variant="text">
+ *         Confirm
+ *       </Button>
  *     </Dialog.Footer>
  *   </Dialog.Content>
  * </Dialog>
@@ -457,10 +514,11 @@ function DialogContent({
   const [register] = useState(() => registerOf(setParts))
   const [title, setTitle] = useState<HostInstance | null>(null)
   const [name, setName] = useState<string | undefined>(undefined)
+  const [actions, setActions] = useState<ReactNode>(null)
   const motion = useDialogMotion(state.isOpen, present, setPresent, basic)
   const keyboard = useKeyboardInset(present)
   const layout = useMemo<DialogLayout>(
-    () => ({ basic, parts, register, setName, setTitle, titleId }),
+    () => ({ basic, parts, register, setActions, setName, setTitle, titleId }),
     [basic, parts, register, titleId],
   )
 
@@ -508,7 +566,9 @@ function DialogContent({
           )}
         >
           <DialogLayoutContext value={layout}>
-            <ButtonSlotContext value={slots}>{children}</ButtonSlotContext>
+            <DialogActionsContext value={actions}>
+              <ButtonSlotContext value={slots}>{children}</ButtonSlotContext>
+            </DialogActionsContext>
           </DialogLayoutContext>
         </Animated.View>
       </View>
@@ -518,37 +578,60 @@ function DialogContent({
 
 /**
  * The dialog's actions, at the trailing edge and wrapping onto another row
- * when they do not fit on one. Full screen they are the page's bottom action
- * bar. `style`, `ref` and `testID` land on its view.
+ * when they do not fit on one. Full screen they are drawn at the trailing end
+ * of `Dialog.Header`, where the page's full-screen dialog has its confirming
+ * action; in a dialog with no header they are a bottom action bar instead.
+ * `style`, `ref` and `testID` land on its view, wherever it is drawn.
  */
 function DialogFooter({ style, ...props }: DialogPartProps) {
   const layout = useLayout('Dialog.Footer')
   const styles = stylesOf(useTheme())
-  const { register } = layout
+  const { basic, register, setActions } = layout
+  const inHeader = actionsInHeader(layout)
+  const footer = useMemo(
+    () => (
+      <View
+        {...props}
+        style={composeStyles<ViewStyle>(
+          inHeader ? styles.actionsInHeader : styles.actions,
+          basic || inHeader ? undefined : styles.actionsFull,
+          style,
+        )}
+      />
+    ),
+    [basic, inHeader, props, style, styles],
+  )
 
   useLayoutEffect(() => register('footer'), [register])
+  // Handed to the header before paint, so the actions never draw a frame in
+  // the place they leave.
+  useLayoutEffect(() => {
+    if (!inHeader) {
+      return undefined
+    }
+    setActions(footer)
+    return () => {
+      setActions(null)
+    }
+  }, [footer, inHeader, setActions])
 
-  return (
-    <View
-      {...props}
-      style={composeStyles<ViewStyle>(
-        styles.actions,
-        layout.basic ? undefined : styles.actionsFull,
-        style,
-      )}
-    />
-  )
+  return inHeader ? null : footer
 }
 
 /**
  * The dialog's header: its `Dialog.Title`, and anything beside it, such as a
- * close button. Full screen it is the page's header bar. `style`, `ref` and
- * `testID` land on its view.
+ * close button. Full screen it is the page's header bar, leading with what it
+ * holds besides the title and ending in the footer's actions. `style`, `ref`
+ * and `testID` land on its view.
  */
-function DialogHeader({ style, ...props }: DialogPartProps) {
+function DialogHeader({ children, style, ...props }: DialogPartProps) {
   const layout = useLayout('Dialog.Header')
+  const actions = use(DialogActionsContext)
   const styles = stylesOf(useTheme())
   const { register } = layout
+  // Keyed by where the call site wrote them in both dialogs, so crossing the
+  // breakpoint moves them rather than drawing them again.
+  const parts = Children.toArray(children)
 
   useLayoutEffect(() => register('header'), [register])
 
@@ -560,7 +643,15 @@ function DialogHeader({ style, ...props }: DialogPartProps) {
         layout.basic ? undefined : styles.headerFull,
         style,
       )}
-    />
+    >
+      {layout.basic
+        ? parts
+        : [
+            ...parts.filter((part) => !isTitle(part)),
+            ...parts.filter((part) => isTitle(part)),
+          ]}
+      {layout.basic ? null : actions}
+    </View>
   )
 }
 
@@ -585,9 +676,20 @@ function DialogTitle({ ref, style, ...props }: DialogTitleProps) {
       nativeID={layout.titleId}
       ref={refsOf(setTitle, ref)}
       role="heading"
-      style={composeStyles<TextStyle>(role, styles.title, style)}
+      style={composeStyles<TextStyle>(
+        role,
+        styles.title,
+        layout.basic ? undefined : styles.titleFull,
+        style,
+      )}
     />
   )
+}
+
+// Whether a header's child is its headline, which the full-screen header
+// draws after the rest.
+function isTitle(part: ReactNode) {
+  return isValidElement(part) && part.type === DialogTitle
 }
 
 /**

@@ -61,12 +61,37 @@ const Default: Story = {
   ),
 }
 
-// The same dialog in a compact window, where it fills the window as the
-// page's full-screen dialog: square corners, the headline in title large on a
-// header bar, and the actions on a bar along the bottom.
+// The default dialog in a compact window, where it fills the window as the
+// page's full-screen dialog: square corners and a 56dp header over a
+// divider, leading with the close button and ending in the confirming action,
+// with no action bar below the body. The close button is written after the
+// headline, where it trails in the basic dialog, and the action in the
+// footer, where the basic dialog draws it; the footer holds that one action,
+// since the close button is the dismissive one.
 const FullScreen: Story = {
   globals: COMPACT,
-  render: Default.render,
+  render: () => (
+    <Dialog defaultOpen>
+      <Button variant="outlined">Open dialog</Button>
+      <Dialog.Content>
+        <Dialog.Header>
+          <Dialog.Title>Headline</Dialog.Title>
+          <IconButton aria-label="Close" slot="close">
+            {CLOSE}
+          </IconButton>
+        </Dialog.Header>
+        <Dialog.Body>
+          Supporting text explains what the dialog is asking, in as many lines
+          as it needs.
+        </Dialog.Body>
+        <Dialog.Footer>
+          <Button slot="close" variant="text">
+            Confirm
+          </Button>
+        </Dialog.Footer>
+      </Dialog.Content>
+    </Dialog>
+  ),
 }
 
 // A body longer than the room is the one part that scrolls: the header and
