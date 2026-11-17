@@ -26,8 +26,12 @@ import { composeStyles, themedStyles } from '../../theme/styles'
 //
 // **A swatch is outlined.** Its own colour is the content, so it cannot carry
 // a contrasting one, and a white swatch on a light surface, or a near-black
-// one in dark mode, would otherwise have no edge at all. The outline is the
-// 1dp outline variant hairline a field's box takes, drawn as the border of a
+// one in dark mode, would otherwise have no edge at all. That edge carries the
+// value, so it is a boundary a reader has to see, and it takes the outline
+// role a field's box takes rather than outline variant, which Material Design
+// keeps for decoration that needs no contrast: outline variant stood at about
+// 1.6:1 against the light surface and 2:1 against the dark one, short of the
+// 3:1 WCAG asks of a boundary. It is a 1dp hairline, drawn as the border of a
 // view laid over the colour, so it sits on the colour's edge rather than
 // around it.
 //
@@ -55,7 +59,7 @@ const stylesOf = themedStyles(({ colors, radii }) =>
     },
     hairline: {
       ...StyleSheet.absoluteFill,
-      borderColor: colors.outlineVariant,
+      borderColor: colors.outline,
       borderRadius: radii.xs,
       borderWidth: 1,
     },

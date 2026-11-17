@@ -10,6 +10,7 @@ import { parseColor } from 'react-stately'
 
 import { ColorSwatch } from '.'
 import { I18nProvider } from '../../i18n/provider'
+import { ThemeScope } from '../../theme-scope'
 import { scopeFor } from '../../theme/scope'
 
 const { theme } = scopeFor('light', {})
@@ -32,6 +33,15 @@ const ABSOLUTE_FILL = {
 
 type Paint = { brushRef?: string; payload?: number }
 
+/** WCAG's contrast ratio between two colours. */
+function contrastOf(one: string, two: string) {
+  const [lighter, darker] = [luminanceOf(one), luminanceOf(two)].sort(
+    (a, b) => b - a,
+  )
+
+  return (lighter + 0.05) / (darker + 0.05)
+}
+
 // The view the colour is painted on, and the one outlining it over the top.
 function fill() {
   return layers().find((layer) => layer.type === 'View')
@@ -49,6 +59,18 @@ function layers() {
   return swatch().children.filter(
     (child): child is TestInstance => typeof child !== 'string',
   )
+}
+
+/** WCAG's relative luminance of a colour. */
+function luminanceOf(color: string) {
+  const rgb = parseColor(color).toFormat('rgb')
+  const [r, g, b] = (['red', 'green', 'blue'] as const).map((channel) => {
+    const value = rgb.getChannelValue(channel) / 255
+
+    return value <= 0.039_28 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4
+  })
+
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b
 }
 
 function nameOf(element: { props: { name?: string } }) {
@@ -254,17 +276,39 @@ describe('ColorSwatch', () => {
     }
   })
 
-  it('outlines the colour with an outline variant hairline laid over it', async () => {
+  it('outlines the colour with an outline hairline laid over it', async () => {
     await render(<ColorSwatch color={OPAQUE} />)
 
     expect(layers().at(-1)).toBe(hairline())
     expect(styleOf(hairline() ?? swatch())).toEqual({
       ...ABSOLUTE_FILL,
-      borderColor: colors.outlineVariant,
+      borderColor: colors.outline,
       borderRadius: radii.xs,
       borderWidth: 1,
     })
   })
+
+  // A white swatch's edge is what carries its value on a light surface, so it
+  // is a boundary that has to read, which WCAG 1.4.11 puts at 3:1 against
+  // what is beside it. Material Design gives that kind of boundary the
+  // outline role and keeps outline variant for decoration.
+  it.each(['light', 'dark'] as const)(
+    'edges a white swatch at 3:1 on the %s surface',
+    async (scheme) => {
+      const { outline, surface } = scopeFor(scheme, {}).theme.colors
+
+      await render(
+        <ThemeScope scheme={scheme}>
+          <ColorSwatch color="#ffffff" />
+        </ThemeScope>,
+      )
+
+      const edge = styleOf(hairline() ?? swatch()).borderColor
+
+      expect(edge).toBe(outline)
+      expect(contrastOf(String(edge), surface)).toBeGreaterThanOrEqual(3)
+    },
+  )
 
   it('is a 40dp square on the extra-small corner, which a style resizes', async () => {
     const { rerender } = await render(<ColorSwatch color={OPAQUE} />)
