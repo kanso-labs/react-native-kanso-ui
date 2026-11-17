@@ -1,5 +1,36 @@
 # Changelog
 
+## [0.13.1](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.13.0...v0.13.1) (2026-11-17)
+
+
+### Bug Fixes
+
+* **breadcrumbs:** report a disabled trail's links as disabled links ([#673](https://github.com/kanso-labs/react-native-kanso-ui/issues/673)) ([df84a23](https://github.com/kanso-labs/react-native-kanso-ui/commit/df84a230517b9d6b7e7b5477f1446c2396d19bab))
+* **button:** keep an outlined button's height when its label wraps ([#682](https://github.com/kanso-labs/react-native-kanso-ui/issues/682)) ([69ba4d4](https://github.com/kanso-labs/react-native-kanso-ui/commit/69ba4d499e80a7e8a00d790b4b5ddab82a05c9f0))
+* **button:** keep the pending ring out of TalkBack's focus order ([#671](https://github.com/kanso-labs/react-native-kanso-ui/issues/671)) ([fd6b2d0](https://github.com/kanso-labs/react-native-kanso-ui/commit/fd6b2d0c25544ca25b5bb2794d34d31379b21748))
+* **color-picker:** hide the trigger's swatch from a screen reader ([#672](https://github.com/kanso-labs/react-native-kanso-ui/issues/672)) ([8ef5d12](https://github.com/kanso-labs/react-native-kanso-ui/commit/8ef5d12a6b8cc286efbba1bbb6354506be5d3cc5))
+* fade a disabled colour control as one layer on Android ([#683](https://github.com/kanso-labs/react-native-kanso-ui/issues/683)) ([57b8173](https://github.com/kanso-labs/react-native-kanso-ui/commit/57b817371251872317c9a54afd29b2e266b97272))
+* **field:** close the outlined notch at the end of a cut-short label ([#679](https://github.com/kanso-labs/react-native-kanso-ui/issues/679)) ([f1c5711](https://github.com/kanso-labs/react-native-kanso-ui/commit/f1c5711918f567fce791590e60b763564f6c2c67))
+* **field:** keep the value on its prefix's baseline at large text sizes ([#676](https://github.com/kanso-labs/react-native-kanso-ui/issues/676)) ([fd623df](https://github.com/kanso-labs/react-native-kanso-ui/commit/fd623dfe1e95673fec0102cb85e941edf173d71c))
+* **field:** make room above an outlined box for its floated label ([#677](https://github.com/kanso-labs/react-native-kanso-ui/issues/677)) ([eeecdf2](https://github.com/kanso-labs/react-native-kanso-ui/commit/eeecdf247d19761487f66c7771213a421bcb87eb))
+* **progress-indicator:** leave the gap between the indeterminate bars and the track ([#674](https://github.com/kanso-labs/react-native-kanso-ui/issues/674)) ([1b7d5ea](https://github.com/kanso-labs/react-native-kanso-ui/commit/1b7d5ea9067f395ed85e6d06e4ec575f6f814113))
+* **segmented-button:** give an icon-only segment a 48dp target ([#670](https://github.com/kanso-labs/react-native-kanso-ui/issues/670)) ([306e5a5](https://github.com/kanso-labs/react-native-kanso-ui/commit/306e5a57421e11c1b8c4721930d7a4396a0c739b))
+* **slider:** give the track a 48dp target at the xs and sm sizes ([#669](https://github.com/kanso-labs/react-native-kanso-ui/issues/669)) ([5a56219](https://github.com/kanso-labs/react-native-kanso-ui/commit/5a56219c4c3584200dd88bc405e46c90df4c415d))
+* **split-button:** keep both halves one height when the label grows ([#675](https://github.com/kanso-labs/react-native-kanso-ui/issues/675)) ([b32badf](https://github.com/kanso-labs/react-native-kanso-ui/commit/b32badf888784e1f297e38759bfcaebfe5bbc290))
+* **table:** pad a body cell so wrapped text clears the rules ([#680](https://github.com/kanso-labs/react-native-kanso-ui/issues/680)) ([89165c8](https://github.com/kanso-labs/react-native-kanso-ui/commit/89165c8ec59fe69da823c50810dbf97fa64a234d))
+* **toolbar:** draw a vibrant bar's icon buttons in on-primary-container ([#681](https://github.com/kanso-labs/react-native-kanso-ui/issues/681)) ([f4d136a](https://github.com/kanso-labs/react-native-kanso-ui/commit/f4d136addb9ed3fe45c961c69e2efe0288b84c6c))
+
+
+### Dependencies
+
+* update chromaui/action action to v18.14.5 ([#685](https://github.com/kanso-labs/react-native-kanso-ui/issues/685)) ([4f8bad8](https://github.com/kanso-labs/react-native-kanso-ui/commit/4f8bad8367ebea15d67f4b0ee64f4f0f5b3a2b46))
+* update dependency @kanso-labs/kanso-ui-core to v0.1.23 ([#686](https://github.com/kanso-labs/react-native-kanso-ui/issues/686)) ([ad88af6](https://github.com/kanso-labs/react-native-kanso-ui/commit/ad88af6b496179b3887493d8aec195dbfb41b3d9))
+* update dependency @kanso-labs/kanso-ui-core to v0.1.23 ([#687](https://github.com/kanso-labs/react-native-kanso-ui/issues/687)) ([10810f9](https://github.com/kanso-labs/react-native-kanso-ui/commit/10810f9198c5353716d21042f2a52197c638bd10))
+* update dependency eslint-plugin-oxlint to v1.94.0 ([#678](https://github.com/kanso-labs/react-native-kanso-ui/issues/678)) ([d1c633d](https://github.com/kanso-labs/react-native-kanso-ui/commit/d1c633d5ba7967b4f9d02ae8e026ecd9b35c1d7b))
+* update dependency oxfmt to v0.79.0 ([#665](https://github.com/kanso-labs/react-native-kanso-ui/issues/665)) ([3400017](https://github.com/kanso-labs/react-native-kanso-ui/commit/3400017a00bc743701783a93d4e6d722f706a723))
+* update dependency oxlint to v1.94.0 ([#666](https://github.com/kanso-labs/react-native-kanso-ui/issues/666)) ([9d687da](https://github.com/kanso-labs/react-native-kanso-ui/commit/9d687da78ccdd37454f1b1a729fc756a2980682e))
+* update dependency typescript-eslint to v8.73.0 ([#688](https://github.com/kanso-labs/react-native-kanso-ui/issues/688)) ([41a1da3](https://github.com/kanso-labs/react-native-kanso-ui/commit/41a1da3e4c924f762e8b031e4309dc1a0b3af7d1))
+
 ## [0.13.0](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.12.5...v0.13.0) (2026-11-15)
 
 
