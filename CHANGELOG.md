@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.13.4](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.13.3...v0.13.4) (2026-11-18)
+
+
+### Dependencies
+
+* update chromaui/action action to v18.14.6 ([#723](https://github.com/kanso-labs/react-native-kanso-ui/issues/723)) ([e1ab63f](https://github.com/kanso-labs/react-native-kanso-ui/commit/e1ab63f5f68ffa734e6b711a3e84c5c895a19d66))
+* update dependency @storybook/react-native to v10.7.2 ([#724](https://github.com/kanso-labs/react-native-kanso-ui/issues/724)) ([c39f710](https://github.com/kanso-labs/react-native-kanso-ui/commit/c39f71045e1626150741906c15773ed729303f01))
+
 ## [0.13.3](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.13.2...v0.13.3) (2026-11-17)
 
 
