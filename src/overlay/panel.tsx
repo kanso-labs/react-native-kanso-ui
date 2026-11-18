@@ -28,7 +28,8 @@ import { useHiddenBelow } from './host'
 // What a non-modal panel anchored beside its trigger does besides being
 // placed, shared by Popover and Menu so the two cannot drift: the layer a
 // press outside lands on, Android's back gesture and Escape on the web, the
-// motion in and out, and where a screen reader is sent as it comes and goes.
+// motion in and out, and where a screen reader, or on the web the focus, is
+// sent as it comes and goes.
 
 /** The little of a keyboard event a panel reads. */
 type KeyPress = {
@@ -174,6 +175,24 @@ function DismissLayer({
       <LayerPart onPress={onPress} style={parts.right} />
     </View>
   )
+}
+
+/**
+ * Whether the web page's focus is on its body, where a browser drops it when
+ * the element holding it goes, or on nothing at all.
+ */
+function focusFellToBody() {
+  const page: unknown = Reflect.get(globalThis, 'document')
+
+  if (
+    typeof page !== 'object' ||
+    page === null ||
+    !('activeElement' in page) ||
+    !('body' in page)
+  ) {
+    return false
+  }
+  return page.activeElement === null || page.activeElement === page.body
 }
 
 // Whether the web's document is there to listen on.
@@ -397,8 +416,15 @@ function usePanelStyle(shown: SharedValue<number>) {
 /**
  * Sends the screen reader back to the trigger once a panel has gone, unless
  * `quiet` says nothing moved it there, as a pointer resting on a hover
- * trigger does not. React Native Web's `Modal` restores focus itself, and has
- * no screen reader to send otherwise.
+ * trigger does not.
+ *
+ * On the web it is the keyboard's focus that goes back, and only where the
+ * panel took it with it: focus inside a panel falls to the page's body as
+ * the panel goes, however it closed, by Escape, by a choice or by a press
+ * outside, and a keyboard would start again from the top of the page. Focus
+ * the panel never had, on its trigger or anywhere else, stays where it is.
+ * This is what React Aria's `restoreFocus` does for kanso-ui's panels, and
+ * what WCAG's focus order asks for.
  */
 function useReturnFocus(
   present: boolean,
@@ -412,8 +438,13 @@ function useReturnFocus(
     const target = trigger.current
 
     shown.current = present
-    if (gone && !quiet && target !== null && Platform.OS !== 'web') {
+    if (!gone || quiet || target === null) {
+      return
+    }
+    if (Platform.OS !== 'web') {
       AccessibilityInfo.sendAccessibilityEvent(target, 'focus')
+    } else if (focusFellToBody()) {
+      target.focus()
     }
   }, [quiet, present, trigger])
 }

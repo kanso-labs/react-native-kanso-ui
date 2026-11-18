@@ -1,3 +1,5 @@
+import type { HostInstance, ViewProps } from 'react-native'
+
 import {
   afterEach,
   beforeEach,
@@ -7,7 +9,7 @@ import {
   jest,
 } from '@jest/globals'
 import { act, fireEvent, render, screen } from '@testing-library/react-native'
-import { Platform } from 'react-native'
+import { Platform, View } from 'react-native'
 
 import { Button } from '../components/button'
 import { ListBox } from '../components/list-box'
@@ -26,17 +28,31 @@ type Key = {
 
 type Listener = (event: Key) => void
 
+// What React Native's Jest preset draws a View as: a class component holding
+// its props, with the native methods on its prototype.
+type MockedView = Pick<HostInstance, 'focus' | 'measureInWindow'> & {
+  readonly props: ViewProps
+}
+
 // Escape on the web, heard on the document while a non-modal panel is open.
 // React Native's Jest environment has no document, so each case stands one
 // in that dispatches a key as a browser does for one pressed on an element
 // inside the document: its capture listeners first, then, unless one of
 // them stopped it, its bubbling ones, which is where React Native Web's
-// `Modal` hears the release it closes on.
+// `Modal` hears the release it closes on. Its focus is on its body, where a
+// browser drops the focus a panel held as the panel goes, unless a case
+// puts it elsewhere.
 class Page {
+  activeElement: unknown
+  readonly body = {}
   readonly listeners = new Map<
     string,
     { capture: boolean; listener: Listener }[]
   >()
+
+  constructor() {
+    this.activeElement = this.body
+  }
 
   addEventListener(type: string, listener: Listener, capture = false) {
     this.listeners.set(type, [
@@ -91,6 +107,13 @@ const OPTIONS = [
   </ListBox.Item>,
 ]
 
+// Runs the panel's exit, after which it has gone.
+async function exited() {
+  await act(() => {
+    jest.advanceTimersByTime(1000)
+  })
+}
+
 // Whether the trigger with this test id says what it opens is open.
 function expanded(testID: string) {
   const state: unknown = screen.getByTestId(testID, {
@@ -100,6 +123,47 @@ function expanded(testID: string) {
   return typeof state === 'object' && state !== null && 'expanded' in state
     ? state.expanded
     : undefined
+}
+
+function isMockedView(value: unknown): value is MockedView {
+  return typeof value === 'object' && value !== null && 'focus' in value
+}
+
+// The surface the list is drawn on: the nearest view around it that closes
+// on VoiceOver's escape gesture.
+function panelOfList() {
+  let node = screen.getByLabelText('Label').parent
+
+  while (node !== null && !('onAccessibilityEscape' in node.props)) {
+    node = node.parent
+  }
+  if (node === null) {
+    throw new TypeError('expected the surface around the list')
+  }
+  return node
+}
+
+// Places the list under the box, which takes presses once it is: the box
+// and the overlay layer report where they are, and the list its size.
+async function placed() {
+  const prototype: unknown = View.prototype
+
+  if (!isMockedView(prototype)) {
+    throw new TypeError('expected the View the Jest preset mocks')
+  }
+  jest.spyOn(prototype, 'measureInWindow').mockImplementation(function measure(
+    this: MockedView,
+    callback,
+  ) {
+    if (this.props.testID === 'box') {
+      callback(20, 100, 320, 56)
+    } else {
+      callback(0, 0, 400, 800)
+    }
+  })
+  await fireEvent(panelOfList(), 'layout', {
+    nativeEvent: { layout: { height: 168, width: 320, x: 0, y: 0 } },
+  })
 }
 
 // Presses a key on the page, down and then up, as a keyboard does, with a
@@ -120,6 +184,29 @@ async function press(key: string) {
     cancelled: down?.defaultPrevented === true,
     released: released.mock.calls.length > 0,
   }
+}
+
+// Renders an open Select, and watches which views are focused. The preset's
+// View shares one mock `focus` between instances, so a call's `this` says
+// which was focused.
+async function renderOpenSelect() {
+  const prototype: unknown = View.prototype
+
+  if (!isMockedView(prototype)) {
+    throw new TypeError('expected the View the Jest preset mocks')
+  }
+  const focus = jest.spyOn(prototype, 'focus')
+  focus.mockClear()
+
+  await render(
+    <ThemeScope>
+      <Select defaultOpen label="Label" options={OPTIONS} testID="box" />
+    </ThemeScope>,
+  )
+  return () =>
+    focus.mock.contexts.map((view) =>
+      isMockedView(view) ? view.props.testID : undefined,
+    )
 }
 
 beforeEach(() => {
@@ -223,5 +310,65 @@ describe('Escape on the web', () => {
     await press('Escape')
 
     expect(expanded('box')).toBe(false)
+  })
+})
+
+describe('focus on the web, once a panel has gone', () => {
+  beforeEach(() => {
+    jest.useFakeTimers()
+  })
+
+  afterEach(() => {
+    jest.useRealTimers()
+  })
+
+  it('goes back to the trigger after Escape', async () => {
+    const focused = await renderOpenSelect()
+
+    await press('Escape')
+    await exited()
+
+    expect(focused()).toEqual(['box'])
+  })
+
+  it('goes back to the trigger after a choice', async () => {
+    const focused = await renderOpenSelect()
+    await placed()
+
+    await fireEvent.press(screen.getByRole('button', { name: /Second item/ }), {
+      currentTarget: { measure: () => undefined },
+      nativeEvent: {},
+    })
+    await exited()
+
+    expect(expanded('box')).toBe(false)
+    expect(focused()).toEqual(['box'])
+  })
+
+  it('goes back to the trigger after a press outside', async () => {
+    const focused = await renderOpenSelect()
+    const panel = panelOfList()
+    const siblings = panel.parent?.children ?? []
+    const layer = siblings.at(siblings.indexOf(panel) - 1)
+
+    if (layer === undefined || typeof layer === 'string') {
+      throw new TypeError('expected the layer before the list')
+    }
+    await fireEvent.press(layer)
+    await exited()
+
+    expect(expanded('box')).toBe(false)
+    expect(focused()).toEqual(['box'])
+  })
+
+  it('stays where it is when the panel never had it', async () => {
+    const focused = await renderOpenSelect()
+    // On the box itself, or anywhere else on the page.
+    page.activeElement = {}
+
+    await press('Escape')
+    await exited()
+
+    expect(focused()).toEqual([])
   })
 })
