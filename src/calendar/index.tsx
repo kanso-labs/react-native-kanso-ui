@@ -12,6 +12,7 @@ import type { RangeCalendarState } from 'react-stately/useRangeCalendarState'
 import {
   DateFormatter,
   endOfMonth,
+  endOfWeek,
   isSameDay,
   isSameMonth,
   isSameYear,
@@ -35,6 +36,7 @@ import {
 import {
   I18nManager,
   Text as NativeText,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -54,9 +56,10 @@ import { IconButton } from '../components/icon-button'
 import { ArrowDropDownGlyph, CheckGlyph, ChevronEndGlyph } from '../glyphs'
 import { scrollNameOf } from '../group'
 import { useWindowSizeClass } from '../hooks/useWindowSizeClass'
-import { messagesFor } from '../i18n'
+import { directionOf, messagesFor } from '../i18n'
 import { useFocusOnPlaced, useReturnFocus } from '../overlay/panel'
 import { hitSlop, usePressFeedback } from '../press'
+import { refsOf } from '../ref'
 import { withOpacity } from '../theme/color'
 import { useTheme } from '../theme/scope'
 import { composeStyles } from '../theme/styles'
@@ -82,7 +85,14 @@ import {
  * the state and the dates the grid last drew when they are called.
  */
 type CellActions = {
+  /** Tells the state whether the focus is in the calendar, under web. */
+  readonly focus: (focused: boolean) => void
   readonly highlight: (week: number, day: number) => void
+  /**
+   * A key pressed on the date under web, and whether the grid took it to
+   * move the focus.
+   */
+  readonly key: (key: string, shiftKey: boolean) => boolean
   readonly select: (week: number, day: number) => void
 }
 
@@ -112,6 +122,11 @@ type CellState = {
   readonly label: string
   /** The date's number, in the locale's digits. */
   readonly number: string
+  /**
+   * Whether the date is to take the browser's focus: the one the calendar
+   * is on, while the focus is in the calendar, under React Native Web.
+   */
+  readonly takesFocus: boolean
 }
 
 /** One entry of a month or year list. */
@@ -343,6 +358,8 @@ function cellOf(
   const isSelected = selectable && state.isSelected(date)
   const isCurrent = isToday(date, state.timeZone)
   const range = rangeOf(state, date, isSelected)
+  const isFocused =
+    isSameMonth(date, month) && isSameDay(date, state.focusedDate)
 
   return {
     highlights: 'highlightDate' in state,
@@ -351,12 +368,13 @@ function cellOf(
     isCurrent,
     isDisabled,
     isFilled: range === null ? isSelected : range.isEnd,
-    isFocused: isSameMonth(date, month) && isSameDay(date, state.focusedDate),
+    isFocused,
     isRangeEnd: range?.isLast === true,
     isRangeStart: range?.isFirst === true,
     isUnavailable,
     label: dateLabelOf(date, state, locale, isCurrent, isSelected),
     number: dayOf(date, state, locale),
+    takesFocus: Platform.OS === 'web' && isFocused && state.isFocused,
   }
 }
 
@@ -441,6 +459,18 @@ function cornersOf(shape: StyleProp<ViewStyle>) {
  * It is handed what it draws as values, which the grid reads off the state,
  * and its place in the grid, which its actions take, so a pick re-renders the
  * dates it changed and no others.
+ *
+ * **Under React Native Web the grid is one Tab stop**, as web's React Aria
+ * grid is and the ARIA grid pattern asks: the date the calendar is on takes
+ * the stop and the rest take none, and the keys move inside it. ArrowRight
+ * and ArrowLeft move a day, mirrored under a right-to-left locale, ArrowDown
+ * and ArrowUp a week, Home and End to the start and the end of the week, and
+ * PageDown and PageUp a month, or a year with Shift. Enter or Space picks the
+ * date, as a press does. The focus is React Stately's own focused date, which
+ * pages the calendar as it moves past the month shown and stays within the
+ * bounds, and the date it moves to takes the browser's focus. On iOS and
+ * Android a date is a stop of its own for a hardware keyboard, as every
+ * control is.
  */
 const DateCell = memo(function DateCell({
   actions,
@@ -457,6 +487,7 @@ const DateCell = memo(function DateCell({
   isUnavailable,
   label,
   number,
+  takesFocus,
   week,
 }: CellState & {
   readonly actions: CellActions
@@ -473,6 +504,17 @@ const DateCell = memo(function DateCell({
   // The date the calendar is on, in its own month's grid rather than as the
   // spill of the month beside it, is the cell a picker sends a reader to.
   const report = use(CalendarFocusContext)
+  const view = useRef<ComponentRef<typeof Pressable>>(null)
+  const web = Platform.OS === 'web'
+
+  // The date the keys moved the focus to takes the browser's focus, once it
+  // is drawn as that date.
+  useEffect(() => {
+    if (takesFocus) {
+      view.current?.focus()
+    }
+  }, [takesFocus])
+
   const shape = composeStyles<ViewStyle>(
     own.date,
     inRange ? own.dateInRange : undefined,
@@ -487,6 +529,8 @@ const DateCell = memo(function DateCell({
         : colors.onSurface,
     corners: cornersOf(shape),
     disabled: !selectable,
+    onBlur: web ? focusedThen(actions.focus, false) : undefined,
+    onFocus: web ? focusedThen(actions.focus, true) : undefined,
     onHoverIn: highlights
       ? cellActionThen(actions.highlight, week, day)
       : undefined,
@@ -501,8 +545,11 @@ const DateCell = memo(function DateCell({
         inRange ? undefined : sizing.controlSm,
       )}
       onPress={cellActionThen(actions.select, week, day)}
-      ref={isFocused && report !== null ? report : undefined}
+      ref={refsOf(view, isFocused && report !== null ? report : undefined)}
       role="button"
+      {...(web
+        ? { onKeyDown: keyThen(actions.key), tabIndex: isFocused ? 0 : -1 }
+        : undefined)}
       {...feedback.handlers}
       disabled={!selectable}
       style={composeStyles<ViewStyle>(
@@ -593,6 +640,14 @@ function eraOf(date: CalendarDate) {
     : undefined
 }
 
+// A date's focus or blur under web, which tells the state whether the focus
+// is in the calendar.
+function focusedThen(focus: (focused: boolean) => void, focused: boolean) {
+  return () => {
+    focus(focused)
+  }
+}
+
 // The formatter for `locale` and `options`, built once and kept, as
 // `formatters` says.
 function formatterOf(locale: string, options: Intl.DateTimeFormatOptions) {
@@ -606,6 +661,19 @@ function formatterOf(locale: string, options: Intl.DateTimeFormatOptions) {
   const formatter = new DateFormatter(locale, options)
   formatters.set(key, formatter)
   return formatter
+}
+
+// A key pressed on a date under web, which the grid takes, and then the page
+// does nothing more with: an arrow or a page key would scroll it.
+function keyThen(key: (key: string, shiftKey: boolean) => boolean) {
+  return (event: {
+    readonly nativeEvent: { readonly key: string; readonly shiftKey: boolean }
+    readonly preventDefault: () => void
+  }) => {
+    if (key(event.nativeEvent.key, event.nativeEvent.shiftKey)) {
+      event.preventDefault()
+    }
+  }
 }
 
 // The row a list's row occupies, which is every row's 48dp, so the list can
@@ -830,12 +898,15 @@ function MonthGrid({
   // The state and the dates a cell's action reaches, the ones the grid last
   // drew. Read only when a cell is pressed or hovered, so they are kept where
   // the cells' values do not change with them.
-  const latest = useRef({ state, weeks })
+  const latest = useRef({ firstDayOfWeek, locale, state, weeks })
   useLayoutEffect(() => {
-    latest.current = { state, weeks }
+    latest.current = { firstDayOfWeek, locale, state, weeks }
   })
   const actions = useMemo<CellActions>(
     () => ({
+      focus: (focused) => {
+        latest.current.state.setFocused(focused)
+      },
       // Draws a started range as far as the date a pointer is over, as
       // web's does. Nothing in a calendar of one date; before a range is
       // started, React Stately's own `highlightDate` does nothing.
@@ -846,6 +917,15 @@ function MonthGrid({
         if (date != null && 'highlightDate' in current) {
           current.highlightDate(date)
         }
+      },
+      key: (key, shiftKey) => {
+        const {
+          firstDayOfWeek: first,
+          locale: tag,
+          state: current,
+        } = latest.current
+
+        return moveFocus(current, key, shiftKey, tag, first)
       },
       // Picks a date and moves the calendar's focus to it, as a press on one
       // does on web. A read-only or disabled calendar's state ignores the
@@ -944,6 +1024,69 @@ function monthsOf(
       }
     },
   )
+}
+
+// Moves the calendar's focus for a key pressed in its grid under web, as
+// React Aria's grid does, and says whether the key was one that moves it.
+// The state keeps the focus within the bounds and pages the calendar to it.
+// Home and End go to the start and the end of the week, as the ARIA grid
+// pattern has them.
+function moveFocus(
+  state: SomeCalendarState,
+  key: string,
+  shiftKey: boolean,
+  locale: string,
+  firstDayOfWeek: undefined | Weekday,
+) {
+  const rtl = directionOf(locale) === 'rtl'
+
+  switch (key) {
+    case 'ArrowDown': {
+      state.focusNextRow()
+      return true
+    }
+    case 'ArrowLeft': {
+      if (rtl) {
+        state.focusNextDay()
+      } else {
+        state.focusPreviousDay()
+      }
+      return true
+    }
+    case 'ArrowRight': {
+      if (rtl) {
+        state.focusPreviousDay()
+      } else {
+        state.focusNextDay()
+      }
+      return true
+    }
+    case 'ArrowUp': {
+      state.focusPreviousRow()
+      return true
+    }
+    case 'End': {
+      state.setFocusedDate(endOfWeek(state.focusedDate, locale, firstDayOfWeek))
+      return true
+    }
+    case 'Home': {
+      state.setFocusedDate(
+        startOfWeek(state.focusedDate, locale, firstDayOfWeek),
+      )
+      return true
+    }
+    case 'PageDown': {
+      state.focusNextSection(shiftKey)
+      return true
+    }
+    case 'PageUp': {
+      state.focusPreviousSection(shiftKey)
+      return true
+    }
+    default: {
+      return false
+    }
+  }
 }
 
 // Where an open list starts scrolled to, a row's height to each row above.
