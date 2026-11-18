@@ -358,6 +358,15 @@ wrapper is then `accessible`, so the whole story is one element. The emulator's
 TalkBack takes none of the swipes adb sends, so the pass is a person's: pick the
 story through the sheet or the Storybook channel, then swipe through it.
 
+**A long pass on a device restarts Expo Go every hundred stories or so**, with
+`adb shell am force-stop host.exp.exponent` and then opening the app again. Each
+switch of story through the Storybook channel, `select-story-sync`, renders the
+whole sidebar again, some 600 components in four commits, and that is Storybook
+React Native's, not the library's. The cost grows as the session goes on: after
+about 200 switches each one took 15 to 25 seconds on the emulator, with Expo Go
+holding 1.1GB and the system swapping, which is what cut the review of
+2026-11-18 to 209 of the 450 stories. A restart starts that count again.
+
 ## Workflows and checks
 
 `Build`, `Lint` and `Test` run on every pull request and on pushes to `main`,
