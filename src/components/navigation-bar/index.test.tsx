@@ -871,7 +871,7 @@ describe('NavigationBar', () => {
       await fireEvent(tab('First item'), 'focus')
 
       expect(styleOf(pillOf('First item')).outlineWidth).toBe(2)
-      expect(styleOf(tab('First item')).outlineWidth).toBeUndefined()
+      expect(styleOf(tab('First item')).outlineWidth).toBe(0)
     })
 
     it('rings the whole pill in the horizontal form', async () => {

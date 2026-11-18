@@ -289,6 +289,38 @@ describe('NavigationRail', () => {
       expect(within(headerOf()).getByTestId('header-button')).toBeTruthy()
     })
 
+    // A destination is what takes focus and draws the ring, on its
+    // indicator or on itself, so a browser's own ring round it would be a
+    // second one. A browser's ring is the `auto` style, which ignores the
+    // width, so the style is set as well as the width.
+    it.each([
+      ['collapsed', false],
+      ['expanded', true],
+    ])(
+      'keeps a browser’s own ring off the %s destination',
+      async (_form, isExpanded) => {
+        await renderRail({ isExpanded })
+
+        expect(styleOf(tab('First item'))).toMatchObject({
+          outlineStyle: 'solid',
+          outlineWidth: 0,
+        })
+      },
+    )
+
+    // An expanded destination draws its ring on itself, over the reset.
+    it('draws its own ring on an expanded destination focused from a key', async () => {
+      await renderRail({ isExpanded: true })
+
+      await fireEvent(tab('First item'), 'focus', {})
+
+      expect(styleOf(tab('First item'))).toMatchObject({
+        outlineColor: colors.primary,
+        outlineStyle: 'solid',
+        outlineWidth: 2,
+      })
+    })
+
     it('takes a name of its own for a destination', async () => {
       await renderRail({
         items: { second: { 'aria-label': 'Second item, 3 new', badge: 3 } },

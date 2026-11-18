@@ -44,6 +44,16 @@ const styles = StyleSheet.create({
   labelWrapped: {
     textAlign: 'center',
   },
+  // A destination without a browser's own ring. The destination is what
+  // takes focus and draws the ring, on itself or on its indicator, so a
+  // browser's ring round it as well would be a second treatment for one
+  // focus. Solid as well as no width: a browser's ring is the `auto` style,
+  // which ignores the width. The destination's own ring is composed after
+  // this and wins where it is on the destination itself.
+  unringed: {
+    outlineStyle: 'solid',
+    outlineWidth: 0,
+  },
 })
 
 const stylesOf = themedStyles(({ radii, spacing }) =>

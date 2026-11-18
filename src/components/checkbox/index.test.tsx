@@ -364,6 +364,19 @@ describe('Checkbox', () => {
   })
 
   describe('appearance', () => {
+    // The row is what takes focus, and the disc draws the ring, so a
+    // browser's own ring round the row would be a second one. A browser's
+    // ring is the `auto` style, which ignores the width, so the style is set
+    // as well as the width.
+    it('keeps a browser’s own ring off the row', async () => {
+      await render(<Checkbox>Label</Checkbox>)
+
+      expect(StyleSheet.flatten(checkbox().props.style)).toMatchObject({
+        outlineStyle: 'solid',
+        outlineWidth: 0,
+      })
+    })
+
     it('draws an unselected box as a rule in on surface variant', async () => {
       await render(<Checkbox>Label</Checkbox>)
 

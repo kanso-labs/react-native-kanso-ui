@@ -392,7 +392,12 @@ function NavigationDestination({
         {...props}
         {...feedback.handlers}
         disabled={isDisabled}
-        style={composeStyles<ViewStyle>(own[form], feedback.ring, style)}
+        style={composeStyles<ViewStyle>(
+          styles.unringed,
+          own[form],
+          feedback.ring,
+          style,
+        )}
       >
         <ActiveIndicator selected={selected} />
         {feedback.layer}
@@ -409,7 +414,7 @@ function NavigationDestination({
       {...props}
       {...feedback.handlers}
       disabled={isDisabled}
-      style={composeStyles<ViewStyle>(own[form], style)}
+      style={composeStyles<ViewStyle>(styles.unringed, own[form], style)}
     >
       <Label form={form} isDisabled={isDisabled} selected={selected}>
         {children}
