@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import type { Insets, PressableProps, ViewStyle } from 'react-native'
 
 import { useRef, useState } from 'react'
-import { View } from 'react-native'
+import { Platform, View } from 'react-native'
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -141,6 +141,22 @@ const NO_RIPPLE: RippleGeometry = {
 }
 
 /**
+ * Whether the browser draws its focus ring on the control a focus `event`
+ * arrived at, by the `:focus-visible` rule web's ring is drawn under, or
+ * `undefined` where the control is not an element of a page, as on a device.
+ */
+function focusVisibleOn(event: unknown): boolean | undefined {
+  const target =
+    typeof event === 'object' && event !== null && 'currentTarget' in event
+      ? event.currentTarget
+      : undefined
+
+  return Platform.OS === 'web' && matchesSelectors(target)
+    ? target.matches(':focus-visible')
+    : undefined
+}
+
+/**
  * The `hitSlop` that brings a control smaller than 48dp up to a 48dp target,
  * centred on it, as web's controls draw their target with a `::before`.
  * Nothing for a control already that big. A width left out is taken to be
@@ -160,6 +176,19 @@ function hitSlop(height: number, width = TARGET_SIZE): Insets | undefined {
     right: horizontal,
     top: vertical,
   }
+}
+
+// A page's element, which the library's types, written without the DOM's,
+// know only by the method it is read through.
+function matchesSelectors(
+  target: unknown,
+): target is { readonly matches: (selectors: string) => boolean } {
+  return (
+    typeof target === 'object' &&
+    target !== null &&
+    'matches' in target &&
+    typeof target.matches === 'function'
+  )
 }
 
 /**
@@ -195,7 +224,10 @@ function hitSlop(height: number, width = TARGET_SIZE): Insets | undefined {
  * pressed layer takes another colour passes it as `pressedColor`.
  *
  * The ring shows when focus arrives from a keyboard, and not when it arrives
- * with a press, which on web is a click focusing what it presses.
+ * with a press. On web that is the browser's own `:focus-visible`, read as
+ * focus arrives, since React Native Web focuses a control as the mouse goes
+ * down, before its press begins. On a device, where focus moves under a
+ * hardware keyboard, it is focus that no press brought.
  *
  * ```tsx
  * const feedback = usePressFeedback({ color: colors.onPrimary, corners, onPressIn })
@@ -330,7 +362,7 @@ function usePressFeedback({
     },
     onFocus: (event) => {
       focused.current = true
-      setRingShown(!pressedUnfocused.current)
+      setRingShown(focusVisibleOn(event) ?? !pressedUnfocused.current)
       pressedUnfocused.current = false
       onFocus?.(event)
     },

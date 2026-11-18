@@ -9,7 +9,7 @@ import {
   jest,
 } from '@jest/globals'
 import { act, fireEvent, render, screen } from '@testing-library/react-native'
-import { Pressable, StyleSheet, Text } from 'react-native'
+import { Platform, Pressable, StyleSheet, Text } from 'react-native'
 import { getAnimatedStyle } from 'react-native-reanimated'
 
 import type { PressFeedbackOptions } from '.'
@@ -143,6 +143,7 @@ beforeEach(() => {
 
 afterEach(() => {
   mockReducedMotion = false
+  jest.restoreAllMocks()
   jest.useRealTimers()
 })
 
@@ -295,6 +296,44 @@ describe('the focus ring', () => {
     await fireEvent(control(), 'focus', {})
 
     expect(styleOf(control()).outlineWidth).toBe(2)
+  })
+
+  // React Native Web focuses a control as the mouse goes down, before its
+  // press begins, so on web the ring follows the browser's `:focus-visible`.
+  it('follows the browser on web, showing for focus from a key alone', async () => {
+    jest.replaceProperty(Platform, 'OS', 'web')
+    const visible = jest.fn(() => false)
+    await render(<Control />)
+
+    await fireEvent(control(), 'focus', {
+      currentTarget: { matches: visible },
+    })
+
+    expect(visible).toHaveBeenCalledWith(':focus-visible')
+    expect(styleOf(control()).outlineWidth).toBeUndefined()
+    expect(layerOpacity()).toBe(0)
+
+    await fireEvent(control(), 'blur', {})
+    visible.mockReturnValue(true)
+    await fireEvent(control(), 'focus', {
+      currentTarget: { matches: visible },
+    })
+
+    expect(styleOf(control()).outlineWidth).toBe(2)
+    expect(layerOpacity()).toBe(stateLayerOpacity.focus)
+  })
+
+  it('reads no selector off a device, where a press decides', async () => {
+    const visible = jest.fn(() => true)
+    await render(<Control />)
+
+    await fireEvent(control(), 'pressIn', pressAt(30, 30))
+    await fireEvent(control(), 'focus', {
+      currentTarget: { matches: visible },
+    })
+
+    expect(visible).not.toHaveBeenCalled()
+    expect(styleOf(control()).outlineWidth).toBeUndefined()
   })
 
   it('does not show on a disabled control', async () => {
