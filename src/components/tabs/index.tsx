@@ -54,6 +54,11 @@ import { IconStyleContext } from '../../glyphs/icon-style'
 import { GROUP } from '../../group'
 import { usePressFeedback } from '../../press'
 import { useLinkPress } from '../../router'
+import {
+  ScrollFade,
+  useScrollEdges,
+  useScrollFadeProps,
+} from '../../scroll-fade'
 import { withOpacity } from '../../theme/color'
 import { useTheme } from '../../theme/scope'
 import { composeStyles, themedStyles } from '../../theme/styles'
@@ -97,6 +102,16 @@ import { Badge } from '../badge'
 // 264dp, in a bar that scrolls without a scroll indicator and brings the
 // selected tab into view, at once the first time and with the platform's
 // own scroll after that.
+//
+// **A scrollable bar fades the edge with tabs past it**, and only that edge,
+// as web's does: a tab cut off at the edge read as a whole one with a
+// shorter name, "…nd item". The fade is src/scroll-fade's, 32dp long, on
+// Android the scroll view's own and elsewhere a gradient from the bar's
+// container colour, surface, as the tabs page gives it. A selected tab is
+// brought into view clear of that fade, the fade's length in from the edge,
+// since shown only just whole it came to rest inside it, its last letters
+// and its indicator fading out with the tabs beyond it. A vertical bar
+// scrolls without a fade, as on web.
 //
 // **`orientation="vertical"` turns the bar on its side**, as web does, since
 // the page draws no vertical tabs: the tabs stack, the divider runs down the
@@ -603,6 +618,8 @@ function TabsList<T extends object = object>({
   const { bar, ids, state } = useTabs('Tabs.List', true)
   const theme = useTheme()
   const own = stylesOf(theme)
+  const fade = useScrollEdges()
+  const fadeProps = useScrollFadeProps()
   const reduceMotion = useReducedMotion()
   const [measured, setMeasured] = useState(NO_MEASUREMENTS)
   const [viewport, setViewport] = useState(0)
@@ -613,6 +630,8 @@ function TabsList<T extends object = object>({
   const revealed = useRef<Key | null | undefined>(undefined)
   const vertical = bar.orientation === 'vertical'
   const scrollable = bar.layout === 'scrollable'
+  // Only a horizontal bar that scrolls fades its edges, as on web.
+  const fades = scrollable && !vertical
   const { selectedKey } = state
   const selected = selectedKey === null ? undefined : measured.get(selectedKey)
   const placement = placementOf(bar, selected, theme.spacing.xxs)
@@ -624,23 +643,45 @@ function TabsList<T extends object = object>({
     [],
   )
 
-  // Keeps how far the bar has scrolled, for the next reveal to measure from.
+  // Keeps how far the bar has scrolled, for the next reveal to measure from
+  // and for the fade.
+  const { onContentSize, onScrolled, onViewport } = fade
   const onScroll = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
       const { contentOffset } = event.nativeEvent
       scrolled.current = vertical ? contentOffset.y : contentOffset.x
+      onScrolled(contentOffset.x)
     },
-    [vertical],
+    [onScrolled, vertical],
+  )
+  const onContentSizeChange = useCallback(
+    (width: number) => {
+      onContentSize(width)
+    },
+    [onContentSize],
+  )
+  const onLayout = useCallback(
+    (event: LayoutChangeEvent) => {
+      const { height, width } = event.nativeEvent.layout
+      setViewport(vertical ? height : width)
+      onViewport(width)
+    },
+    [onViewport, vertical],
   )
 
+  // Every tab's place, once each has reported one: how far the bar runs,
+  // which a reveal stops at, is the far end of the last.
+  const length = lengthOf(state.collection, measured, vertical)
+
   // Brings the selected tab into view in a bar that scrolls, as it becomes
-  // the selected one.
+  // the selected one, once every tab has been laid out.
   useEffect(() => {
     const tab = selected?.tab
 
     if (
       !scrollable ||
       tab === undefined ||
+      length === undefined ||
       viewport === 0 ||
       revealed.current === selectedKey
     ) {
@@ -651,10 +692,13 @@ function TabsList<T extends object = object>({
     revealed.current = selectedKey
 
     const target = revealOffset(
-      scrolled.current,
-      viewport,
+      { scrolled: scrolled.current, viewport },
       vertical ? tab.y : tab.x,
       vertical ? tab.height : tab.width,
+      {
+        limit: Math.max(0, length - viewport),
+        margin: fades ? theme.spacing.xxl : 0,
+      },
     )
 
     if (target !== undefined) {
@@ -663,7 +707,17 @@ function TabsList<T extends object = object>({
         vertical ? { animated, y: target } : { animated, x: target },
       )
     }
-  }, [reduceMotion, scrollable, selected, selectedKey, vertical, viewport])
+  }, [
+    fades,
+    length,
+    reduceMotion,
+    scrollable,
+    selected,
+    selectedKey,
+    theme.spacing.xxl,
+    vertical,
+    viewport,
+  ])
 
   const tabs = (
     <>
@@ -699,8 +753,10 @@ function TabsList<T extends object = object>({
       <View style={vertical ? own.dividerVertical : own.divider} />
       {scrollable ? (
         <ScrollView
+          {...(fades ? fadeProps : null)}
           horizontal={!vertical}
-          onLayout={viewportOf(setViewport, vertical)}
+          onContentSizeChange={onContentSizeChange}
+          onLayout={onLayout}
           onScroll={onScroll}
           ref={scroll}
           scrollEventThrottle={16}
@@ -713,6 +769,9 @@ function TabsList<T extends object = object>({
       ) : (
         tabs
       )}
+      {fades ? (
+        <ScrollFade color={theme.colors.surface} edges={fade.edges} />
+      ) : null}
     </View>
   )
 }
@@ -909,6 +968,24 @@ function leftEdgeOf() {
   return I18nManager.isRTL && I18nManager.getConstants().doLeftAndRightSwapInRTL
     ? styles.atRight
     : styles.atLeft
+}
+
+// How long the bar's tabs run along it, the far end of the last one, or
+// nothing until every tab has been measured.
+function lengthOf(
+  collection: Iterable<Node<object>>,
+  measured: ReadonlyMap<Key, Measured>,
+  vertical: boolean,
+): number | undefined {
+  let length = 0
+  for (const node of collection) {
+    const tab = measured.get(node.key)?.tab
+    if (tab === undefined) {
+      return undefined
+    }
+    length = Math.max(length, vertical ? tab.y + tab.height : tab.x + tab.width)
+  }
+  return length
 }
 
 // The `Tabs.List` among the root's children, looked for through any element
@@ -1144,22 +1221,27 @@ function placementOf(
   return { length, offset: tab.x + label.x + (label.width - length) / 2 }
 }
 
-// How far to scroll a bar so a tab lies whole inside it, or nothing when it
-// already does: to its start when it is cut off there, and to its end when
-// it is cut off at the end.
+// How far to scroll a bar so a tab lies whole inside it and `margin` clear of
+// either edge, or nothing when it already does: to its start when it is cut
+// off there, and to its end when it is cut off at the end. Never past either
+// end of the bar, `limit` being the far one: an edge the bar has reached has
+// nothing past it, so no fade to keep clear of.
 function revealOffset(
-  scrolled: number,
-  viewport: number,
+  {
+    scrolled,
+    viewport,
+  }: { readonly scrolled: number; readonly viewport: number },
   start: number,
   size: number,
+  { limit, margin }: { readonly limit: number; readonly margin: number },
 ): number | undefined {
-  if (start < scrolled) {
-    return start
-  }
-  if (start + size > scrolled + viewport) {
-    return start + size - viewport
-  }
-  return undefined
+  const target =
+    start - margin < scrolled
+      ? Math.max(0, start - margin)
+      : start + size + margin > scrolled + viewport
+        ? Math.min(limit, start + size + margin - viewport)
+        : scrolled
+  return target === scrolled ? undefined : target
 }
 
 // A press's selection of its tab, then the call site's own handler and the
@@ -1309,17 +1391,6 @@ function useTabs(part: string, list = false): TabsContextValue {
     )
   }
   return value
-}
-
-// The bar's `onLayout` while it scrolls, which keeps how much of it shows.
-function viewportOf(
-  setViewport: (viewport: number) => void,
-  vertical: boolean,
-) {
-  return (event: LayoutChangeEvent) => {
-    const { height, width } = event.nativeEvent.layout
-    setViewport(vertical ? height : width)
-  }
 }
 
 function withHeight(
