@@ -39,19 +39,16 @@ type MockedView = Pick<HostInstance, 'focus' | 'measureInWindow'> & {
 // in that dispatches a key as a browser does for one pressed on an element
 // inside the document: its capture listeners first, then, unless one of
 // them stopped it, its bubbling ones, which is where React Native Web's
-// `Modal` hears the release it closes on. Its focus is on its body, where a
-// browser drops the focus a panel held as the panel goes, unless a case
-// puts it elsewhere.
+// `Modal` hears the release it closes on. Its focus is on its body unless a
+// case puts it elsewhere.
 class Page {
-  activeElement: unknown
   readonly body = {}
   readonly listeners = new Map<
     string,
     { capture: boolean; listener: Listener }[]
   >()
-
-  constructor() {
-    this.activeElement = this.body
+  get activeElement() {
+    return this.focused()
   }
 
   addEventListener(type: string, listener: Listener, capture = false) {
@@ -86,6 +83,9 @@ class Page {
     return event
   }
 
+  /** Where the focus is, asked each time it is read. */
+  focused: () => unknown = () => this.body
+
   removeEventListener(type: string, listener: Listener, capture = false) {
     this.listeners.set(
       type,
@@ -107,10 +107,14 @@ const OPTIONS = [
   </ListBox.Item>,
 ]
 
-// Runs the panel's exit, after which it has gone.
+// Runs the panel's exit, after which it has gone, and then what its going
+// left to run.
 async function exited() {
   await act(() => {
     jest.advanceTimersByTime(1000)
+  })
+  await act(() => {
+    jest.runOnlyPendingTimers()
   })
 }
 
@@ -203,6 +207,11 @@ async function renderOpenSelect() {
       <Select defaultOpen label="Label" options={OPTIONS} testID="box" />
     </ThemeScope>,
   )
+  // Focus on an option, which a browser drops to the body once the list
+  // has left the page, and not before.
+  const option = {}
+  page.focused = () =>
+    screen.queryByLabelText('Label') === null ? page.body : option
   return () =>
     focus.mock.contexts.map((view) =>
       isMockedView(view) ? view.props.testID : undefined,
@@ -364,7 +373,8 @@ describe('focus on the web, once a panel has gone', () => {
   it('stays where it is when the panel never had it', async () => {
     const focused = await renderOpenSelect()
     // On the box itself, or anywhere else on the page.
-    page.activeElement = {}
+    const elsewhere = {}
+    page.focused = () => elsewhere
 
     await press('Escape')
     await exited()

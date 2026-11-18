@@ -439,12 +439,23 @@ function useReturnFocus(
 
     shown.current = present
     if (!gone || quiet || target === null) {
-      return
+      return undefined
     }
     if (Platform.OS !== 'web') {
       AccessibilityInfo.sendAccessibilityEvent(target, 'focus')
-    } else if (focusFellToBody()) {
-      target.focus()
+      return undefined
+    }
+
+    // The overlay host takes the panel off the page in a render of its own,
+    // after this one, so the focus is looked at once it has.
+    const timer = setTimeout(() => {
+      if (focusFellToBody()) {
+        target.focus()
+      }
+    }, 0)
+
+    return () => {
+      clearTimeout(timer)
     }
   }, [quiet, present, trigger])
 }
