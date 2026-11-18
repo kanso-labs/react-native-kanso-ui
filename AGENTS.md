@@ -53,12 +53,18 @@ package too.
 | Test      | `npm test`               | Jest, through React Native's own preset                        |
 | Coverage  | `npm run test:coverage`  | Jest with coverage and JUnit results, which `Test` uploads     |
 | Stories   | `npm run test:storybook` | Every story in Chromium through Vitest, failing on a11y        |
-| Storybook | `npm run storybook`      | The web Storybook at http://localhost:6006                     |
+| Storybook | `npm run storybook`      | The web Storybook at http://localhost:6006, or on `PORT`       |
 | Chromatic | `npm run chromatic`      | Visual tests by hand; needs `CHROMATIC_PROJECT_TOKEN` in env   |
 | Lint      | `npm run lint`           | oxlint, then ESLint, then oxfmt formatting check               |
 | Build     | `npm run build`          | Type-checks (`tsc -b`) then builds ESM into `dist/`            |
 | Format    | `npm run format`         | oxfmt; `npm run format:check` is the check `lint` already runs |
 | Verify    | `npm run package:check`  | publint, attw, then a check for kanso-ui-core in `dist/`       |
+
+**`scripts/storybook.mjs` reads `PORT`, not the npm script**: npm runs scripts
+under `cmd.exe` on Windows, which expands no `${PORT:-6006}`, and Storybook
+refused the text it was handed as a port. Keep shell expansion out of
+`package.json`'s scripts for the same reason. Arguments after `--` reach
+Storybook after the port, so `npm run storybook -- -p 6010` picks one too.
 
 **Install with the Node version in `.tool-versions`.** CI resolves it from that
 file, and an older npm rewrites `package-lock.json` in a way no check here can
