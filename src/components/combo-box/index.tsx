@@ -70,10 +70,11 @@ import { composeStyles, themedStyles } from '../../theme/styles'
 // React Stately's combo box state around the two, and the things that are
 // this component's own.
 //
-// It is Select's shape with differences that are web's too. The control is
-// a real input, so typing reaches it and a press on the box focuses it, and
-// only the chevron at the end opens the list on its own: an autocomplete
-// field is a text field with a button on it.
+// It is Select's shape, its options drawn as menu rows as Select's are, with
+// differences that are web's too. The control is a real input, so typing
+// reaches it and a press on the box focuses it, and only the chevron at the
+// end opens the list on its own: an autocomplete field is a text field with
+// a button on it.
 //
 // **Filtering is on by default,** as on web: `defaultFilter` falls back to a
 // match anywhere in an option's text, compared by an `Intl.Collator` in the
@@ -598,6 +599,7 @@ function ComboBoxList({
           revealFocus={placement.placed}
           state={state}
           style={SHRINKS}
+          variant="menu"
         />
       </Animated.View>
     </>

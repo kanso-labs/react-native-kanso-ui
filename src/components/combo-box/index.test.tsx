@@ -60,7 +60,7 @@ type MockedView = Pick<HostInstance, 'measureInWindow'> & {
 }
 
 const { theme } = scopeFor('light', {})
-const { colors, motion, radii, shadows, typography } = theme
+const { colors, motion, radii, shadows, sizing, spacing, typography } = theme
 
 const INITIAL = {
   screen: Dimensions.get('screen'),
@@ -902,6 +902,36 @@ describe('ComboBox', () => {
 
       expect(list().props.keyboardShouldPersistTaps).toBe('handled')
       expect(styleOf(list()).flexGrow).toBe(0)
+    })
+
+    // Drawn as Select's are, as Menu's items are: Material Design draws an
+    // exposed dropdown menu as a menu.
+    it('draws its options as menu rows, the chosen one on tertiary container', async () => {
+      await renderComboBox({ defaultValue: 'second' })
+
+      await fireEvent.press(chevron())
+
+      expect(styleOf(optionOf('First item'))).toMatchObject({
+        minHeight: sizing.rowXs,
+        paddingHorizontal: spacing.md,
+      })
+      expect(styleOf(optionOf('Second item')).backgroundColor).toBe(
+        colors.tertiaryContainer,
+      )
+    })
+
+    // So the list keeps its height when the last match goes.
+    it('draws the row a search leaves empty a menu row tall', async () => {
+      await renderComboBox({ allowsEmptyCollection: true })
+
+      await type('zz')
+
+      expect(
+        styleOf(within(list()).getByText('No results').parent ?? list()),
+      ).toMatchObject({
+        minHeight: sizing.rowXs,
+        paddingHorizontal: spacing.md,
+      })
     })
 
     it('marks the chosen option selected', async () => {

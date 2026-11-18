@@ -73,7 +73,7 @@ type ScrollFailure = {
 }
 
 const { theme } = scopeFor('light', {})
-const { colors, motion, radii, shadows, spacing, typography } = theme
+const { colors, motion, radii, shadows, sizing, spacing, typography } = theme
 
 const INITIAL = {
   screen: Dimensions.get('screen'),
@@ -816,6 +816,31 @@ describe('Select', () => {
           selected: false,
         }),
       ).toBeOnTheScreen()
+    })
+
+    // Material Design draws an exposed dropdown menu as a menu, so the
+    // options are the menus page's rows, as Menu's items are.
+    it('draws its options as menu rows, the chosen one on tertiary container', async () => {
+      await renderSelect({ defaultOpen: true, defaultValue: 'second' })
+
+      expect(styleOf(optionOf('First item'))).toMatchObject({
+        minHeight: sizing.rowXs,
+        paddingHorizontal: spacing.md,
+      })
+      expect(styleOf(optionOf('Second item')).backgroundColor).toBe(
+        colors.tertiaryContainer,
+      )
+      expect(
+        styleOf(within(optionOf('Second item')).getByText('Second item')).color,
+      ).toBe(colors.onTertiaryContainer)
+    })
+
+    it("heads a section at the menu row's inset", async () => {
+      await renderSelect({ defaultOpen: true, options: GROUPED })
+
+      expect(
+        styleOf(within(list()).getByRole('heading', { name: 'Second group' })),
+      ).toMatchObject({ paddingHorizontal: spacing.md, paddingTop: spacing.md })
     })
 
     it('heads its sections', async () => {

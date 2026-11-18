@@ -42,6 +42,7 @@ import { useListState } from 'react-stately/useListState'
 
 import type { AutocompleteValue } from '../autocomplete'
 import type { LibraryMessages } from '../i18n/messages'
+import type { RowVariant } from '../row'
 import type { ResolvedTheme } from '../theme/scope'
 
 import { AutocompleteContext } from '../autocomplete'
@@ -79,7 +80,12 @@ import { useTypeRole } from '../typography/roles'
 // and closes, and the rows of an open one follow it in the same column. A
 // NavigationTree is a Tree drawn as a navigation drawer: its rows are links,
 // the one whose `href` is the route is marked with the drawer's pill, and
-// the rows it sits under with a bold label.
+// the rows it sits under with a bold label. The ListBox in a Select's or a
+// ComboBox's popup draws the menus page's rows, as Menu does: Material
+// Design draws an exposed dropdown menu, which is what those two are, as a
+// menu, so its options are 48dp rows at the menu's 12dp inset, on its
+// tertiary selected container, and its section headers, its empty row and
+// its loading row follow the same page.
 //
 // Five things differ from web's, each because a screen reader, a touch or a
 // screen on a phone works differently from a keyboard and a page in a
@@ -202,6 +208,14 @@ const stylesOf = themedStyles(
         paddingHorizontal: spacing.lg,
         paddingTop: spacing.lg,
       },
+      // The same at a menu row's 12dp, for options drawn as menu rows, as
+      // Menu's own section heading is.
+      headerMenu: {
+        color: colors.onSurfaceVariant,
+        paddingBottom: spacing.xxs,
+        paddingHorizontal: spacing.md,
+        paddingTop: spacing.md,
+      },
       // The checkbox beside whatever the row's leading slot was given, a
       // row's own gap apart.
       lead: {
@@ -218,6 +232,10 @@ const stylesOf = themedStyles(
         alignItems: 'center',
         justifyContent: 'center',
         minHeight: sizing.rowSm,
+      },
+      // A menu row's height, for options drawn as menu rows.
+      loadingMenu: {
+        minHeight: sizing.rowXs,
       },
       // The corners a drawer's row clips its state layer and ripple to.
       pill: {
@@ -434,6 +452,8 @@ type CollectionValue = {
    * from, and null for a list's. It changes as rows open and close.
    */
   readonly tree: null | TreeState<unknown>['collection']
+  /** The spec page whose row the rows draw. */
+  readonly variant: RowVariant
 }
 
 type CollectionViewProps<T extends object = object> = Omit<
@@ -469,6 +489,13 @@ type CollectionViewProps<T extends object = object> = Omit<
    * state, which opens and closes them too.
    */
   readonly state: CollectionState<T>
+  /**
+   * The spec page whose row the options draw: the lists page's, or the menus
+   * page's, for the list in a Select's or a ComboBox's popup. A drawer's rows
+   * are the navigation drawer page's whatever this says.
+   * @default 'list'
+   */
+  readonly variant?: 'list' | 'menu'
 }
 
 /** One cell of the `FlatList`: a section's header, or a row. */
@@ -661,6 +688,7 @@ function CollectionView<T extends object = object>({
   selectLabel,
   state,
   style,
+  variant = 'list',
   ...props
 }: CollectionViewProps<T>) {
   const theme = useTheme()
@@ -733,6 +761,7 @@ function CollectionView<T extends object = object>({
       route,
       selectLabel: selectLabel ?? messages.select,
       tree,
+      variant: kind === 'drawer' ? 'drawer' : variant,
     }),
     [
       actions,
@@ -748,6 +777,7 @@ function CollectionView<T extends object = object>({
       route,
       selectLabel,
       tree,
+      variant,
     ],
   )
 
@@ -820,16 +850,19 @@ function drawnThrough(
 
 /**
  * The muted row a list shows when nothing is in it: a row's box and
- * headline in on surface variant, with no press of its own.
+ * headline in on surface variant, with no press of its own, and a menu row
+ * in a menu item's label large where the options are menu rows.
  */
 function EmptyRow() {
   const theme = useTheme()
   const own = stylesOf(theme)
-  const headline = useTypeRole('bodyLarge')
+  const { variant } = useCollection()
+  const menu = variant === 'menu'
+  const headline = useTypeRole(menu ? 'labelLarge' : 'bodyLarge')
   const messages = useMessages()
 
   return (
-    <View style={rowStyleOf(theme, {})}>
+    <View style={rowStyleOf(theme, { variant: menu ? 'menu' : 'list' })}>
       <NativeText style={composeStyles<TextStyle>(headline, own.empty)}>
         {messages.noResults}
       </NativeText>
@@ -1024,7 +1057,9 @@ function* loaderNode(props: CollectionLoadMoreProps) {
 
 // The row the collection's `LoadMore` part draws.
 function LoaderRow() {
-  return <LoadingRow {...(useCollection().loadMore ?? IDLE)} />
+  const { loadMore, variant } = useCollection()
+
+  return <LoadingRow {...(loadMore ?? IDLE)} isMenuRow={variant === 'menu'} />
 }
 
 /**
@@ -1032,14 +1067,16 @@ function LoaderRow() {
  * holding the ring while loading. Android and React Native Web say what
  * arrives in it; iOS has no live regions, so the ring's name is said there
  * as it appears. A List's and a ListBox's, and a Table's, which draws it
- * after its rows at a row's own height.
+ * after its rows at a row's own height. `isMenuRow` draws it a menu row
+ * tall, for options drawn as menu rows.
  */
 function LoadingRow({
   isLoading = false,
+  isMenuRow = false,
   label,
   style,
   testID,
-}: CollectionLoadMoreProps) {
+}: CollectionLoadMoreProps & { readonly isMenuRow?: boolean }) {
   const own = stylesOf(useTheme())
   const messages = useMessages()
   const name = label ?? messages.loadingMore
@@ -1051,6 +1088,7 @@ function LoadingRow({
       aria-live="polite"
       style={composeStyles<ViewStyle>(
         isLoading ? own.loading : styles.idle,
+        isLoading && isMenuRow ? own.loadingMenu : undefined,
         style,
       )}
       testID={testID}
@@ -1327,7 +1365,7 @@ function RowNode({ entry }: { readonly entry: RowEntry }) {
   const current = route?.current === key
   const onTrail = route?.trail.has(key) === true
   const marked = selected || current
-  const variant = route === undefined ? undefined : 'drawer'
+  const { variant } = collection
   // A tree's row with rows under it, which opens and closes.
   const branch = tree !== null && node.hasChildNodes
   const expanded = branch && isExpanded
@@ -1536,7 +1574,7 @@ function scrollNear(list: FlatList | null) {
  */
 function SectionHeader({ node }: { readonly node: Node<unknown> }) {
   const own = stylesOf(useTheme())
-  const { ground, kind } = useCollection()
+  const { ground, kind, variant } = useCollection()
   const drawer = kind === 'drawer'
   // The lists page's subhead is title small, and the drawer page's label
   // large.
@@ -1554,7 +1592,11 @@ function SectionHeader({ node }: { readonly node: Node<unknown> }) {
         role="heading"
         style={composeStyles<TextStyle>(
           title,
-          drawer ? own.drawerHeader : own.header,
+          drawer
+            ? own.drawerHeader
+            : variant === 'menu'
+              ? own.headerMenu
+              : own.header,
         )}
       >
         {node.rendered}
