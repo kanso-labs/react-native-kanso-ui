@@ -28,7 +28,7 @@ import { useTheme } from '../theme/scope'
 // src/button/context.ts does, for ButtonGroup's two variants and
 // SplitButton's two halves: the group's size, whether it is disabled, its
 // selection, the corners it gives the button, a standard group's part in a
-// press, and a split button's paddings and held press. Apart from
+// press, and a split button's paddings. Apart from
 // src/components, which holds the public components alone, and from
 // ./index.ts, which the group reads too.
 
@@ -38,12 +38,6 @@ type ButtonGroupItem = {
    * the place of its own shape.
    */
   readonly corners?: (state: GroupButtonState) => GroupCorners
-  /**
-   * Whether the button draws its pressed layer though nothing presses it, as
-   * a split button's menu half does while its menu is open. Button reads
-   * it, which is what a split button's halves are.
-   */
-  readonly held?: boolean
   /** Whether the group is disabled, which disables every button in it. */
   readonly isDisabled: boolean
   /**
@@ -76,7 +70,8 @@ type ButtonGroupItem = {
   readonly size: ControlSize | undefined
   /**
    * A style laid over the button's own size, before its corners: a split
-   * button's paddings. Button reads it, as it reads `held`.
+   * button's paddings. Button reads it, which is what a split button's
+   * halves are.
    */
   readonly style?: StyleProp<ViewStyle>
 }

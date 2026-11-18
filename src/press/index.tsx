@@ -88,13 +88,6 @@ type PressFeedbackOptions = Handlers & {
    */
   readonly disc?: number | undefined
   /**
-   * Draws the pressed layer while true, though nothing presses the control:
-   * a split button's menu half while its menu is open, as web's React Aria
-   * reports the trigger pressed for as long as its menu shows. It draws no
-   * ripple, and `pressed` stays false, since no press is in flight.
-   */
-  readonly held?: boolean | undefined
-  /**
    * Takes no press or hover while true, with no layer and no ripple for
    * either, and keeps the focus and its ring, as a pending button does.
    */
@@ -213,7 +206,6 @@ function usePressFeedback({
   disabled,
   disableRipple = false,
   disc,
-  held = false,
   onBlur,
   onFocus,
   onHoverIn,
@@ -382,7 +374,7 @@ function usePressFeedback({
     },
   }
 
-  const pressedLayer = interactive && (pressed || held)
+  const pressedLayer = interactive && pressed
   const layerOpacity = !active
     ? 0
     : pressedLayer

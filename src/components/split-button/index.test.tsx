@@ -30,6 +30,15 @@ import { Menu } from '../menu'
 
 type Element = Parameters<typeof getAnimatedStyle>[0]
 
+// What the next split button the device draws is told about reduced motion.
+let mockReducedMotion = false
+
+jest.mock('react-native-reanimated', () => ({
+  __esModule: true,
+  ...jest.requireActual<object>('react-native-reanimated'),
+  useReducedMotion: () => mockReducedMotion,
+}))
+
 // What React Native's Jest preset draws a View as: a class component holding
 // its props, with the native methods on its prototype.
 type MockedView = Pick<HostInstance, 'measureInWindow'> & {
@@ -95,6 +104,31 @@ async function advance(milliseconds: number) {
   await act(() => {
     jest.advanceTimersByTime(milliseconds)
   })
+}
+
+// How far the trigger's chevron is turned, in degrees: the view turning the
+// glyph, which is the glyph's parent.
+function chevronAngle(): number {
+  const turned = trigger()
+    .queryAll((node) => node.type === 'RNSVGSvgView')
+    .at(0)?.parent
+
+  if (turned === null || turned === undefined) {
+    throw new TypeError('expected the chevron in the trigger')
+  }
+
+  const { transform }: { transform?: unknown } = getAnimatedStyle(turned)
+  const turn: unknown = Array.isArray(transform) ? transform.at(0) : undefined
+
+  if (
+    typeof turn !== 'object' ||
+    turn === null ||
+    !('rotate' in turn) ||
+    typeof turn.rotate !== 'string'
+  ) {
+    throw new TypeError('expected the chevron to be turned')
+  }
+  return Number.parseFloat(turn.rotate)
 }
 
 // The chevron's svg, at the side it is drawn.
@@ -230,6 +264,7 @@ beforeEach(() => {
 })
 
 afterEach(() => {
+  mockReducedMotion = false
   jest.clearAllMocks()
   jest.restoreAllMocks()
   jest.useRealTimers()
@@ -503,14 +538,64 @@ describe('the colours', () => {
     },
   )
 
-  it('lays the pressed layer over the trigger while the menu is open', async () => {
+  // An open menu's trigger rests, as on web: the colours stay as they are,
+  // with no pressed layer held over them, and a pointer still draws hover.
+  it('leaves the trigger at rest while the menu is open, still answering hover', async () => {
     await renderSplit()
-
-    expect(styleOf(layerOf(trigger())).opacity).toBe(0)
 
     await fireEvent.press(trigger(), PRESS)
 
-    expect(styleOf(layerOf(trigger())).opacity).toBe(stateLayerOpacity.pressed)
+    expect(trigger().props.accessibilityState).toMatchObject({
+      expanded: true,
+    })
+    expect(styleOf(layerOf(trigger())).opacity).toBe(0)
     expect(styleOf(layerOf(action())).opacity).toBe(0)
+
+    await fireEvent(trigger(), 'hoverIn', {})
+
+    expect(styleOf(layerOf(trigger())).opacity).toBe(stateLayerOpacity.hover)
+  })
+})
+
+describe('the chevron', () => {
+  // The page selects the trigger while its menu is open: the chevron turns
+  // half a turn to point up, on short3, and back as the menu closes.
+  it('points down while closed, and turns half a turn over short3 as the menu opens and back as it closes', async () => {
+    await renderSplit()
+
+    expect(chevronAngle()).toBe(0)
+
+    await fireEvent.press(trigger(), PRESS)
+    await advance(motion.durationShort3 / 2)
+
+    expect(chevronAngle()).toBeGreaterThan(0)
+    expect(chevronAngle()).toBeLessThan(180)
+
+    await advance(motion.durationShort3 / 2)
+
+    expect(chevronAngle()).toBe(180)
+
+    await layOut()
+    await fireEvent.press(screen.getByRole('menuitem', { name: 'First item' }))
+    await advance(motion.durationLong2)
+
+    expect(screen.queryAllByRole('menuitem')).toEqual([])
+    expect(chevronAngle()).toBe(0)
+  })
+
+  it('turns at once under reduced motion', async () => {
+    mockReducedMotion = true
+    await renderSplit()
+
+    await fireEvent.press(trigger(), PRESS)
+    await advance(0)
+
+    expect(chevronAngle()).toBe(180)
+  })
+
+  it('starts turned when the menu starts open', async () => {
+    await renderSplit({}, { defaultOpen: true })
+
+    expect(chevronAngle()).toBe(180)
   })
 })

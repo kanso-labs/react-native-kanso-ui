@@ -7,8 +7,15 @@ import type {
 } from 'react-native'
 import type { Key } from 'react-stately'
 
-import { createContext, use, useState } from 'react'
+import { createContext, use, useEffect, useState } from 'react'
 import { StyleSheet, View } from 'react-native'
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated'
 
 import type { ControlSize } from '../../button'
 import type { ButtonGroupItem, GroupButtonState } from '../../button/group'
@@ -43,9 +50,21 @@ import { Menu } from '../menu'
 // chevron at the size's icon size, 22dp up to 50dp, with the menu below its
 // end edge. The chevron sits a dp or more toward the start while the menu is
 // closed, the page's optical centring, 1dp to 6dp by size, and centres once
-// it opens, when the inner corners round off entirely. The page keeps the
-// colours as they are while the menu is open and lays the pressed state
-// layer over them, which the half draws for as long as the menu shows.
+// it opens, when the inner corners round off entirely.
+//
+// **The trailing half is selected while its menu is open**, as the page
+// draws it: the inner corners round off and the chevron turns 180° to point
+// up, turning back as the menu closes. Both are read from the menu's open
+// state, which the half is handed. The turn takes the standard easing on the
+// short step the menu arrives on, short3, as Select's chevron does, and
+// happens at once under reduced motion. "Selected" is the picture alone: the
+// half announces the open menu as expanded, and takes no selected or checked
+// state beside it, which would make it a toggle.
+//
+// The page keeps the colours as they are while the menu is open and lays the
+// pressed state layer over them; here the colours stay at rest with no layer
+// over them, and the hover layer still answers a pointer, as on web, where
+// an open overlay's trigger rests rather than reading as held mid-press.
 //
 // **The two halves are one height.** A label that grows with the OS text
 // size makes the action half taller than the chevron's, so the row stretches
@@ -112,14 +131,17 @@ type SplitButtonVariant = 'elevated' | 'filled' | 'outlined' | 'tonal'
 const TRAILING_PADDING = { lg: 15, md: 13, xl: 29, xs: 13, xxl: 43 }
 const CLOSED_OFFSET = { lg: 2, md: 1, xl: 3, xs: 1, xxl: 6 }
 
-// The chevron the trailing half holds, at each size's icon size.
-const CHEVRONS: Readonly<Record<ControlSize, ReactNode>> = {
-  lg: <ChevronDownGlyph size={26} />,
-  md: <ChevronDownGlyph size={22} />,
-  xl: <ChevronDownGlyph size={38} />,
-  xs: <ChevronDownGlyph size={22} />,
-  xxl: <ChevronDownGlyph size={50} />,
+// The side of the chevron the trailing half holds, at each size's icon size.
+const CHEVRON_SIZES: Readonly<Record<ControlSize, number>> = {
+  lg: 26,
+  md: 22,
+  xl: 38,
+  xs: 22,
+  xxl: 50,
 }
+
+// How far the chevron turns while the menu is open: half a turn, to point up.
+const OPEN_TURN = 180
 
 // What the root hands its two halves, as `contextOf` builds it.
 const SplitButtonContext = createContext<{
@@ -211,6 +233,12 @@ function changeThen(
   }
 }
 
+// The trailing half's chevron, built by a call rather than written at the
+// prop, which is what react-perf's jsx-no-jsx-as-prop is after.
+function chevronOf(open: boolean, size: ControlSize) {
+  return <SplitButtonChevron open={open} size={size} />
+}
+
 // What the root hands its two halves.
 function contextOf(
   height: number | undefined,
@@ -234,7 +262,7 @@ function heightThen(
 
 // The trailing half's place in the pair: the round end at the end, and the
 // inner corner at the start, opening out while the half is active and
-// rounding off while the menu is open, when the pressed layer is held too.
+// rounding off while the menu is open.
 function menuItemOf(
   theme: ResolvedTheme,
   size: ControlSize,
@@ -249,7 +277,6 @@ function menuItemOf(
       end: round,
       start: open ? round : active ? corners.active[size] : corners.inner[size],
     }),
-    held: open,
     isDisabled: false,
     keepsTarget: false,
     shift: 0,
@@ -343,6 +370,44 @@ function SplitButtonAction(props: SplitButtonActionProps) {
   )
 }
 
+// The trailing half's chevron, pointing down while the menu is closed and
+// turned half a turn to point up while it is open, on short3 and the standard
+// curve, and at once under reduced motion. It takes its colour from the half.
+function SplitButtonChevron({
+  open,
+  size,
+}: {
+  readonly open: boolean
+  readonly size: ControlSize
+}) {
+  const { motion } = useTheme()
+  const reduceMotion = useReducedMotion()
+  const turn = open ? OPEN_TURN : 0
+  const angle = useSharedValue(turn)
+
+  useEffect(() => {
+    angle.set(
+      reduceMotion
+        ? turn
+        : withTiming(turn, {
+            duration: motion.durationShort3,
+            easing: Easing.bezier(...motion.easingStandard),
+          }),
+    )
+  }, [angle, motion, reduceMotion, turn])
+
+  const turned = useAnimatedStyle(() => {
+    'worklet'
+    return { transform: [{ rotate: `${angle.get()}deg` }] }
+  })
+
+  return (
+    <Animated.View style={turned}>
+      <ChevronDownGlyph size={CHEVRON_SIZES[size]} />
+    </Animated.View>
+  )
+}
+
 /**
  * The split button's trailing half: the down chevron, which opens the menu
  * of alternatives its children describe, below its end edge.
@@ -366,7 +431,7 @@ function SplitButtonMenu({
       <ButtonGroupItemContext value={menuItemOf(theme, size, open, height)}>
         <Button
           aria-label={label}
-          icon={CHEVRONS[size]}
+          icon={chevronOf(open, size)}
           isDisabled={isDisabled}
           variant={variant}
         />

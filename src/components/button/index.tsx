@@ -503,7 +503,6 @@ function Button({
     onHoverIn: hoverIn,
     onHoverOut: hoverOut,
     ...groupPressHandlers(group, width, pressIn, pressOut),
-    held: group?.held,
     pending,
   })
 
