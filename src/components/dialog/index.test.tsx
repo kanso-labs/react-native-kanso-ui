@@ -104,6 +104,25 @@ function child(node: TestNode | undefined): TestInstance {
   return node
 }
 
+// The headline laid out in these lines, as iOS and Android report them.
+async function headlineLaidOut(lines: readonly string[]) {
+  await fireEvent(screen.getByText('Headline'), 'textLayout', {
+    nativeEvent: {
+      lines: lines.map((text) => ({
+        ascender: 0,
+        capHeight: 0,
+        descender: 0,
+        height: 28,
+        text,
+        width: 0,
+        x: 0,
+        xHeight: 0,
+        y: 0,
+      })),
+    },
+  })
+}
+
 // A dialog whose open state the call site holds, opened from elsewhere on
 // the screen.
 function Held({
@@ -136,6 +155,11 @@ function Held({
       </Dialog>
     </>
   )
+}
+
+// Whether the full-screen header holds the actions.
+function inHeader() {
+  return within(screen.getByTestId('header')).queryByTestId('footer') !== null
 }
 
 // The keyboard as iOS reports it starting to move: up, covering `KEYBOARD`
@@ -267,6 +291,14 @@ function styleOf(element: {
   props: { style?: StyleProp<ViewStyle> }
 }): ViewStyle {
   return StyleSheet.flatten([element.props.style]) ?? {}
+}
+
+// A compact window at another text size, as the platform reports it.
+function textScaled(fontScale: number) {
+  Dimensions.set({
+    ...INITIAL,
+    window: { ...INITIAL.window, fontScale, width: COMPACT },
+  })
 }
 
 function textStyleOf(element: {
@@ -1049,6 +1081,126 @@ describe('Dialog', () => {
         panel.children.length - 1,
       )
       expect(bodyStyle().paddingBottom).toBe(0)
+    })
+
+    // At a large text size the actions would squeeze the headline to a few
+    // letters a line, so where it would break inside a word beside them on
+    // iOS and Android, they go to the bottom bar.
+    describe('beside a headline it would break', () => {
+      it('keeps Cancel and Confirm in the header at 100%', async () => {
+        textScaled(1)
+        await renderDialog({}, { defaultOpen: true })
+
+        await headlineLaidOut(['Headline'])
+
+        expect(inHeader()).toBe(true)
+        expect(styleOf(screen.getByTestId('header')).opacity).toBe(undefined)
+      })
+
+      it('keeps a lone Confirm in the header at 100%', async () => {
+        textScaled(1)
+        await render(
+          <Dialog.Content defaultOpen testID="panel">
+            <Dialog.Header testID="header">
+              <Dialog.Title>Headline</Dialog.Title>
+            </Dialog.Header>
+            <Dialog.Body testID="body">Supporting text</Dialog.Body>
+            <Dialog.Footer testID="footer">
+              <Button slot="close" variant="text">
+                Confirm
+              </Button>
+            </Dialog.Footer>
+          </Dialog.Content>,
+        )
+
+        await headlineLaidOut(['Headline'])
+
+        expect(inHeader()).toBe(true)
+      })
+
+      it('moves Cancel and Confirm to the bottom bar at 200%', async () => {
+        textScaled(2)
+        await renderDialog({}, { defaultOpen: true })
+
+        await headlineLaidOut(['He', 'ad', 'lin', 'e'])
+
+        const panel = screen.getByTestId('panel')
+
+        expect(inHeader()).toBe(false)
+        expect(placeIn(panel, screen.getByTestId('footer'))).toBe(
+          panel.children.length - 1,
+        )
+        expect(styleOf(screen.getByTestId('footer'))).toMatchObject({
+          borderTopColor: colors.outlineVariant,
+          borderTopWidth: 1,
+          minHeight: sizing.rowSm,
+        })
+        expect(bodyStyle().paddingBottom).toBe(0)
+      })
+
+      it('keeps them in the header where the headline breaks between words', async () => {
+        textScaled(2)
+        await renderDialog({}, { defaultOpen: true })
+
+        await headlineLaidOut(['Head ', 'line'])
+
+        expect(inHeader()).toBe(true)
+      })
+
+      // So a headline broken inside a word is never drawn.
+      it('lays the header out unseen until the headline is measured', async () => {
+        textScaled(2)
+        await renderDialog({}, { defaultOpen: true })
+
+        expect(styleOf(screen.getByTestId('header')).opacity).toBe(0)
+
+        await headlineLaidOut(['He', 'ad', 'lin', 'e'])
+
+        expect(styleOf(screen.getByTestId('header')).opacity).toBe(undefined)
+      })
+
+      // The headline grows into the room the actions leave, which says
+      // nothing about whether it would fit beside them.
+      it('keeps them in the bar as the headline grows into the room', async () => {
+        textScaled(2)
+        await renderDialog({}, { defaultOpen: true })
+        await headlineLaidOut(['He', 'ad', 'lin', 'e'])
+
+        await headlineLaidOut(['Headline'])
+
+        expect(inHeader()).toBe(false)
+      })
+
+      it('measures again at another text size', async () => {
+        textScaled(2)
+        await renderDialog({}, { defaultOpen: true })
+        await headlineLaidOut(['He', 'ad', 'lin', 'e'])
+
+        await act(() => {
+          textScaled(1)
+        })
+
+        expect(inHeader()).toBe(true)
+        expect(styleOf(screen.getByTestId('header')).opacity).toBe(0)
+
+        await headlineLaidOut(['Headline'])
+
+        expect(inHeader()).toBe(true)
+        expect(styleOf(screen.getByTestId('header')).opacity).toBe(undefined)
+      })
+
+      // React Native Web reports no lines, and the web has no system text
+      // size to grow the actions.
+      it('leaves the web header as it is', async () => {
+        jest.replaceProperty(Platform, 'OS', 'web')
+        textScaled(2)
+        await renderDialog({}, { defaultOpen: true })
+
+        await headlineLaidOut(['He', 'ad', 'lin', 'e'])
+
+        expect(inHeader()).toBe(true)
+        expect(styleOf(screen.getByTestId('header')).opacity).toBe(undefined)
+      })
     })
 
     // Crossing the breakpoint moves the actions between the two places.
