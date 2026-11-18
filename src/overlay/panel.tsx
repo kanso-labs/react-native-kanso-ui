@@ -27,8 +27,33 @@ import { useHiddenBelow } from './host'
 
 // What a non-modal panel anchored beside its trigger does besides being
 // placed, shared by Popover and Menu so the two cannot drift: the layer a
-// press outside lands on, Android's back gesture, the motion in and out, and
-// where a screen reader is sent as it comes and goes.
+// press outside lands on, Android's back gesture and Escape on the web, the
+// motion in and out, and where a screen reader, or on the web the focus, is
+// sent as it comes and goes.
+
+/** The little of a keyboard event a panel reads. */
+type KeyPress = {
+  readonly key: string
+  readonly preventDefault: () => void
+  readonly stopImmediatePropagation: () => void
+}
+
+/**
+ * The little of the web's document a panel listens to Escape through. The
+ * library is typed without the DOM, which Hermes has none of.
+ */
+type KeyTarget = {
+  addEventListener: (
+    type: 'keydown' | 'keyup',
+    listener: (event: KeyPress) => void,
+    capture: boolean,
+  ) => void
+  removeEventListener: (
+    type: 'keydown' | 'keyup',
+    listener: (event: KeyPress) => void,
+    capture: boolean,
+  ) => void
+}
 
 // What the panel scales up from as it arrives, web's keyframes'.
 const SCALE_FROM = 0.95
@@ -40,6 +65,10 @@ const PANEL_ORIGINS = {
   right: 'left',
   top: 'bottom',
 } as const satisfies Record<OverlaySide, string>
+
+// The panels open on the web that close on Escape, the one opened last at the
+// end, which is the one an Escape closes.
+const escapable: (() => void)[] = []
 
 const styles = StyleSheet.create({
   // Over the whole screen and under the panel.
@@ -60,6 +89,49 @@ const styles = StyleSheet.create({
     top: 0,
   },
 })
+
+/**
+ * Closes a panel on the web when Escape is pressed while it is the last
+ * panel opened, so Escape closes the panels one at a time, the one on top
+ * first, as React Aria's do. Heard on the document, so it reaches the panel
+ * wherever the focus is, on its trigger or inside it. The Escape's release
+ * goes no further once it has closed a panel: React Native Web's `Modal`
+ * closes on that release, and a dialog under the panel would close with it.
+ * Returns what stops listening.
+ */
+function closeOnEscape(close: () => void) {
+  const target: unknown = Reflect.get(globalThis, 'document')
+
+  if (!isKeyTarget(target)) {
+    return undefined
+  }
+
+  const entry = () => {
+    close()
+  }
+  const swallow = (event: KeyPress) => {
+    if (event.key === 'Escape') {
+      event.stopImmediatePropagation()
+      target.removeEventListener('keyup', swallow, true)
+    }
+  }
+  const onKeyDown = (event: KeyPress) => {
+    if (event.key !== 'Escape' || escapable.at(-1) !== entry) {
+      return
+    }
+    event.preventDefault()
+    target.addEventListener('keyup', swallow, true)
+    entry()
+  }
+
+  escapable.push(entry)
+  target.addEventListener('keydown', onKeyDown, false)
+
+  return () => {
+    target.removeEventListener('keydown', onKeyDown, false)
+    escapable.splice(escapable.indexOf(entry), 1)
+  }
+}
 
 /**
  * The layer a press outside a non-modal panel lands on, drawn just before the
@@ -102,6 +174,34 @@ function DismissLayer({
       <LayerPart onPress={onPress} style={parts.left} />
       <LayerPart onPress={onPress} style={parts.right} />
     </View>
+  )
+}
+
+/**
+ * Whether the web page's focus is on its body, where a browser drops it when
+ * the element holding it goes, or on nothing at all.
+ */
+function focusFellToBody() {
+  const page: unknown = Reflect.get(globalThis, 'document')
+
+  if (
+    typeof page !== 'object' ||
+    page === null ||
+    !('activeElement' in page) ||
+    !('body' in page)
+  ) {
+    return false
+  }
+  return page.activeElement === null || page.activeElement === page.body
+}
+
+// Whether the web's document is there to listen on.
+function isKeyTarget(value: unknown): value is KeyTarget {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'addEventListener' in value &&
+    'removeEventListener' in value
   )
 }
 
@@ -167,12 +267,36 @@ function partsAround({ height, width, x, y }: Rect) {
 
 /**
  * Closes a non-modal panel from Android's back gesture, as a `Modal` closes a
- * modal one. React Native calls the latest listener first, so a panel opened
- * from another closes before the one it came from. React Native Web has no
- * back gesture, and its BackHandler reports an error when one is listened for,
- * so nothing listens there.
+ * modal one, and on the web from Escape, as a `Modal` closes there. React
+ * Native calls the latest back listener first, and Escape closes the panel
+ * opened last, so a panel opened from another closes before the one it came
+ * from. React Native Web has no back gesture, and its BackHandler reports an
+ * error when one is listened for, so only Escape is listened for there.
+ *
+ * Escape on Android's hardware keyboard closes nothing. React Native hands a
+ * view its keys only behind `enableKeyEvents`, a native flag an app sets
+ * when it starts, which is off by default and in Expo Go, and its hardware
+ * key events leave Escape out. A `Modal` hears Escape natively, which is why
+ * a dialog closes on it there.
  */
 function useBackToClose(close: () => void, active: boolean) {
+  // The latest `close`, so a panel keeps its place among those open when it
+  // is handed a new one.
+  const latest = useRef(close)
+
+  useEffect(() => {
+    latest.current = close
+  })
+
+  useEffect(() => {
+    if (!active || Platform.OS !== 'web') {
+      return undefined
+    }
+    return closeOnEscape(() => {
+      latest.current()
+    })
+  }, [active])
+
   useEffect(() => {
     if (!active || Platform.OS === 'web') {
       return undefined
@@ -292,8 +416,15 @@ function usePanelStyle(shown: SharedValue<number>) {
 /**
  * Sends the screen reader back to the trigger once a panel has gone, unless
  * `quiet` says nothing moved it there, as a pointer resting on a hover
- * trigger does not. React Native Web's `Modal` restores focus itself, and has
- * no screen reader to send otherwise.
+ * trigger does not.
+ *
+ * On the web it is the keyboard's focus that goes back, and only where the
+ * panel took it with it: focus inside a panel falls to the page's body as
+ * the panel goes, however it closed, by Escape, by a choice or by a press
+ * outside, and a keyboard would start again from the top of the page. Focus
+ * the panel never had, on its trigger or anywhere else, stays where it is.
+ * This is what React Aria's `restoreFocus` does for kanso-ui's panels, and
+ * what WCAG's focus order asks for.
  */
 function useReturnFocus(
   present: boolean,
@@ -307,8 +438,24 @@ function useReturnFocus(
     const target = trigger.current
 
     shown.current = present
-    if (gone && !quiet && target !== null && Platform.OS !== 'web') {
+    if (!gone || quiet || target === null) {
+      return undefined
+    }
+    if (Platform.OS !== 'web') {
       AccessibilityInfo.sendAccessibilityEvent(target, 'focus')
+      return undefined
+    }
+
+    // The overlay host takes the panel off the page in a render of its own,
+    // after this one, so the focus is looked at once it has.
+    const timer = setTimeout(() => {
+      if (focusFellToBody()) {
+        target.focus()
+      }
+    }, 0)
+
+    return () => {
+      clearTimeout(timer)
     }
   }, [quiet, present, trigger])
 }
