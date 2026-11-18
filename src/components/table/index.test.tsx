@@ -801,6 +801,20 @@ describe('Table', () => {
         expect(fadedEdges()).toEqual([])
         expect(scroller().props.fadingEdgeLength).toBe(spacing.xxl)
       })
+
+      // Android draws its fading edge from the content's measured width, which
+      // the border leaves a pixel or two past the room of a table that fits,
+      // so the edge is only handed over while the table scrolls.
+      it('hands Android no fading edge for a table whose columns fit', async () => {
+        jest.replaceProperty(Platform, 'OS', 'android')
+        await render(<Basic />)
+        await layOut()
+        await fireEvent(scroller(), 'layout', LAYOUT)
+        await fireEvent(scroller(), 'contentSizeChange', WIDTH + 2, 400)
+
+        expect(scroller().props.scrollEnabled).toBe(false)
+        expect(scroller().props.fadingEdgeLength).toBeUndefined()
+      })
     })
 
     it('draws a cell across the columns it spans', async () => {

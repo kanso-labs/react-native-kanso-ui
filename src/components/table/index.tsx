@@ -1983,7 +1983,11 @@ function TableView({
   const Root = resizable ? GestureHandlerRootView : View
   const scroller = (
     <ScrollView
-      {...fadeProps}
+      // Android's own fading edge, only while there is anywhere to scroll:
+      // it draws from the content's measured width, which the table's border
+      // leaves a pixel or two past the room even when every column fits, so
+      // a table that fits would fade at an edge with nothing past it.
+      {...(total > width ? fadeProps : undefined)}
       // A keyboard stop while there is anywhere to scroll, as the rows are,
       // which axe's scrollable-region-focusable asks of it under React
       // Native Web.
