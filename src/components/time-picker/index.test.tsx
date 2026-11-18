@@ -723,6 +723,23 @@ describe('TimePicker', () => {
       expect(styleOf(instanceOf(hour.parent)).direction).toBe('ltr')
     })
 
+    // React Native Web knows no `direction` style: held in the stylesheet,
+    // it logged "Invalid style property" in the console as the picker
+    // opened, and was dropped.
+    it('names the boxes left to right on the web through their `dir`', async () => {
+      jest.replaceProperty(Platform, 'OS', 'web')
+      await renderPicker()
+      await open()
+      await fireEvent.press(screen.getByRole('button', { name: 'Enter time' }))
+
+      const hour = within(container()).getByText('Hour', {
+        includeHiddenElements: true,
+      })
+      const captions = instanceOf(hour.parent)
+      expect(captions.props.dir).toBe('ltr')
+      expect(styleOf(captions).direction).toBeUndefined()
+    })
+
     it('raises the keyboard on the box the dial set, and takes the time typed', async () => {
       await renderPicker()
       await open()
