@@ -142,6 +142,14 @@ function findAll(
   ]
 }
 
+// Focuses a handle as React Native Web does, its element saying whether the
+// focus came from the keyboard, as a browser's `:focus-visible` does.
+async function focus(fromKeyboard: boolean, index = 0) {
+  await fireEvent(child(screen.getAllByRole('slider').at(index)), 'focus', {
+    currentTarget: { matches: () => fromKeyboard },
+  })
+}
+
 // The handle's own view inside its frame.
 function handleOf(index = 0) {
   return child(child(screen.getAllByRole('slider').at(index)).children.at(0))
@@ -587,12 +595,68 @@ describe('Slider', () => {
     })
 
     // On iOS and Android a handle is moved by a screen reader's actions, and
-    // a hardware keyboard's keys reach no handler of its own.
+    // is no Tab stop of its own, nor does a hardware keyboard's key reach it.
     it('hands a handle no key handler on a device', async () => {
       jest.replaceProperty(Platform, 'OS', 'android')
       await render(<Slider defaultValue={40} label="Label" />)
 
-      expect(screen.getByRole('slider').props.onKeyDown).toBeUndefined()
+      const { onKeyDown, tabIndex } = screen.getByRole('slider').props
+      expect(onKeyDown).toBeUndefined()
+      expect(tabIndex).toBeUndefined()
+    })
+
+    it('makes a handle a Tab stop, and none while disabled', async () => {
+      await render(<Slider defaultValue={40} label="Label" />)
+      expect(screen.getByRole('slider').props.tabIndex).toBe(0)
+
+      await render(<Slider defaultValue={40} isDisabled label="Label" />)
+      expect(screen.getByRole('slider').props.tabIndex).toBe(-1)
+    })
+
+    // kanso-ui's handle, focused from the keyboard: it narrows, its value
+    // shows above it, and it takes a ring of its own, which is why its frame
+    // keeps the browser's off.
+    it('rings, narrows and shows its value once focused from the keyboard', async () => {
+      await render(<Slider defaultValue={40} label="Label" />)
+      expect(styleOf(screen.getByRole('slider'))).toMatchObject({
+        outlineStyle: 'solid',
+        outlineWidth: 0,
+      })
+
+      await focus(true)
+      await advance(motion.durationShort2)
+      expect(styleOf(handleOf())).toMatchObject({
+        outlineColor: colors.secondary,
+        outlineOffset: 2,
+        outlineStyle: 'solid',
+        outlineWidth: 3,
+      })
+      expect(getAnimatedStyle(handleOf())).toMatchObject({ width: 2 })
+      expect(indicatorOf()).toBeDefined()
+      expect(
+        screen.getByText('40', { includeHiddenElements: true }),
+      ).toBeOnTheScreen()
+
+      await press('ArrowRight')
+      expect(
+        screen.getByText('41', { includeHiddenElements: true }),
+      ).toBeOnTheScreen()
+
+      await fireEvent(screen.getByRole('slider'), 'blur', {})
+      await advance(motion.durationShort2)
+      expect(styleOf(handleOf()).outlineWidth).toBeUndefined()
+      expect(getAnimatedStyle(handleOf())).toMatchObject({ width: 4 })
+      expect(indicatorOf()).toBeUndefined()
+    })
+
+    it('draws none of it when focus came from a press', async () => {
+      await render(<Slider defaultValue={40} label="Label" />)
+
+      await focus(false)
+      await advance(motion.durationShort2)
+      expect(styleOf(handleOf()).outlineWidth).toBeUndefined()
+      expect(getAnimatedStyle(handleOf())).toMatchObject({ width: 4 })
+      expect(indicatorOf()).toBeUndefined()
     })
   })
 

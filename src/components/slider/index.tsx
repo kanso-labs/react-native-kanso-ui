@@ -1,5 +1,5 @@
 import type { ComponentRef, ReactNode, Ref } from 'react'
-import type { StyleProp, TextStyle, ViewStyle } from 'react-native'
+import type { FocusEvent, StyleProp, TextStyle, ViewStyle } from 'react-native'
 import type { AnimatedStyle } from 'react-native-reanimated'
 import type { SliderState } from 'react-stately/useSliderState'
 
@@ -83,8 +83,9 @@ import { useTypeRole } from '../../typography/roles'
 //
 // The value indicator is the page's label: inverse surface under label large
 // in inverse on surface, 44dp tall and at least 48dp wide, 12dp above the
-// handle, while the handle is dragged. It is hidden from a screen reader,
-// which hears the same words as the handle's value.
+// handle, while the handle is dragged or, on the web, focused from the
+// keyboard. It is hidden from a screen reader, which hears the same words as
+// the handle's value.
 //
 // **The state is React Stately's `useSliderState`**, the one web's React Aria
 // keeps, with a `NumberFormatter` in the provider's locale, so the steps, the
@@ -104,11 +105,18 @@ import { useTypeRole } from '../../typography/roles'
 // **Each handle is an adjustable control to a screen reader**, named by its
 // entry in `thumbLabels` and then the slider's label, as React Aria names a
 // range's handles, with its value in the formatter's words and an increment
-// and a decrement action that move it a step. Under React Native Web a handle
-// takes focus from the keyboard and the keys React Aria's does: the arrows by
-// a step, Page Up and Page Down by React Stately's larger step, and Home and
-// End to its ends, which `keysOf` in src/slider reads. The label drawn above the track
-// is hidden from a screen reader, since every handle already says it.
+// and a decrement action that move it a step. The label drawn above the
+// track is hidden from a screen reader, since every handle already says it.
+//
+// **Under React Native Web a handle is a Tab stop** and takes the keys React
+// Aria's does: the arrows by a step, Page Up and Page Down by React Stately's
+// larger step, and Home and End to its ends, which `keysOf` in src/slider
+// reads. Focused from the keyboard, which `:focus-visible` says, it is drawn
+// as kanso-ui's handle is: it narrows as it does while dragged, its value
+// shows above it, and it takes a ring of its own, 3dp in secondary 2dp out
+// from it, web's literals. Its frame keeps the browser's own ring off, since
+// the handle draws one. A disabled handle is no Tab stop. iOS and Android
+// keep the screen reader's actions alone.
 //
 // Vertical, the same parts run up the track, with the active part rising
 // from the bottom and the indicator to the start side of the handle. The
@@ -124,6 +132,9 @@ type Inset = {
   readonly fraction: number
   readonly px: number
 }
+
+// An element a selector can be matched against, as a browser hands one.
+type Matchable = { readonly matches: (selector: string) => boolean }
 
 /** A size's measurements, from the page. */
 type Metrics = {
@@ -234,6 +245,15 @@ type SliderProps = {
 
 type SliderSize = 'lg' | 'md' | 'sm' | 'xl' | 'xs'
 
+// What a handle's element is handed under React Native Web: its focus and
+// blur, its keys, and its place in the tab order.
+type WebHandleProps = {
+  readonly onBlur: () => void
+  readonly onFocus: (event: FocusEvent) => void
+  readonly onKeyDown: ReturnType<typeof keysOf>
+  readonly tabIndex: -1 | 0
+}
+
 // The sliders page's own measurements, which are constants of the component
 // rather than steps of the consumer's spacing scale, as on web.
 const GAP = 6
@@ -272,6 +292,13 @@ const styles = StyleSheet.create({
   // What a press is read along: the whole of the track's strip.
   area: {
     flexGrow: 1,
+  },
+  // A handle's frame under React Native Web, which takes focus while the
+  // handle in it draws the ring: solid as well as no width, since a
+  // browser's own ring is the `auto` style, which ignores the width.
+  frameUnringed: {
+    outlineStyle: 'solid',
+    outlineWidth: 0,
   },
   // The handle's value, centred on it across the track by its frame.
   indicator: {
@@ -366,6 +393,14 @@ const stylesOf = themedStyles(
       handleDisabled: {
         backgroundColor: disabledContent,
       },
+      // The ring round a handle focused from the keyboard, web's thumb ring:
+      // 3dp in secondary, 2dp out from the handle.
+      handleRing: {
+        outlineColor: colors.secondary,
+        outlineOffset: 2,
+        outlineStyle: 'solid',
+        outlineWidth: 3,
+      },
       inactive: {
         backgroundColor: colors.secondaryContainer,
       },
@@ -428,8 +463,16 @@ function before(fraction: number): Inset {
   return { fraction: 1 - fraction, px: CLEAR }
 }
 
+// Whether focus came from the keyboard, read off the element React Native
+// Web hands a focus event, which a browser matches against `:focus-visible`.
+// React Native types the target as a node of its own, so the element is
+// recognised by what it can do.
+function focusVisibleOn(target: unknown): boolean {
+  return isMatchable(target) && target.matches(':focus-visible')
+}
+
 // One handle: the frame a screen reader adjusts, the handle in it, and the
-// value above it while it is dragged.
+// value above it while it is dragged or focused from the keyboard.
 function Handle({
   index,
   metrics,
@@ -446,13 +489,16 @@ function Handle({
   const theme = useTheme()
   const own = stylesOf(theme)
   const labelRole = useTypeRole('labelLarge')
-  const dragging = state.isThumbDragging(index)
-  const narrowing = useHandleMotion(dragging, vertical)
+  // Whether the handle has focus from the keyboard, under React Native Web.
+  const [focusVisible, setFocusVisible] = useState(false)
+  const ringed = focusVisible && !state.isDisabled
+  const shown = state.isThumbDragging(index) || ringed
+  const narrowing = useHandleMotion(shown, vertical)
 
   return (
     <View
       {...(Platform.OS === 'web'
-        ? { onKeyDown: keysOf(state, index) }
+        ? webHandleOf(state, index, setFocusVisible)
         : undefined)}
       accessibilityActions={ADJUSTABLE}
       accessible
@@ -467,6 +513,7 @@ function Handle({
       style={composeStyles<ViewStyle>(
         vertical ? seats.seatVertical : seats.seat,
         seatPlaceOf(state.getThumbPercent(index), vertical),
+        Platform.OS === 'web' ? styles.frameUnringed : undefined,
       )}
     >
       <Animated.View
@@ -474,10 +521,11 @@ function Handle({
           own.handle,
           handleLengthOf(metrics, vertical),
           state.isDisabled ? own.handleDisabled : undefined,
+          ringed ? own.handleRing : undefined,
           narrowing,
         )}
       />
-      {dragging ? (
+      {shown ? (
         <View
           aria-hidden
           style={composeStyles<ViewStyle>(
@@ -586,6 +634,17 @@ function InsetIcon({
     <View style={iconPlaceOf(metrics, size, vertical)}>
       <IconStyleContext value={slot}>{icon}</IconStyleContext>
     </View>
+  )
+}
+
+// Whether a focus event's target is an element a selector can be matched
+// against, as a browser's is.
+function isMatchable(target: unknown): target is Matchable {
+  return (
+    typeof target === 'object' &&
+    target !== null &&
+    'matches' in target &&
+    typeof target.matches === 'function'
   )
 }
 
@@ -968,13 +1027,13 @@ function trackOf(metrics: Metrics, vertical: boolean): ViewStyle {
     : { height: strip }
 }
 
-// The handle narrowing to 2dp while it is dragged, over the short2 duration
-// on the standard curve, as web's transition does, and at once under reduced
-// motion.
-function useHandleMotion(dragging: boolean, vertical: boolean) {
+// The handle narrowing to 2dp while it is dragged or focused from the
+// keyboard, over the short2 duration on the standard curve, as web's
+// transition does, and at once under reduced motion.
+function useHandleMotion(narrowed: boolean, vertical: boolean) {
   const { motion } = useTheme()
   const reduceMotion = useReducedMotion()
-  const thickness = dragging ? HANDLE_PRESSED : HANDLE_WIDTH
+  const thickness = narrowed ? HANDLE_PRESSED : HANDLE_WIDTH
   const timing = {
     duration: motion.durationShort2,
     easing: Easing.bezier(...motion.easingStandard),
@@ -985,6 +1044,29 @@ function useHandleMotion(dragging: boolean, vertical: boolean) {
     const to = reduceMotion ? thickness : withTiming(thickness, timing)
     return vertical ? { height: to } : { width: to }
   })
+}
+
+/**
+ * What a handle is handed under React Native Web: a Tab stop unless the
+ * slider is disabled, the keys `keysOf` reads, and whether its focus came
+ * from the keyboard, which a browser's `:focus-visible` says, as a link reads
+ * it.
+ */
+function webHandleOf(
+  state: SliderState,
+  index: number,
+  setFocusVisible: (shown: boolean) => void,
+): WebHandleProps {
+  return {
+    onBlur: () => {
+      setFocusVisible(false)
+    },
+    onFocus: (event) => {
+      setFocusVisible(focusVisibleOn(event.currentTarget))
+    },
+    onKeyDown: keysOf(state, index),
+    tabIndex: state.isDisabled ? -1 : 0,
+  }
 }
 
 export { Slider }
