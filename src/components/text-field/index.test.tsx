@@ -1035,6 +1035,16 @@ describe('TextField', () => {
   })
 
   describe('on the web', () => {
+    // React Native Web keeps a Pressable at `tabindex="0"` whatever its
+    // `focusable` says, so the box was a Tab stop of its own ahead of the
+    // control. `tabIndex` is what it writes.
+    it('keeps the box out of the tab order', async () => {
+      jest.replaceProperty(Platform, 'OS', 'web')
+      await renderField()
+
+      expect(box().props).toMatchObject({ focusable: false, tabIndex: -1 })
+    })
+
     it('points the control at what describes it, and drops the hint', async () => {
       jest.replaceProperty(Platform, 'OS', 'web')
       await renderField({

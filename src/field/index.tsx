@@ -1128,10 +1128,16 @@ const INHERITS_DIRECTION = { dir: null } as const
 // no name a description made of the text inside it, which made the box a
 // TalkBack stop of its own, reading the text on the value's line again, or a
 // token field's words between its pills out of their place among them.
+//
+// Under React Native Web it is no tab stop either. `focusable` alone leaves a
+// Pressable at `tabindex="0"` there, so the first Tab landed on the box, in
+// the browser's own outline rather than the field's focus, and only the
+// second reached the control. `tabIndex` is what React Native Web writes.
 const NOT_A_CONTROL = {
   accessible: false,
   focusable: false,
   importantForAccessibility: 'no',
+  tabIndex: -1,
 } as const
 
 // The limit under React Native Web: in the document for the control to point

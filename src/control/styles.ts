@@ -57,11 +57,18 @@ const controlStylesOf = themedStyles(
       },
       // The control, then the label. The row is at least the layer's
       // height and grows with a label that wraps or a larger text size.
+      //
+      // The row is what takes focus, and the control in it draws the ring,
+      // so a browser's own ring round the whole row would be a second
+      // treatment for one focus. Solid as well as no width: a browser's ring
+      // is the `auto` style, which ignores the width.
       row: {
         alignItems: 'flex-start',
         columnGap: spacing.sm,
         flexDirection: 'row',
         minHeight: LAYER_SIZE,
+        outlineStyle: 'solid',
+        outlineWidth: 0,
       },
     }),
 )
