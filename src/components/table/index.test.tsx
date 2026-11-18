@@ -191,6 +191,22 @@ function Empty(props: { readonly loading?: boolean }) {
   )
 }
 
+// The edges of the table a fade is laid over, start first: the views at an
+// edge that hold a gradient.
+function fadedEdges() {
+  return (
+    screen.root?.queryAll((each) => {
+      const style = styleOf(each)
+      return (
+        typeof each.type === 'string' &&
+        ('start' in style || 'end' in style) &&
+        each.queryAll((inner) => inner.type === 'RNSVGLinearGradient').at(0) !==
+          undefined
+      )
+    }) ?? []
+  ).map((each) => ('start' in styleOf(each) ? 'start' : 'end'))
+}
+
 // A table with two footer rows, the first spanning two columns.
 function Footed() {
   return (
@@ -320,6 +336,27 @@ function nothingToShow() {
   return 'Nothing to show'
 }
 
+// A table of two 400dp columns laid out 600dp wide, whose scroll view has
+// reported both, so 200dp of it lies past the end.
+async function renderWide() {
+  await render(
+    <Table aria-label="Label" style={CALL_SITE}>
+      <Table.Header>
+        <Table.Column defaultWidth={400} id="colName">
+          Label
+        </Table.Column>
+        <Table.Column defaultWidth={400} id="colValue">
+          Value
+        </Table.Column>
+      </Table.Header>
+      <Table.Body />
+    </Table>,
+  )
+  await layOut()
+  await fireEvent(scroller(), 'layout', LAYOUT)
+  await fireEvent(scroller(), 'contentSizeChange', 2 * 400, 400)
+}
+
 function Resizable(props: Partial<Parameters<typeof Table>[0]>) {
   return (
     <Table
@@ -364,6 +401,12 @@ function scroller() {
   return instance(
     screen.root?.queryAll((node) => node.type === 'RCTScrollView').at(0),
   )
+}
+
+async function scrollSideways(x: number) {
+  await fireEvent.scroll(scroller(), {
+    nativeEvent: { contentOffset: { x, y: 0 } },
+  })
 }
 
 // The select-all checkbox, the first checkbox the table draws.
@@ -711,6 +754,53 @@ describe('Table', () => {
       expect(scroller().props.scrollEnabled).toBe(true)
       expect(scroller().props.focusable).toBe(true)
       expect(scroller().props.horizontal).toBe(true)
+    })
+
+    // A column past the edge of a table scrolled sideways was simply not
+    // there until the reader happened to scroll. The edge with columns past
+    // it fades, as a scrollable tab bar's does, and only that one.
+    describe('the edges of a table scrolled sideways', () => {
+      it('fades the trailing edge while columns lie past it, and not once scrolled to the end', async () => {
+        await renderWide()
+
+        expect(fadedEdges()).toEqual(['end'])
+
+        await scrollSideways(100)
+        expect(fadedEdges()).toEqual(['start', 'end'])
+
+        await scrollSideways(2 * 400 - WIDTH)
+        expect(fadedEdges()).toEqual(['start'])
+      })
+
+      it('fades from surface, the colour a table is drawn on', async () => {
+        await renderWide()
+
+        const gradient = screen.root
+          ?.queryAll((each) => each.type === 'RNSVGLinearGradient')
+          .at(0)
+        const packed: unknown = gradient?.props.gradient
+        const stop = Array.isArray(packed) ? Number(packed[1]) >>> 0 : 0
+        expect(`#${(stop & 0xff_ff_ff).toString(16).padStart(6, '0')}`).toBe(
+          colors.surface.toLowerCase(),
+        )
+      })
+
+      it('fades neither edge of a table whose columns fit', async () => {
+        await render(<Basic />)
+        await layOut()
+        await fireEvent(scroller(), 'layout', LAYOUT)
+        await fireEvent(scroller(), 'contentSizeChange', WIDTH, 400)
+
+        expect(fadedEdges()).toEqual([])
+      })
+
+      it('leaves the fade to the scroll view’s own fading edge on Android', async () => {
+        jest.replaceProperty(Platform, 'OS', 'android')
+        await renderWide()
+
+        expect(fadedEdges()).toEqual([])
+        expect(scroller().props.fadingEdgeLength).toBe(spacing.xxl)
+      })
     })
 
     it('draws a cell across the columns it spans', async () => {
