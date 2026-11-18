@@ -24,6 +24,7 @@ import {
   createContext,
   use,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -401,8 +402,17 @@ type CollectionSectionProps = {
 type CollectionState<T> = ListState<T> | TreeState<T>
 
 // What the cells of the `FlatList` read from the collection they are drawn
-// in.
+// in. It holds what every row shares, and changes only when that does: a
+// row's own state comes in its cell, so a selection does not hand every row
+// a new value. See `entriesOf`.
 type CollectionValue = {
+  /**
+   * Selects a row, and opens or closes a tree's, through the state the list
+   * last drew. The same functions for as long as the list is drawn.
+   */
+  readonly actions: RowActions
+  /** Whether rows can be selected at all. */
+  readonly checks: boolean
   /** The row whose node goes to `onFocusTarget`. */
   readonly focusKey: Key | null
   /**
@@ -419,7 +429,11 @@ type CollectionValue = {
   /** Where a drawer's route is among its rows, and nothing for the others. */
   readonly route: RouteMark | undefined
   readonly selectLabel: string
-  readonly state: CollectionState<unknown>
+  /**
+   * A tree's collection, which a row reads its place among its siblings
+   * from, and null for a list's. It changes as rows open and close.
+   */
+  readonly tree: null | TreeState<unknown>['collection']
 }
 
 type CollectionViewProps<T extends object = object> = Omit<
@@ -458,8 +472,11 @@ type CollectionViewProps<T extends object = object> = Omit<
 }
 
 /** One cell of the `FlatList`: a section's header, or a row. */
-type Entry = {
-  readonly kind: 'header' | 'item'
+type Entry = HeaderEntry | RowEntry
+
+/** A section's header, drawn from its node alone. */
+type HeaderEntry = {
+  readonly kind: 'header'
   readonly node: Node<unknown>
 }
 
@@ -472,6 +489,41 @@ type RouteMark = {
   readonly trail: ReadonlySet<Key>
 }
 
+/**
+ * What a row does through the list's state, by its key: the same two
+ * functions for as long as the list is drawn, which read the state the list
+ * last drew when they are called.
+ */
+type RowActions = {
+  readonly select: (key: Key) => void
+  readonly toggle: (key: Key) => void
+}
+
+/**
+ * A row, with what it draws from the list's state: everything a row reads
+ * off the selection and the open rows, read once for the whole list in
+ * `entriesOf`.
+ */
+type RowEntry = {
+  /**
+   * Whether a press runs the row's action rather than selecting it: React
+   * Aria's rule for a touch press, the action while nothing is selected and
+   * the selection after.
+   */
+  readonly acts: boolean
+  /**
+   * Disabled, by the list's `disabledKeys` or by the row's own
+   * `isDisabled`, which the selection manager reads off its entry.
+   */
+  readonly isDisabled: boolean
+  /** Whether a tree's row is open. */
+  readonly isExpanded: boolean
+  readonly isSelectable: boolean
+  readonly isSelected: boolean
+  readonly kind: 'item'
+  readonly node: Node<unknown>
+}
+
 /** What a `FlatList` reports when it cannot scroll to a row. */
 type ScrollFailure = {
   readonly averageItemLength: number
@@ -479,6 +531,12 @@ type ScrollFailure = {
 }
 
 const CollectionContext = createContext<CollectionValue | null>(null)
+
+// The cell each node was last drawn as, which `entriesOf` hands back while
+// nothing the row draws from has changed. Keyed by the node, which a
+// collection keeps for as long as its parts stay the same, so a collection
+// that is rebuilt starts again.
+const cells = new WeakMap<Node<unknown>, Entry>()
 
 // Runs what a screen reader asks of a row: selecting it, or opening or
 // closing a tree's row, each where the row offers it.
@@ -503,6 +561,20 @@ function accessibilityActionOf(actions: {
       }
     }
   }
+}
+
+/**
+ * The cell a node was last drawn as, while it is the same as `next`, and
+ * `next` otherwise, kept for the next time. See `entriesOf`.
+ */
+function cellOf(next: Entry): Entry {
+  const last = cells.get(next.node)
+
+  if (last !== undefined && sameCell(last, next)) {
+    return last
+  }
+  cells.set(next.node, next)
+  return next
 }
 
 /**
@@ -594,10 +666,31 @@ function CollectionView<T extends object = object>({
   const theme = useTheme()
   const own = stylesOf(theme)
   const autocomplete = use(AutocompleteContext)
+  const acts = onAction !== undefined
   const { entries, loader, rows, sticky } = useMemo(
-    () => entriesOf(state),
-    [state],
+    () => entriesOf(state, acts),
+    [acts, state],
   )
+  // The state a row's press reaches, the one the list last drew. Read only
+  // when a row is pressed, so it is kept where the rows' values do not
+  // change with it.
+  const latest = useRef(state)
+  useLayoutEffect(() => {
+    latest.current = state
+  })
+  const actions = useMemo<RowActions>(
+    () => ({
+      select: (key) => {
+        latest.current.selectionManager.select(key)
+      },
+      toggle: (key) => {
+        expansionOf(latest.current)?.toggleKey(key)
+      },
+    }),
+    [],
+  )
+  const checks = state.selectionManager.selectionMode !== 'none'
+  const tree = expansionOf(state)?.collection ?? null
   const route = useMemo(
     () =>
       kind === 'drawer'
@@ -628,6 +721,8 @@ function CollectionView<T extends object = object>({
     : undefined
   const value = useMemo<CollectionValue>(
     () => ({
+      actions,
+      checks,
       focusKey,
       ground,
       kind,
@@ -637,9 +732,11 @@ function CollectionView<T extends object = object>({
       renderEmptyState,
       route,
       selectLabel: selectLabel ?? messages.select,
-      state,
+      tree,
     }),
     [
+      actions,
+      checks,
       focusKey,
       ground,
       kind,
@@ -650,7 +747,7 @@ function CollectionView<T extends object = object>({
       renderEmptyState,
       route,
       selectLabel,
-      state,
+      tree,
     ],
   )
 
@@ -686,6 +783,12 @@ function CollectionView<T extends object = object>({
         ref={refsOf(setList, ref)}
         renderItem={renderEntry}
         stickyHeaderIndices={isList ? sticky : undefined}
+        // Holds the function each cell is drawn through across renders,
+        // which a `FlatList` otherwise builds anew on each one, and a cell
+        // handed a new one re-renders. `renderEntry` draws a cell from its
+        // entry alone, and what every cell shares comes through the
+        // collection's context, so nothing else has to reach it.
+        strictMode
         style={listStyle}
       />
       {autocomplete === null ? null : <ResultsStatus count={rows} />}
@@ -749,16 +852,54 @@ function EmptyState() {
  * are, and how many rows there are: the rows outside any section, and each
  * section's header followed by its rows, with the rows under each open row
  * of a tree after it. The row that loads more is drawn after them all.
+ * `listActs` says whether the list has an `onAction` of its own.
+ *
+ * Each row's cell carries what the row draws from the state, and a row whose
+ * state held gets back the cell it was drawn from last time. A `FlatList`
+ * re-renders a cell only when its item changes, so a selection re-renders
+ * the rows it changed and no others, where a context holding the state
+ * would re-render every row on show.
  */
-function entriesOf<T>(state: CollectionState<T>) {
+function entriesOf<T>(state: CollectionState<T>, listActs = false) {
   const entries: Entry[] = []
   const sticky: number[] = []
-  const open = expansionOf(state)?.expandedKeys
+  const tree = expansionOf(state)
+  const open = tree?.expandedKeys
+  const { selectionManager } = state
+  const checks = selectionManager.selectionMode !== 'none'
   let loader: Node<T> | undefined
   let rows = 0
 
   const addRow = (row: Node<T>) => {
-    entries.push({ kind: 'item', node: row })
+    const { key } = row
+    const isSelectable = selectionManager.canSelectItem(key)
+    // oxlint-disable-next-line typescript/no-unsafe-assignment -- a node carries the props its row was written with, which React Stately types as `any`
+    const {
+      href,
+      onAction,
+    }: Pick<CollectionRowProps, 'onAction'> & {
+      readonly href?: string
+    } = row.props
+    // The rule `RowNode` picks the row's action by: its own, its link, the
+    // list's, or opening a tree's row in a tree that neither selects nor
+    // acts.
+    const hasAction =
+      onAction !== undefined ||
+      href !== undefined ||
+      listActs ||
+      (tree !== null && row.hasChildNodes && !checks)
+
+    entries.push(
+      cellOf({
+        acts: hasAction && (!isSelectable || selectionManager.isEmpty),
+        isDisabled: selectionManager.isDisabled(key),
+        isExpanded: open?.has(key) === true,
+        isSelectable,
+        isSelected: checks && selectionManager.isSelected(key),
+        kind: 'item',
+        node: row,
+      }),
+    )
     rows++
     if (open?.has(row.key) === true) {
       // oxlint-disable-next-line typescript/no-deprecated -- a tree's collection has no getChildren, and this is the field it reads a row's rows from itself
@@ -776,7 +917,7 @@ function entriesOf<T>(state: CollectionState<T>) {
     } else if (node.type === 'section') {
       if (hasContent(node.rendered)) {
         sticky.push(entries.length)
-        entries.push({ kind: 'header', node })
+        entries.push(cellOf({ kind: 'header', node }))
       }
       const children =
         state.collection.getChildren?.(node.key) ??
@@ -979,15 +1120,15 @@ function noop() {
  * place among the rows beside it, "level 2, 1 of 3" in English.
  */
 function placeOf<T>(
-  tree: TreeState<T>,
+  tree: TreeState<T>['collection'],
   node: Node<T>,
   messages: LibraryMessages,
 ): string {
   const siblings = [
     ...(node.parentKey == null
-      ? tree.collection
+      ? tree
       : // oxlint-disable-next-line typescript/no-deprecated -- a tree's collection has no getChildren, and this is the field it reads a row's rows from itself
-        (tree.collection.getItem(node.parentKey)?.childNodes ?? [])),
+        (tree.getItem(node.parentKey)?.childNodes ?? [])),
   ].filter((sibling) => sibling.type === 'item')
   const index = siblings.findIndex((sibling) => sibling.key === node.key)
   const level = messages.treeLevel.replace('{level}', String(node.level + 1))
@@ -1018,7 +1159,7 @@ function renderEntry({ item }: ListRenderItemInfo<Entry>) {
   return item.kind === 'header' ? (
     <SectionHeader node={item.node} />
   ) : (
-    <RowNode node={item.node} />
+    <RowNode entry={item} />
   )
 }
 
@@ -1125,8 +1266,12 @@ function* rowNode(props: CollectionRowProps) {
  * on a press, in a collection that neither selects nor acts, is a `View`
  * that only presents. A row with a `render` is handed over to it, and what
  * it returns is drawn in the row's place.
+ *
+ * What it draws from the list's state comes in its `entry`, and what it does
+ * through the state goes through the collection's `actions`, so nothing the
+ * row is handed changes when another row is selected.
  */
-function RowNode({ node }: { readonly node: Node<unknown> }) {
+function RowNode({ entry }: { readonly entry: RowEntry }) {
   const theme = useTheme()
   const own = stylesOf(theme)
   const collection = useCollection()
@@ -1162,21 +1307,21 @@ function RowNode({ node }: { readonly node: Node<unknown> }) {
     readonly headline?: ReactNode
     readonly href?: string
     readonly label?: ReactNode
-  } = node.props
+  } = entry.node.props
+  const {
+    acts,
+    isDisabled: disabled,
+    isExpanded,
+    isSelectable: selectable,
+    isSelected: selected,
+    node,
+  } = entry
   const isList = collection.kind === 'list'
-  const { route } = collection
+  const { actions, checks, route, tree } = collection
   const openLink = useOpenLink()
-  const { selectionManager } = collection.state
-  const tree = expansionOf(collection.state)
   const { key } = node
   const rowRef =
     key === collection.focusKey ? refsOf(collection.onFocusTarget, ref) : ref
-  // The selection manager reads a row's own `isDisabled` off its entry,
-  // beside the list's `disabledKeys`, so it answers for both.
-  const disabled = selectionManager.isDisabled(key)
-  const checks = selectionManager.selectionMode !== 'none'
-  const selectable = selectionManager.canSelectItem(key)
-  const selected = checks && selectionManager.isSelected(key)
   // A drawer's row whose `href` is the route, drawn as a selected row is,
   // and the rows it sits under, whose labels are drawn bold.
   const current = route?.current === key
@@ -1185,7 +1330,7 @@ function RowNode({ node }: { readonly node: Node<unknown> }) {
   const variant = route === undefined ? undefined : 'drawer'
   // A tree's row with rows under it, which opens and closes.
   const branch = tree !== null && node.hasChildNodes
-  const expanded = branch && tree.expandedKeys.has(key)
+  const expanded = branch && isExpanded
   // A tree's row says where it sits after its name, on iOS and Android,
   // where its indent is all that shows it: its level and its place among the
   // rows beside it, which kanso-ui's rows say with React Aria's `aria-level`
@@ -1194,7 +1339,7 @@ function RowNode({ node }: { readonly node: Node<unknown> }) {
     tree === null || Platform.OS === 'web'
       ? undefined
       : placeOf(tree, node, messages)
-  const toggle = toggleOf(tree, key)
+  const toggle = toggleOf(actions, key)
   const listAction = collection.onAction
   // A row with an `href` goes there. Otherwise, React Aria's rule for a tree
   // that neither selects nor acts: a press on a row with rows under it opens
@@ -1212,18 +1357,13 @@ function RowNode({ node }: { readonly node: Node<unknown> }) {
       : () => {
           openLink(href)
         })
-  // React Aria's rule for a touch press on a row that selects: the action
-  // while nothing is selected, the selection after.
-  const acts = action !== undefined && (!selectable || selectionManager.isEmpty)
   // A List's row offers the select action wherever its checkbox does; a
   // ListBox's option only where a press may run its action instead.
   const offersSelect = selectable && (isList || action !== undefined)
   // A row that opens offers the one of the two it can do, as web names its
   // chevron, and a disabled one neither.
   const opens = branch && !disabled
-  const select = () => {
-    selectionManager.select(key)
-  }
+  const select = selectOf(actions, key)
   const content = rowContentColor(theme, {
     isDisabled: disabled,
     isSelected: marked,
@@ -1362,6 +1502,20 @@ function RowNode({ node }: { readonly node: Node<unknown> }) {
   )
 }
 
+// Whether two cells of the same node draw the same thing.
+function sameCell(last: Entry, next: Entry) {
+  if (last.kind === 'header' || next.kind === 'header') {
+    return last.kind === next.kind
+  }
+  return (
+    last.acts === next.acts &&
+    last.isExpanded === next.isExpanded &&
+    last.isDisabled === next.isDisabled &&
+    last.isSelectable === next.isSelectable &&
+    last.isSelected === next.isSelected
+  )
+}
+
 /**
  * Where a row the list has not measured yet is reached: as far down as rows
  * of the average height would put it, which a `FlatList` asks for in place
@@ -1471,6 +1625,16 @@ function SelectBox({
 }
 
 /**
+ * Selects a row, as a press on it does. Built by a call for the same reason
+ * as `toggleOf`.
+ */
+function selectOf(actions: RowActions, key: Key) {
+  return () => {
+    actions.select(key)
+  }
+}
+
+/**
  * A message said to a screen reader as it changes and never drawn: through
  * `AccessibilityInfo` on iOS and Android, so nothing is drawn there at all,
  * and in a polite live region under React Native Web. A live region on
@@ -1500,9 +1664,9 @@ function Status({ message }: { readonly message: string }) {
  * than written inline, which is what react-perf's
  * no-new-function-as-prop is after.
  */
-function toggleOf(tree: null | TreeState<unknown>, key: Key) {
+function toggleOf(actions: RowActions, key: Key) {
   return () => {
-    tree?.toggleKey(key)
+    actions.toggle(key)
   }
 }
 
