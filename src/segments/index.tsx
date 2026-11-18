@@ -271,11 +271,10 @@ const styles = StyleSheet.create({
     top: 0,
     width: 1,
   },
-  // The run a time's parts are isolated in, laid out left to right in any
-  // locale, as the marks around it ask.
+  // The run a time's parts are isolated in, a row laid out left to right in
+  // any locale, as the marks around it ask: see `leftToRightProps`.
   isolate: {
     alignItems: 'center',
-    direction: 'ltr',
     flexDirection: 'row',
   },
   // The date written out, in the document under React Native Web for the
@@ -284,6 +283,15 @@ const styles = StyleSheet.create({
     display: 'none',
   },
 })
+
+// The left-to-right direction of a time's run, outside the stylesheet: React
+// Native Web knows no `direction` style, and a stylesheet holding one logged
+// "Invalid style property" in every story's console, since the module loads
+// with the library, and dropped it, so a time in a right-to-left locale was
+// not held left to right on the web. There the run takes the `dir` attribute
+// its `View` hands the element, and on iOS and Android the style. See
+// `leftToRightProps` and `leftToRightStyle`.
+const NATIVE_LEFT_TO_RIGHT: ViewStyle = { direction: 'ltr' }
 
 // What a screen reader's swipe up or down does to a segment.
 function actionOf(line: SegmentLineProps, segment: DateSegment) {
@@ -613,7 +621,11 @@ function isolatedOf(
       run = []
     } else if (segment.type === 'literal' && segment.text === ISOLATE_END) {
       laid.push(
-        <View key="isolate" style={styles.isolate}>
+        <View
+          {...leftToRightProps()}
+          key="isolate"
+          style={composeStyles<ViewStyle>(styles.isolate, leftToRightStyle())}
+        >
           {run}
         </View>,
       )
@@ -671,6 +683,25 @@ function leftOf({
     state.confirmPlaceholder()
     onBlur?.()
   }
+}
+
+/**
+ * The `dir` attribute that lays a view out left to right under React Native
+ * Web, which knows no `direction` style, and nothing on iOS and Android,
+ * where `leftToRightStyle` does. A time's run takes both, and so do a time
+ * picker's captions, which name its boxes left to right.
+ */
+function leftToRightProps(): { readonly dir?: 'ltr' } {
+  return Platform.OS === 'web' ? { dir: 'ltr' } : {}
+}
+
+/**
+ * The `direction` style that lays a view out left to right on iOS and
+ * Android, and nothing under React Native Web, where `leftToRightProps`
+ * does.
+ */
+function leftToRightStyle(): undefined | ViewStyle {
+  return Platform.OS === 'web' ? undefined : NATIVE_LEFT_TO_RIGHT
 }
 
 // The segments on either side of the one of `type`, among those a person
@@ -1239,5 +1270,5 @@ function webStateOf(isInvalid: boolean, state: DateFieldState) {
   }
 }
 
-export { DateSegments }
+export { DateSegments, leftToRightProps, leftToRightStyle }
 export type { DateSegmentsProps, SegmentDrawing, SegmentsHandle }

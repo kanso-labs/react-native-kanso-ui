@@ -61,7 +61,11 @@ import {
 import { usePanelShown, usePanelStyle } from '../../overlay/panel'
 import { roomOf } from '../../picker'
 import { usePressFeedback } from '../../press'
-import { DateSegments } from '../../segments'
+import {
+  DateSegments,
+  leftToRightProps,
+  leftToRightStyle,
+} from '../../segments'
 import { fieldClockOf } from '../../segments/clock'
 import { SegmentedField } from '../../segments/field'
 import { useTheme } from '../../theme/scope'
@@ -212,9 +216,9 @@ const stylesOf = themedStyles(
         width: sizing.controlXl,
       },
       // The boxes' names, under the boxes, left to right as the time they
-      // name is in every locale.
+      // name is in every locale: see `leftToRightProps` in src/segments,
+      // since React Native Web knows no `direction` style.
       captions: {
-        direction: 'ltr',
         flexDirection: 'row',
         gap: COLON,
         marginTop: spacing.sm,
@@ -878,7 +882,14 @@ function ModalContent({
               state={state}
             />
             {isDial ? null : (
-              <View aria-hidden style={styles.captions}>
+              <View
+                {...leftToRightProps()}
+                aria-hidden
+                style={composeStyles<ViewStyle>(
+                  styles.captions,
+                  leftToRightStyle(),
+                )}
+              >
                 <NativeText
                   style={composeStyles<TextStyle>(captionRole, styles.caption)}
                 >
