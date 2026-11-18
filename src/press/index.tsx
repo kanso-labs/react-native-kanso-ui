@@ -169,23 +169,30 @@ function hitSlop(height: number, width = TARGET_SIZE): Insets | undefined {
  *
  * The state layer is the control's content colour at the state's opacity
  * token, over the whole control: hover for an iPad pointer or an Android
- * mouse, focus while the ring shows, pressed while pressed. React Native has
- * no `color-mix()`, so it is a view of its own rather than a blended
- * background.
+ * mouse, focus while the ring shows. React Native has no `color-mix()`, so it
+ * is a view of its own rather than a blended background.
+ *
+ * A press is one layer, as the page draws it: the ripple at the pressed
+ * opacity, over the control at rest. The hover and focus layers come off
+ * while a pointer presses the control, so neither stacks under the ripple,
+ * and the pressed layer is the one the control draws in the ripple's place:
+ * when `disableRipple` turns the ripple off, while the device asks for
+ * reduced motion, and while a key holds the control down, since the ripple
+ * answers a key only once it is released. The layer then gives way to the
+ * ripple, which plays its whole press from the centre, as on web.
  *
  * The ripple grows from the press point to cover the control and fades out
  * once the press ends, held at least `durationMedium1` so a tap reads, and is
  * drawn the same on iOS and Android rather than through Android's own
  * `android_ripple`. It is a solid disc where web's has a soft edge, since
  * React Native draws a gradient only through an experimental style that React
- * Native Web ignores. It is not drawn while the device asks for reduced
- * motion, where the pressed layer alone marks the press.
+ * Native Web ignores.
  *
  * A control whose layer is a disc of its own beside its label, as a
  * checkbox's is, passes the disc's side as `disc`, and its ripple grows from
  * the disc's centre instead. One whose layer is drawn on a part of it of a
- * fixed size passes that size as `area`, with the same effect. One whose pressed layer takes another colour
- * passes it as `pressedColor`.
+ * fixed size passes that size as `area`, with the same effect. One whose
+ * pressed layer takes another colour passes it as `pressedColor`.
  *
  * The ring shows when focus arrives from a keyboard, and not when it arrives
  * with a press, which on web is a click focusing what it presses.
@@ -219,6 +226,9 @@ function usePressFeedback({
   const reduceMotion = useReducedMotion()
   const [hovered, setHovered] = useState(false)
   const [pressed, setPressed] = useState(false)
+  // Whether the press in flight is a key's, which draws the pressed layer
+  // until it is released and plays the ripple then.
+  const [keyHeld, setKeyHeld] = useState(false)
   const [ringShown, setRingShown] = useState(false)
   const focused = useRef(false)
   // Whether the press in flight began while the control had no focus, which
@@ -226,6 +236,8 @@ function usePressFeedback({
   const pressedUnfocused = useRef(false)
   const pressStarted = useRef(0)
   const phase = useRef<RipplePhase>('idle')
+  // The size a key's ripple is drawn at, measured as the key goes down.
+  const keySize = useRef<Size>(undefined)
   const geometry = useSharedValue(NO_RIPPLE)
   const grow = useSharedValue(0)
   const fade = useSharedValue(0)
@@ -302,6 +314,14 @@ function usePressFeedback({
     )
   }
 
+  // Plays the ripple of a key's press from the centre of a control `size`
+  // across, once the key is released, and lets it go at once, so it shows
+  // for the least a ripple may.
+  function playFromCentre({ height, width }: Size) {
+    ripple(width, height, { x: width / 2, y: height / 2 })
+    release()
+  }
+
   const handlers: PressFeedback['handlers'] = {
     onBlur: (event) => {
       focused.current = false
@@ -323,32 +343,45 @@ function usePressFeedback({
       onHoverOut?.(event)
     },
     onPressIn: (event) => {
-      pressedUnfocused.current = !focused.current
-      setPressed(true)
-
+      const { pageX, pageY } = event.nativeEvent
+      // A press from a key carries no point on the page.
+      const fromKey = !Number.isFinite(pageX) || !Number.isFinite(pageY)
       const fixed = disc === undefined ? area : { height: disc, width: disc }
 
-      if (rippled && fixed !== undefined) {
+      pressedUnfocused.current = !focused.current
+      setPressed(true)
+      setKeyHeld(fromKey)
+
+      // Where the ripple is off, the pressed layer alone marks the press.
+      if (rippled && fromKey) {
+        // A key's ripple waits for the release, so the control is measured
+        // as the key goes down and the ripple drawn from that size then.
+        keySize.current = fixed
+        if (fixed === undefined && typeof event.currentTarget !== 'number') {
+          event.currentTarget.measure((_x, _y, width, height) => {
+            keySize.current = { height, width }
+
+            if (phase.current === 'released') {
+              playFromCentre(keySize.current)
+              phase.current = 'idle'
+            }
+          })
+        }
+      } else if (rippled && fixed !== undefined) {
         ripple(fixed.width, fixed.height, {
           x: fixed.width / 2,
           y: fixed.height / 2,
         })
         phase.current = 'shown'
       } else if (rippled && typeof event.currentTarget !== 'number') {
-        const { pageX, pageY } = event.nativeEvent
-
         // A touch's own location is measured from whichever child it landed
         // on, so the point is taken from the page and the control measured
-        // there. A press from a key carries no point, and ripples from the
-        // centre. React Native Web measures a frame later, so a press can end
+        // there. React Native Web measures a frame later, so a press can end
         // first, and its ripple is then drawn whole. React Native types the
         // target as a bare view tag too, which has nothing to measure.
         phase.current = 'measuring'
         event.currentTarget.measure((_x, _y, width, height, left, top) => {
-          ripple(width, height, {
-            x: Number.isFinite(pageX - left) ? pageX - left : width / 2,
-            y: Number.isFinite(pageY - top) ? pageY - top : height / 2,
-          })
+          ripple(width, height, { x: pageX - left, y: pageY - top })
 
           if (phase.current === 'released') {
             release()
@@ -364,26 +397,40 @@ function usePressFeedback({
     onPressOut: (event) => {
       pressedUnfocused.current = false
       setPressed(false)
+      setKeyHeld(false)
 
-      if (phase.current === 'shown') {
-        release()
+      if (rippled && keyHeld) {
+        if (keySize.current === undefined) {
+          phase.current = 'released'
+        } else {
+          playFromCentre(keySize.current)
+          phase.current = 'idle'
+        }
+      } else {
+        if (phase.current === 'shown') {
+          release()
+        }
+        phase.current = phase.current === 'measuring' ? 'released' : 'idle'
       }
-      phase.current = phase.current === 'measuring' ? 'released' : 'idle'
 
       onPressOut?.(event)
     },
   }
 
-  const pressedLayer = interactive && pressed
+  // The pressed layer, where no ripple draws the press; a pointer's press
+  // with the ripple on keeps the control at rest under it.
+  const pressedLayer = interactive && pressed && (!rippled || keyHeld)
   const layerOpacity = !active
     ? 0
     : pressedLayer
       ? stateLayerOpacity.pressed
-      : ringShown
-        ? stateLayerOpacity.focus
-        : interactive && hovered
-          ? stateLayerOpacity.hover
-          : 0
+      : interactive && pressed
+        ? 0
+        : ringShown
+          ? stateLayerOpacity.focus
+          : interactive && hovered
+            ? stateLayerOpacity.hover
+            : 0
   const surface = composeStyles<ViewStyle>(styles.surface, corners)
   const state = composeStyles<ViewStyle>(styles.layer, {
     backgroundColor: pressedLayer ? pressedColor : color,

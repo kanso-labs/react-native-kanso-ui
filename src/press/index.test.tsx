@@ -184,8 +184,27 @@ describe('the state layer', () => {
     expect(layerOpacity()).toBe(0)
   })
 
-  it('draws the pressed opacity while pressed, over hover and focus', async () => {
+  // A press is one layer: the ripple at the pressed opacity, over the control
+  // at rest, with neither hover nor focus under it.
+  it('stays at rest under the ripple while a pointer presses, over hover and focus', async () => {
     await render(<Control />)
+
+    await fireEvent(control(), 'hoverIn', {})
+    await fireEvent(control(), 'focus', {})
+    await fireEvent(control(), 'pressIn', pressAt(30, 30))
+    await advance(105)
+
+    expect(layerOpacity()).toBe(0)
+    expect(getAnimatedStyle(drawnRipple()).opacity).toBe(
+      stateLayerOpacity.pressed,
+    )
+
+    await fireEvent(control(), 'pressOut', {})
+    expect(layerOpacity()).toBe(stateLayerOpacity.focus)
+  })
+
+  it('draws the pressed opacity over hover and focus with the ripple off', async () => {
+    await render(<Control disableRipple />)
 
     await fireEvent(control(), 'hoverIn', {})
     await fireEvent(control(), 'focus', {})
@@ -197,7 +216,7 @@ describe('the state layer', () => {
   })
 
   it('takes the pressed colour while pressed, and its own colour otherwise', async () => {
-    await render(<Control pressedColor={PRESSED_COLOR} />)
+    await render(<Control disableRipple pressedColor={PRESSED_COLOR} />)
 
     await fireEvent(control(), 'hoverIn', {})
     expect(styleOf(parts().layer).backgroundColor).toBe(COLOR)
@@ -371,15 +390,75 @@ describe('the ripple', () => {
     })
   })
 
-  it('starts at the centre for a press with no point', async () => {
+  // A press with no point is a key's. The ripple answers it only once the
+  // key is released, so the pressed layer marks it while the key is down.
+  it('waits for a key to be released, the pressed layer marking it meanwhile', async () => {
+    await render(<Control pressedColor={PRESSED_COLOR} />)
+
+    await fireEvent(control(), 'pressIn', pressAt())
+    await advance(motion.durationMedium1)
+
+    expect(styleOf(parts().layer)).toMatchObject({
+      backgroundColor: PRESSED_COLOR,
+      opacity: stateLayerOpacity.pressed,
+    })
+    expect(getAnimatedStyle(drawnRipple()).opacity).toBe(0)
+  })
+
+  it('plays the whole ripple from the centre once a key is released', async () => {
     await render(<Control />)
 
     await fireEvent(control(), 'pressIn', pressAt())
+    await fireEvent(control(), 'pressOut', {})
     await advance(0)
 
+    expect(layerOpacity()).toBe(0)
     expect(getAnimatedStyle(drawnRipple())).toMatchObject({
       transform: [{ translateX: 40 }, { translateY: 10 }, { scale: 1 }],
     })
+
+    await advance(105)
+
+    expect(getAnimatedStyle(drawnRipple()).opacity).toBe(
+      stateLayerOpacity.pressed,
+    )
+
+    await advance(motion.durationMedium1 + 375)
+
+    expect(getAnimatedStyle(drawnRipple()).opacity).toBe(0)
+  })
+
+  it('plays the ripple of a key released before the control is measured', async () => {
+    let measured: (() => void) | undefined
+    await render(<Control />)
+
+    await fireEvent(control(), 'pressIn', {
+      currentTarget: {
+        measure: (
+          callback: (
+            ...values: [number, number, number, number, number, number]
+          ) => void,
+        ) => {
+          measured = () => {
+            callback(0, 0, 100, 40, 10, 20)
+          }
+        },
+      },
+      nativeEvent: {},
+    })
+    await fireEvent(control(), 'pressOut', {})
+    await act(() => {
+      measured?.()
+    })
+    await advance(105)
+
+    expect(getAnimatedStyle(drawnRipple())).toMatchObject({
+      opacity: stateLayerOpacity.pressed,
+    })
+
+    await advance(motion.durationMedium1 + 375)
+
+    expect(getAnimatedStyle(drawnRipple()).opacity).toBe(0)
   })
 
   it('fades once the press ends, after showing for the least it may', async () => {
