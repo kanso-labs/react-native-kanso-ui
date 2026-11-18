@@ -42,7 +42,7 @@
     "lint": "oxlint --type-aware . && eslint . && npm run format:check",
     "package:check": "publint && attw --pack --profile esm-only && node scripts/check-package.mjs",
     "prepare": "husky || true",
-    "storybook": "storybook dev -p ${PORT:-6006}",
+    "storybook": "node scripts/storybook.mjs",
     "test": "jest",
     "test:coverage": "jest --coverage",
     "test:storybook": "vitest run --mode development"
