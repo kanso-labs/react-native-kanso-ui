@@ -5,6 +5,8 @@ import type {
   HostInstance,
   LayoutChangeEvent,
   ListRenderItemInfo,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
   PressableProps,
   ScrollViewProps,
   StyleProp,
@@ -79,6 +81,11 @@ import { useLocaleOf, useMessages } from '../../i18n/provider'
 import { usePressFeedback } from '../../press'
 import { useOpenLink } from '../../router'
 import { rowContentColor, rowStyles } from '../../row/styles'
+import {
+  ScrollFade,
+  useScrollEdges,
+  useScrollFadeProps,
+} from '../../scroll-fade'
 import { ADJUSTABLE, SLOP_RANGE } from '../../slider'
 import { useTheme } from '../../theme/scope'
 import { composeStyles, themedStyles } from '../../theme/styles'
@@ -138,6 +145,14 @@ import { Checkbox } from '../checkbox'
 // first cell, so the rows scroll under nothing and the header needs no ground
 // of its own to hide them. The table scrolls sideways as one when its columns
 // are wider than it is, header and footer with the rows.
+//
+// **A table scrolled sideways fades the edge with columns past it**, and only
+// that edge, as web's does: a column past the edge was simply not there
+// until the reader happened to scroll, and Android's scroll indicator shows
+// only while it scrolls. The fade is src/scroll-fade's, as a scrollable tab
+// bar's is, on Android the scroll view's own and elsewhere a gradient from
+// surface, the colour a table is drawn on, since it draws no container of
+// its own.
 //
 // **A resize handle is a slider to a screen reader.** Web's handle is a
 // slider a keyboard steps with its arrow keys; this one takes a drag along
@@ -1851,6 +1866,13 @@ function roomTo(
   }
 }
 
+// The sideways scroll's offset, for the fade.
+function scrolledTo(set: (x: number) => void) {
+  return ({ nativeEvent }: NativeSyntheticEvent<NativeScrollEvent>) => {
+    set(nativeEvent.contentOffset.x)
+  }
+}
+
 /**
  * The column each footer cell starts at, from the columns the cells before it
  * span, worked out before the cells are drawn rather than counted up while
@@ -1897,6 +1919,9 @@ function TableView({
 }: TableViewProps) {
   const messages = useMessages()
   const locale = useLocaleOf(undefined)
+  const theme = useTheme()
+  const fade = useScrollEdges()
+  const fadeProps = useScrollFadeProps()
   const [content, setContent] = useState(0)
   const [room, setRoom] = useState(0)
   const { columns } = state.collection
@@ -1958,12 +1983,21 @@ function TableView({
   const Root = resizable ? GestureHandlerRootView : View
   const scroller = (
     <ScrollView
+      // Android's own fading edge, only while there is anywhere to scroll:
+      // it draws from the content's measured width, which the table's border
+      // leaves a pixel or two past the room even when every column fits, so
+      // a table that fits would fade at an edge with nothing past it.
+      {...(total > width ? fadeProps : undefined)}
       // A keyboard stop while there is anywhere to scroll, as the rows are,
       // which axe's scrollable-region-focusable asks of it under React
       // Native Web.
       focusable={total > width}
       horizontal
+      onContentSizeChange={fade.onContentSize}
+      onLayout={viewportTo(fade.onViewport)}
+      onScroll={scrolledTo(fade.onScrolled)}
       scrollEnabled={total > width}
+      scrollEventThrottle={16}
       showsHorizontalScrollIndicator={total > width}
     >
       <View style={composeStyles<ViewStyle>(styles.grid, { width: total })}>
@@ -2006,6 +2040,7 @@ function TableView({
         ) : (
           <GestureDetector gesture={native}>{scroller}</GestureDetector>
         )}
+        <ScrollFade color={theme.colors.surface} edges={fade.edges} />
         <Status message={sortMessageOf(state, locale)} />
         <ColumnWords onMinimums={onMinimums} />
       </Root>
@@ -2022,6 +2057,13 @@ function useTable(): TableValue {
     throw new Error('A Table part is drawn by the Table it is in.')
   }
   return table
+}
+
+// The sideways scroll's own width, for the fade.
+function viewportTo(set: (width: number) => void) {
+  return ({ nativeEvent }: LayoutChangeEvent) => {
+    set(nativeEvent.layout.width)
+  }
 }
 
 // The width `span` columns take from the column at `start`.
