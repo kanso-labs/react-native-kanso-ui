@@ -456,6 +456,26 @@ function drawn(drawing: SegmentDrawing | undefined, segment: DateSegment) {
     : drawing.parts.has(segment.type)
 }
 
+// The nearest segment drawn as something before the one at `index`, or
+// after it, past any drawn as nothing.
+function drawnBeside(
+  segments: readonly DateSegment[],
+  index: number,
+  step: -1 | 1,
+): DateSegment | undefined {
+  const side =
+    step === 1 ? segments.slice(index + 1) : segments.slice(0, index).reverse()
+  return side.find((segment) => !drawsNothing(segment))
+}
+
+// Whether a segment is drawn as nothing at all: a literal of the marks a
+// locale sets a direction with, such as the isolate around a time.
+function drawsNothing(segment: DateSegment) {
+  return (
+    segment.type === 'literal' && segment.text.replace(INVISIBLE, '') === ''
+  )
+}
+
 function edited({ onEdit }: SegmentLineProps, changed: boolean) {
   if (changed) {
     onEdit?.()
@@ -704,6 +724,27 @@ function leftToRightStyle(): undefined | ViewStyle {
   return Platform.OS === 'web' ? undefined : NATIVE_LEFT_TO_RIGHT
 }
 
+// The room web's segments keep either side of the literal at `index`, when
+// it sits between two segments a value is typed into: both sides, or the far
+// side alone for one that ends in its own space. A literal that is only a
+// space, or only marks, takes none, and nor does one at either end.
+function literalRoomOf(
+  own: ReturnType<typeof segmentStylesOf>,
+  segments: readonly DateSegment[],
+  index: number,
+) {
+  const segment = segments[index]
+  if (segment.type !== 'literal' || drawsNothing(segment)) {
+    return undefined
+  }
+  const before = drawnBeside(segments, index, -1)
+  const after = drawnBeside(segments, index, 1)
+  if (before?.isEditable !== true || after?.isEditable !== true) {
+    return undefined
+  }
+  return /\s$/u.test(segment.text) ? own.literalRoomHanging : own.literalRoom
+}
+
 // The segments on either side of the one of `type`, among those a person
 // types into, which a full segment moves on to and a backspace back to. Past
 // either end it is the field's to say, as a range picker's focus moves on
@@ -823,6 +864,9 @@ function SegmentLine(line: SegmentLineProps) {
                     ? composeStyles<TextStyle>(
                         role,
                         segment.type === 'literal' ? undefined : own.segment,
+                        Platform.OS === 'web'
+                          ? literalRoomOf(own, state.segments, index)
+                          : undefined,
                         state.isDisabled
                           ? own.textDisabled
                           : segment.type === 'literal'

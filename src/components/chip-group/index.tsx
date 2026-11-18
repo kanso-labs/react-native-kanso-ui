@@ -60,7 +60,11 @@ import { useTypeRole } from '../../typography/roles'
 // sibling of the chip's own button rather than a child, laid over the pill's
 // end: VoiceOver reaches nothing inside a button, so a close target inside one
 // could never be focused. Its target is WCAG's 24dp, as on web, since the chip
-// around it is no spacing to lean on when the group selects. It draws its
+// around it is no spacing to lean on when the group selects: on iOS and
+// Android through its `hitSlop`, and under React Native Web, which ignores
+// `hitSlop`, through a view of nothing 3dp past each edge of the glyph, as
+// web's `::before` reaches, so the 18dp it draws is not its target there and
+// nothing drawn moves. It draws its
 // hover and pressed layers in the label's colour, and on focus from a key a
 // 2dp ring in the same colour, 1dp out, as web's does: a second ring in the
 // focus role inside a chip would read as two focus treatments for one focus.
@@ -183,7 +187,13 @@ type ChipGroupProps<T extends object = object> = Omit<
 
 // The close target reaches 3dp past its 18dp glyph on every side, which is
 // WCAG's 24dp.
-const REMOVE_REACH: Insets = { bottom: 3, left: 3, right: 3, top: 3 }
+const OVERHANG = 3
+const REMOVE_REACH: Insets = {
+  bottom: OVERHANG,
+  left: OVERHANG,
+  right: OVERHANG,
+  top: OVERHANG,
+}
 
 const styles = StyleSheet.create({
   // Holds the pill and the close target laid over it, and is never wider
@@ -205,6 +215,15 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 0,
     top: 0,
+  },
+  // The close target's reach under React Native Web, past each edge of the
+  // glyph by as much as its `hitSlop` reaches on iOS and Android.
+  reach: {
+    bottom: -OVERHANG,
+    left: -OVERHANG,
+    position: 'absolute',
+    right: -OVERHANG,
+    top: -OVERHANG,
   },
 })
 
@@ -603,6 +622,7 @@ function RemoveButton({
         )}
       />
       <CloseGlyph color={color} size={GLYPH_SIZE} />
+      {Platform.OS === 'web' ? <View style={styles.reach} /> : null}
     </Pressable>
   )
 }
