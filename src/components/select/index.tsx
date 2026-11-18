@@ -68,6 +68,11 @@ import { composeStyles, themedStyles } from '../../theme/styles'
 // extra-small corner and the second elevation. A press outside it closes it,
 // as do Android's back gesture and VoiceOver's escape gesture.
 //
+// **The options are menu rows,** as Menu's items are: Material Design draws
+// an exposed dropdown menu as a menu, so they are 48dp at the menu's 12dp
+// inset, in label large, with the chosen one on tertiary container, and a
+// section's header sits at the same inset.
+//
 // **A screen reader is sent to the chosen option as the list opens**, or to
 // the first option that takes a press where nothing is chosen, and back to
 // the field as it closes. A list taller than its room opens scrolled to the
@@ -428,6 +433,7 @@ function SelectList({
           revealFocus={placement.placed}
           state={state}
           style={SHRINKS}
+          variant="menu"
         />
       </Animated.View>
     </>
