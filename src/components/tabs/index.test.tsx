@@ -27,6 +27,7 @@ import type { TabsProps, TabsTabProps } from '.'
 
 import { Tabs, TabsList, TabsPanel, TabsPanels, TabsTab } from '.'
 import { useIconStyle } from '../../glyphs/icon-style'
+import { I18nProvider } from '../../i18n/provider'
 import { RouterProvider } from '../../router'
 import { withOpacity } from '../../theme/color'
 import { scopeFor } from '../../theme/scope'
@@ -1091,6 +1092,128 @@ describe('Tabs', () => {
     })
   })
 
+  // On the web the bar is one Tab stop with the arrow keys inside it, as web's
+  // React Aria bar is: every tab was a stop of its own, and the arrow keys
+  // did nothing.
+  describe('the keyboard on the web', () => {
+    it('takes one Tab stop, the selected tab, so one more Tab leaves the bar', async () => {
+      jest.replaceProperty(Platform, 'OS', 'web')
+      await renderTabs({ defaultSelectedKey: 'second' })
+
+      expect(tabIndexes()).toEqual([-1, 0, -1])
+    })
+
+    it('focuses and selects the next tab with ArrowRight, the last with End and the first with Home', async () => {
+      jest.replaceProperty(Platform, 'OS', 'web')
+      const moved = spyOnFocus()
+      await renderTabs()
+
+      await keyDown('First item', 'ArrowRight')
+      expect(selected()).toEqual([false, true, false])
+      expect(tabIndexes()).toEqual([-1, 0, -1])
+
+      await keyDown('Second item', 'End')
+      expect(selected()).toEqual([false, false, true])
+
+      await keyDown('Third item', 'Home')
+      expect(selected()).toEqual([true, false, false])
+      expect(tabIndexes()).toEqual([0, -1, -1])
+      expect(moved).toEqual(['Second item', 'Third item', 'First item'])
+    })
+
+    it('goes back with ArrowLeft and round from either end', async () => {
+      jest.replaceProperty(Platform, 'OS', 'web')
+      await renderTabs()
+
+      await keyDown('First item', 'ArrowLeft')
+      expect(selected()).toEqual([false, false, true])
+
+      await keyDown('Third item', 'ArrowRight')
+      expect(selected()).toEqual([true, false, false])
+    })
+
+    it('passes over a disabled tab', async () => {
+      jest.replaceProperty(Platform, 'OS', 'web')
+      await renderTabs({ disabledKeys: ['second'] })
+
+      await keyDown('First item', 'ArrowRight')
+
+      expect(selected()).toEqual([false, false, true])
+    })
+
+    it('mirrors the arrows under a right-to-left locale', async () => {
+      jest.replaceProperty(Platform, 'OS', 'web')
+      await render(
+        <I18nProvider locale="ar-EG">
+          <Sample />
+        </I18nProvider>,
+      )
+
+      await keyDown('First item', 'ArrowLeft')
+
+      expect(selected()).toEqual([false, true, false])
+    })
+
+    it('moves down a vertical bar with ArrowDown and up it with ArrowUp', async () => {
+      jest.replaceProperty(Platform, 'OS', 'web')
+      await renderTabs({ orientation: 'vertical' })
+
+      await keyDown('First item', 'ArrowRight')
+      expect(selected()).toEqual([true, false, false])
+
+      await keyDown('First item', 'ArrowDown')
+      expect(selected()).toEqual([false, true, false])
+
+      await keyDown('Second item', 'ArrowUp')
+      expect(selected()).toEqual([true, false, false])
+    })
+
+    it('moves the focus and its stop without selecting under manual activation', async () => {
+      jest.replaceProperty(Platform, 'OS', 'web')
+      const moved = spyOnFocus()
+      await renderTabs({ keyboardActivation: 'manual' })
+
+      await keyDown('First item', 'ArrowRight')
+
+      expect(selected()).toEqual([true, false, false])
+      expect(tabIndexes()).toEqual([-1, 0, -1])
+      expect(moved).toEqual(['Second item'])
+    })
+
+    it('brings the focused tab into view under manual activation', async () => {
+      jest.replaceProperty(Platform, 'OS', 'web')
+      await overflow({ keyboardActivation: 'manual' })
+      scrollTo().mockClear()
+
+      await keyDown('First item', 'End')
+
+      expect(scrollTo().mock.calls).toEqual([
+        [{ animated: true, x: 3 * TAB - 200 }],
+      ])
+    })
+
+    it('leaves the page to scroll with any other key', async () => {
+      jest.replaceProperty(Platform, 'OS', 'web')
+      await renderTabs()
+      const preventDefault = jest.fn()
+
+      await fireEvent(tab('First item'), 'keyDown', {
+        nativeEvent: { key: 'a' },
+        preventDefault,
+      })
+
+      expect(preventDefault).not.toHaveBeenCalled()
+      expect(selected()).toEqual([true, false, false])
+    })
+
+    it('leaves a hardware keyboard on iOS and Android to the platform', async () => {
+      await renderTabs()
+
+      expect(tabIndexes()).toEqual([undefined, undefined, undefined])
+      expect(tab('First item').props.onKeyDown).toBeUndefined()
+    })
+  })
+
   describe('panels', () => {
     it('names each panel a tabpanel, by its tab', async () => {
       await renderTabs()
@@ -1390,6 +1513,12 @@ describe('Tabs', () => {
   })
 })
 
+// What the Jest preset mocks a view's host with, which every view shares.
+type MockedView = {
+  readonly focus: () => void
+  readonly props: { readonly accessibilityLabel?: unknown }
+}
+
 // The edges of the bar a fade is laid over, start first: the views at an
 // edge that hold a gradient.
 function fadedEdges() {
@@ -1405,6 +1534,18 @@ function fadedEdges() {
       )
     })
     .map((each) => ('start' in styleOf(each) ? 'start' : 'end'))
+}
+
+function isMockedView(value: unknown): value is MockedView {
+  return typeof value === 'object' && value !== null && 'focus' in value
+}
+
+// A key pressed on a tab, as React Native Web hands it over.
+async function keyDown(name: string, key: string) {
+  await fireEvent(tab(name), 'keyDown', {
+    nativeEvent: { key },
+    preventDefault: () => undefined,
+  })
 }
 
 // Three 120dp tabs in a 200dp bar, which has 160dp to scroll.
@@ -1432,4 +1573,28 @@ function scrollOf() {
     throw new TypeError('expected the bar to scroll')
   }
   return scroll
+}
+
+// Spies on the focus every mocked view shares, and hands back the names of
+// the views it was moved to, in turn.
+function spyOnFocus() {
+  const prototype: unknown = View.prototype
+  if (!isMockedView(prototype)) {
+    throw new TypeError('expected the View the Jest preset mocks')
+  }
+  const moved: unknown[] = []
+  jest.spyOn(prototype, 'focus').mockImplementation(function focus(
+    this: MockedView,
+  ) {
+    moved.push(this.props.accessibilityLabel)
+  })
+  return moved
+}
+
+// Each tab's place in the Tab order, in turn.
+function tabIndexes() {
+  return screen.getAllByRole('tab').map((each: TestInstance): unknown => {
+    const index: unknown = each.props.tabIndex
+    return index
+  })
 }

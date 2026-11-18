@@ -32,6 +32,7 @@ import {
 import {
   I18nManager,
   Text as NativeText,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -52,7 +53,10 @@ import type { ResolvedTheme } from '../../theme/scope'
 
 import { IconStyleContext } from '../../glyphs/icon-style'
 import { GROUP } from '../../group'
+import { directionOf } from '../../i18n'
+import { useLocaleOf } from '../../i18n/provider'
 import { usePressFeedback } from '../../press'
+import { refsOf } from '../../ref'
 import { useLinkPress } from '../../router'
 import {
   ScrollFade,
@@ -133,8 +137,19 @@ import { Badge } from '../badge'
 // panels report.
 //
 // A tab is a `tab` reporting whether it is selected, inside a `tablist`, and
-// a panel is a `tabpanel` named by its tab. Touch has no arrow keys, so web's
-// `keyboardActivation` is not taken.
+// a panel is a `tabpanel` named by its tab.
+//
+// **Under React Native Web the bar is one Tab stop, with the arrow keys
+// inside it**, as web's React Aria bar is and the ARIA tabs pattern asks: the
+// focused tab, or else the selected one, takes the stop and the rest take
+// none. ArrowRight and ArrowLeft move along a bar that runs across, mirrored
+// under a right-to-left locale, and ArrowDown and ArrowUp along one that runs
+// down, past any disabled tab and round from either end; Home and End go to
+// the first and the last. The focus is React Stately's own focused key.
+// Selection follows the focus unless `keyboardActivation` is `manual`, as on
+// web, and then Enter or Space selects the tab, as a press does; a bar that
+// scrolls brings the focused tab into view either way. On iOS and Android a
+// tab is a stop of its own for a hardware keyboard, as every control is.
 //
 // **The label comes first in the tree and is drawn after the icon**, through
 // a reversed row or column, as src/navigation does it and for its reason: a
@@ -154,6 +169,9 @@ type Measured = {
   readonly tab?: LayoutRectangle
 }
 
+/** Where a key moves the focus along the bar. */
+type Move = 'first' | 'last' | 'next' | 'previous'
+
 /** Where the indicator lies along the bar's own axis. */
 type Placement = {
   readonly length: number
@@ -166,6 +184,8 @@ type TabsContextValue = {
   readonly found: boolean
   /** The root's own id, which the tabs' and panels' ids start with. */
   readonly ids: string
+  /** Whether a key that moves the focus selects too. */
+  readonly keyboardActivation: 'automatic' | 'manual'
   readonly state: TabListState<object>
 }
 
@@ -223,6 +243,12 @@ type TabsProps = {
    * @default false
    */
   readonly isDisabled?: boolean
+  /**
+   * Whether moving the focus with the arrow keys selects the tab it lands on,
+   * or leaves that to Enter or Space, under React Native Web.
+   * @default 'automatic'
+   */
+  readonly keyboardActivation?: 'automatic' | 'manual'
   /**
    * How the bar shares its room: `fixed` divides it into equal sections, and
    * `scrollable` gives each tab its label's width in a bar that scrolls,
@@ -553,6 +579,7 @@ function Tabs({
   defaultSelectedKey,
   disabledKeys,
   isDisabled,
+  keyboardActivation = 'automatic',
   layout = 'fixed',
   onSelectionChange,
   orientation = 'horizontal',
@@ -581,7 +608,7 @@ function Tabs({
   const context = contextOf(
     { layout, orientation, variant },
     list !== undefined,
-    ids,
+    { ids, keyboardActivation },
     state,
   )
 
@@ -615,9 +642,10 @@ function TabsList<T extends object = object>({
   style,
   testID,
 }: TabsListProps<T>) {
-  const { bar, ids, state } = useTabs('Tabs.List', true)
+  const { bar, ids, keyboardActivation, state } = useTabs('Tabs.List', true)
   const theme = useTheme()
   const own = stylesOf(theme)
+  const locale = useLocaleOf(undefined)
   const fade = useScrollEdges()
   const fadeProps = useScrollFadeProps()
   const reduceMotion = useReducedMotion()
@@ -633,8 +661,48 @@ function TabsList<T extends object = object>({
   // Only a horizontal bar that scrolls fades its edges, as on web.
   const fades = scrollable && !vertical
   const { selectedKey } = state
+  const { focusedKey } = state.selectionManager
   const selected = selectedKey === null ? undefined : measured.get(selectedKey)
   const placement = placementOf(bar, selected, theme.spacing.xxs)
+  // The tab a scrolling bar keeps in view: the focused one while the arrow
+  // keys move the focus without selecting, and the selected one otherwise.
+  const shownKey =
+    keyboardActivation === 'manual' && focusedKey !== null
+      ? focusedKey
+      : selectedKey
+  const shown = shownKey === null ? undefined : measured.get(shownKey)
+  // Each tab's view, for the arrow keys to move the focus to.
+  const nodes = useRef(new Map<Key, ComponentRef<typeof Pressable>>())
+  const stop = tabStopOf(state)
+
+  const register = useCallback(
+    (key: Key) => (node: ComponentRef<typeof Pressable> | null) => {
+      if (node === null) {
+        nodes.current.delete(key)
+      } else {
+        nodes.current.set(key, node)
+      }
+    },
+    [],
+  )
+
+  // A key pressed on a tab under React Native Web: the arrow keys, Home and
+  // End move the focus, and select the tab too unless the bar is manual.
+  const onTabKey = useCallback(
+    (from: Key, key: string) => {
+      const to = movedTo(state, from, keyOf(key, vertical, directionOf(locale)))
+      if (to === undefined) {
+        return false
+      }
+      if (keyboardActivation === 'automatic') {
+        state.setSelectedKey(to)
+      }
+      state.selectionManager.setFocusedKey(to)
+      nodes.current.get(to)?.focus()
+      return true
+    },
+    [keyboardActivation, locale, state, vertical],
+  )
 
   const measure = useCallback(
     (key: Key, part: keyof Measured, layout: LayoutRectangle) => {
@@ -673,23 +741,23 @@ function TabsList<T extends object = object>({
   // which a reveal stops at, is the far end of the last.
   const length = lengthOf(state.collection, measured, vertical)
 
-  // Brings the selected tab into view in a bar that scrolls, as it becomes
-  // the selected one, once every tab has been laid out.
+  // Brings the shown tab into view in a bar that scrolls, as it becomes the
+  // selected one or the focused one, once every tab has been laid out.
   useEffect(() => {
-    const tab = selected?.tab
+    const tab = shown?.tab
 
     if (
       !scrollable ||
       tab === undefined ||
       length === undefined ||
       viewport === 0 ||
-      revealed.current === selectedKey
+      revealed.current === shownKey
     ) {
       return
     }
 
     const first = revealed.current === undefined
-    revealed.current = selectedKey
+    revealed.current = shownKey
 
     const target = revealOffset(
       { scrolled: scrolled.current, viewport },
@@ -712,8 +780,8 @@ function TabsList<T extends object = object>({
     length,
     reduceMotion,
     scrollable,
-    selected,
-    selectedKey,
+    shown,
+    shownKey,
     theme.spacing.xxl,
     vertical,
     viewport,
@@ -725,9 +793,12 @@ function TabsList<T extends object = object>({
         <ListTab
           bar={bar}
           ids={ids}
+          isStop={node.key === stop}
           key={node.key}
           node={node}
+          onKey={onTabKey}
           onMeasure={measure}
+          register={register}
           state={state}
         />
       ))}
@@ -828,6 +899,18 @@ function badgeFor(
   )
 }
 
+// A tab's blur, which leaves React Stately's focused key empty, so a bar the
+// focus has left keeps its selected tab in view and its stop on it.
+function blurThen(
+  state: TabListState<object>,
+  then: TabsTabProps['onBlur'],
+): TabsTabProps['onBlur'] {
+  return (event) => {
+    state.selectionManager.setFocusedKey(null)
+    then?.(event)
+  }
+}
+
 /**
  * The colour a tab draws its label and icon in: primary for the active tab
  * of a primary bar and on surface for a secondary one's, on surface for an
@@ -854,10 +937,25 @@ function colorOf(
 function contextOf(
   bar: Bar,
   found: boolean,
-  ids: string,
+  {
+    ids,
+    keyboardActivation,
+  }: Pick<TabsContextValue, 'ids' | 'keyboardActivation'>,
   state: TabListState<object>,
 ): TabsContextValue {
-  return { bar, found, ids, state }
+  return { bar, found, ids, keyboardActivation, state }
+}
+
+// A tab's focus, which React Stately keeps as its focused key.
+function focusThen(
+  state: TabListState<object>,
+  key: Key,
+  then: TabsTabProps['onFocus'],
+): TabsTabProps['onFocus'] {
+  return (event) => {
+    state.selectionManager.setFocusedKey(key)
+    then?.(event)
+  }
 }
 
 // A panel's `onLayout` inside a `Tabs.Panels`, which reports its height, and
@@ -956,6 +1054,43 @@ function indicatorStyleOf(own: ReturnType<typeof stylesOf>, bar: Bar) {
     : own.indicatorSecondary
 }
 
+// Where a key moves the focus along the bar: to the next or the previous
+// tab, or to the first or the last, or nowhere for any other key.
+function keyOf(
+  key: string,
+  vertical: boolean,
+  direction: 'ltr' | 'rtl',
+): Move | undefined {
+  const forward = direction === 'rtl' ? 'ArrowLeft' : 'ArrowRight'
+  const back = direction === 'rtl' ? 'ArrowRight' : 'ArrowLeft'
+  if (key === 'End') {
+    return 'last'
+  }
+  if (key === 'Home') {
+    return 'first'
+  }
+  if (key === (vertical ? 'ArrowDown' : forward)) {
+    return 'next'
+  }
+  if (key === (vertical ? 'ArrowUp' : back)) {
+    return 'previous'
+  }
+  return undefined
+}
+
+// A key pressed on a tab under React Native Web, which the bar takes, and
+// then the page does nothing more with: an arrow would scroll it.
+function keyThen(onKey: (from: Key, key: string) => boolean, from: Key) {
+  return (event: {
+    readonly nativeEvent: { readonly key: string }
+    readonly preventDefault: () => void
+  }) => {
+    if (onKey(from, event.nativeEvent.key)) {
+      event.preventDefault()
+    }
+  }
+}
+
 /**
  * The style that puts a horizontal indicator at the bar's left edge, which is
  * where a layout measures a tab's `x` from in either direction, so that the
@@ -1019,18 +1154,28 @@ function listOf(children: ReactNode): TabsListElement | undefined {
 function ListTab({
   bar,
   ids,
+  isStop,
   node,
+  onKey,
   onMeasure,
+  register,
   state,
 }: {
   readonly bar: Bar
   readonly ids: string
+  /** Whether the tab is the bar's one Tab stop under React Native Web. */
+  readonly isStop: boolean
   readonly node: Node<object>
+  /** A key pressed on the tab, and whether the bar took it. */
+  readonly onKey: (from: Key, key: string) => boolean
   readonly onMeasure: (
     key: Key,
     part: keyof Measured,
     layout: LayoutRectangle,
   ) => void
+  readonly register: (
+    key: Key,
+  ) => (node: ComponentRef<typeof Pressable> | null) => void
   readonly state: TabListState<object>
 }) {
   const theme = useTheme()
@@ -1072,8 +1217,8 @@ function ListTab({
         ? theme.colors.primary
         : theme.colors.onSurface,
     disabled,
-    onBlur,
-    onFocus,
+    onBlur: blurThen(state, onBlur),
+    onFocus: focusThen(state, key, onFocus),
     onHoverIn,
     onHoverOut,
     onPressIn,
@@ -1114,9 +1259,12 @@ function ListTab({
       aria-label={ariaLabel ?? nameOf(children)}
       aria-selected={selected}
       id={tabIdOf(ids, key)}
-      ref={ref}
+      ref={refsOf(register(key), ref)}
       role="tab"
       {...props}
+      {...(Platform.OS === 'web'
+        ? { onKeyDown: keyThen(onKey, key), tabIndex: isStop ? 0 : -1 }
+        : undefined)}
       {...feedback.handlers}
       disabled={disabled}
       onLayout={measureThen(onMeasure, key, 'tab', onLayout)}
@@ -1173,6 +1321,31 @@ function measureThen(
     onMeasure(key, part, event.nativeEvent.layout)
     onLayout?.(event)
   }
+}
+
+// The tab a move lands on from `from`, past any disabled one and round from
+// either end, or nothing when no tab takes the focus.
+function movedTo(
+  state: TabListState<object>,
+  from: Key,
+  move: Move | undefined,
+): Key | undefined {
+  const keys = [...state.collection]
+    .map((node) => node.key)
+    .filter((key) => !state.selectionManager.isDisabled(key))
+  if (move === undefined || keys.length === 0 || state.isDisabled) {
+    return undefined
+  }
+  if (move === 'first') {
+    return keys[0]
+  }
+  if (move === 'last') {
+    return keys.at(-1)
+  }
+  const at = keys.indexOf(from)
+  const step = move === 'next' ? 1 : -1
+  const index = at === -1 ? 0 : (at + step + keys.length) % keys.length
+  return keys[index]
 }
 
 // A label that is a string names its tab; anything else leaves the name to
@@ -1374,6 +1547,25 @@ function TabsPanels({ children, ref, style, testID }: TabsPanelsProps) {
       </Animated.View>
     </PanelHeightContext>
   )
+}
+
+// The bar's one Tab stop: the focused tab while one is, or else the selected
+// one, or else the first a press can reach.
+function tabStopOf(state: TabListState<object>): Key | undefined {
+  const { focusedKey } = state.selectionManager
+  const reachable = (key: Key | null): key is Key =>
+    key !== null &&
+    state.collection.getItem(key) !== null &&
+    !state.selectionManager.isDisabled(key)
+  if (reachable(focusedKey)) {
+    return focusedKey
+  }
+  if (reachable(state.selectedKey)) {
+    return state.selectedKey
+  }
+  return [...state.collection]
+    .map((node) => node.key)
+    .find((key) => reachable(key))
 }
 
 function tabWidthOf(layout: TabsLayout) {
