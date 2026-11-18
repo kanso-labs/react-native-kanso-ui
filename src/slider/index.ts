@@ -2,6 +2,7 @@ import type {
   AccessibilityActionEvent,
   AccessibilityActionInfo,
   DimensionValue,
+  KeyDownEvent,
   LayoutChangeEvent,
   ViewStyle,
 } from 'react-native'
@@ -57,6 +58,19 @@ const seats = StyleSheet.create({
   },
 })
 
+// What a key asks a handle for under React Native Web, as React Aria's handle
+// reads the keys on web: an arrow is a step, up and right raising the value
+// and down and left lowering it, with right and left swapped under a
+// right-to-left layout, whichever way the slider runs; Page Up and Page Down
+// are React Stately's larger step; Home and End are the handle's ends.
+type KeyMove =
+  | 'decrement'
+  | 'end'
+  | 'home'
+  | 'increment'
+  | 'pageDown'
+  | 'pageUp'
+
 // Runs the step a screen reader asks a handle for, as a move that starts and
 // ends at once, so `onChangeEnd` comes once as it does for a key on web.
 function adjustOf(state: SliderState, index: number) {
@@ -75,6 +89,17 @@ function adjustOf(state: SliderState, index: number) {
   }
 }
 
+const KEY_MOVES: Readonly<Record<string, KeyMove>> = {
+  ArrowDown: 'decrement',
+  ArrowLeft: 'decrement',
+  ArrowRight: 'increment',
+  ArrowUp: 'increment',
+  End: 'end',
+  Home: 'home',
+  PageDown: 'pageDown',
+  PageUp: 'pageUp',
+}
+
 // The handle nearest a press at `value`, as React Aria picks it on web: the
 // first handle past it or the last before it, whichever is closer, and the
 // one past it when the two are as close.
@@ -91,6 +116,65 @@ function closestThumb(values: readonly number[], value: number) {
   return Math.abs(lastBefore - value) < Math.abs(firstPast - value)
     ? split - 1
     : split
+}
+
+// The move a key asks for, with right and left swapped under a right-to-left
+// layout, or undefined for a key a handle takes no move from.
+function keyMoveOf(key: string, rtl: boolean): KeyMove | undefined {
+  if (rtl && key === 'ArrowLeft') {
+    return 'increment'
+  }
+  if (rtl && key === 'ArrowRight') {
+    return 'decrement'
+  }
+  return KEY_MOVES[key]
+}
+
+/**
+ * The keys a handle takes under React Native Web, where it is focused from
+ * the keyboard: the arrows, Page Up and Page Down, Home and End, each run as
+ * a move that starts and ends at once, as a screen reader's step is, so
+ * `onChangeEnd` comes once a key. A range's handle moves itself alone, within
+ * the bounds its neighbours set, which React Stately keeps. A key it moves by
+ * is kept from the page, which would otherwise scroll. A disabled slider
+ * takes none.
+ */
+function keysOf(state: SliderState, index: number) {
+  return (event: KeyDownEvent) => {
+    const move = keyMoveOf(event.nativeEvent.key, I18nManager.isRTL)
+    if (move === undefined || state.isDisabled) {
+      return
+    }
+    event.preventDefault()
+    state.setThumbDragging(index, true)
+    switch (move) {
+      case 'decrement': {
+        state.decrementThumb(index)
+        break
+      }
+      case 'end': {
+        state.setThumbValue(index, state.getThumbMaxValue(index))
+        break
+      }
+      case 'home': {
+        state.setThumbValue(index, state.getThumbMinValue(index))
+        break
+      }
+      case 'increment': {
+        state.incrementThumb(index)
+        break
+      }
+      case 'pageDown': {
+        state.decrementThumb(index, state.pageSize)
+        break
+      }
+      case 'pageUp': {
+        state.incrementThumb(index, state.pageSize)
+        break
+      }
+    }
+    state.setThumbDragging(index, false)
+  }
 }
 
 // Keeps the track's length along its axis as it is laid out.
@@ -234,6 +318,7 @@ export {
   ADJUSTABLE,
   adjustOf,
   closestThumb,
+  keysOf,
   lengthTo,
   percentOf,
   seatPlaceOf,

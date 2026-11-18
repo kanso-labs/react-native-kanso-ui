@@ -12,7 +12,13 @@ import {
 } from '@jest/globals'
 import { act, fireEvent, render, screen } from '@testing-library/react-native'
 import { createRef } from 'react'
-import { DeviceEventEmitter, I18nManager, StyleSheet, View } from 'react-native'
+import {
+  DeviceEventEmitter,
+  I18nManager,
+  Platform,
+  StyleSheet,
+  View,
+} from 'react-native'
 import { State } from 'react-native-gesture-handler'
 import {
   fireGestureHandler,
@@ -136,6 +142,14 @@ function findAll(
   ]
 }
 
+// Focuses a handle as React Native Web does, its element saying whether the
+// focus came from the keyboard, as a browser's `:focus-visible` does.
+async function focus(fromKeyboard: boolean, index = 0) {
+  await fireEvent(child(screen.getAllByRole('slider').at(index)), 'focus', {
+    currentTarget: { matches: () => fromKeyboard },
+  })
+}
+
 // The handle's own view inside its frame.
 function handleOf(index = 0) {
   return child(child(screen.getAllByRole('slider').at(index)).children.at(0))
@@ -214,6 +228,18 @@ function partsOf() {
   return area()
     .children.map(child)
     .filter((each) => each.props.role !== 'slider')
+}
+
+// Presses a key on a handle, as React Native Web hands it the browser's key,
+// and hands back the event, to read whether the page was kept from it.
+async function press(key: string, index = 0) {
+  const event = { nativeEvent: { key }, preventDefault: jest.fn() }
+  await fireEvent(
+    child(screen.getAllByRole('slider').at(index)),
+    'keyDown',
+    event,
+  )
+  return event
 }
 
 // An icon that draws the slot it is handed, as an app's own icon reads it.
@@ -442,6 +468,195 @@ describe('Slider', () => {
       await ask('increment')
       expect(onChange.mock.calls).toStrictEqual([[41]])
       expect(screen.getByRole('slider')).toHaveAccessibilityValue({ now: 40 })
+    })
+  })
+
+  // Under React Native Web a handle takes focus from the keyboard and moves
+  // by the keys React Aria's does on web. The Storybook's Vitest project
+  // takes story files alone, so these read the key handler React Native Web
+  // hands the handle's element.
+  describe('the keyboard, on the web', () => {
+    beforeEach(() => {
+      jest.replaceProperty(Platform, 'OS', 'web')
+    })
+
+    it('steps by the arrows, and ends each move', async () => {
+      const onChange = jest.fn()
+      const onChangeEnd = jest.fn()
+      await render(
+        <Slider
+          defaultValue={40}
+          label="Label"
+          onChange={onChange}
+          onChangeEnd={onChangeEnd}
+          step={10}
+        />,
+      )
+
+      const right = await press('ArrowRight')
+      expect(screen.getByRole('slider')).toHaveAccessibilityValue({ now: 50 })
+      expect(right.preventDefault).toHaveBeenCalledTimes(1)
+      await press('ArrowUp')
+      expect(screen.getByRole('slider')).toHaveAccessibilityValue({ now: 60 })
+      await press('ArrowLeft')
+      await press('ArrowDown')
+      expect(screen.getByRole('slider')).toHaveAccessibilityValue({ now: 40 })
+      expect(onChange.mock.calls).toStrictEqual([[50], [60], [50], [40]])
+      expect(onChangeEnd.mock.calls).toStrictEqual([[50], [60], [50], [40]])
+    })
+
+    it('goes to the ends on Home and End', async () => {
+      await render(
+        <Slider defaultValue={40} label="Label" maxValue={80} minValue={20} />,
+      )
+
+      await press('Home')
+      expect(screen.getByRole('slider')).toHaveAccessibilityValue({ now: 20 })
+      await press('End')
+      expect(screen.getByRole('slider')).toHaveAccessibilityValue({ now: 80 })
+    })
+
+    it('takes the larger step on Page Up and Page Down', async () => {
+      await render(<Slider defaultValue={40} label="Label" />)
+
+      await press('PageUp')
+      expect(screen.getByRole('slider')).toHaveAccessibilityValue({ now: 50 })
+      await press('PageDown')
+      await press('PageDown')
+      expect(screen.getByRole('slider')).toHaveAccessibilityValue({ now: 30 })
+    })
+
+    it('swaps right and left under a right-to-left layout', async () => {
+      jest.replaceProperty(I18nManager, 'isRTL', true)
+      await render(<Slider defaultValue={40} label="Label" />)
+
+      await press('ArrowLeft')
+      expect(screen.getByRole('slider')).toHaveAccessibilityValue({ now: 41 })
+      await press('ArrowRight')
+      await press('ArrowRight')
+      expect(screen.getByRole('slider')).toHaveAccessibilityValue({ now: 39 })
+      await press('ArrowUp')
+      expect(screen.getByRole('slider')).toHaveAccessibilityValue({ now: 40 })
+    })
+
+    it("moves a range's handle alone, within the other's bound", async () => {
+      await render(
+        <Slider
+          defaultValue={NEAR}
+          label="Label"
+          step={10}
+          thumbLabels={THUMB_LABELS}
+        />,
+      )
+
+      await press('End', 0)
+      expect(
+        screen.getByRole('slider', { name: 'Start Label' }),
+      ).toHaveAccessibilityValue({ now: 60 })
+      await press('Home', 1)
+      expect(
+        screen.getByRole('slider', { name: 'End Label' }),
+      ).toHaveAccessibilityValue({ now: 60 })
+      await press('ArrowRight', 1)
+      expect(
+        screen.getByRole('slider', { name: 'Start Label' }),
+      ).toHaveAccessibilityValue({ now: 60 })
+      expect(
+        screen.getByRole('slider', { name: 'End Label' }),
+      ).toHaveAccessibilityValue({ now: 70 })
+    })
+
+    it('takes no key while disabled, and leaves the page the key', async () => {
+      const onChange = jest.fn()
+      await render(
+        <Slider
+          defaultValue={40}
+          isDisabled
+          label="Label"
+          onChange={onChange}
+        />,
+      )
+
+      const right = await press('ArrowRight')
+      expect(screen.getByRole('slider')).toHaveAccessibilityValue({ now: 40 })
+      expect(onChange).not.toHaveBeenCalled()
+      expect(right.preventDefault).not.toHaveBeenCalled()
+    })
+
+    it('leaves a key it takes no move from to the page', async () => {
+      const onChange = jest.fn()
+      await render(
+        <Slider defaultValue={40} label="Label" onChange={onChange} />,
+      )
+
+      const tab = await press('Tab')
+      expect(onChange).not.toHaveBeenCalled()
+      expect(tab.preventDefault).not.toHaveBeenCalled()
+    })
+
+    // On iOS and Android a handle is moved by a screen reader's actions, and
+    // is no Tab stop of its own, nor does a hardware keyboard's key reach it.
+    it('hands a handle no key handler on a device', async () => {
+      jest.replaceProperty(Platform, 'OS', 'android')
+      await render(<Slider defaultValue={40} label="Label" />)
+
+      const { onKeyDown, tabIndex } = screen.getByRole('slider').props
+      expect(onKeyDown).toBeUndefined()
+      expect(tabIndex).toBeUndefined()
+    })
+
+    it('makes a handle a Tab stop, and none while disabled', async () => {
+      await render(<Slider defaultValue={40} label="Label" />)
+      expect(screen.getByRole('slider').props.tabIndex).toBe(0)
+
+      await render(<Slider defaultValue={40} isDisabled label="Label" />)
+      expect(screen.getByRole('slider').props.tabIndex).toBe(-1)
+    })
+
+    // kanso-ui's handle, focused from the keyboard: it narrows, its value
+    // shows above it, and it takes a ring of its own, which is why its frame
+    // keeps the browser's off.
+    it('rings, narrows and shows its value once focused from the keyboard', async () => {
+      await render(<Slider defaultValue={40} label="Label" />)
+      expect(styleOf(screen.getByRole('slider'))).toMatchObject({
+        outlineStyle: 'solid',
+        outlineWidth: 0,
+      })
+
+      await focus(true)
+      await advance(motion.durationShort2)
+      expect(styleOf(handleOf())).toMatchObject({
+        outlineColor: colors.secondary,
+        outlineOffset: 2,
+        outlineStyle: 'solid',
+        outlineWidth: 3,
+      })
+      expect(getAnimatedStyle(handleOf())).toMatchObject({ width: 2 })
+      expect(indicatorOf()).toBeDefined()
+      expect(
+        screen.getByText('40', { includeHiddenElements: true }),
+      ).toBeOnTheScreen()
+
+      await press('ArrowRight')
+      expect(
+        screen.getByText('41', { includeHiddenElements: true }),
+      ).toBeOnTheScreen()
+
+      await fireEvent(screen.getByRole('slider'), 'blur', {})
+      await advance(motion.durationShort2)
+      expect(styleOf(handleOf()).outlineWidth).toBeUndefined()
+      expect(getAnimatedStyle(handleOf())).toMatchObject({ width: 4 })
+      expect(indicatorOf()).toBeUndefined()
+    })
+
+    it('draws none of it when focus came from a press', async () => {
+      await render(<Slider defaultValue={40} label="Label" />)
+
+      await focus(false)
+      await advance(motion.durationShort2)
+      expect(styleOf(handleOf()).outlineWidth).toBeUndefined()
+      expect(getAnimatedStyle(handleOf())).toMatchObject({ width: 4 })
+      expect(indicatorOf()).toBeUndefined()
     })
   })
 
