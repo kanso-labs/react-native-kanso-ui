@@ -8,7 +8,14 @@ import type {
   ViewStyle,
 } from 'react-native'
 
-import { use, useId, useImperativeHandle, useRef, useState } from 'react'
+import {
+  use,
+  useId,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native'
 
 import type { AutocompleteValue } from '../../autocomplete'
@@ -18,10 +25,11 @@ import type { IconStyle } from '../../glyphs/icon-style'
 import { AutocompleteContext } from '../../autocomplete'
 import {
   describedBy,
-  FieldInput,
+  FieldInputScope,
   FieldMessage,
   FieldStates,
   FieldStroke,
+  ScopedFieldInput,
   useFieldFocus,
   useStrokeMotion,
 } from '../../field'
@@ -463,7 +471,10 @@ function SearchField({
   const autocomplete = use(AutocompleteContext)
   const [own, setOwn] = useState(defaultValue)
   const current = autocomplete?.inputValue ?? value ?? own
-  const report = reportTo(autocomplete, onChange)
+  const report = useMemo(
+    () => reportTo(autocomplete, onChange),
+    [autocomplete, onChange],
+  )
   const validation = useFieldValidation({
     control,
     error,
@@ -480,7 +491,15 @@ function SearchField({
     onBlur: blurThen(validation.onBlur, onBlur),
     onFocus,
   })
-  const clear = clearInto(setOwn, report, onClear, validation.onEdit)
+  // In a memo rather than left to the React Compiler, which rebuilds a
+  // function handed on to a call as often as that call's own inputs change:
+  // handed to the Escape handler, which follows the value, it gave the clear
+  // button a new press handler on every keystroke. `report` is in one for
+  // the same reason, since this is built from it.
+  const clear = useMemo(
+    () => clearInto(setOwn, report, onClear, validation.onEdit),
+    [report, onClear, validation.onEdit],
+  )
   const shownError = validation.error
 
   useImperativeHandle<
@@ -490,34 +509,36 @@ function SearchField({
 
   return (
     <View ref={ref} style={style}>
-      <SearchBar
-        clearLabel={clearLabel}
-        control={control}
-        isDisabled={isDisabled}
-        isFocused={focus.focused}
-        isInvalid={shownError !== undefined}
-        isRequired={isRequired}
-        onClear={clear}
-        showsClear={current !== ''}
+      <FieldInputScope
+        {...props}
+        {...focus.handlers}
+        aria-label={label}
+        described={describedBy(id, { description, error: shownError })}
+        editable={!isDisabled}
+        onChangeText={editInto(setOwn, report, validation.onEdit)}
+        onKeyPress={keyInto(
+          current === '' || isDisabled ? undefined : clear,
+          onKeyPress,
+        )}
+        onSubmitEditing={submitInto(current, onSubmit, onSubmitEditing)}
+        ref={control}
+        returnKeyType="search"
+        role="searchbox"
+        value={current}
       >
-        <FieldInput
-          {...props}
-          {...focus.handlers}
-          aria-label={label}
-          described={describedBy(id, { description, error: shownError })}
-          editable={!isDisabled}
-          onChangeText={editInto(setOwn, report, validation.onEdit)}
-          onKeyPress={keyInto(
-            current === '' || isDisabled ? undefined : clear,
-            onKeyPress,
-          )}
-          onSubmitEditing={submitInto(current, onSubmit, onSubmitEditing)}
-          ref={control}
-          returnKeyType="search"
-          role="searchbox"
-          value={current}
-        />
-      </SearchBar>
+        <SearchBar
+          clearLabel={clearLabel}
+          control={control}
+          isDisabled={isDisabled}
+          isFocused={focus.focused}
+          isInvalid={shownError !== undefined}
+          isRequired={isRequired}
+          onClear={clear}
+          showsClear={current !== ''}
+        >
+          <ScopedFieldInput />
+        </SearchBar>
+      </FieldInputScope>
       <FieldMessage description={description} error={shownError} id={id} />
     </View>
   )

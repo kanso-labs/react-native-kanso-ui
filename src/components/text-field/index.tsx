@@ -15,8 +15,9 @@ import type { ValidationResult } from '../../form'
 import {
   describedBy,
   FieldBox,
-  FieldInput,
+  FieldInputScope,
   FieldMessage,
+  ScopedFieldInput,
   useFieldFocus,
 } from '../../field'
 import { useFieldValidation } from '../../form'
@@ -285,46 +286,48 @@ function TextField({
 
   return (
     <View ref={ref} style={style}>
-      <FieldBox
-        control={control}
-        floatingLabel={floatingLabel}
-        isDisabled={isDisabled}
-        isFocused={focus.focused}
-        isInvalid={shownError !== undefined}
-        isPopulated={current !== ''}
-        isRequired={isRequired}
-        label={label}
-        leading={leadingIcon}
-        trailing={trailingIcon}
-        variant={variant}
+      <FieldInputScope
+        {...props}
+        {...focus.handlers}
+        aria-label={label}
+        described={describedBy(id, {
+          characterLimitLabel,
+          description,
+          error: shownError,
+          locale,
+          maxLength: props.maxLength,
+        })}
+        editable={!isDisabled && !isReadOnly}
+        numeric={numeric}
+        onChangeText={editInto(setOwn, onChange, validation.onEdit)}
+        prefix={prefix}
+        ref={control}
+        suffix={suffix}
+        value={current}
       >
-        <FieldInput
-          {...props}
-          {...focus.handlers}
-          aria-label={label}
-          described={describedBy(id, {
-            characterLimitLabel,
-            description,
-            error: shownError,
-            locale,
-            maxLength: props.maxLength,
-          })}
-          editable={!isDisabled && !isReadOnly}
-          numeric={numeric}
-          onChangeText={editInto(setOwn, onChange, validation.onEdit)}
-          prefix={prefix}
-          ref={control}
-          suffix={suffix}
-          value={current}
-        />
-      </FieldBox>
+        <FieldBox
+          control={control}
+          floatingLabel={floatingLabel}
+          isDisabled={isDisabled}
+          isFocused={focus.focused}
+          isInvalid={shownError !== undefined}
+          isPopulated={current !== ''}
+          isRequired={isRequired}
+          label={label}
+          leading={leadingIcon}
+          trailing={trailingIcon}
+          variant={variant}
+        >
+          <ScopedFieldInput />
+        </FieldBox>
+      </FieldInputScope>
       <FieldMessage
         characterCount={characterCount}
         characterLimitLabel={characterLimitLabel}
         description={description}
         error={shownError}
         id={id}
-        length={current.length}
+        length={characterCount ? current.length : undefined}
         maxLength={props.maxLength}
       />
     </View>
