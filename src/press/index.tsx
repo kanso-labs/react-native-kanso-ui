@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import type { Insets, PressableProps, ViewStyle } from 'react-native'
+import type { SharedValue } from 'react-native-reanimated'
 
 import { useRef, useState } from 'react'
 import { Platform, View } from 'react-native'
@@ -192,6 +193,49 @@ function matchesSelectors(
 }
 
 /**
+ * The ripple's disc, which follows the shared values `usePressFeedback`
+ * moves it by. Drawn from a control's first press on, so its animated style
+ * is kept only for a control that has been pressed.
+ */
+function Ripple({
+  color,
+  fade,
+  geometry,
+  grow,
+}: {
+  readonly color: string
+  readonly fade: SharedValue<number>
+  readonly geometry: SharedValue<RippleGeometry>
+  readonly grow: SharedValue<number>
+}) {
+  const motion = useAnimatedStyle(() => {
+    'worklet'
+    const { end, scale, size, start } = geometry.get()
+    const progress = grow.get()
+
+    // The whole style is the animation's, so the view takes the one object it
+    // hands back.
+    return {
+      backgroundColor: color,
+      borderRadius: size / 2,
+      height: size,
+      left: 0,
+      opacity: fade.get(),
+      position: 'absolute',
+      top: 0,
+      transform: [
+        { translateX: start.x + (end.x - start.x) * progress },
+        { translateY: start.y + (end.y - start.y) * progress },
+        { scale: 1 + (scale - 1) * progress },
+      ],
+      width: size,
+    }
+  })
+
+  return <Animated.View style={motion} />
+}
+
+/**
  * The press feedback every interactive control draws: the state layer, the
  * ripple and the focus ring, as Material Design's state layers page sets them
  * out.
@@ -273,35 +317,16 @@ function usePressFeedback({
   const geometry = useSharedValue(NO_RIPPLE)
   const grow = useSharedValue(0)
   const fade = useSharedValue(0)
+  // Whether the control has been pressed since it was drawn, which is when
+  // its ripple's view is first drawn. A long list draws a row's feedback for
+  // every row in reach, and most are never pressed, so each would otherwise
+  // carry an animated view, and Reanimated a style to keep, for nothing.
+  const [armed, setArmed] = useState(false)
 
   const { motion, spacing, stateLayerOpacity } = theme
   const active = disabled !== true
   const interactive = active && pending !== true
   const rippled = interactive && !disableRipple && !reduceMotion
-
-  const rippleMotion = useAnimatedStyle(() => {
-    'worklet'
-    const { end, scale, size, start } = geometry.get()
-    const progress = grow.get()
-
-    // The whole style is the animation's, so the view takes the one object it
-    // hands back.
-    return {
-      backgroundColor: pressedColor,
-      borderRadius: size / 2,
-      height: size,
-      left: 0,
-      opacity: fade.get(),
-      position: 'absolute',
-      top: 0,
-      transform: [
-        { translateX: start.x + (end.x - start.x) * progress },
-        { translateY: start.y + (end.y - start.y) * progress },
-        { scale: 1 + (scale - 1) * progress },
-      ],
-      width: size,
-    }
-  })
 
   // Grows a disc a fifth of the control's longer side from the press point
   // to the centre, until it covers the control and `spacing.sm` beyond its
@@ -383,6 +408,9 @@ function usePressFeedback({
       pressedUnfocused.current = !focused.current
       setPressed(true)
       setKeyHeld(fromKey)
+      if (rippled && !armed) {
+        setArmed(true)
+      }
 
       // Where the ripple is off, the pressed layer alone marks the press.
       if (rippled && fromKey) {
@@ -479,7 +507,14 @@ function usePressFeedback({
         style={surface}
       >
         <View style={state} />
-        {rippled ? <Animated.View style={rippleMotion} /> : null}
+        {rippled && armed ? (
+          <Ripple
+            color={pressedColor}
+            fade={fade}
+            geometry={geometry}
+            grow={grow}
+          />
+        ) : null}
       </View>
     ),
     pressed: interactive && pressed,

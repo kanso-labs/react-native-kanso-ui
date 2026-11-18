@@ -148,6 +148,16 @@ const LOAD_OFFSET = 1
 // to reach the row it opens on.
 const INITIAL_ROWS = 10
 
+// How much of a long list a `FlatList` keeps drawn, in screens of it: the one
+// in view and five either side, where React Native's default keeps ten. A
+// fling past them draws the rows it reaches in batches, as before; half as
+// many screens are half as many rows mounted, kept and re-rendered on the
+// JavaScript thread while the list scrolls. `getItemLayout` is left out:
+// a row's height is a floor, which a headline that wraps or a larger text
+// size grows past, so a height reckoned from the line count would place the
+// rows after it wrongly.
+const WINDOW_SCREENS = 11
+
 // What the loading row reads when the collection has no `LoadMore` part,
 // which leaves it nothing to draw.
 const IDLE: CollectionLoadMoreProps = {}
@@ -820,6 +830,7 @@ function CollectionView<T extends object = object>({
         // collection's context, so nothing else has to reach it.
         strictMode
         style={listStyle}
+        windowSize={WINDOW_SCREENS}
       />
       {autocomplete === null ? null : <ResultsStatus count={rows} />}
     </CollectionContext>

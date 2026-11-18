@@ -904,7 +904,10 @@ describe('SegmentedButton', () => {
         </SegmentedButton>,
       )
 
-      // The layer, then the ripple where one is drawn.
+      // The layer, then the ripple where one is drawn, which a control
+      // draws from its first press on.
+      await fireEvent(segment('First item'), 'pressIn', PRESS)
+      await fireEvent(segment('Second item'), 'pressIn', PRESS)
       expect(surfaceOf('First item').children).toHaveLength(2)
       expect(surfaceOf('Second item').children).toHaveLength(1)
     })

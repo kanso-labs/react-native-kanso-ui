@@ -229,6 +229,31 @@ describe('List', () => {
       expect(screen.queryByRole('button')).toBe(null)
     })
 
+    // Most rows in a long list are never pressed, so a row draws its
+    // ripple's view from its first press on rather than with itself.
+    it('draws no ripple view on a row until it is pressed', async () => {
+      await render(
+        <List aria-label="Label" onAction={jest.fn()}>
+          {THREE_ROWS}
+        </List>,
+      )
+      const feedbackOf = (name: string) =>
+        instance(
+          rowOf(name).queryAll(
+            (node) =>
+              node.props.importantForAccessibility === 'no-hide-descendants',
+          )[0],
+        )
+
+      expect(feedbackOf('First item').children).toHaveLength(1)
+      expect(feedbackOf('Second item').children).toHaveLength(1)
+
+      await fireEvent(rowOf('First item'), 'pressIn', PRESS)
+
+      expect(feedbackOf('First item').children).toHaveLength(2)
+      expect(feedbackOf('Second item').children).toHaveLength(1)
+    })
+
     it("lands a row's style and testID on the row", async () => {
       await render(
         <List aria-label="Label" onAction={jest.fn()}>
@@ -825,6 +850,19 @@ describe('List', () => {
   })
 
   describe('the list', () => {
+    // Five screens either side of the one in view, rather than React
+    // Native's ten, so a long list keeps half as many rows mounted.
+    it('keeps eleven screens of a long list drawn', async () => {
+      const ref = createRef<FlatList>()
+      await render(
+        <List aria-label="Label" ref={ref}>
+          {THREE_ROWS}
+        </List>,
+      )
+
+      expect(ref.current?.props.windowSize).toBe(11)
+    })
+
     it('is a FlatList taking a style and a ref, drawn on surface', async () => {
       const ref = createRef<FlatList>()
       await render(

@@ -349,6 +349,21 @@ describe('the ripple', () => {
   const size = 20
   const scale = (Math.hypot(100, 40) + spacing.sm) / size
 
+  // A control most of whose kind are never pressed, a row in a long list,
+  // draws its ripple's view from its first press on rather than with itself.
+  it('draws no ripple view until the control is first pressed', async () => {
+    await render(<Control />)
+    expect(parts().ripple).toBeUndefined()
+
+    await fireEvent(control(), 'pressIn', pressAt(30, 30))
+    await advance(0)
+    expect(parts().ripple).toBeDefined()
+
+    await fireEvent(control(), 'pressOut', pressAt(30, 30))
+    await advance(motion.durationMedium1 + 400)
+    expect(parts().ripple).toBeDefined()
+  })
+
   it('starts at the press point and grows to cover the control', async () => {
     await render(<Control />)
 
