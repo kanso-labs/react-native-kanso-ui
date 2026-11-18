@@ -176,6 +176,21 @@ function pathsIn(node: TestInstance): unknown[] {
   ]
 }
 
+// The views inside a close target laid past its edges, by their styles.
+function reachOf(target: TestInstance) {
+  return target
+    .queryAll((each) => {
+      const style = styleOf(each)
+      return (
+        typeof each.type === 'string' &&
+        style.position === 'absolute' &&
+        typeof style.top === 'number' &&
+        style.top < 0
+      )
+    })
+    .map((each) => styleOf(each))
+}
+
 function removeFrom(setIds: (update: (ids: string[]) => string[]) => void) {
   return (keys: Set<Key>) => {
     setIds((ids) => ids.filter((id) => !keys.has(id)))
@@ -793,6 +808,23 @@ describe('ChipGroup', () => {
         right: 3,
         top: 3,
       })
+    })
+
+    // React Native Web ignores `hitSlop`, so there the 18dp the glyph is
+    // drawn at was the whole target, and axe reported its target size.
+    it("reaches WCAG's 24dp on the web through a view 3dp past the glyph", async () => {
+      jest.replaceProperty(Platform, 'OS', 'web')
+      await render(<Group onRemove={jest.fn()} />)
+
+      expect(reachOf(closeOf('First item'))).toEqual([
+        { bottom: -3, left: -3, position: 'absolute', right: -3, top: -3 },
+      ])
+    })
+
+    it('reaches no further than its hitSlop on iOS and Android', async () => {
+      await render(<Group onRemove={jest.fn()} />)
+
+      expect(reachOf(closeOf('First item'))).toEqual([])
     })
 
     it('draws a hover and a pressed layer in the label colour, and none for focus', async () => {
