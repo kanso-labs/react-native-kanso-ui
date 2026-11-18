@@ -271,11 +271,10 @@ const styles = StyleSheet.create({
     top: 0,
     width: 1,
   },
-  // The run a time's parts are isolated in, laid out left to right in any
-  // locale, as the marks around it ask.
+  // The run a time's parts are isolated in, a row laid out left to right in
+  // any locale, as the marks around it ask: see `isolateDirectionOf`.
   isolate: {
     alignItems: 'center',
-    direction: 'ltr',
     flexDirection: 'row',
   },
   // The date written out, in the document under React Native Web for the
@@ -284,6 +283,14 @@ const styles = StyleSheet.create({
     display: 'none',
   },
 })
+
+// The left-to-right direction of a time's run, outside the stylesheet: React
+// Native Web knows no `direction` style, and a stylesheet holding one logged
+// "Invalid style property" in every story's console, since the module loads
+// with the library, and dropped it, so a time in a right-to-left locale was
+// not held left to right on the web. There the run takes the `dir` attribute
+// its `View` hands the element, and on iOS and Android the style.
+const NATIVE_LEFT_TO_RIGHT: ViewStyle = { direction: 'ltr' }
 
 // What a screen reader's swipe up or down does to a segment.
 function actionOf(line: SegmentLineProps, segment: DateSegment) {
@@ -594,6 +601,12 @@ function inputOf({ input }: SegmentLineProps) {
   }
 }
 
+// The `dir` attribute that lays a time's run out left to right under React
+// Native Web, and nothing on iOS and Android, where its style does.
+function isolateDirectionOf(): { readonly dir?: 'ltr' } {
+  return Platform.OS === 'web' ? { dir: 'ltr' } : {}
+}
+
 /**
  * The segments' views, with a time's parts held in a row of their own laid
  * out left to right. React Stately marks that run with a left-to-right
@@ -613,7 +626,14 @@ function isolatedOf(
       run = []
     } else if (segment.type === 'literal' && segment.text === ISOLATE_END) {
       laid.push(
-        <View key="isolate" style={styles.isolate}>
+        <View
+          {...isolateDirectionOf()}
+          key="isolate"
+          style={composeStyles<ViewStyle>(
+            styles.isolate,
+            Platform.OS === 'web' ? undefined : NATIVE_LEFT_TO_RIGHT,
+          )}
+        >
           {run}
         </View>,
       )
