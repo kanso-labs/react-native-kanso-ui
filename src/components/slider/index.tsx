@@ -5,7 +5,7 @@ import type { SliderState } from 'react-stately/useSliderState'
 
 import { NumberFormatter } from '@internationalized/number'
 import { useState } from 'react'
-import { Text as NativeText, StyleSheet, View } from 'react-native'
+import { Text as NativeText, Platform, StyleSheet, View } from 'react-native'
 import {
   GestureDetector,
   GestureHandlerRootView,
@@ -27,6 +27,7 @@ import { TARGET_SIZE } from '../../press'
 import {
   ADJUSTABLE,
   adjustOf,
+  keysOf,
   lengthTo,
   percentOf,
   seatPlaceOf,
@@ -103,7 +104,10 @@ import { useTypeRole } from '../../typography/roles'
 // **Each handle is an adjustable control to a screen reader**, named by its
 // entry in `thumbLabels` and then the slider's label, as React Aria names a
 // range's handles, with its value in the formatter's words and an increment
-// and a decrement action that move it a step. The label drawn above the track
+// and a decrement action that move it a step. Under React Native Web a handle
+// takes focus from the keyboard and the keys React Aria's does: the arrows by
+// a step, Page Up and Page Down by React Stately's larger step, and Home and
+// End to its ends, which `keysOf` in src/slider reads. The label drawn above the track
 // is hidden from a screen reader, since every handle already says it.
 //
 // Vertical, the same parts run up the track, with the active part rising
@@ -447,6 +451,9 @@ function Handle({
 
   return (
     <View
+      {...(Platform.OS === 'web'
+        ? { onKeyDown: keysOf(state, index) }
+        : undefined)}
       accessibilityActions={ADJUSTABLE}
       accessible
       aria-disabled={state.isDisabled}
