@@ -15,6 +15,7 @@ import { createRef } from 'react'
 import {
   Dimensions,
   I18nManager,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -325,6 +326,7 @@ const INITIAL = {
 
 afterEach(() => {
   Dimensions.set(INITIAL)
+  jest.restoreAllMocks()
   jest.useRealTimers()
   mockReducedMotion = false
 })
@@ -982,6 +984,113 @@ describe('Tabs', () => {
     })
   })
 
+  // A tab cut off at the edge of a scrollable bar read as a whole one with a
+  // shorter name, "…nd item". The edge with tabs past it fades, and only
+  // that one.
+  describe('the edges of a scrollable bar', () => {
+    it('fades the edge with tabs past it and no other', async () => {
+      await overflow()
+
+      expect(fadedEdges()).toEqual(['end'])
+
+      await scrollBar(80)
+      expect(fadedEdges()).toEqual(['start', 'end'])
+
+      await scrollBar(160)
+      expect(fadedEdges()).toEqual(['start'])
+
+      await scrollBar(0)
+      expect(fadedEdges()).toEqual(['end'])
+    })
+
+    // React Native measures the offset from the left edge in either
+    // direction, so a right-to-left bar opens scrolled to the far end, where
+    // its first tab is.
+    it('fades the edge with tabs past it in a right-to-left layout', async () => {
+      jest.replaceProperty(I18nManager, 'isRTL', true)
+      await overflow()
+      await scrollBar(160)
+
+      expect(fadedEdges()).toEqual(['end'])
+
+      await scrollBar(0)
+      expect(fadedEdges()).toEqual(['start'])
+    })
+
+    it('fades from the bar’s container colour, surface', async () => {
+      await overflow()
+
+      const gradient = screen
+        .getByTestId('list')
+        .queryAll((each) => each.type === 'RNSVGLinearGradient')
+        .at(0)
+      const packed: unknown = gradient?.props.gradient
+      const stop = Array.isArray(packed) ? Number(packed[1]) >>> 0 : 0
+      expect(`#${(stop & 0xff_ff_ff).toString(16).padStart(6, '0')}`).toBe(
+        colors.surface.toLowerCase(),
+      )
+    })
+
+    it('fades neither edge of a bar whose tabs fit', async () => {
+      await renderTabs({ layout: 'scrollable' })
+      await fireEvent(scrollOf(), 'layout', {
+        nativeEvent: { layout: { height: 48, width: 400, x: 0, y: 0 } },
+      })
+      await fireEvent(scrollOf(), 'contentSizeChange', 3 * TAB, 48)
+      await layOut()
+
+      expect(fadedEdges()).toEqual([])
+    })
+
+    it('leaves the fade to the scroll view’s own fading edge on Android', async () => {
+      jest.replaceProperty(Platform, 'OS', 'android')
+      await overflow()
+
+      expect(fadedEdges()).toEqual([])
+      expect(scrollOf().props.fadingEdgeLength).toBe(spacing.xxl)
+    })
+
+    it('fades neither edge of a bar that does not scroll, or that scrolls down', async () => {
+      await renderTabs()
+      await layOut()
+      expect(fadedEdges()).toEqual([])
+
+      await renderTabs({ layout: 'scrollable', orientation: 'vertical' })
+      await fireEvent(scrollOf(), 'layout', {
+        nativeEvent: { layout: { height: 200, width: 160, x: 0, y: 0 } },
+      })
+      await fireEvent(scrollOf(), 'contentSizeChange', 160, 3 * TAB)
+      await layOut({ vertical: true })
+      expect(fadedEdges()).toEqual([])
+      expect(scrollOf().props.fadingEdgeLength).toBeUndefined()
+    })
+
+    // Brought only just whole into view, a tab with tabs past it came to
+    // rest inside the fade, its last letters and its indicator fading out
+    // with the tabs beyond it.
+    it('opens on its selected tab clear of the fade', async () => {
+      await overflow({ defaultSelectedKey: 'second' })
+
+      expect(scrollTo().mock.calls).toEqual([
+        [{ animated: false, x: 2 * TAB + spacing.xxl - 200 }],
+      ])
+    })
+
+    it('scrolls back to a tab cut off at the start clear of the fade, never past the bar’s start', async () => {
+      await overflow({ defaultSelectedKey: 'third' })
+      await scrollBar(160)
+
+      await press('Second item')
+      expect(scrollTo().mock.calls.at(-1)).toEqual([
+        { animated: true, x: TAB - spacing.xxl },
+      ])
+
+      await scrollBar(TAB - spacing.xxl)
+      await press('First item')
+      expect(scrollTo().mock.calls.at(-1)).toEqual([{ animated: true, x: 0 }])
+    })
+  })
+
   describe('panels', () => {
     it('names each panel a tabpanel, by its tab', async () => {
       await renderTabs()
@@ -1280,6 +1389,39 @@ describe('Tabs', () => {
     })
   })
 })
+
+// The edges of the bar a fade is laid over, start first: the views at an
+// edge that hold a gradient.
+function fadedEdges() {
+  return screen
+    .getByTestId('list')
+    .queryAll((each) => {
+      const style = styleOf(each)
+      return (
+        typeof each.type === 'string' &&
+        ('start' in style || 'end' in style) &&
+        each.queryAll((inner) => inner.type === 'RNSVGLinearGradient').at(0) !==
+          undefined
+      )
+    })
+    .map((each) => ('start' in styleOf(each) ? 'start' : 'end'))
+}
+
+// Three 120dp tabs in a 200dp bar, which has 160dp to scroll.
+async function overflow(props: SampleProps = {}) {
+  await renderTabs({ layout: 'scrollable', ...props })
+  await fireEvent(scrollOf(), 'layout', {
+    nativeEvent: { layout: { height: 48, width: 200, x: 0, y: 0 } },
+  })
+  await fireEvent(scrollOf(), 'contentSizeChange', 3 * TAB, 48)
+  await layOut()
+}
+
+async function scrollBar(x: number) {
+  await fireEvent.scroll(scrollOf(), {
+    nativeEvent: { contentOffset: { x, y: 0 } },
+  })
+}
 
 function scrollOf() {
   const scroll = screen
