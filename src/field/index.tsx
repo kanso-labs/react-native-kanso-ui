@@ -353,6 +353,10 @@ const OUTSIDE_BOX: BoxControl = {
 
 const BoxContext = createContext<BoxControl>(OUTSIDE_BOX)
 
+// The props a FieldInputScope hands the ScopedFieldInput inside it, and null
+// outside one.
+const InputContext = createContext<FieldInputProps | null>(null)
+
 // Whether a FieldSegments sits on the line of another, as a date range
 // picker's two dates sit on the one line it draws, which clears the label
 // once for both.
@@ -807,6 +811,25 @@ function FieldInput({
 }
 
 /**
+ * Hands a field's control its props from above the box, for the
+ * {@link ScopedFieldInput} inside it to read, as web's input reads its
+ * value from React Aria's context.
+ *
+ * Handed to the box as its children instead, the control was a new element
+ * on every keystroke, since its `value` is one of its props, and the box and
+ * everything it draws re-rendered with each character. Read from here, the
+ * box is handed the same children every time and keeps what it drew while
+ * the flags it draws by hold; only the control re-renders as it is typed
+ * into.
+ */
+function FieldInputScope({
+  children,
+  ...props
+}: FieldInputProps & { readonly children?: ReactNode }) {
+  return <InputContext value={props}>{children}</InputContext>
+}
+
+/**
  * The line under a field: the error while there is one, the description
  * otherwise, and the count of characters at its end. With nothing to show it
  * is out of the flow, so the field ends at its box. Inside a form it is drawn
@@ -1044,6 +1067,17 @@ function FieldWrap({ children }: { readonly children?: ReactNode }) {
       <BoxContext value={inside}>{children}</BoxContext>
     </View>
   )
+}
+
+/**
+ * The control a {@link FieldInputScope} around the box describes: a
+ * {@link FieldInput} with its props. It takes none of its own, so the element
+ * the box is handed stays the same while the control's props change.
+ */
+function ScopedFieldInput() {
+  const props = use(InputContext)
+
+  return props === null ? null : <FieldInput {...props} />
 }
 
 /**
@@ -1691,6 +1725,7 @@ export {
   descriptionOf,
   FieldBox,
   FieldInput,
+  FieldInputScope,
   FieldMessage,
   FieldSegments,
   FieldStates,
@@ -1698,6 +1733,7 @@ export {
   FieldValue,
   FieldWrap,
   requiredName,
+  ScopedFieldInput,
   useErrorAnnouncement,
   useFieldFocus,
   useStrokeMotion,
