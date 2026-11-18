@@ -4,6 +4,7 @@ import type {
   LayoutChangeEvent,
   ScrollViewProps,
   StyleProp,
+  TextLayoutEvent,
   TextProps,
   TextStyle,
   ViewProps,
@@ -25,6 +26,7 @@ import {
 } from 'react'
 import {
   Text as NativeText,
+  Platform,
   ScrollView,
   StyleSheet,
   useWindowDimensions,
@@ -84,6 +86,20 @@ import { useTypeRole } from '../../typography/roles'
 // 56dp action bar over a divider, since nothing above the body can take its
 // actions.
 //
+// **The headline is never broken inside a word.** At a large text size the
+// actions grow with their labels and would squeeze the headline beside them
+// to a few letters a line. On iOS and Android, where the headline is laid
+// out beside the actions and a line of it ends inside a word, the actions go
+// to the bottom action bar a headerless dialog draws instead, and the
+// headline takes the rest of the header. That is decided for the window
+// width, the text size and the headline it was measured at, and measured
+// again only when one of them changes, so the actions stay in the bar as
+// the headline grows into the room they left. Until it has been measured
+// the header is laid out unseen, so a headline broken inside a word is never
+// drawn. React Native Web reports no lines of text, and the web has no
+// system text size to grow the actions, so there the actions stay in the
+// header.
+//
 // **It stays above the software keyboard.** While one is up the basic dialog
 // is centred in the room above it, and the full-screen one pads its bottom by
 // as much of the screen as the keyboard covers, so the end of its body, the
@@ -142,6 +158,10 @@ const NO_PARTS: Readonly<Record<DialogPart, number>> = {
   title: 0,
 }
 
+// A letter or a digit at the end of a line, and at the start of one.
+const WORD_END = /[\p{L}\p{N}]$/u
+const WORD_START = /^[\p{L}\p{N}]/u
+
 const stylesOf = themedStyles(
   ({ colors, radii, shadows, sizing, spacing }: ResolvedTheme) =>
     StyleSheet.create({
@@ -157,8 +177,9 @@ const stylesOf = themedStyles(
         justifyContent: 'flex-end',
         padding: spacing.xl,
       },
-      // Full screen, in a dialog with no header to take them, the actions are
-      // a bottom action bar: 56dp at least, over a divider, so an action whose
+      // Full screen, in a dialog with no header to take them, or whose header
+      // would break the headline inside a word beside them, the actions are a
+      // bottom action bar: 56dp at least, over a divider, so an action whose
       // label wraps grows the bar rather than meeting the divider.
       actionsFull: {
         borderTopColor: colors.outlineVariant,
@@ -168,8 +189,10 @@ const stylesOf = themedStyles(
       },
       // The actions full screen, drawn at the header's trailing end after the
       // headline, 8dp apart as in the basic dialog, and never narrower than
-      // they are, since the headline is the part of that row that gives way.
-      // The header's own padding is their inset from the container's edge.
+      // they are, since the headline is the part of that row that gives way,
+      // short of breaking inside a word, where the actions leave the header
+      // for the bottom bar. The header's own padding is their inset from the
+      // container's edge.
       actionsInHeader: {
         alignItems: 'center',
         flexDirection: 'row',
@@ -244,6 +267,11 @@ const stylesOf = themedStyles(
         alignItems: 'stretch',
         padding: 0,
       },
+      // The header while its headline is measured beside the actions: laid
+      // out, and not yet drawn.
+      measuring: {
+        opacity: 0,
+      },
       // The headline gives way to whatever shares its row.
       title: {
         color: colors.onSurface,
@@ -262,6 +290,16 @@ const stylesOf = themedStyles(
 // parts are there, and the headline's name and node.
 type DialogLayout = {
   readonly basic: boolean
+  /**
+   * Whether the full-screen header would break the headline inside a word
+   * beside the actions, for the window, the text size and the headline it
+   * was measured at.
+   */
+  readonly crowded: boolean
+  /** Whether the header is laid out unseen while its headline is measured. */
+  readonly measuring: boolean
+  /** Takes the lines the headline was laid out in. */
+  readonly onHeadlineLines: (event: TextLayoutEvent) => void
   readonly parts: Readonly<Record<DialogPart, number>>
   readonly register: (part: DialogPart) => () => void
   /** Hands the header the footer's actions, to draw full screen. */
@@ -273,6 +311,17 @@ type DialogLayout = {
 }
 
 type DialogPart = 'footer' | 'header' | 'title'
+
+/**
+ * Whether the headline fits beside the actions without breaking inside a
+ * word, and what it was measured at.
+ */
+type HeadlineFit = {
+  readonly fits: boolean
+  readonly fontScale: number
+  readonly name: string | undefined
+  readonly width: number
+}
 
 // The footer's actions, while the full-screen header draws them: apart from
 // the layout, so the footer handing them over is not drawn again for it.
@@ -336,9 +385,9 @@ type DialogTitleProps = Omit<TextProps, 'role'> & {
 }
 
 // Whether the footer's actions are drawn in the header: full screen, in a
-// dialog with a header to take them.
-function actionsInHeader({ basic, parts }: DialogLayout) {
-  return !basic && parts.header > 0
+// dialog with a header with room for them beside the headline.
+function actionsInHeader({ basic, crowded, parts }: DialogLayout) {
+  return !basic && parts.header > 0 && !crowded
 }
 
 // The body's padding. The page's 24dp all round is spent by whichever part
@@ -360,6 +409,19 @@ function bodyPaddingOf(
     paddingHorizontal: spacing.xl,
     paddingTop: basic && parts.header > 0 ? 0 : spacing.xl,
   }
+}
+
+/**
+ * Whether a text was broken inside a word: a line ending in a letter or a
+ * digit and the next one starting with one. A break at a space or after a
+ * hyphen is between words.
+ */
+function breaksWord(lines: TextLayoutEvent['nativeEvent']['lines']) {
+  return lines.some((line, index) => {
+    const before = lines[index - 1]?.text ?? ''
+
+    return WORD_END.test(before) && WORD_START.test(line.text)
+  })
 }
 
 /**
@@ -515,11 +577,60 @@ function DialogContent({
   const [title, setTitle] = useState<HostInstance | null>(null)
   const [name, setName] = useState<string | undefined>(undefined)
   const [actions, setActions] = useState<ReactNode>(null)
+  const { fontScale, width } = useWindowDimensions()
+  const [fit, setFit] = useState<HeadlineFit | null>(null)
+  const measured =
+    fit?.fontScale === fontScale && fit.width === width && fit.name === name
+  // Full screen on iOS and Android, a header holding the headline and the
+  // actions is measured before it is drawn.
+  const measures =
+    !basic &&
+    Platform.OS !== 'web' &&
+    parts.footer > 0 &&
+    parts.header > 0 &&
+    parts.title > 0
+  const crowded = measures && measured && !fit.fits
+  // Only the lines laid out beside the actions decide, and only once for
+  // what they were measured at, so the headline growing into the room the
+  // actions leave does not bring them back.
+  const onHeadlineLines = useCallback(
+    (event: TextLayoutEvent) => {
+      if (measures && !measured && actions !== null) {
+        setFit({
+          fits: !breaksWord(event.nativeEvent.lines),
+          fontScale,
+          name,
+          width,
+        })
+      }
+    },
+    [actions, fontScale, measured, measures, name, width],
+  )
   const motion = useDialogMotion(state.isOpen, present, setPresent, basic)
   const keyboard = useKeyboardInset(present)
   const layout = useMemo<DialogLayout>(
-    () => ({ basic, parts, register, setActions, setName, setTitle, titleId }),
-    [basic, parts, register, titleId],
+    () => ({
+      basic,
+      crowded,
+      measuring: measures && !measured,
+      onHeadlineLines,
+      parts,
+      register,
+      setActions,
+      setName,
+      setTitle,
+      titleId,
+    }),
+    [
+      basic,
+      crowded,
+      measured,
+      measures,
+      onHeadlineLines,
+      parts,
+      register,
+      titleId,
+    ],
   )
 
   if (!present) {
@@ -580,7 +691,8 @@ function DialogContent({
  * The dialog's actions, at the trailing edge and wrapping onto another row
  * when they do not fit on one. Full screen they are drawn at the trailing end
  * of `Dialog.Header`, where the page's full-screen dialog has its confirming
- * action; in a dialog with no header they are a bottom action bar instead.
+ * action; in a dialog with no header, or on iOS and Android where they would
+ * break the headline inside a word, they are a bottom action bar instead.
  * `style`, `ref` and `testID` land on its view, wherever it is drawn.
  */
 function DialogFooter({ style, ...props }: DialogPartProps) {
@@ -641,6 +753,7 @@ function DialogHeader({ children, style, ...props }: DialogPartProps) {
       style={composeStyles<ViewStyle>(
         styles.header,
         layout.basic ? undefined : styles.headerFull,
+        layout.measuring ? styles.measuring : undefined,
         style,
       )}
     >
@@ -661,11 +774,11 @@ function DialogHeader({ children, style, ...props }: DialogPartProps) {
  * and title large as the full-screen one, where it shares a 56dp bar.
  * `style`, `ref` and `testID` land on React Native's own Text.
  */
-function DialogTitle({ ref, style, ...props }: DialogTitleProps) {
+function DialogTitle({ onTextLayout, ref, style, ...props }: DialogTitleProps) {
   const layout = useLayout('Dialog.Title')
   const styles = stylesOf(useTheme())
   const role = useTypeRole(layout.basic ? 'headlineSmall' : 'titleLarge')
-  const { register, setName, setTitle } = layout
+  const { onHeadlineLines, register, setName, setTitle } = layout
 
   useLayoutEffect(() => register('title'), [register])
   useTitleName(setName, props.children)
@@ -674,6 +787,7 @@ function DialogTitle({ ref, style, ...props }: DialogTitleProps) {
     <NativeText
       {...props}
       nativeID={layout.titleId}
+      onTextLayout={linesThen(onTextLayout, onHeadlineLines)}
       ref={refsOf(setTitle, ref)}
       role="heading"
       style={composeStyles<TextStyle>(
@@ -690,6 +804,21 @@ function DialogTitle({ ref, style, ...props }: DialogTitleProps) {
 // draws after the rest.
 function isTitle(part: ReactNode) {
   return isValidElement(part) && part.type === DialogTitle
+}
+
+/**
+ * The headline's text layout handler: the call site's own, then the
+ * content's. Built by a call rather than written inline at the prop, which
+ * is what react-perf's no-new-function-as-prop is after.
+ */
+function linesThen(
+  onTextLayout: TextProps['onTextLayout'],
+  then: DialogLayout['onHeadlineLines'],
+) {
+  return (event: TextLayoutEvent) => {
+    onTextLayout?.(event)
+    then(event)
+  }
 }
 
 /**
