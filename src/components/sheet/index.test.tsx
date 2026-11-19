@@ -97,7 +97,9 @@ function child(node: TestNode | undefined): TestInstance {
 
 // A drag on the sheet carried through to its end with Gesture Handler's own
 // helper: moved through each of `along` and let go at the last, at
-// `velocity`.
+// `velocity`. The drag runs on the UI thread and hands closing and moving
+// the sheet to its other height back to the JavaScript thread, a microtask
+// later, which the suite's fake timers hold until their ticks are run.
 async function drag(along: readonly number[], velocity = 0) {
   const last = along.at(-1) ?? 0
   await act(() => {
@@ -106,6 +108,7 @@ async function drag(along: readonly number[], velocity = 0) {
       ...along.map((translationY) => ({ state: State.ACTIVE, translationY })),
       { state: State.END, translationY: last, velocityY: velocity },
     ])
+    jest.runAllTicks()
   })
 }
 
@@ -712,6 +715,18 @@ describe('Sheet', () => {
   })
 
   describe('the drag', () => {
+    // The panel follows the finger from the UI thread, since the drag moves
+    // its offset alone; it used to wait on the JavaScript thread.
+    it('runs on the UI thread', async () => {
+      const onOpenChange = jest.fn<(isOpen: boolean) => void>()
+      await render(<Held onOpenChange={onOpenChange} />)
+      await layOut(SHORT)
+      await advance(ENTER)
+
+      const gesture = getByGestureTestId('panel-drag')
+      expect('config' in gesture ? gesture.config.runOnJS : true).not.toBe(true)
+    })
+
     it('closes on a swipe down past half its height', async () => {
       const onOpenChange = jest.fn<(isOpen: boolean) => void>()
       await render(<Held onOpenChange={onOpenChange} />)

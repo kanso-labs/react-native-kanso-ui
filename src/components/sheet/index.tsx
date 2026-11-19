@@ -44,6 +44,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated'
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context'
+import { scheduleOnRN } from 'react-native-worklets'
 
 import type { ButtonSlots } from '../../button/slots'
 import type { ModalOpenProps, ModalTrigger } from '../../modal'
@@ -384,8 +385,10 @@ function bottomBoundsOf(
  * Where a bottom sheet let go comes to rest: one height on in the direction of
  * a fling, and the nearest height otherwise. Heights are how far the panel is
  * moved down, highest first, and the highest is always the whole sheet, 0.
+ * A worklet, since the drag that asks for it runs on the UI thread.
  */
 function settleOf(at: number, velocity: number, settles: readonly number[]) {
+  'worklet'
   if (velocity > FLING) {
     return settles.find((stop) => stop > at) ?? settles.at(-1) ?? 0
   }
@@ -827,6 +830,13 @@ function useLayout(part: string) {
  * whole height and no lower than gone, or than its lowest height when it may
  * not be dismissed, and once let go it settles where `settleOf` says: below
  * the lowest height it closes, and at another height it moves the sheet there.
+ *
+ * It runs on the UI thread, since following the finger and settling move the
+ * panel's offset alone, a shared value: the panel no longer waits on the
+ * JavaScript thread to move. Only closing the sheet and moving it to its
+ * other height, which set React state, are handed back to the JavaScript
+ * thread, through `scheduleOnRN`. The gesture is memoised over what it reads,
+ * none of which a drag changes, so a drag does not rebuild it.
  */
 function useSheetDrag({
   close,
@@ -856,51 +866,73 @@ function useSheetDrag({
   // Where the panel stood when the drag was recognised. Gesture Handler
   // measures its translation from there, past the slop.
   const origin = useSharedValue(0)
-  const lowest = stops.settles.at(-1) ?? 0
+  const { partial, settles } = stops
+  const { durationMedium1, easingEmphasizedDecelerate } = motion
 
-  function follow(translation: number) {
-    offset.set(Math.min(lowest, Math.max(0, origin.get() + translation)))
-  }
-
-  function settle(target: number) {
-    if (isDismissable && target === full) {
-      close()
-      return
+  return useMemo(() => {
+    const lowest = settles.at(-1) ?? 0
+    const timing = {
+      duration: durationMedium1,
+      easing: Easing.bezier(...easingEmphasizedDecelerate),
     }
 
-    const higher = target === 0
-    if (stops.partial !== null && higher !== expanded) {
-      setExpanded(higher)
-      return
+    function follow(translation: number) {
+      'worklet'
+      offset.set(Math.min(lowest, Math.max(0, origin.get() + translation)))
     }
 
-    offset.set(
-      reduceMotion
-        ? target
-        : withTiming(target, {
-            duration: motion.durationMedium1,
-            easing: Easing.bezier(...motion.easingEmphasizedDecelerate),
-          }),
-    )
-  }
+    function settle(target: number) {
+      'worklet'
+      if (isDismissable && target === full) {
+        scheduleOnRN(close)
+        return
+      }
 
-  // oxlint-disable-next-line react/capitalized-calls, typescript/no-deprecated -- a builder named after its gesture, not a component; see SheetLayout
-  const pan = Gesture.Pan()
-    .activeOffsetY([-DRAG_SLOP, DRAG_SLOP])
-    .enabled(enabled)
-    .runOnJS(true)
-    .onStart(({ translationY }) => {
-      origin.set(offset.get())
-      follow(translationY)
-    })
-    .onUpdate(({ translationY }) => {
-      follow(translationY)
-    })
-    .onEnd(({ velocityY }, success) => {
-      settle(success ? settleOf(offset.get(), velocityY, stops.settles) : rest)
-    })
+      const higher = target === 0
+      if (partial !== null && higher !== expanded) {
+        scheduleOnRN(setExpanded, higher)
+        return
+      }
 
-  return testID === undefined ? pan : pan.withTestId(`${testID}-drag`)
+      offset.set(reduceMotion ? target : withTiming(target, timing))
+    }
+
+    // oxlint-disable-next-line react/capitalized-calls, typescript/no-deprecated -- a builder named after its gesture, not a component; see SheetLayout
+    const pan = Gesture.Pan()
+      .activeOffsetY([-DRAG_SLOP, DRAG_SLOP])
+      .enabled(enabled)
+      .onStart(({ translationY }) => {
+        'worklet'
+        origin.set(offset.get())
+        follow(translationY)
+      })
+      .onUpdate(({ translationY }) => {
+        'worklet'
+        follow(translationY)
+      })
+      .onEnd(({ velocityY }, success) => {
+        'worklet'
+        settle(success ? settleOf(offset.get(), velocityY, settles) : rest)
+      })
+
+    return testID === undefined ? pan : pan.withTestId(`${testID}-drag`)
+  }, [
+    close,
+    durationMedium1,
+    easingEmphasizedDecelerate,
+    enabled,
+    expanded,
+    full,
+    isDismissable,
+    offset,
+    origin,
+    partial,
+    reduceMotion,
+    rest,
+    setExpanded,
+    settles,
+    testID,
+  ])
 }
 
 /**

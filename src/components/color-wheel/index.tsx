@@ -8,6 +8,7 @@ import type { SharedValue } from 'react-native-reanimated'
 import type { Color } from 'react-stately'
 import type { ColorWheelState } from 'react-stately/useColorWheelState'
 
+import { useMemo } from 'react'
 import { I18nManager, StyleSheet, View } from 'react-native'
 import {
   Gesture,
@@ -19,6 +20,7 @@ import Svg, { Path } from 'react-native-svg'
 import { useColorWheelState } from 'react-stately/useColorWheelState'
 
 import { ColorThumb } from '../../color-thumb'
+import { useLatest } from '../../gesture/latest'
 import { HIDDEN } from '../../glyphs/hidden'
 import { useLocaleOf } from '../../i18n/provider'
 import { ADJUSTABLE } from '../../slider'
@@ -364,7 +366,13 @@ function sliceOf(hue: number, innerRadius: number, outerRadius: number) {
  * lets go, which lifts the handle and is what `onChangeEnd` waits for; the
  * tap moves it and lets it go at once.
  *
- * Both run on the JavaScript thread, since every move sets React state.
+ * Both run on the JavaScript thread, since every move sets React Stately's
+ * state, which is what `onChange` is called from as the handle moves. The
+ * handle could follow a shared value on the UI thread with the state set
+ * less often, but `onChange` would then fire less often too, so the handle
+ * moves with each commit, as before. The gesture is memoised over what
+ * configures it, and reads the state of the latest render through
+ * `useLatest`, so a move no longer rebuilds it.
  */
 function useWheelGesture({
   beyond,
@@ -388,72 +396,84 @@ function useWheelGesture({
   // gesture's callbacks are built while rendering, and the React Compiler
   // lets no ref reach them.
   const held: SharedValue<boolean> = useSharedValue(false)
+  const latest = useLatest(state)
 
-  // The wheel's centre, in the view taking presses.
-  const centre = outerRadius + beyond
+  return useMemo(() => {
+    // The wheel's centre, in the view taking presses.
+    const centre = outerRadius + beyond
 
-  function reaches(x: number, y: number) {
-    const distance = Math.hypot(x - centre, y - centre)
-    return Math.abs(distance - thumbRadius) <= reach
-  }
-
-  // Sets the hue from a press's angle. The very centre has none, and moves
-  // nothing.
-  function setFrom(x: number, y: number) {
-    const across = x - centre
-    const down = y - centre
-    const distance = Math.hypot(across, down)
-    if (distance > 0) {
-      state.setHueFromPoint(across, down, distance)
+    function reaches(x: number, y: number) {
+      const distance = Math.hypot(x - centre, y - centre)
+      return Math.abs(distance - thumbRadius) <= reach
     }
-  }
 
-  // Gesture Handler 3 deprecates these builders for hooks that version 2 does
-  // not have, and the peer range admits both, so the builders stay while it
-  // does.
-  // oxlint-disable-next-line react/capitalized-calls, typescript/no-deprecated -- a builder named after its gesture, not a component; see above
-  const pan = Gesture.Pan()
-    .minDistance(SLOP)
-    .enabled(!isDisabled)
-    .runOnJS(true)
-    .onBegin(({ x, y }) => {
-      held.set(reaches(x, y))
-    })
-    .onStart(({ x, y }) => {
-      if (held.get()) {
-        state.setDragging(true)
-        setFrom(x, y)
+    // Sets the hue from a press's angle. The very centre has none, and moves
+    // nothing.
+    function setFrom(x: number, y: number) {
+      const across = x - centre
+      const down = y - centre
+      const distance = Math.hypot(across, down)
+      if (distance > 0) {
+        latest.get().setHueFromPoint(across, down, distance)
       }
-    })
-    .onUpdate(({ x, y }) => {
-      if (held.get()) {
-        setFrom(x, y)
-      }
-    })
-    // A pan the tap beat, or one begun off the ring, never started, and
-    // letting go of a wheel nothing holds ends nothing, so this needs no
-    // guard.
-    .onFinalize(() => {
-      state.setDragging(false)
-    })
-  // oxlint-disable-next-line react/capitalized-calls, typescript/no-deprecated -- as above
-  const tap = Gesture.Tap()
-    .maxDistance(SLOP)
-    .enabled(!isDisabled)
-    .runOnJS(true)
-    .onEnd(({ x, y }, success) => {
-      if (success && reaches(x, y)) {
-        state.setDragging(true)
-        setFrom(x, y)
-        state.setDragging(false)
-      }
-    })
+    }
 
-  // oxlint-disable-next-line react/capitalized-calls, typescript/no-deprecated -- as above
-  return Gesture.Race(
-    testID === undefined ? pan : pan.withTestId(`${testID}-pan`),
-    testID === undefined ? tap : tap.withTestId(`${testID}-tap`),
-  )
+    // Gesture Handler 3 deprecates these builders for hooks that version 2
+    // does not have, and the peer range admits both, so the builders stay
+    // while it does.
+    // oxlint-disable-next-line react/capitalized-calls, typescript/no-deprecated -- a builder named after its gesture, not a component; see above
+    const pan = Gesture.Pan()
+      .minDistance(SLOP)
+      .enabled(!isDisabled)
+      .runOnJS(true)
+      .onBegin(({ x, y }) => {
+        held.set(reaches(x, y))
+      })
+      .onStart(({ x, y }) => {
+        if (held.get()) {
+          latest.get().setDragging(true)
+          setFrom(x, y)
+        }
+      })
+      .onUpdate(({ x, y }) => {
+        if (held.get()) {
+          setFrom(x, y)
+        }
+      })
+      // A pan the tap beat, or one begun off the ring, never started, and
+      // letting go of a wheel nothing holds ends nothing, so this needs no
+      // guard.
+      .onFinalize(() => {
+        latest.get().setDragging(false)
+      })
+    // oxlint-disable-next-line react/capitalized-calls, typescript/no-deprecated -- as above
+    const tap = Gesture.Tap()
+      .maxDistance(SLOP)
+      .enabled(!isDisabled)
+      .runOnJS(true)
+      .onEnd(({ x, y }, success) => {
+        if (success && reaches(x, y)) {
+          latest.get().setDragging(true)
+          setFrom(x, y)
+          latest.get().setDragging(false)
+        }
+      })
+
+    // oxlint-disable-next-line react/capitalized-calls, typescript/no-deprecated -- as above
+    return Gesture.Race(
+      testID === undefined ? pan : pan.withTestId(`${testID}-pan`),
+      testID === undefined ? tap : tap.withTestId(`${testID}-tap`),
+    )
+  }, [
+    beyond,
+    held,
+    isDisabled,
+    latest,
+    outerRadius,
+    reach,
+    testID,
+    thumbRadius,
+  ])
 }
 
 export { ColorWheel }
