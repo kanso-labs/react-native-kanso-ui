@@ -8,7 +8,7 @@ import type {
 import type { Color, ColorChannel, ColorSpace } from 'react-stately'
 import type { ColorAreaState } from 'react-stately/useColorAreaState'
 
-import { useId, useState } from 'react'
+import { useId, useMemo, useState } from 'react'
 import { I18nManager, StyleSheet, View } from 'react-native'
 import {
   Gesture,
@@ -20,6 +20,7 @@ import { parseColor } from 'react-stately'
 import { useColorAreaState } from 'react-stately/useColorAreaState'
 
 import { ColorThumb } from '../../color-thumb'
+import { useLatest } from '../../gesture/latest'
 import { HIDDEN } from '../../glyphs/hidden'
 import { useLocaleOf } from '../../i18n/provider'
 import { ADJUSTABLE, percentOf } from '../../slider'
@@ -622,7 +623,13 @@ function stopsOf(channel: ColorChannel, base: Color): Fade[] {
  * lifts the handle and what `onChangeEnd` waits for; the tap moves it and
  * lets it go at once.
  *
- * Both run on the JavaScript thread, since every move sets React state.
+ * Both run on the JavaScript thread, since every move sets React Stately's
+ * state, which is what `onChange` is called from as the handle moves. The
+ * handle could follow a shared value on the UI thread with the state set
+ * less often, but `onChange` would then fire less often too, so the handle
+ * moves with each commit, as before. The gesture is memoised over what
+ * configures it, and reads the state and the plane's size of the latest
+ * render through `useLatest`, so a move no longer rebuilds it.
  */
 function usePlaneGesture({
   isDisabled,
@@ -635,57 +642,63 @@ function usePlaneGesture({
   readonly state: ColorAreaState
   readonly testID: string | undefined
 }) {
-  // Sets both channels from a press, once the plane has a size to read it
-  // against. A press past an edge reads past it, which React Stately clamps.
-  function setFrom(x: number, y: number) {
-    if (size.width <= 0 || size.height <= 0) {
-      return
-    }
-    const across = x / size.width
-    state.setColorFromPoint(
-      I18nManager.isRTL ? 1 - across : across,
-      y / size.height,
-    )
-  }
+  const latest = useLatest({ size, state })
 
-  // Gesture Handler 3 deprecates these builders for hooks that version 2 does
-  // not have, and the peer range admits both, so the builders stay while it
-  // does.
-  // oxlint-disable-next-line react/capitalized-calls, typescript/no-deprecated -- a builder named after its gesture, not a component; see above
-  const pan = Gesture.Pan()
-    .minDistance(SLOP)
-    .enabled(!isDisabled)
-    .runOnJS(true)
-    .onStart(({ x, y }) => {
-      state.setDragging(true)
-      setFrom(x, y)
-    })
-    .onUpdate(({ x, y }) => {
-      setFrom(x, y)
-    })
-    // A pan the tap beat never started, and letting go of a plane nothing
-    // holds ends nothing, so this needs no guard.
-    .onFinalize(() => {
-      state.setDragging(false)
-    })
-  // oxlint-disable-next-line react/capitalized-calls, typescript/no-deprecated -- as above
-  const tap = Gesture.Tap()
-    .maxDistance(SLOP)
-    .enabled(!isDisabled)
-    .runOnJS(true)
-    .onEnd(({ x, y }, success) => {
-      if (success) {
-        state.setDragging(true)
-        setFrom(x, y)
-        state.setDragging(false)
+  return useMemo(() => {
+    // Sets both channels from a press, once the plane has a size to read it
+    // against. A press past an edge reads past it, which React Stately
+    // clamps.
+    function setFrom(x: number, y: number) {
+      const { size: now, state: held } = latest.get()
+      if (now.width <= 0 || now.height <= 0) {
+        return
       }
-    })
+      const across = x / now.width
+      held.setColorFromPoint(
+        I18nManager.isRTL ? 1 - across : across,
+        y / now.height,
+      )
+    }
 
-  // oxlint-disable-next-line react/capitalized-calls, typescript/no-deprecated -- as above
-  return Gesture.Race(
-    testID === undefined ? pan : pan.withTestId(`${testID}-pan`),
-    testID === undefined ? tap : tap.withTestId(`${testID}-tap`),
-  )
+    // Gesture Handler 3 deprecates these builders for hooks that version 2
+    // does not have, and the peer range admits both, so the builders stay
+    // while it does.
+    // oxlint-disable-next-line react/capitalized-calls, typescript/no-deprecated -- a builder named after its gesture, not a component; see above
+    const pan = Gesture.Pan()
+      .minDistance(SLOP)
+      .enabled(!isDisabled)
+      .runOnJS(true)
+      .onStart(({ x, y }) => {
+        latest.get().state.setDragging(true)
+        setFrom(x, y)
+      })
+      .onUpdate(({ x, y }) => {
+        setFrom(x, y)
+      })
+      // A pan the tap beat never started, and letting go of a plane nothing
+      // holds ends nothing, so this needs no guard.
+      .onFinalize(() => {
+        latest.get().state.setDragging(false)
+      })
+    // oxlint-disable-next-line react/capitalized-calls, typescript/no-deprecated -- as above
+    const tap = Gesture.Tap()
+      .maxDistance(SLOP)
+      .enabled(!isDisabled)
+      .runOnJS(true)
+      .onEnd(({ x, y }, success) => {
+        if (success) {
+          latest.get().state.setDragging(true)
+          setFrom(x, y)
+          latest.get().state.setDragging(false)
+        }
+      })
+
+    // oxlint-disable-next-line react/capitalized-calls, typescript/no-deprecated -- as above
+    return Gesture.Race(
+      testID === undefined ? pan : pan.withTestId(`${testID}-pan`),
+      testID === undefined ? tap : tap.withTestId(`${testID}-tap`),
+    )
+  }, [isDisabled, latest, testID])
 }
 
 export { ColorArea }

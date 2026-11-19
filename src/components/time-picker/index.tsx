@@ -18,7 +18,7 @@ import {
   toCalendarDateTime,
   today,
 } from '@internationalized/date'
-import { use, useCallback, useId, useRef, useState } from 'react'
+import { use, useCallback, useId, useMemo, useRef, useState } from 'react'
 import {
   Text as NativeText,
   Platform,
@@ -47,6 +47,7 @@ import type { ResolvedTheme } from '../../theme/scope'
 import type { TimeFieldProps } from '../time-field'
 
 import { ButtonSlotContext } from '../../button/slots'
+import { useLatest } from '../../gesture/latest'
 import { ClockGlyph, KeyboardGlyph } from '../../glyphs'
 import { GROUP } from '../../group'
 import { messagesFor } from '../../i18n'
@@ -1199,43 +1200,49 @@ function TimePickerModal({ state, trigger, ...props }: ModalProps) {
 
 // The dial's gestures: a drag that sets the part as it moves and moves on
 // as it lets go, and a tap that does both where it lands. Each lets go to
-// the other, as the slider's track does.
+// the other, as the slider's track does. Memoised over the test id, with the
+// handlers of the latest render read through `useLatest`, so the render each
+// pick sets off does not rebuild them.
 function useDialGesture({
   onPick,
   onRelease,
   testID,
 }: Pick<DialProps, 'onPick' | 'onRelease' | 'testID'>) {
-  // Gesture Handler 3 deprecates these builders for hooks that version 2 does
-  // not have, and the peer range admits both, so the builders stay while it
-  // does.
-  // oxlint-disable-next-line react/capitalized-calls, typescript/no-deprecated -- a builder named after its gesture, not a component; see above
-  const pan = Gesture.Pan()
-    .runOnJS(true)
-    .onStart(({ x, y }) => {
-      onPick(x, y)
-    })
-    .onUpdate(({ x, y }) => {
-      onPick(x, y)
-    })
-    .onEnd(() => {
-      onRelease()
-    })
-  // oxlint-disable-next-line react/capitalized-calls, typescript/no-deprecated -- as above
-  const tap = Gesture.Tap()
-    .maxDistance(SLOP)
-    .runOnJS(true)
-    .onEnd(({ x, y }, success) => {
-      if (success) {
-        onPick(x, y)
-        onRelease()
-      }
-    })
+  const latest = useLatest({ onPick, onRelease })
 
-  // oxlint-disable-next-line react/capitalized-calls, typescript/no-deprecated -- as above
-  return Gesture.Race(
-    testID === undefined ? pan : pan.withTestId(`${testID}-dial-pan`),
-    testID === undefined ? tap : tap.withTestId(`${testID}-dial-tap`),
-  )
+  return useMemo(() => {
+    // Gesture Handler 3 deprecates these builders for hooks that version 2
+    // does not have, and the peer range admits both, so the builders stay
+    // while it does.
+    // oxlint-disable-next-line react/capitalized-calls, typescript/no-deprecated -- a builder named after its gesture, not a component; see above
+    const pan = Gesture.Pan()
+      .runOnJS(true)
+      .onStart(({ x, y }) => {
+        latest.get().onPick(x, y)
+      })
+      .onUpdate(({ x, y }) => {
+        latest.get().onPick(x, y)
+      })
+      .onEnd(() => {
+        latest.get().onRelease()
+      })
+    // oxlint-disable-next-line react/capitalized-calls, typescript/no-deprecated -- as above
+    const tap = Gesture.Tap()
+      .maxDistance(SLOP)
+      .runOnJS(true)
+      .onEnd(({ x, y }, success) => {
+        if (success) {
+          latest.get().onPick(x, y)
+          latest.get().onRelease()
+        }
+      })
+
+    // oxlint-disable-next-line react/capitalized-calls, typescript/no-deprecated -- as above
+    return Gesture.Race(
+      testID === undefined ? pan : pan.withTestId(`${testID}-dial-pan`),
+      testID === undefined ? tap : tap.withTestId(`${testID}-dial-tap`),
+    )
+  }, [latest, testID])
 }
 
 /**

@@ -3,7 +3,7 @@ import type { StyleProp, ViewProps, ViewStyle } from 'react-native'
 import type { AnimatedStyle, SharedValue } from 'react-native-reanimated'
 import type { ToggleState } from 'react-stately/useToggleState'
 
-import { useId, useState } from 'react'
+import { useId, useMemo, useState } from 'react'
 import {
   I18nManager,
   Platform,
@@ -36,6 +36,7 @@ import {
   useControlLine,
 } from '../../control'
 import { controlStylesOf } from '../../control/styles'
+import { useLatest } from '../../gesture/latest'
 import { CheckGlyph } from '../../glyphs'
 import { hitSlop, usePressFeedback } from '../../press'
 import { withOpacity } from '../../theme/color'
@@ -445,7 +446,9 @@ function Switch({
  *
  * The drag is recognised once it has moved `DRAG_SLOP` across the track, and
  * on the JavaScript thread, since settling sets React state and a drag moves
- * one shared value.
+ * one shared value. The gesture is memoised over what configures it, and
+ * reads the switch's state of the latest render through `useLatest`, so the
+ * renders a drag starts and ends do not rebuild it.
  */
 function useHandleDrag({
   enabled,
@@ -472,45 +475,53 @@ function useHandleDrag({
   // distance is taken from here instead, as web's is from the press.
   const began = useSharedValue(0)
 
-  // Puts the seat where the drag has carried it, from the end it started at,
-  // and no further than either end.
-  function follow(x: number) {
-    const along = I18nManager.isRTL ? began.get() - x : x - began.get()
-    offset.set(Math.min(TRAVEL, Math.max(0, (on ? TRAVEL : 0) + along)))
-  }
+  const latest = useLatest({ on, state })
+  const gesture = useMemo(() => {
+    // Puts the seat where the drag has carried it, from the end it started
+    // at, and no further than either end.
+    function follow(x: number) {
+      const along = I18nManager.isRTL ? began.get() - x : x - began.get()
+      const from = latest.get().on ? TRAVEL : 0
+      offset.set(Math.min(TRAVEL, Math.max(0, from + along)))
+    }
 
-  // Gesture Handler 3 deprecates this builder for hooks that version 2 does not
-  // have, and the peer range admits both, so the builder stays while it does.
-  // oxlint-disable-next-line react/capitalized-calls, typescript/no-deprecated -- a builder named after its gesture, not a component; see above
-  const pan = Gesture.Pan()
-    .activeOffsetX([-DRAG_SLOP, DRAG_SLOP])
-    .enabled(enabled)
-    .runOnJS(true)
-    .onBegin(({ x }) => {
-      began.set(x)
-    })
-    .onStart(({ x }) => {
-      took.set(Platform.OS === 'web')
-      setDragging(true)
-      follow(x)
-    })
-    .onUpdate(({ x }) => {
-      follow(x)
-    })
-    .onEnd((_event, success) => {
-      const stopped = offset.get()
-      if (success && stopped !== null && stopped > TRAVEL / 2 !== on) {
-        state.setSelected(!on)
-      }
-    })
-    .onFinalize(() => {
-      offset.set(null)
-      setDragging(false)
-    })
+    // Gesture Handler 3 deprecates this builder for hooks that version 2
+    // does not have, and the peer range admits both, so the builder stays
+    // while it does.
+    // oxlint-disable-next-line react/capitalized-calls, typescript/no-deprecated -- a builder named after its gesture, not a component; see above
+    const pan = Gesture.Pan()
+      .activeOffsetX([-DRAG_SLOP, DRAG_SLOP])
+      .enabled(enabled)
+      .runOnJS(true)
+      .onBegin(({ x }) => {
+        began.set(x)
+      })
+      .onStart(({ x }) => {
+        took.set(Platform.OS === 'web')
+        setDragging(true)
+        follow(x)
+      })
+      .onUpdate(({ x }) => {
+        follow(x)
+      })
+      .onEnd((_event, success) => {
+        const stopped = offset.get()
+        const { on: was, state: now } = latest.get()
+        if (success && stopped !== null && stopped > TRAVEL / 2 !== was) {
+          now.setSelected(!was)
+        }
+      })
+      .onFinalize(() => {
+        offset.set(null)
+        setDragging(false)
+      })
+
+    return testID === undefined ? pan : pan.withTestId(`${testID}-drag`)
+  }, [began, enabled, latest, offset, testID, took])
 
   return {
     dragging,
-    gesture: testID === undefined ? pan : pan.withTestId(`${testID}-drag`),
+    gesture,
     offset,
     onPressIn: () => {
       took.set(false)

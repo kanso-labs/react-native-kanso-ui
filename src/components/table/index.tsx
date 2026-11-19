@@ -74,6 +74,7 @@ import {
   Status,
 } from '../../collection'
 import { LAYER_SIZE } from '../../control/styles'
+import { useLatest } from '../../gesture/latest'
 import { ArrowDownwardGlyph, ArrowUpwardGlyph } from '../../glyphs'
 import { IconStyleContext } from '../../glyphs/icon-style'
 import { columnSizeFor, sortedFor } from '../../i18n'
@@ -1368,80 +1369,90 @@ function ResizeHandle({
   const width = layout.getColumnWidth(key)
   const resizing = layout.resizingColumn === key
 
-  function begin(x: number) {
-    const start = layout.getColumnWidth(key)
-    from.set(start)
-    last.set(start)
-    layout.startResize(key)
-    resizeTo(start, x)
-  }
-
-  function move(x: number) {
-    const start = from.get()
-    if (start < 0) {
-      return
+  // The gesture is memoised over what configures it, and reads the layout
+  // and the handlers of the latest render through `useLatest`, so the
+  // renders a drag sets off as the column widens do not rebuild it.
+  const latest = useLatest({ layout, onResize, onResizeEnd })
+  const { testID } = table
+  const pan = useMemo(() => {
+    function begin(x: number) {
+      const start = latest.get().layout.getColumnWidth(key)
+      from.set(start)
+      last.set(start)
+      latest.get().layout.startResize(key)
+      resizeTo(start, x)
     }
-    resizeTo(start, x)
-  }
 
-  // The width the drag asks for once the finger is at `x` across the window.
-  // A drag towards the end widens the column, which is leftwards in a
-  // right-to-left layout.
-  function resizeTo(start: number, x: number) {
-    const moved = x - down.get()
-    const next = start + (I18nManager.isRTL ? -moved : moved)
-    last.set(next)
-    onResize?.(layout.updateResizedColumns(key, next))
-  }
-
-  function finish() {
-    if (from.get() < 0) {
-      return
+    function move(x: number) {
+      const start = from.get()
+      if (start < 0) {
+        return
+      }
+      resizeTo(start, x)
     }
-    from.set(-1)
-    const sizes = layout.updateResizedColumns(key, last.get())
-    layout.endResize()
-    onResizeEnd?.(sizes)
-  }
 
-  // Gesture Handler 3 deprecates these builders for hooks that version 2
-  // does not have, and the peer range admits both, so the builders stay
-  // while it does.
-  // oxlint-disable-next-line react/capitalized-calls, typescript/no-deprecated -- a builder named after its gesture, not a component; see above
-  const drag = Gesture.Pan()
-    // Reaching to 48dp across the header, centred on the edge, past the
-    // strip the handle is drawn as. The last one's strip is only the half
-    // inside the table, so its reach past the table's end is the whole half,
-    // on the left under a right-to-left layout.
-    .hitSlop(reachOf(isLast))
-    // Taken once it moves along the header, and let go to a scroll once it
-    // moves across it first.
-    .activeOffsetX(SLOP_RANGE)
-    .failOffsetY(SLOP_RANGE)
-    .runOnJS(true)
-    // The edge follows the finger from where it went down, so the distance
-    // it moved before the drag was taken counts too. That is read off where
-    // the finger is across the window rather than off the drag's
-    // translation, which Gesture Handler counts from the point the drag was
-    // taken: an edge that followed it fell behind the finger by as far as
-    // the finger had gone by then, half of a 40dp drag on an iPhone.
-    .onBegin(({ absoluteX }) => {
-      down.set(absoluteX)
-    })
-    .onStart(({ absoluteX }) => {
-      begin(absoluteX)
-    })
-    .onUpdate(({ absoluteX }) => {
-      move(absoluteX)
-    })
-    .onFinalize(() => {
-      finish()
-    })
-  const held = native === undefined ? drag : drag.blocksExternalGesture(native)
-  const pan =
-    table.testID === undefined
+    // The width the drag asks for once the finger is at `x` across the window.
+    // A drag towards the end widens the column, which is leftwards in a
+    // right-to-left layout.
+    function resizeTo(start: number, x: number) {
+      const moved = x - down.get()
+      const next = start + (I18nManager.isRTL ? -moved : moved)
+      last.set(next)
+      const { layout: now, onResize: report } = latest.get()
+      report?.(now.updateResizedColumns(key, next))
+    }
+
+    function finish() {
+      if (from.get() < 0) {
+        return
+      }
+      from.set(-1)
+      const { layout: now, onResizeEnd: ended } = latest.get()
+      const sizes = now.updateResizedColumns(key, last.get())
+      now.endResize()
+      ended?.(sizes)
+    }
+
+    // Gesture Handler 3 deprecates these builders for hooks that version 2
+    // does not have, and the peer range admits both, so the builders stay
+    // while it does.
+    // oxlint-disable-next-line react/capitalized-calls, typescript/no-deprecated -- a builder named after its gesture, not a component; see above
+    const drag = Gesture.Pan()
+      // Reaching to 48dp across the header, centred on the edge, past the
+      // strip the handle is drawn as. The last one's strip is only the half
+      // inside the table, so its reach past the table's end is the whole half,
+      // on the left under a right-to-left layout.
+      .hitSlop(reachOf(isLast))
+      // Taken once it moves along the header, and let go to a scroll once it
+      // moves across it first.
+      .activeOffsetX(SLOP_RANGE)
+      .failOffsetY(SLOP_RANGE)
+      .runOnJS(true)
+      // The edge follows the finger from where it went down, so the distance
+      // it moved before the drag was taken counts too. That is read off where
+      // the finger is across the window rather than off the drag's
+      // translation, which Gesture Handler counts from the point the drag was
+      // taken: an edge that followed it fell behind the finger by as far as
+      // the finger had gone by then, half of a 40dp drag on an iPhone.
+      .onBegin(({ absoluteX }) => {
+        down.set(absoluteX)
+      })
+      .onStart(({ absoluteX }) => {
+        begin(absoluteX)
+      })
+      .onUpdate(({ absoluteX }) => {
+        move(absoluteX)
+      })
+      .onFinalize(() => {
+        finish()
+      })
+    const held =
+      native === undefined ? drag : drag.blocksExternalGesture(native)
+
+    return testID === undefined
       ? held
-      : held.withTestId(`${table.testID}-resize-${String(key)}`)
+      : held.withTestId(`${testID}-resize-${String(key)}`)
+  }, [down, from, isLast, key, last, latest, native, testID])
 
   return (
     <GestureDetector gesture={pan}>

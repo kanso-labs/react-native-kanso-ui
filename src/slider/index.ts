@@ -9,9 +9,12 @@ import type {
 import type { SharedValue } from 'react-native-reanimated'
 import type { SliderState } from 'react-stately/useSliderState'
 
+import { useMemo } from 'react'
 import { I18nManager, StyleSheet } from 'react-native'
 import { Gesture } from 'react-native-gesture-handler'
 import { useSharedValue } from 'react-native-reanimated'
+
+import { useLatest } from '../gesture/latest'
 
 // What a slider and a colour slider share: the press and the drag along the
 // track, the frame a screen reader adjusts a handle in and the steps it asks
@@ -202,7 +205,13 @@ function seatPlaceOf(fraction: number, vertical: boolean): ViewStyle {
  * which is what brings up its indicator and narrows it, and what
  * `onChangeEnd` waits for; the tap moves it and lets it go at once.
  *
- * Both run on the JavaScript thread, since every move sets React state.
+ * Both run on the JavaScript thread, since every move sets React Stately's
+ * state, which is what `onChange` is called from as the handle moves. The
+ * handle could follow a shared value on the UI thread with the state set
+ * less often, but `onChange` would then fire less often too, so the handle
+ * moves with each commit, as before. What a move no longer does is rebuild
+ * the gesture: it is memoised over what configures it, and reads the state
+ * and the track's length of the latest render through `useLatest`.
  */
 function useTrackGesture({
   isDisabled,
@@ -221,97 +230,103 @@ function useTrackGesture({
   // gesture's callbacks are built while rendering, and the React Compiler
   // lets no ref reach them.
   const dragged: SharedValue<number> = useSharedValue(-1)
+  const latest = useLatest({ length, state })
 
-  // A press's place as a fraction of the way along the track, or null
-  // before the track has a length to read it against. A press past either
-  // end reads past 0 or 1, which React Stately clamps to the slider's ends.
-  function fractionAt(x: number, y: number) {
-    if (length <= 0) {
-      return null
-    }
-    const along = (vertical ? y : x) / length
-    if (vertical) {
-      return 1 - along
-    }
-    return I18nManager.isRTL ? 1 - along : along
-  }
-
-  function grab(x: number, y: number) {
-    const fraction = fractionAt(x, y)
-    if (fraction === null) {
-      return
-    }
-    const index = closestThumb(state.values, state.getPercentValue(fraction))
-    dragged.set(index)
-    state.setThumbDragging(index, true)
-    state.setThumbPercent(index, fraction)
-  }
-
-  function move(x: number, y: number) {
-    const index = dragged.get()
-    const fraction = fractionAt(x, y)
-    if (index >= 0 && fraction !== null) {
-      state.setThumbPercent(index, fraction)
-    }
-  }
-
-  function release() {
-    const index = dragged.get()
-    if (index >= 0) {
-      dragged.set(-1)
-      state.setThumbDragging(index, false)
-    }
-  }
-
-  function jump(x: number, y: number) {
-    const fraction = fractionAt(x, y)
-    if (fraction === null) {
-      return
-    }
-    const index = closestThumb(state.values, state.getPercentValue(fraction))
-    state.setThumbDragging(index, true)
-    state.setThumbPercent(index, fraction)
-    state.setThumbDragging(index, false)
-  }
-
-  // Gesture Handler 3 deprecates these builders for hooks that version 2 does
-  // not have, and the peer range admits both, so the builders stay while it
-  // does.
-  // oxlint-disable-next-line react/capitalized-calls, typescript/no-deprecated -- a builder named after its gesture, not a component; see above
-  const drag = Gesture.Pan()
-  // Taken once it moves along the track, and let go to a scroll view once
-  // it moves across it first.
-  const oriented = vertical
-    ? drag.activeOffsetY(SLOP_RANGE).failOffsetX(SLOP_RANGE)
-    : drag.activeOffsetX(SLOP_RANGE).failOffsetY(SLOP_RANGE)
-  const pan = oriented
-    .enabled(!isDisabled)
-    .runOnJS(true)
-    .onStart(({ x, y }) => {
-      grab(x, y)
-    })
-    .onUpdate(({ x, y }) => {
-      move(x, y)
-    })
-    .onFinalize(() => {
-      release()
-    })
-  // oxlint-disable-next-line react/capitalized-calls, typescript/no-deprecated -- as above
-  const tap = Gesture.Tap()
-    .maxDistance(SLOP)
-    .enabled(!isDisabled)
-    .runOnJS(true)
-    .onEnd(({ x, y }, success) => {
-      if (success) {
-        jump(x, y)
+  return useMemo(() => {
+    // A press's place as a fraction of the way along the track, or null
+    // before the track has a length to read it against. A press past either
+    // end reads past 0 or 1, which React Stately clamps to the slider's ends.
+    function fractionAt(x: number, y: number) {
+      const along = latest.get().length
+      if (along <= 0) {
+        return null
       }
-    })
+      const share = (vertical ? y : x) / along
+      if (vertical) {
+        return 1 - share
+      }
+      return I18nManager.isRTL ? 1 - share : share
+    }
 
-  // oxlint-disable-next-line react/capitalized-calls, typescript/no-deprecated -- as above
-  return Gesture.Race(
-    testID === undefined ? pan : pan.withTestId(`${testID}-pan`),
-    testID === undefined ? tap : tap.withTestId(`${testID}-tap`),
-  )
+    function grab(x: number, y: number) {
+      const fraction = fractionAt(x, y)
+      if (fraction === null) {
+        return
+      }
+      const { state: now } = latest.get()
+      const index = closestThumb(now.values, now.getPercentValue(fraction))
+      dragged.set(index)
+      now.setThumbDragging(index, true)
+      now.setThumbPercent(index, fraction)
+    }
+
+    function move(x: number, y: number) {
+      const index = dragged.get()
+      const fraction = fractionAt(x, y)
+      if (index >= 0 && fraction !== null) {
+        latest.get().state.setThumbPercent(index, fraction)
+      }
+    }
+
+    function release() {
+      const index = dragged.get()
+      if (index >= 0) {
+        dragged.set(-1)
+        latest.get().state.setThumbDragging(index, false)
+      }
+    }
+
+    function jump(x: number, y: number) {
+      const fraction = fractionAt(x, y)
+      if (fraction === null) {
+        return
+      }
+      const { state: now } = latest.get()
+      const index = closestThumb(now.values, now.getPercentValue(fraction))
+      now.setThumbDragging(index, true)
+      now.setThumbPercent(index, fraction)
+      now.setThumbDragging(index, false)
+    }
+
+    // Gesture Handler 3 deprecates these builders for hooks that version 2
+    // does not have, and the peer range admits both, so the builders stay
+    // while it does.
+    // oxlint-disable-next-line react/capitalized-calls, typescript/no-deprecated -- a builder named after its gesture, not a component; see above
+    const drag = Gesture.Pan()
+    // Taken once it moves along the track, and let go to a scroll view once
+    // it moves across it first.
+    const oriented = vertical
+      ? drag.activeOffsetY(SLOP_RANGE).failOffsetX(SLOP_RANGE)
+      : drag.activeOffsetX(SLOP_RANGE).failOffsetY(SLOP_RANGE)
+    const pan = oriented
+      .enabled(!isDisabled)
+      .runOnJS(true)
+      .onStart(({ x, y }) => {
+        grab(x, y)
+      })
+      .onUpdate(({ x, y }) => {
+        move(x, y)
+      })
+      .onFinalize(() => {
+        release()
+      })
+    // oxlint-disable-next-line react/capitalized-calls, typescript/no-deprecated -- as above
+    const tap = Gesture.Tap()
+      .maxDistance(SLOP)
+      .enabled(!isDisabled)
+      .runOnJS(true)
+      .onEnd(({ x, y }, success) => {
+        if (success) {
+          jump(x, y)
+        }
+      })
+
+    // oxlint-disable-next-line react/capitalized-calls, typescript/no-deprecated -- as above
+    return Gesture.Race(
+      testID === undefined ? pan : pan.withTestId(`${testID}-pan`),
+      testID === undefined ? tap : tap.withTestId(`${testID}-tap`),
+    )
+  }, [dragged, isDisabled, latest, testID, vertical])
 }
 
 export {

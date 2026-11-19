@@ -104,6 +104,13 @@ async function ask(actionName: string, index = 0) {
   )
 }
 
+// The callbacks of the gesture registered under `testID`, which the detector
+// takes into the handler it attached first from each gesture it is handed.
+function callbacksOf(testID: string) {
+  const gesture = getByGestureTestId(testID)
+  return 'handlers' in gesture ? gesture.handlers : undefined
+}
+
 function child(element: null | TestNode | undefined) {
   if (
     element === null ||
@@ -865,6 +872,28 @@ describe('Slider', () => {
   })
 
   describe('while dragged', () => {
+    // Every move sets React state and renders the slider again, and a
+    // gesture built in render was a new one each time, which Gesture
+    // Handler's detector set up again on every move. The detector keeps the
+    // handler it first attached and takes each new gesture's callbacks into
+    // it, so the callbacks are what tell one gesture from the next.
+    it('hands its detector the same gesture from move to move', async () => {
+      await render(<Slider defaultValue={40} label="Label" testID="slider" />)
+      await layOut()
+
+      const held = heldDrag()
+      await held.begin(160)
+      await held.move(200)
+      const first = callbacksOf('slider-pan')
+      expect(first).toBeDefined()
+      await held.move(240)
+      await held.move(280)
+
+      expect(screen.getByRole('slider')).toHaveAccessibilityValue({ now: 70 })
+      expect(callbacksOf('slider-pan')).toBe(first)
+      await held.end()
+    })
+
     it('shows the value above the handle until it is let go', async () => {
       const onChangeEnd = jest.fn()
       await render(
