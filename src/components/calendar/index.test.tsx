@@ -17,6 +17,7 @@ import { createRef } from 'react'
 import {
   AccessibilityInfo,
   I18nManager,
+  Platform,
   ScrollView,
   StyleSheet,
   View,
@@ -146,6 +147,16 @@ function glyphOf(button: TestInstance): TestInstance {
   )
 }
 
+// Whether a value has the `focus` the Jest preset's View mocks.
+function isFocusable(value: unknown): value is { focus: () => void } {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'focus' in value &&
+    typeof value.focus === 'function'
+  )
+}
+
 function isWeekend(date: DateValue) {
   const day = getDayOfWeek(date, 'en-US')
   return day === 0 || day === 6
@@ -164,10 +175,29 @@ function nameOf(element: TestInstance) {
   return typeof name === 'string' ? name : ''
 }
 
+// A key pressed on the date that takes the grid's Tab stop, and the
+// `preventDefault` it was handed.
+async function pressKey(key: string, shiftKey = false) {
+  const preventDefault = jest.fn()
+  const at = datesOf().find((cell) => cell.props.tabIndex === 0)
+  await fireEvent(child(at), 'keyDown', {
+    nativeEvent: { key, shiftKey },
+    preventDefault,
+  })
+  return preventDefault
+}
+
 function styleOf(element: {
   props: { style?: StyleProp<ViewStyle> }
 }): ViewStyle {
   return StyleSheet.flatten([element.props.style]) ?? {}
+}
+
+// The name of the one date that takes the grid's Tab stop.
+function tabStopName() {
+  const stops = datesOf().filter((cell) => cell.props.tabIndex === 0)
+  expect(stops).toHaveLength(1)
+  return nameOf(child(stops[0]))
 }
 
 // A date's number, which is the one text inside its button.
@@ -464,6 +494,140 @@ describe('Calendar', () => {
         'Tuesday, September 15, 2026',
         'Tuesday, September 22, 2026 selected',
       ])
+    })
+  })
+
+  // Under React Native Web the grid is one Tab stop and the keys move the
+  // focus inside it. The browser's focus is read off the views a cell hands
+  // `focus` to, which the Jest preset's View mocks.
+  describe('the keys, under React Native Web', () => {
+    let focused: string[] = []
+
+    beforeEach(() => {
+      focused = []
+      jest.replaceProperty(Platform, 'OS', 'web')
+      const prototype: unknown = View.prototype
+      if (!isFocusable(prototype)) {
+        throw new TypeError('expected the View the Jest preset mocks')
+      }
+      jest.spyOn(prototype, 'focus').mockImplementation(function focus(this: {
+        props: { accessibilityLabel?: unknown }
+      }) {
+        focused.push(String(this.props.accessibilityLabel))
+      })
+    })
+
+    it('makes the grid one Tab stop, on the date it holds', async () => {
+      await render(<Calendar defaultValue={SEPTEMBER} locale="en-US" />)
+
+      expect(tabStopName()).toBe('Tuesday, September 15, 2026 selected')
+      expect(
+        datesOf().filter((cell) => cell.props.tabIndex === -1),
+      ).toHaveLength(34)
+    })
+
+    it('moves a day, a week, the week’s ends, a month and a year', async () => {
+      await render(<Calendar defaultValue={SEPTEMBER} locale="en-US" />)
+      await fireEvent(
+        dateNamed('Tuesday, September 15, 2026 selected'),
+        'focus',
+      )
+
+      const moves: readonly (readonly [string, boolean, string])[] = [
+        ['ArrowRight', false, 'Wednesday, September 16, 2026'],
+        ['ArrowDown', false, 'Wednesday, September 23, 2026'],
+        ['PageDown', false, 'Friday, October 23, 2026'],
+        ['Home', false, 'Sunday, October 18, 2026'],
+        ['End', false, 'Saturday, October 24, 2026'],
+        ['ArrowLeft', false, 'Friday, October 23, 2026'],
+        ['ArrowUp', false, 'Friday, October 16, 2026'],
+        ['PageDown', true, 'Saturday, October 16, 2027'],
+        ['PageUp', false, 'Thursday, September 16, 2027'],
+      ]
+      for (const [key, shiftKey, landed] of moves) {
+        // oxlint-disable-next-line no-await-in-loop -- each key is an act of its own, and two acts may not overlap
+        const preventDefault = await pressKey(key, shiftKey)
+
+        expect(preventDefault).toHaveBeenCalledTimes(1)
+        expect(tabStopName()).toBe(landed)
+        expect(focused.at(-1)).toBe(landed)
+      }
+      expect(
+        screen.getByRole('heading', { name: 'September 2027' }),
+      ).toBeTruthy()
+    })
+
+    it('leaves any other key to the page', async () => {
+      await render(<Calendar defaultValue={SEPTEMBER} locale="en-US" />)
+      await fireEvent(
+        dateNamed('Tuesday, September 15, 2026 selected'),
+        'focus',
+      )
+
+      expect(await pressKey('a')).not.toHaveBeenCalled()
+      expect(await pressKey('Tab')).not.toHaveBeenCalled()
+      expect(tabStopName()).toBe('Tuesday, September 15, 2026 selected')
+    })
+
+    it('keeps the focus within the bounds', async () => {
+      await render(
+        <Calendar
+          defaultValue={new CalendarDate(2026, 9, 22)}
+          locale="en-US"
+          maxValue={MAX}
+          minValue={MIN}
+        />,
+      )
+      await fireEvent(
+        dateNamed('Tuesday, September 22, 2026 selected'),
+        'focus',
+      )
+
+      await pressKey('ArrowDown')
+
+      expect(tabStopName()).toBe(
+        'Thursday, September 24, 2026, Last available date',
+      )
+    })
+
+    it('mirrors the arrows under a right-to-left locale', async () => {
+      await render(<Calendar defaultValue={SEPTEMBER} locale="he-IL" />)
+      const dates = datesOf()
+      const at = dates.findIndex((cell) => cell.props.tabIndex === 0)
+      await fireEvent(child(dates[at]), 'focus')
+
+      await pressKey('ArrowRight')
+
+      expect(datesOf()[at - 1]?.props.tabIndex).toBe(0)
+    })
+
+    it('takes no focus once the focus has left the grid', async () => {
+      await render(<Calendar defaultValue={SEPTEMBER} locale="en-US" />)
+      const cell = dateNamed('Tuesday, September 15, 2026 selected')
+      await fireEvent(cell, 'focus')
+      await fireEvent(cell, 'blur')
+      focused = []
+
+      await fireEvent.press(screen.getByRole('button', { name: 'Next' }))
+
+      expect(focused).toEqual([])
+    })
+
+    it('leaves a date a stop of its own on a device', async () => {
+      jest.replaceProperty(Platform, 'OS', 'android')
+      await render(<Calendar defaultValue={SEPTEMBER} locale="en-US" />)
+
+      const web = datesOf().map((cell) => {
+        const {
+          onKeyDown,
+          tabIndex,
+        }: { onKeyDown?: unknown; tabIndex?: unknown } = cell.props
+        return [tabIndex, onKeyDown]
+      })
+
+      expect(web).toEqual(
+        Array.from({ length: 35 }, () => [undefined, undefined]),
+      )
     })
   })
 
