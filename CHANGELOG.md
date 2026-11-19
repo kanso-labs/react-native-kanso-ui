@@ -1,5 +1,45 @@
 # Changelog
 
+## [0.14.0](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.13.4...v0.14.0) (2026-11-19)
+
+
+### Features
+
+* **calendar:** move between dates with the arrow keys, Home, End, PageUp and PageDown on web ([#776](https://github.com/kanso-labs/react-native-kanso-ui/issues/776)) ([4759d3e](https://github.com/kanso-labs/react-native-kanso-ui/commit/4759d3e5fb81a10fc12b48e49135cb656e1b02b5))
+* **slider:** move a slider with the arrow keys, Home and End on web ([#775](https://github.com/kanso-labs/react-native-kanso-ui/issues/775)) ([2c9b16a](https://github.com/kanso-labs/react-native-kanso-ui/commit/2c9b16ab0cd7dffd828c46d51557e2fd2866b0cd))
+* **split-button:** select the menu button and turn its chevron while the menu is open ([#767](https://github.com/kanso-labs/react-native-kanso-ui/issues/767)) ([bb7f7ee](https://github.com/kanso-labs/react-native-kanso-ui/commit/bb7f7ee5dc6b7223b7b5814c88bdbc754f9e9665))
+* **table:** show that a table scrolled sideways has more columns past its edge ([#758](https://github.com/kanso-labs/react-native-kanso-ui/issues/758)) ([d9935ab](https://github.com/kanso-labs/react-native-kanso-ui/commit/d9935abdc68c3b6db1dcc555bd5708544e4b7a3f))
+* **tabs:** fade the edge of a scrollable tab bar that has tabs past it ([#757](https://github.com/kanso-labs/react-native-kanso-ui/issues/757)) ([0951dba](https://github.com/kanso-labs/react-native-kanso-ui/commit/0951dbac92809f1e47ef4e64d8bfe9ec8e2bde57))
+* **tabs:** move between tabs with the arrow keys, Home and End on web ([#763](https://github.com/kanso-labs/react-native-kanso-ui/issues/763)) ([9981295](https://github.com/kanso-labs/react-native-kanso-ui/commit/998129580cab4b1b505286558bf3cbd3522cecd7))
+
+
+### Bug Fixes
+
+* bring a chip's remove button and the time segments to a 24px target on web ([#761](https://github.com/kanso-labs/react-native-kanso-ui/issues/761)) ([465b5d4](https://github.com/kanso-labs/react-native-kanso-ui/commit/465b5d4146fa8573383e0634db10192f7ea44cdb))
+* **dialog:** keep a full-screen dialog's headline readable at large text sizes ([#756](https://github.com/kanso-labs/react-native-kanso-ui/issues/756)) ([01814ab](https://github.com/kanso-labs/react-native-kanso-ui/commit/01814abdbf8bda4016cd7650dbaa11cdc39dc9a1))
+* keep a field's box out of web's tab order and the browser's outline off controls that draw their own ring ([#769](https://github.com/kanso-labs/react-native-kanso-ui/issues/769)) ([beea0c6](https://github.com/kanso-labs/react-native-kanso-ui/commit/beea0c660144fd339406efc1c60b7d4d12a7949b))
+* **overlay:** close a non-modal panel on Escape ([#754](https://github.com/kanso-labs/react-native-kanso-ui/issues/754)) ([46407e3](https://github.com/kanso-labs/react-native-kanso-ui/commit/46407e34a0577542642e6b6cb5f3f4c78f396c80))
+* **press:** draw a press as one layer, the ripple over the resting container ([#768](https://github.com/kanso-labs/react-native-kanso-ui/issues/768)) ([cf46dc2](https://github.com/kanso-labs/react-native-kanso-ui/commit/cf46dc2dd2cede4448b9368afe4cf78abb1f161c))
+* **press:** show the focus ring on web only for focus from the keyboard ([#773](https://github.com/kanso-labs/react-native-kanso-ui/issues/773)) ([1fe2455](https://github.com/kanso-labs/react-native-kanso-ui/commit/1fe2455b7d7660efc69071011b709211f4e79b47))
+* **segments:** isolate a time's parts left to right on web without the direction style ([#760](https://github.com/kanso-labs/react-native-kanso-ui/issues/760)) ([d48cf3e](https://github.com/kanso-labs/react-native-kanso-ui/commit/d48cf3e0d80fe17971f069f056f4d15986dcda93))
+* **select,combo-box:** draw options as menu rows, as Material Design's exposed dropdown menu does ([#753](https://github.com/kanso-labs/react-native-kanso-ui/issues/753)) ([4695ec1](https://github.com/kanso-labs/react-native-kanso-ui/commit/4695ec143adeb0757fdab047dc0b11136eb12d27))
+
+
+### Performance Improvements
+
+* **calendar:** keep a month change from remounting every cell ([#774](https://github.com/kanso-labs/react-native-kanso-ui/issues/774)) ([e423d0a](https://github.com/kanso-labs/react-native-kanso-ui/commit/e423d0add98cab1682c0acf529d895732df77689))
+* **collection:** re-render only the rows whose selection changed ([#752](https://github.com/kanso-labs/react-native-kanso-ui/issues/752)) ([7e6e3f1](https://github.com/kanso-labs/react-native-kanso-ui/commit/7e6e3f1bc7dce97d3da26343882fffbc14a31275))
+* **field:** hand the field's parts the flags they read, as web does ([#766](https://github.com/kanso-labs/react-native-kanso-ui/issues/766)) ([fdaa682](https://github.com/kanso-labs/react-native-kanso-ui/commit/fdaa682a690cb38c7731882fd86d6dd597fe67ac))
+* keep a drag's gesture from being rebuilt on every move, and drag a sheet on the UI thread ([#778](https://github.com/kanso-labs/react-native-kanso-ui/issues/778)) ([ed6b54a](https://github.com/kanso-labs/react-native-kanso-ui/commit/ed6b54ac287803a9903b689670c3e83ce6eac494))
+
+
+### Dependencies
+
+* update chromaui/action action to v18.15.0 ([#765](https://github.com/kanso-labs/react-native-kanso-ui/issues/765)) ([130a42a](https://github.com/kanso-labs/react-native-kanso-ui/commit/130a42a30d66d7a8f1f9d191df88f4959957dbc5))
+* update chromaui/action action to v18.15.1 ([#782](https://github.com/kanso-labs/react-native-kanso-ui/issues/782)) ([e40d090](https://github.com/kanso-labs/react-native-kanso-ui/commit/e40d090e34fa047a8fd493a1e0d67b0656cf0d73))
+* update kanso-labs/actions action to v4.5.5 ([#764](https://github.com/kanso-labs/react-native-kanso-ui/issues/764)) ([a277a24](https://github.com/kanso-labs/react-native-kanso-ui/commit/a277a24e62f94b21b318528ae9ddcf525e8b41de))
+* update react-native ([#783](https://github.com/kanso-labs/react-native-kanso-ui/issues/783)) ([42625a0](https://github.com/kanso-labs/react-native-kanso-ui/commit/42625a03ec8f36666882ad22eec973105f0ed086))
+
 ## [0.13.4](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.13.3...v0.13.4) (2026-11-18)
 
 
