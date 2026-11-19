@@ -23,10 +23,12 @@ import {
 } from '@internationalized/date'
 import {
   createContext,
+  memo,
   startTransition,
   use,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react'
@@ -74,6 +76,44 @@ import {
 // src/components holds one component, as kanso-ui keeps its own in
 // src/calendar.
 
+/**
+ * What a date's cell does through the calendar's state, by its place in the
+ * grid: the same two functions for as long as the grid is drawn, which read
+ * the state and the dates the grid last drew when they are called.
+ */
+type CellActions = {
+  readonly highlight: (week: number, day: number) => void
+  readonly select: (week: number, day: number) => void
+}
+
+/**
+ * What a date's cell draws, read off the calendar's state for the whole grid
+ * in `cellOf`, so a cell is handed values rather than the state and renders
+ * again only when one of its own changes.
+ */
+type CellState = {
+  /** Whether a pointer over the date draws a started range as far as it. */
+  readonly highlights: boolean
+  /** What pressing the date does, for a screen reader. */
+  readonly hint: string | undefined
+  /** Whether the date is in a range calendar's range. */
+  readonly inRange: boolean
+  readonly isCurrent: boolean
+  /** Disabled by the calendar, or a date of the month beside the grid's. */
+  readonly isDisabled: boolean
+  /** Whether the date is drawn filled: a selected date, or a range's end. */
+  readonly isFilled: boolean
+  /** Whether the date is the one the calendar is on, in its own grid. */
+  readonly isFocused: boolean
+  readonly isRangeEnd: boolean
+  readonly isRangeStart: boolean
+  readonly isUnavailable: boolean
+  /** The date's name, in full. */
+  readonly label: string
+  /** The date's number, in the locale's digits. */
+  readonly number: string
+}
+
 /** One entry of a month or year list. */
 type ListEntry = {
   readonly date: CalendarDate
@@ -117,6 +157,10 @@ const LISTED_YEARS = 201
 // opens with the entry shown in the middle one, three rows from the top.
 const LIST_ROWS = WEEKS_HELD + 1
 const ROWS_ABOVE_SHOWN = WEEKS_HELD / 2
+
+// The formatters the calendar writes its dates through, one per locale and
+// options, so a grid's 35 dates share them rather than each building its own.
+const formatters = new Map<string, DateFormatter>()
 
 /**
  * What a calendar draws inside its container: the header, and a grid for each
@@ -274,6 +318,48 @@ function CalendarMenus({
   )
 }
 
+// A cell's action at its place in the grid, as a handler.
+function cellActionThen(
+  action: (week: number, day: number) => void,
+  week: number,
+  day: number,
+) {
+  return () => {
+    action(week, day)
+  }
+}
+
+// What the cell of `date` draws, in the grid of the month that starts on
+// `month`. See `CellState`.
+function cellOf(
+  state: SomeCalendarState,
+  date: CalendarDate,
+  month: CalendarDate,
+  locale: string,
+): CellState {
+  const isDisabled = state.isCellDisabled(date) || !isSameMonth(date, month)
+  const isUnavailable = state.isCellUnavailable(date)
+  const selectable = !isDisabled && !isUnavailable
+  const isSelected = selectable && state.isSelected(date)
+  const isCurrent = isToday(date, state.timeZone)
+  const range = rangeOf(state, date, isSelected)
+
+  return {
+    highlights: 'highlightDate' in state,
+    hint: promptOf(state, locale, selectable),
+    inRange: range !== null,
+    isCurrent,
+    isDisabled,
+    isFilled: range === null ? isSelected : range.isEnd,
+    isFocused: isSameMonth(date, month) && isSameDay(date, state.focusedDate),
+    isRangeEnd: range?.isLast === true,
+    isRangeStart: range?.isFirst === true,
+    isUnavailable,
+    label: dateLabelOf(date, state, locale, isCurrent, isSelected),
+    number: dayOf(date, state, locale),
+  }
+}
+
 /**
  * A chevron that moves the month, the icon buttons page's standard 40dp
  * button. Disabled where the month it would move to is outside `minValue`
@@ -351,59 +437,70 @@ function cornersOf(shape: StyleProp<ViewStyle>) {
  * primary container over the band, on surface elsewhere. While a range is
  * started, a pointer over a date draws the range as far as it, as web's
  * does; a touch has no such preview, and the second press ends the range.
+ *
+ * It is handed what it draws as values, which the grid reads off the state,
+ * and its place in the grid, which its actions take, so a pick re-renders the
+ * dates it changed and no others.
  */
-function DateCell({
-  date,
-  locale,
-  month,
-  state,
-}: PartProps & {
-  readonly date: CalendarDate
-  /** The first day of the month the date's grid shows. */
-  readonly month: CalendarDate
+const DateCell = memo(function DateCell({
+  actions,
+  day,
+  highlights,
+  hint,
+  inRange,
+  isCurrent,
+  isDisabled,
+  isFilled,
+  isFocused,
+  isRangeEnd,
+  isRangeStart,
+  isUnavailable,
+  label,
+  number,
+  week,
+}: CellState & {
+  readonly actions: CellActions
+  /** The date's column in its week. */
+  readonly day: number
+  /** The date's week in its grid. */
+  readonly week: number
 }) {
   const theme = useTheme()
   const { colors, sizing } = theme
   const own = stylesOf(theme)
   const role = useTypeRole('bodyLarge')
-  const isDisabled = state.isCellDisabled(date) || !isSameMonth(date, month)
-  const isUnavailable = state.isCellUnavailable(date)
   const selectable = !isDisabled && !isUnavailable
-  const isSelected = selectable && state.isSelected(date)
-  const isCurrent = isToday(date, state.timeZone)
-  const range = rangeOf(state, date, isSelected)
-  const isFilled = range === null ? isSelected : range.isEnd
   // The date the calendar is on, in its own month's grid rather than as the
   // spill of the month beside it, is the cell a picker sends a reader to.
   const report = use(CalendarFocusContext)
-  const isFocused =
-    isSameMonth(date, month) && isSameDay(date, state.focusedDate)
   const shape = composeStyles<ViewStyle>(
     own.date,
-    range === null ? undefined : own.dateInRange,
-    range?.isFirst === true ? own.dateRangeStart : undefined,
-    range?.isLast === true ? own.dateRangeEnd : undefined,
+    inRange ? own.dateInRange : undefined,
+    isRangeStart ? own.dateRangeStart : undefined,
+    isRangeEnd ? own.dateRangeEnd : undefined,
   )
   const feedback = usePressFeedback({
     color: isFilled
       ? colors.onPrimary
-      : range === null
-        ? colors.onSurface
-        : colors.onPrimaryContainer,
+      : inRange
+        ? colors.onPrimaryContainer
+        : colors.onSurface,
     corners: cornersOf(shape),
     disabled: !selectable,
-    onHoverIn: highlightThen(state, date),
+    onHoverIn: highlights
+      ? cellActionThen(actions.highlight, week, day)
+      : undefined,
   })
 
   return (
     <Pressable
-      accessibilityHint={promptOf(state, locale, selectable)}
-      aria-label={dateLabelOf(date, state, locale, isCurrent, isSelected)}
+      accessibilityHint={hint}
+      aria-label={label}
       hitSlop={hitSlop(
         sizing.controlSm,
-        range === null ? sizing.controlSm : undefined,
+        inRange ? undefined : sizing.controlSm,
       )}
-      onPress={selectThen(state, date)}
+      onPress={cellActionThen(actions.select, week, day)}
       ref={isFocused && report !== null ? report : undefined}
       role="button"
       {...feedback.handlers}
@@ -421,17 +518,17 @@ function DateCell({
           role,
           own.dateText,
           isCurrent ? own.dateTextToday : undefined,
-          range === null ? undefined : own.dateTextInRange,
+          inRange ? own.dateTextInRange : undefined,
           isFilled ? own.dateTextSelected : undefined,
           isUnavailable ? own.dateTextUnavailable : undefined,
           isDisabled ? own.dateTextDisabled : undefined,
         )}
       >
-        {dayOf(date, state, locale)}
+        {number}
       </NativeText>
     </Pressable>
   )
-}
+})
 
 // A date's name: the date in full, as today or as the one held where it is
 // either, then as the first or last date the bounds allow where it is that.
@@ -445,7 +542,7 @@ function dateLabelOf(
   isSelected: boolean,
 ) {
   const words = messagesFor(locale).calendar
-  const full = `${rangeNameOf(state, date, locale)}${new DateFormatter(locale, {
+  const full = `${rangeNameOf(state, date, locale)}${formatterOf(locale, {
     day: 'numeric',
     era: eraOf(date),
     month: 'long',
@@ -478,7 +575,7 @@ function dateLabelOf(
 // after the day, as Japanese does, draws the number alone.
 function dayOf(date: CalendarDate, state: SomeCalendarState, locale: string) {
   return (
-    new DateFormatter(locale, {
+    formatterOf(locale, {
       calendar: date.calendar.identifier,
       day: 'numeric',
       timeZone: state.timeZone,
@@ -496,17 +593,19 @@ function eraOf(date: CalendarDate) {
     : undefined
 }
 
-// Draws a started range as far as the date a pointer is over, as web's does.
-// Nothing in a calendar of one date; before a range is started, React
-// Stately's own `highlightDate` does nothing.
-function highlightThen(state: SomeCalendarState, date: CalendarDate) {
-  if (!('highlightDate' in state)) {
-    return undefined
+// The formatter for `locale` and `options`, built once and kept, as
+// `formatters` says.
+function formatterOf(locale: string, options: Intl.DateTimeFormatOptions) {
+  const key = `${locale} ${JSON.stringify(options)}`
+  const known = formatters.get(key)
+
+  if (known !== undefined) {
+    return known
   }
 
-  return () => {
-    state.highlightDate(date)
-  }
+  const formatter = new DateFormatter(locale, options)
+  formatters.set(key, formatter)
+  return formatter
 }
 
 // The row a list's row occupies, which is every row's 48dp, so the list can
@@ -688,7 +787,7 @@ function MonthCaption({
         numberOfLines={1}
         style={composeStyles<TextStyle>(role, own.monthCaptionText)}
       >
-        {new DateFormatter(locale, {
+        {formatterOf(locale, {
           calendar: start.calendar.identifier,
           era: eraOf(start),
           month: 'long',
@@ -727,6 +826,42 @@ function MonthGrid({
   const start = state.visibleRange.start.add(offset)
   const slide = useMonthSlide(start, theme)
   const rowStyle = composeStyles<ViewStyle>(styles.row, own.rowHeight)
+  const weeks = weeksOf(state, start)
+  // The state and the dates a cell's action reaches, the ones the grid last
+  // drew. Read only when a cell is pressed or hovered, so they are kept where
+  // the cells' values do not change with them.
+  const latest = useRef({ state, weeks })
+  useLayoutEffect(() => {
+    latest.current = { state, weeks }
+  })
+  const actions = useMemo<CellActions>(
+    () => ({
+      // Draws a started range as far as the date a pointer is over, as
+      // web's does. Nothing in a calendar of one date; before a range is
+      // started, React Stately's own `highlightDate` does nothing.
+      highlight: (week, day) => {
+        const { state: current, weeks: drawn } = latest.current
+        const date = drawn.at(week)?.days.at(day)?.date
+
+        if (date != null && 'highlightDate' in current) {
+          current.highlightDate(date)
+        }
+      },
+      // Picks a date and moves the calendar's focus to it, as a press on one
+      // does on web. A read-only or disabled calendar's state ignores the
+      // pick.
+      select: (week, day) => {
+        const { state: current, weeks: drawn } = latest.current
+        const date = drawn.at(week)?.days.at(day)?.date
+
+        if (date != null) {
+          current.selectDate(date)
+          current.setFocusedDate(date)
+        }
+      },
+    }),
+    [],
+  )
 
   return (
     <View style={stacked ? undefined : own.grid}>
@@ -740,16 +875,16 @@ function MonthGrid({
         ))}
       </View>
       <Animated.View style={slide}>
-        {weeksOf(state, start).map((week) => (
+        {weeks.map((week, weekIndex) => (
           <View key={week.key} style={rowStyle}>
-            {week.days.map((day) => (
+            {week.days.map((day, dayIndex) => (
               <View key={day.key} style={styles.column}>
                 {day.date === null ? null : (
                   <DateCell
-                    date={day.date}
-                    locale={locale}
-                    month={start}
-                    state={state}
+                    {...cellOf(state, day.date, start, locale)}
+                    actions={actions}
+                    day={dayIndex}
+                    week={weekIndex}
                   />
                 )}
               </View>
@@ -790,7 +925,7 @@ function monthsOf(
   format: 'long' | 'short',
 ): readonly ListEntry[] {
   const { focusedDate, timeZone } = state
-  const formatter = new DateFormatter(locale, {
+  const formatter = formatterOf(locale, {
     calendar: focusedDate.calendar.identifier,
     month: format,
     timeZone,
@@ -899,7 +1034,7 @@ function rangeNameOf(
   const { end, start } = state.highlightedRange
   const { timeZone } = state
   const words = messagesFor(locale).calendar
-  const formatter = new DateFormatter(locale, {
+  const formatter = formatterOf(locale, {
     day: 'numeric',
     era: eraOf(start) ?? eraOf(end),
     month: 'long',
@@ -1001,15 +1136,6 @@ function Row({
 function rowPressThen(onChoose: (entry: ListEntry) => void, entry: ListEntry) {
   return () => {
     onChoose(entry)
-  }
-}
-
-// Picks a date and moves the calendar's focus to it, as a press on one does
-// on web. A read-only or disabled calendar's state ignores the pick.
-function selectThen(state: SomeCalendarState, date: CalendarDate) {
-  return () => {
-    state.selectDate(date)
-    state.setFocusedDate(date)
   }
 }
 
@@ -1136,7 +1262,7 @@ function visibleRangeOf(
 ) {
   const { end, start } = state.visibleRange
   const { timeZone } = state
-  const formatter = new DateFormatter(locale, {
+  const formatter = formatterOf(locale, {
     calendar: start.calendar.identifier,
     era: eraOf(start) ?? eraOf(end),
     month: 'long',
@@ -1164,7 +1290,7 @@ function weekdaysOf(
   firstDayOfWeek: undefined | Weekday,
 ) {
   const first = startOfWeek(today(state.timeZone), locale, firstDayOfWeek)
-  const formatter = new DateFormatter(locale, {
+  const formatter = formatterOf(locale, {
     timeZone: state.timeZone,
     weekday: 'narrow',
   })
@@ -1181,21 +1307,19 @@ function weekdaysOf(
 
 // The weeks of the month a grid shows, from the first day of that month, each
 // seven days from the locale's first day of the week. A day a calendar system
-// lacks is a gap.
+// lacks is a gap. Each week and day is keyed by its place in the grid rather
+// than by its date, so paging the month hands the same cells new dates
+// rather than mounting a month of new ones.
 function weeksOf(state: SomeCalendarState, start: CalendarDate) {
   return Array.from(
     { length: state.getWeeksInMonth(start) },
-    (_unused, week) => {
-      const key = start.add({ weeks: week }).toString()
-
-      return {
-        days: state.getDatesInWeek(week, start).map((date, day) => ({
-          date,
-          key: date?.toString() ?? `${key}+${String(day)}`,
-        })),
-        key,
-      }
-    },
+    (_unused, week) => ({
+      days: state.getDatesInWeek(week, start).map((date, day) => ({
+        date,
+        key: String(day),
+      })),
+      key: String(week),
+    }),
   )
 }
 
@@ -1222,7 +1346,7 @@ function YearList({
 function yearOf(state: SomeCalendarState, locale: string) {
   const { focusedDate, timeZone } = state
 
-  return new DateFormatter(locale, {
+  return formatterOf(locale, {
     calendar: focusedDate.calendar.identifier,
     era: eraOf(focusedDate),
     timeZone,
@@ -1237,7 +1361,7 @@ function yearOf(state: SomeCalendarState, locale: string) {
 // the Japanese, the era changes as well as the year.
 function yearsOf(state: SomeCalendarState, locale: string) {
   const { focusedDate, maxValue, minValue, timeZone } = state
-  const formatter = new DateFormatter(locale, {
+  const formatter = formatterOf(locale, {
     calendar: focusedDate.calendar.identifier,
     era: eraOf(focusedDate),
     timeZone,

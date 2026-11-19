@@ -431,6 +431,42 @@ describe('Calendar', () => {
     })
   })
 
+  // A cell renders again when one of its values changes, and a view whose
+  // cell rendered again is handed a new props object. Each cell keeps its
+  // place in the grid, so paging hands the same views new dates.
+  describe('the cells', () => {
+    it('keeps every cell mounted as the month moves, naming its new date', async () => {
+      await render(<Calendar defaultValue={SEPTEMBER} locale="en-US" />)
+      const before = datesOf()
+
+      await fireEvent.press(screen.getByRole('button', { name: 'Next' }))
+      const after = datesOf()
+
+      expect(before).toHaveLength(35)
+      expect(after).toHaveLength(35)
+      for (const [index, cell] of after.entries()) {
+        expect(cell).toBe(before[index])
+      }
+      expect(nameOf(after[0])).toBe('Sunday, September 27, 2026')
+      expect(nameOf(after[4])).toBe('Thursday, October 1, 2026')
+    })
+
+    it('renders again only the dates a pick changes', async () => {
+      await render(<Calendar defaultValue={SEPTEMBER} locale="en-US" />)
+      const before = new Map(datesOf().map((cell) => [cell, cell.props]))
+
+      await fireEvent.press(dateNamed('Tuesday, September 22, 2026'))
+
+      const rendered = datesOf()
+        .filter((cell) => cell.props !== before.get(cell))
+        .map((cell) => nameOf(cell))
+      expect(rendered).toEqual([
+        'Tuesday, September 15, 2026',
+        'Tuesday, September 22, 2026 selected',
+      ])
+    })
+  })
+
   describe('moving the month', () => {
     it('steps a month either way with its chevrons', async () => {
       const onFocusChange = jest.fn()

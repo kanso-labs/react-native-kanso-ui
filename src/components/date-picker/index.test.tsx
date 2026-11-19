@@ -609,12 +609,17 @@ describe('DatePicker', () => {
       })
       await fireEvent.press(calendarButton())
       await laidOut()
-      await fireEvent.press(screen.getByRole('button', { name: 'Next' }))
 
-      expect(dateNamed('Saturday, October 10, 2026')).toBeEnabled()
       expect(focusSentTo()).toEqual([
         'focus button Thursday, September 10, 2026',
       ])
+
+      await fireEvent.press(screen.getByRole('button', { name: 'Next' }))
+
+      // The cell keeps its place as the month moves, so the one view sent
+      // focus now names the date in that place; no second one is sent.
+      expect(dateNamed('Saturday, October 10, 2026')).toBeEnabled()
+      expect(focusSentTo()).toHaveLength(1)
     })
   })
 
