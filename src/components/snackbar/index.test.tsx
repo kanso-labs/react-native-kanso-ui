@@ -48,7 +48,6 @@ const INITIAL = {
   window: Dimensions.get('window'),
 }
 
-// A scope's own error, which the other scheme's resolves to as well.
 const INSETS: EdgeInsets = { bottom: 34, left: 12, right: 8, top: 47 }
 
 const OFFSET = { marginBottom: 4 }
