@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.15.1](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.15.0...v0.15.1) (2026-11-21)
+
+
+### Bug Fixes
+
+* **progress-indicator:** draw a full track at 0, as the web does ([#808](https://github.com/kanso-labs/react-native-kanso-ui/issues/808)) ([e5518ef](https://github.com/kanso-labs/react-native-kanso-ui/commit/e5518ef1ad91ab37482ebe28ec498bd93e7ded2b))
+* **snackbar:** draw a failure's glyph in the inverse error token ([#809](https://github.com/kanso-labs/react-native-kanso-ui/issues/809)) ([6373242](https://github.com/kanso-labs/react-native-kanso-ui/commit/63732422335d8e9cd2c8a58e47e6da07d3c1e6b5))
+
 ## [0.15.0](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.14.2...v0.15.0) (2026-11-21)
 
 
