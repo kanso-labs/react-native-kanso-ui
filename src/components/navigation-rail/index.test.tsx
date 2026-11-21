@@ -74,6 +74,12 @@ const HEADER = (
   <Pressable aria-label="Menu" role="button" testID="header-button" />
 )
 
+const FAB = (
+  <NavigationRail.Fab label="Label" testID="fab">
+    <Icon />
+  </NavigationRail.Fab>
+)
+
 const NO_ITEMS: ItemOverrides = {}
 
 type ItemOverrides = Partial<
@@ -129,6 +135,16 @@ function containerStyleOf(element: {
 // What the rail measures: the form being drawn, at its own width.
 function contentOf() {
   return child(screen.getByTestId('rail').children[0])
+}
+
+// The FAB's own view.
+function fabOf() {
+  return screen.getByTestId('fab')
+}
+
+// The view the FAB sits in, above the destinations.
+function fabSlotOf() {
+  return child(columnOf().children.at(-2))
 }
 
 // The header's own view, above the destinations.
@@ -188,17 +204,19 @@ function railOf() {
 }
 
 async function renderRail({
+  fab,
   header,
   isExpanded = false,
   items = NO_ITEMS,
   selectedRoute = '/first',
 }: {
+  readonly fab?: ReactNode
   readonly header?: ReactNode
   readonly isExpanded?: boolean
   readonly items?: ItemOverrides
   readonly selectedRoute?: string
 } = {}) {
-  const sample = { header, isExpanded, items, selectedRoute }
+  const sample = { fab, header, isExpanded, items, selectedRoute }
   return render(<Sample {...sample} />)
 }
 
@@ -210,17 +228,19 @@ function safeAreaOf() {
 // Renders a rail of three destinations, the first one current unless a case
 // says otherwise.
 function Sample({
+  fab,
   header,
   isExpanded,
   items = NO_ITEMS,
   selectedRoute,
 }: {
+  readonly fab?: ReactNode
   readonly header?: ReactNode
   readonly isExpanded?: boolean
   readonly items?: ItemOverrides
   readonly selectedRoute?: string
 }) {
-  const rail = { header, isExpanded, selectedRoute }
+  const rail = { fab, header, isExpanded, selectedRoute }
 
   return (
     <NavigationRail aria-label="Label" {...rail} testID="rail">
@@ -327,6 +347,114 @@ describe('NavigationRail', () => {
       })
 
       expect(tab('Second item, 3 new')).toBeTruthy()
+    })
+  })
+
+  describe('the FAB', () => {
+    it('is reached before the destinations, outside their tab list', async () => {
+      await renderRail({ fab: FAB, header: HEADER })
+
+      const column = columnOf().children.map(child)
+
+      expect(column).toHaveLength(3)
+      expect(column[0]).toBe(headerOf())
+      expect(within(column[1]).getByTestId('fab')).toBeTruthy()
+      expect(column[2]).toBe(listOf())
+      expect(within(listOf()).queryByTestId('fab')).toBeNull()
+    })
+
+    it('is the icon alone in the collapsed rail, named by its label', async () => {
+      await renderRail({ fab: FAB })
+
+      expect(screen.getByRole('button', { name: 'Label' })).toBe(fabOf())
+      expect(screen.queryByText('Label')).toBeNull()
+      expect(styleOf(fabOf())).toMatchObject({
+        boxShadow: theme.shadows.elevation3,
+        height: theme.sizing.controlLg,
+        width: theme.sizing.controlLg,
+      })
+    })
+
+    it('is the extended FAB in the expanded rail, its label beside the icon', async () => {
+      await renderRail({ fab: FAB, isExpanded: true })
+
+      // The extended FAB's name is what it holds: the icon's text, which the
+      // icon here writes out, and the label.
+      expect(screen.getByRole('button', { name: /Label$/u })).toBe(fabOf())
+      expect(screen.getByText('Label')).toBeTruthy()
+      expect(styleOf(fabOf()).width).toBeUndefined()
+      expect(styleOf(fabOf()).boxShadow).toBe(theme.shadows.elevation3)
+    })
+
+    it('changes form as the rail does', async () => {
+      const { rerender } = await renderRail({ fab: FAB })
+
+      expect(screen.queryByText('Label')).toBeNull()
+
+      await rerender(<Sample fab={FAB} isExpanded />)
+
+      expect(screen.getByText('Label')).toBeTruthy()
+    })
+
+    it('stands centred in the collapsed rail, 40dp clear of the first destination', async () => {
+      await renderRail({ fab: FAB })
+
+      // 36dp here and the collapsed list's 4dp of padding make the page's 40.
+      expect(styleOf(fabSlotOf())).toMatchObject({
+        alignItems: 'center',
+        marginBottom: 36,
+      })
+    })
+
+    it("stands at the pills' leading edge in the expanded rail, 40dp clear of the first", async () => {
+      await renderRail({ fab: FAB, isExpanded: true })
+
+      expect(styleOf(fabSlotOf())).toMatchObject({
+        alignItems: 'flex-start',
+        alignSelf: 'stretch',
+        marginBottom: 40,
+      })
+      expect(styleOf(fabSlotOf()).paddingStart).toBeUndefined()
+    })
+
+    it.each([
+      ['collapsed', false],
+      ['expanded', true],
+    ])(
+      'puts a header 4dp above the FAB in the %s rail',
+      async (_form, isExpanded) => {
+        await renderRail({ fab: FAB, header: HEADER, isExpanded })
+
+        expect(styleOf(headerOf()).marginBottom).toBe(4)
+      },
+    )
+
+    it('takes a name of the call site in the collapsed rail', async () => {
+      await renderRail({
+        fab: (
+          <NavigationRail.Fab aria-label="Own label" label="Label" testID="fab">
+            <Icon />
+          </NavigationRail.Fab>
+        ),
+      })
+
+      expect(screen.getByRole('button', { name: 'Own label' })).toBe(fabOf())
+    })
+
+    it.each([false, null])(
+      'holds nothing when handed %s, leaving the header its 40dp',
+      async (empty) => {
+        await renderRail({ fab: empty, header: HEADER, isExpanded: true })
+
+        expect(columnOf().children).toHaveLength(2)
+        expect(styleOf(headerOf()).marginBottom).toBe(40)
+      },
+    )
+
+    it('stays inside the safe area, clear of a landscape notch', async () => {
+      await renderRail({ fab: FAB })
+
+      expect(within(safeAreaOf()).getByTestId('fab')).toBeTruthy()
     })
   })
 

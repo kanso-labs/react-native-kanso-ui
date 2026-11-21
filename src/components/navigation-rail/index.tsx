@@ -8,7 +8,7 @@ import type {
 import type { AnimatedStyle, SharedValue } from 'react-native-reanimated'
 import type { Edge } from 'react-native-safe-area-context'
 
-import { useMemo } from 'react'
+import { use, useMemo } from 'react'
 import { I18nManager, ScrollView, StyleSheet, View } from 'react-native'
 import Animated, {
   Easing,
@@ -20,12 +20,15 @@ import Animated, {
 
 import type { NavigationItemProps } from '../../navigation'
 import type { ResolvedTheme } from '../../theme/scope'
+import type { FabProps } from '../fab'
 
 import { scrollNameOf } from '../../group'
 import { NavigationContext, NavigationItem } from '../../navigation'
+import { hasContent } from '../../row'
 import { SafeArea } from '../../safe-area'
 import { useTheme } from '../../theme/scope'
 import { composeStyles, themedStyles } from '../../theme/styles'
+import { Fab } from '../fab'
 
 // kanso-ui's NavigationRail, the navigation rail page's rail, in both its
 // forms: collapsed, a 96dp column of vertical destinations down the leading
@@ -62,6 +65,30 @@ import { composeStyles, themedStyles } from '../../theme/styles'
 // what it holds is not one of them. Web's rail is a landmark of links, which
 // native has no counterpart for. A destination still goes to its `href`
 // through the app's router, see `RouterProvider`.
+//
+// **The rail can hold the screen's FAB**, where Material Design's rail puts
+// it: above the destinations, under the header when there is one, with the
+// first destination the page's 40dp under the FAB rather than under the
+// header. The header keeps whatever else stands there, such as a menu
+// button or a mark, 4dp above the FAB, the collapsed rail's gap between
+// destinations. `NavigationRail.Fab` is a FAB at 56dp that takes its form
+// from the rail's: the icon alone in the collapsed rail, named by its
+// label, and the extended FAB, icon and label, in the expanded one, at the
+// pills' leading edge so its icon sits over theirs. It changes form when the
+// destinations do, and the surface reveals or covers it as it moves. It
+// keeps the FAB's level 3 shadow. It sits outside the tab list and before
+// it, so a screen reader reaches it first, and inside the safe area, clear
+// of a landscape notch as the destinations are.
+
+type NavigationRailFabProps = FabProps & {
+  /**
+   * What the FAB does, in words: drawn beside the icon in the expanded rail,
+   * and the FAB's name in the collapsed one, where the icon stands alone.
+   */
+  readonly label: string
+  /** The rail's FAB is the 56dp FAB at every width. */
+  readonly size?: never
+}
 
 type NavigationRailItemProps = NavigationItemProps
 
@@ -69,8 +96,14 @@ type NavigationRailProps = Omit<ViewProps, 'children' | 'style'> & {
   /** The destinations: `NavigationRail.Item`s. */
   readonly children?: ReactNode
   /**
-   * What the rail draws above its destinations: a menu button that expands
-   * it, or a floating action button.
+   * The screen's floating action button, a `NavigationRail.Fab`, drawn
+   * above the destinations and under the header, an icon alone in the
+   * collapsed rail and extended in the expanded one.
+   */
+  readonly fab?: ReactNode
+  /**
+   * What the rail draws above its destinations and its FAB: a menu button
+   * that expands it, or a mark.
    */
   readonly header?: ReactNode
   /**
@@ -173,11 +206,29 @@ const stylesOf = themedStyles(({ colors, spacing }) =>
       flexGrow: 1,
       padding: RING_REACH,
     },
+    // The rail's FAB, centred in the collapsed rail, with the first
+    // destination the page's 40dp under it, as under a header.
+    fab: {
+      alignItems: 'center',
+      marginBottom: spacing.xxxl - spacing.xs,
+    },
+    // The expanded rail's FAB, at the pills' leading edge: the extended
+    // FAB's 16dp before its icon puts that icon over the pills' icons, 16dp
+    // into each pill.
+    fabExpanded: {
+      alignItems: 'flex-start',
+      alignSelf: 'stretch',
+      marginBottom: spacing.xxxl,
+    },
     // What the rail draws above its destinations, the page's 40dp clear of
     // the first: the collapsed rail's 4dp gap, and the rest of its own here.
     header: {
       alignItems: 'center',
       marginBottom: spacing.xxxl - spacing.xs,
+    },
+    // A header over a FAB, 4dp above it, the collapsed rail's gap.
+    headerAboveFab: {
+      marginBottom: spacing.xs,
     },
     // The expanded rail has no gap between destinations, so its header keeps
     // the whole 40dp. It starts at the leading edge where the pills do, 8dp
@@ -238,6 +289,7 @@ function edgesOf(): readonly Edge[] {
 function NavigationRail({
   'aria-label': ariaLabel,
   children,
+  fab,
   header,
   isExpanded = false,
   selectedRoute,
@@ -247,6 +299,9 @@ function NavigationRail({
   const theme = useTheme()
   const own = stylesOf(theme)
   const reduceMotion = useReducedMotion()
+  // A slot handed `false` or `null`, as `fab={isWide && <Fab />}` hands it,
+  // holds nothing, and the header keeps its own 40dp.
+  const hasFab = hasContent(fab)
   // The surface's width, unset until the form being drawn is first measured,
   // which leaves the surface as wide as that form.
   const width = useSharedValue<number | undefined>(undefined)
@@ -285,11 +340,22 @@ function NavigationRail({
                 style={composeStyles<ViewStyle>(
                   own.header,
                   isExpanded ? own.headerExpanded : undefined,
+                  hasFab ? own.headerAboveFab : undefined,
                 )}
               >
                 {header}
               </View>
             )}
+            {hasFab ? (
+              <View
+                style={composeStyles<ViewStyle>(
+                  own.fab,
+                  isExpanded ? own.fabExpanded : undefined,
+                )}
+              >
+                <NavigationContext value={context}>{fab}</NavigationContext>
+              </View>
+            ) : null}
             <ScrollView
               {...scrollNameOf(ariaLabel)}
               contentContainerStyle={
@@ -304,6 +370,33 @@ function NavigationRail({
         </SafeArea>
       </View>
     </Animated.View>
+  )
+}
+
+/**
+ * The screen's floating action button in a navigation rail's `fab` slot: a
+ * 56dp FAB, its icon alone in the collapsed rail and named by `label`, and
+ * the extended FAB with `label` beside the icon in the expanded rail.
+ *
+ * ```tsx
+ * <NavigationRail
+ *   fab={
+ *     <NavigationRail.Fab label="Label" onPress={add}>
+ *       <AddIcon />
+ *     </NavigationRail.Fab>
+ *   }
+ * />
+ * ```
+ *
+ * It takes Fab's props otherwise, `tone`, `variant`, `href` and the rest.
+ */
+function NavigationRailFab({ label, ...props }: NavigationRailFabProps) {
+  const { form } = use(NavigationContext)
+
+  return form === 'expanded' ? (
+    <Fab {...props} label={label} />
+  ) : (
+    <Fab {...props} aria-label={props['aria-label'] ?? label} />
   )
 }
 
@@ -347,8 +440,13 @@ function widthThen(
   }
 }
 
+NavigationRail.Fab = NavigationRailFab
 NavigationRail.Item = NavigationRailItem
 
-export type { NavigationRailItemProps, NavigationRailProps }
+export type {
+  NavigationRailFabProps,
+  NavigationRailItemProps,
+  NavigationRailProps,
+}
 
-export { NavigationRail, NavigationRailItem }
+export { NavigationRail, NavigationRailFab, NavigationRailItem }

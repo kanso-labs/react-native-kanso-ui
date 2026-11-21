@@ -213,9 +213,11 @@ export type {
 } from './components/navigation-bar'
 export {
   NavigationRail,
+  NavigationRailFab,
   NavigationRailItem,
 } from './components/navigation-rail'
 export type {
+  NavigationRailFabProps,
   NavigationRailItemProps,
   NavigationRailProps,
 } from './components/navigation-rail'
