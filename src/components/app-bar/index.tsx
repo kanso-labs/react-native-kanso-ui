@@ -46,6 +46,14 @@ import { Text } from '../text'
 // them, and by nothing where it does not, so a bar drawn below another view
 // takes no inset of its own.
 //
+// A flexible bar can carry a kicker over its headline, a line in label medium
+// on on-surface-variant that names where the screen sits, such as the parent
+// a detail screen opened from, and may be a link to it. Material Design's
+// flexible bars draw a subtitle under the headline and nothing over it, so
+// the kicker is kanso-ui's, drawn as the subtitle is: the bar grows by its
+// line, and it goes as the bar collapses, so the collapsed bar holds the
+// headline alone.
+//
 // Three things differ from web's, each because of the platform.
 //
 // - **No heading level.** Native screen readers have no levels to move
@@ -74,6 +82,7 @@ const ICON_SIZE = 24
 // leading glyph, rather than the edge of its target, at the inset.
 const GLYPH_INSET = (TARGET_SIZE - ICON_SIZE) / 2
 
+// The bar's minimum height before a kicker, which adds its own line.
 const HEIGHTS = {
   lg: { plain: 120, withSubtitle: 152 },
   md: { plain: 112, withSubtitle: 136 },
@@ -211,6 +220,14 @@ type AppBarProps = Omit<ViewProps, 'children'> & {
    */
   readonly headline?: ReactNode
   /**
+   * A line over the headline in `md` and `lg`, in label medium on
+   * on-surface-variant, naming where the screen sits, such as the parent a
+   * detail screen opened from. It may hold a `Link` to that parent, which
+   * reaches 48dp tall as a lone link does. Makes the bar taller by its line,
+   * and goes as the bar collapses, as the subtitle does. `sm` draws none.
+   */
+  readonly kicker?: ReactNode
+  /**
    * Usually a back or menu icon button. Sits before the text, and hands an
    * icon the on-surface colour and a 24dp size through `useIconStyle()`.
    */
@@ -240,7 +257,7 @@ type AppBarProps = Omit<ViewProps, 'children'> & {
    * subtitle, which hug their text, with the icons in a 64dp top row and the
    * text under it. The headline is title large, headline medium and display
    * small in turn, and the subtitle label medium, label large and title
-   * medium.
+   * medium. A kicker adds its line to `md` and `lg`.
    * @default 'sm'
    */
   readonly size?: AppBarSize
@@ -286,6 +303,7 @@ function AppBar({
   contentInset,
   contentMaxInlineSize,
   headline,
+  kicker,
   leading,
   pinned = false,
   scrolled = false,
@@ -308,7 +326,10 @@ function AppBar({
   const heights = HEIGHTS[drawn]
   const fill = useFill(scrolled)
   const twoRows = drawn !== 'sm'
-  const minHeight = showsSubtitle ? heights.withSubtitle : heights.plain
+  const showsKicker = hasContent(kicker) && twoRows
+  const minHeight =
+    (showsSubtitle ? heights.withSubtitle : heights.plain) +
+    (showsKicker ? theme.typography.labelMediumLineHeight : 0)
   const leadingSlot = hasLeading ? (
     <Slot color={theme.colors.onSurface}>{leading}</Slot>
   ) : null
@@ -317,6 +338,15 @@ function AppBar({
   ) : null
   const words = (
     <>
+      {showsKicker ? (
+        <Text
+          style={align === 'center' ? styles.center : undefined}
+          tone="muted"
+          variant="labelMedium"
+        >
+          {kicker}
+        </Text>
+      ) : null}
       {hasContent(headline) ? (
         <Text
           role="heading"

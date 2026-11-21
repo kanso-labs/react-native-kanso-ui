@@ -24,6 +24,7 @@ import { ThemeScope } from '../../theme-scope'
 import { withOpacity } from '../../theme/color'
 import { scopeFor } from '../../theme/scope'
 import { IconButton } from '../icon-button'
+import { Link } from '../link'
 
 // What the next bar the device draws is told about reduced motion.
 let mockReducedMotion = false
@@ -275,6 +276,86 @@ describe('AppBar', () => {
 
       expect(styleOf(row()).minHeight).toBe(64)
       expect(screen.getByText('Supporting line')).toBeTruthy()
+    })
+  })
+
+  describe('the kicker', () => {
+    it.each(['md', 'lg'] as const)(
+      'draws a kicker over the headline at %s, in label medium on on-surface-variant',
+      async (size) => {
+        await renderBar({ kicker: 'Kicker', size })
+
+        const kicker = screen.getByText('Kicker')
+        const words = headline().parent
+
+        expect(textStyleOf(kicker)).toMatchObject({
+          color: colors.onSurfaceVariant,
+          fontSize: typography.labelMediumSize,
+          lineHeight: typography.labelMediumLineHeight,
+        })
+        expect(kicker.parent).toBe(words)
+        expect(words?.children.indexOf(kicker)).toBe(0)
+        expect(words?.children.indexOf(headline())).toBe(1)
+      },
+    )
+
+    it.each<[NonNullable<AppBarProps['size']>, number, number]>([
+      ['md', 112, 136],
+      ['lg', 120, 152],
+    ])('makes %s taller by its line', async (size, plain, withSubtitle) => {
+      const { rerender } = await renderBar({ kicker: 'Kicker', size })
+
+      expect(styleOf(row()).minHeight).toBe(
+        plain + typography.labelMediumLineHeight,
+      )
+
+      await rerender(
+        <AppBar
+          headline="Headline"
+          kicker="Kicker"
+          size={size}
+          subtitle="Supporting line"
+          testID="bar"
+        />,
+      )
+
+      expect(styleOf(row()).minHeight).toBe(
+        withSubtitle + typography.labelMediumLineHeight,
+      )
+    })
+
+    it('stays out of the heading, which keeps the headline as its name', async () => {
+      await renderBar({ kicker: 'Kicker', size: 'md' })
+
+      expect(screen.getByRole('heading', { name: 'Headline' })).toBeTruthy()
+      expect(screen.queryByRole('heading', { name: /Kicker/u })).toBeNull()
+    })
+
+    it.each(['md', 'lg'] as const)(
+      'goes as %s collapses, leaving the headline as the name',
+      async (size) => {
+        await renderBar({ collapsed: true, kicker: 'Kicker', size })
+
+        expect(screen.queryByText('Kicker')).toBeNull()
+        expect(styleOf(row()).minHeight).toBe(64)
+        expect(screen.getByRole('heading', { name: 'Headline' })).toBeTruthy()
+      },
+    )
+
+    it('is not drawn by the small bar', async () => {
+      await renderBar({ kicker: 'Kicker' })
+
+      expect(screen.queryByText('Kicker')).toBeNull()
+      expect(styleOf(row()).minHeight).toBe(64)
+    })
+
+    it('holds a link, which a screen reader finds by its name', async () => {
+      await renderBar({
+        kicker: <Link href="/parent">Parent</Link>,
+        size: 'md',
+      })
+
+      expect(screen.getByRole('link', { name: 'Parent' })).toBeTruthy()
     })
   })
 
