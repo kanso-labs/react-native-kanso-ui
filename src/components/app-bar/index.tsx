@@ -50,8 +50,8 @@ import { Text } from '../text'
 // on on-surface-variant that names where the screen sits, such as the parent
 // a detail screen opened from, and may be a link to it. Material Design's
 // flexible bars draw a subtitle under the headline and nothing over it, so
-// the kicker is kanso-ui's, drawn as the subtitle is: the bar grows by its
-// line, and it goes as the bar collapses, so the collapsed bar holds the
+// the kicker is the library's own, drawn as the subtitle is: the bar grows by
+// its line, and it goes as the bar collapses, so the collapsed bar holds the
 // headline alone.
 //
 // Three things differ from web's, each because of the platform.
@@ -122,6 +122,14 @@ const styles = StyleSheet.create({
   gap: {
     flexGrow: 1,
   },
+  // The kicker's line, as wide as its words rather than the bar, so a link
+  // in it takes a press on its words alone.
+  kicker: {
+    alignItems: 'flex-start',
+  },
+  kickerCenter: {
+    alignItems: 'center',
+  },
   // Drawn over what follows it, so whatever strays past the scroll view's
   // top edge, an overscroll or a shadow, passes beneath the bar.
   pinned: {
@@ -153,9 +161,12 @@ const stylesOf = themedStyles(({ sizing, spacing }) =>
       paddingHorizontal: (TARGET_SIZE - sizing.controlSm) / 2,
     },
     // A flexible bar's top row: the small bar's 64dp strip, holding the
-    // slots alone.
+    // slots alone. It is drawn over the text under it, so a link in a kicker,
+    // whose press reaches 16dp above its line, leaves the icon buttons'
+    // targets to them where the two meet.
     strip: {
       height: COLLAPSED_BLOCK_SIZE,
+      zIndex: 1,
     },
     // The text takes the room the slots leave, and wraps inside it.
     text: {
@@ -222,8 +233,9 @@ type AppBarProps = Omit<ViewProps, 'children'> & {
   /**
    * A line over the headline in `md` and `lg`, in label medium on
    * on-surface-variant, naming where the screen sits, such as the parent a
-   * detail screen opened from. It may hold a `Link` to that parent, which
-   * reaches 48dp tall as a lone link does. Makes the bar taller by its line,
+   * detail screen opened from. It may be a `Link` to that parent, which
+   * reaches 48dp tall when it is the whole kicker, as a lone link does, and
+   * takes a press on its words rather than across the bar. Makes the bar taller by its line,
    * and goes as the bar collapses, as the subtitle does. `sm` draws none.
    */
   readonly kicker?: ReactNode
@@ -339,13 +351,15 @@ function AppBar({
   const words = (
     <>
       {showsKicker ? (
-        <Text
-          style={align === 'center' ? styles.center : undefined}
-          tone="muted"
-          variant="labelMedium"
-        >
-          {kicker}
-        </Text>
+        <View style={align === 'center' ? styles.kickerCenter : styles.kicker}>
+          <Text
+            style={align === 'center' ? styles.center : undefined}
+            tone="muted"
+            variant="labelMedium"
+          >
+            {kicker}
+          </Text>
+        </View>
       ) : null}
       {hasContent(headline) ? (
         <Text

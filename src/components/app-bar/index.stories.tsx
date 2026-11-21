@@ -249,6 +249,15 @@ const Kicker: Story = {
         trailing={TRAILING}
       />
       <Sample
+        align="center"
+        headline="Headline"
+        kicker={PARENT}
+        label="md, centered, a kicker holding a link"
+        leading={LEADING}
+        size="md"
+        trailing={TRAILING}
+      />
+      <Sample
         collapsed
         headline="Headline"
         kicker="Kicker"

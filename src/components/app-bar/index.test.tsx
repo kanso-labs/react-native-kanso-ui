@@ -293,8 +293,8 @@ describe('AppBar', () => {
           fontSize: typography.labelMediumSize,
           lineHeight: typography.labelMediumLineHeight,
         })
-        expect(kicker.parent).toBe(words)
-        expect(words?.children.indexOf(kicker)).toBe(0)
+        expect(kicker.parent?.parent).toBe(words)
+        expect(words?.children.indexOf(kicker.parent ?? kicker)).toBe(0)
         expect(words?.children.indexOf(headline())).toBe(1)
       },
     )
@@ -347,6 +347,46 @@ describe('AppBar', () => {
 
       expect(screen.queryByText('Kicker')).toBeNull()
       expect(styleOf(row()).minHeight).toBe(64)
+    })
+
+    // A lone link is drawn as a press area around its Text, which a column
+    // stretches: across the bar, it took a press anywhere on the line.
+    it.each<[NonNullable<AppBarProps['align']>, string]>([
+      ['start', 'flex-start'],
+      ['center', 'center'],
+    ])(
+      'keeps a link to its words, aligned at %s',
+      async (align, alignItems) => {
+        await renderBar({
+          align,
+          kicker: <Link href="/parent">Parent</Link>,
+          size: 'md',
+        })
+
+        let line: null | TestInstance = screen.getByRole('link', {
+          name: 'Parent',
+        })
+        while (line !== null && line.parent !== headline().parent) {
+          line = line.parent
+        }
+
+        expect(styleOf(line ?? { props: {} }).alignItems).toBe(alignItems)
+      },
+    )
+
+    // A link's press reaches 16dp above its line, into the strip the icon
+    // buttons sit in, and the later sibling takes a press where two meet.
+    it('draws the strip over the text, so the icon buttons keep their targets', async () => {
+      await renderBar({ kicker: 'Kicker', leading: BACK, size: 'md' })
+
+      let strip: null | TestInstance = screen.getByRole('button', {
+        name: 'Back',
+      })
+      while (strip !== null && styleOf(strip).height !== 64) {
+        strip = strip.parent
+      }
+
+      expect(styleOf(strip ?? { props: {} }).zIndex).toBe(1)
     })
 
     it('holds a link, which a screen reader finds by its name', async () => {
