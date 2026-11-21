@@ -25,11 +25,11 @@ import { getAnimatedStyle } from 'react-native-reanimated'
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context'
 
 import type { SnackbarOptions, SnackbarProps, SnackbarQueue } from '.'
-import type { KuiTheme } from '../../tokens/defaults'
 
 import { Snackbar } from '.'
 import { ThemeScope } from '../../theme-scope'
 import { scopeFor } from '../../theme/scope'
+import { demoThemes } from '../../theming/themes'
 
 // What the next snackbar the device draws is told about reduced motion.
 let mockReducedMotion = false
@@ -49,8 +49,6 @@ const INITIAL = {
 }
 
 // A scope's own error, which the other scheme's resolves to as well.
-const ERROR_OVERRIDE: KuiTheme = { '--kui-color-error': '#8c1d18' }
-
 const INSETS: EdgeInsets = { bottom: 34, left: 12, right: 8, top: 47 }
 
 const OFFSET = { marginBottom: 4 }
@@ -614,13 +612,13 @@ describe('Snackbar', () => {
       expect(colorOf(screen.getByText('Label'))).toBe(colors.inverseOnSurface)
     })
 
-    // The inverse error is the error role of the other scheme, made to read
-    // on the inverse surface, which is that scheme's surface.
+    // The inverse error is the error made to read on the inverse surface,
+    // the other scheme's error unless a theme states its own.
     it.each<['dark' | 'light', 'dark' | 'light']>([
       ['light', 'dark'],
       ['dark', 'light'],
     ])(
-      'leads a failure in %s with a 20dp warning glyph in the %s error',
+      'leads a failure in %s with a 20dp warning glyph in the inverse error',
       async (scheme, other) => {
         const queue = new Snackbar.Queue()
         await render(
@@ -634,34 +632,46 @@ describe('Snackbar', () => {
           tone: 'failure',
         })
         const [glyph, message] = strip().children.map(child)
-        const inverseError = scopeFor(other, {}).theme.colors.error
+        const { colors: own } = scopeFor(scheme, {}).theme
 
         expect(pathsIn(glyph)).toEqual([errorPath])
-        expect(glyph.props.color).toBe(inverseError)
+        expect(glyph.props.color).toBe(own.inverseError)
         expect(styleOf(glyph)).toMatchObject({
           alignSelf: 'flex-start',
           marginTop: 14,
         })
         expect([glyph.props.width, glyph.props.height]).toEqual([20, 20])
-        expect(inverseError).not.toBe(scopeFor(scheme, {}).theme.colors.error)
+        // The library's own inverse error is the other scheme's error.
+        expect(own.inverseError).toBe(scopeFor(other, {}).theme.colors.error)
+        expect(own.inverseError).not.toBe(own.error)
         expect(message.children.map(child)[0]?.props.children).toBe('Label')
       },
     )
 
-    it('reads the inverse error under the overrides around it', async () => {
-      const queue = new Snackbar.Queue()
-      await render(
-        <ThemeScope scheme="light" theme={ERROR_OVERRIDE}>
-          <Snackbar queue={queue} testID="region" />
-        </ThemeScope>,
-      )
+    // A scheme that states its own error states the inverse error to go
+    // with it, and the glyph takes that rather than the other scheme's.
+    it.each(['dark', 'light'] as const)(
+      'reads the inverse error a theme states, in %s',
+      async (scheme) => {
+        const { theme: editorial } = demoThemes.editorial
+        const queue = new Snackbar.Queue()
+        await render(
+          <ThemeScope scheme={scheme} theme={editorial}>
+            <Snackbar queue={queue} testID="region" />
+          </ThemeScope>,
+        )
 
-      await announce(queue, 'Label', { tone: 'failure' })
+        await announce(queue, 'Label', { tone: 'failure' })
+        const { colors: own } = scopeFor(scheme, editorial).theme
 
-      expect(child(strip().children[0]).props.color).toBe(
-        scopeFor('dark', ERROR_OVERRIDE).theme.colors.error,
-      )
-    })
+        expect(own.inverseError).toBe(editorial['--kui-color-inverse-error'])
+        expect(child(strip().children[0]).props.color).toBe(own.inverseError)
+        expect(own.inverseError).not.toBe(
+          scopeFor(scheme === 'dark' ? 'light' : 'dark', editorial).theme.colors
+            .error,
+        )
+      },
+    )
 
     it('leads a message without a tone with its words, as before', async () => {
       const queue = new Snackbar.Queue()

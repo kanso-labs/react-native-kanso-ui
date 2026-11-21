@@ -26,14 +26,12 @@ import Animated, {
 } from 'react-native-reanimated'
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context'
 
-import type { Scope } from '../../theme/scope'
-
 import { CloseGlyph, ErrorGlyph } from '../../glyphs'
 import { useWindowSizeClass } from '../../hooks/useWindowSizeClass'
 import { useMessages } from '../../i18n/provider'
 import { Overlay } from '../../overlay'
 import { hitSlop, usePressFeedback } from '../../press'
-import { scopeFor, useScope, useTheme } from '../../theme/scope'
+import { useTheme } from '../../theme/scope'
 import { composeStyles, themedStyles } from '../../theme/styles'
 import { useTypeRole } from '../../typography/roles'
 
@@ -82,12 +80,9 @@ import { useTypeRole } from '../../typography/roles'
 // **A failure leads with a warning glyph**, which the page does not draw: a
 // message added with `tone: 'failure'` starts with a 20dp exclamation mark in
 // a filled circle, so it no longer looks like a confirmation. It is drawn in
-// the inverse error, the error role of the other scheme, as inverse primary
-// is the primary of the other scheme: the inverse surface is the other
-// scheme's surface, and the other scheme's error is the one made to read on
-// it. It is read here as the error the scope around the snackbar resolves to
-// in the other scheme, with the same overrides, so a theme that sets its own
-// error hands the glyph that same colour on the inverse surface. The glyph
+// the inverse error, `--kui-color-inverse-error`, the error made to read on
+// the inverse surface, as inverse primary is the primary made to read there.
+// It is the other scheme's error unless a theme states its own. The glyph
 // sits beside the message's first line, and is decorative, since the
 // message's words say what failed.
 
@@ -293,9 +288,8 @@ type SnackbarOptions = {
   /**
    * `failure` leads the message with a warning glyph in the inverse error,
    * so a failure does not look like a confirmation. Left out, the message is
-   * drawn as a confirmation. The inverse error is the other scheme's error
-   * under the same theme, so a theme that sets `--kui-color-error` sets the
-   * glyph's colour on the inverse surface too. The glyph is not announced,
+   * drawn as a confirmation. The glyph's colour is
+   * `--kui-color-inverse-error` from the theme in scope. It is not announced,
    * so the message's words should say that something failed.
    */
   readonly tone?: SnackbarTone
@@ -426,14 +420,6 @@ function flagOf(set: (value: boolean) => void, value: boolean) {
   return () => {
     set(value)
   }
-}
-
-// The error role of the other scheme, under the same overrides as the scope
-// around the snackbar: the colour made to read on the inverse surface, which
-// is that scheme's surface.
-function inverseErrorOf({ overrides, scheme }: Scope): string {
-  return scopeFor(scheme === 'dark' ? 'light' : 'dark', overrides).theme.colors
-    .error
 }
 
 function measureInto(height: SharedValue<number>) {
@@ -581,8 +567,7 @@ function SnackbarStrip({
   readonly shown: ShownMessage
   readonly wide: boolean
 }) {
-  const scope = useScope()
-  const { theme } = scope
+  const theme = useTheme()
   const themed = stylesOf(theme)
   const body = useTypeRole('bodyMedium')
   const label = useTypeRole('labelLarge')
@@ -645,7 +630,7 @@ function SnackbarStrip({
     >
       {tone === 'failure' ? (
         <ErrorGlyph
-          color={inverseErrorOf(scope)}
+          color={colors.inverseError}
           size={GLYPH_SIZE}
           style={themed.glyph}
         />
