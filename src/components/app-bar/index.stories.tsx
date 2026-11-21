@@ -11,6 +11,7 @@ import { useAppBarScroll } from '../../hooks/useAppBarScroll'
 import { useTheme } from '../../theme/scope'
 import { composeStyles, themedStyles } from '../../theme/styles'
 import { IconButton } from '../icon-button'
+import { Link } from '../link'
 import { Stack } from '../stack'
 import { Text } from '../text'
 
@@ -31,6 +32,10 @@ const TRAILING = (
     <SearchGlyph />
   </IconButton>
 )
+
+// A kicker naming the parent a detail screen opened from, as a link back to
+// it.
+const PARENT = <Link href="/parent">Parent</Link>
 
 // One German word, as wide as a headline gets without a space to break at.
 const LONG_WORD = 'Unterstützungszeilenüberschrift'
@@ -212,6 +217,59 @@ const Centered: Story = {
   ),
 }
 
-export { Centered, Collapsing, Default, Large, LongHeadline }
+// A line over the headline in the flexible sizes, as text and as a link to
+// the parent screen, and the collapsed bar, which drops it and keeps the
+// headline alone.
+const Kicker: Story = {
+  render: () => (
+    <Stack gap="lg">
+      <Sample
+        headline="Headline"
+        kicker="Kicker"
+        label="md, with a kicker"
+        leading={LEADING}
+        size="md"
+        trailing={TRAILING}
+      />
+      <Sample
+        headline="Headline"
+        kicker="Kicker"
+        label="lg, with a kicker and a subtitle"
+        leading={LEADING}
+        size="lg"
+        subtitle="Supporting line"
+        trailing={TRAILING}
+      />
+      <Sample
+        headline="Headline"
+        kicker={PARENT}
+        label="md, a kicker holding a link"
+        leading={LEADING}
+        size="md"
+        trailing={TRAILING}
+      />
+      <Sample
+        align="center"
+        headline="Headline"
+        kicker={PARENT}
+        label="md, centered, a kicker holding a link"
+        leading={LEADING}
+        size="md"
+        trailing={TRAILING}
+      />
+      <Sample
+        collapsed
+        headline="Headline"
+        kicker="Kicker"
+        label="md, collapsed"
+        leading={LEADING}
+        size="md"
+        trailing={TRAILING}
+      />
+    </Stack>
+  ),
+}
+
+export { Centered, Collapsing, Default, Kicker, Large, LongHeadline }
 
 export default meta
