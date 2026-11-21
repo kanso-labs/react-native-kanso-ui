@@ -26,12 +26,14 @@ import Animated, {
 } from 'react-native-reanimated'
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context'
 
-import { CloseGlyph } from '../../glyphs'
+import type { Scope } from '../../theme/scope'
+
+import { CloseGlyph, ErrorGlyph } from '../../glyphs'
 import { useWindowSizeClass } from '../../hooks/useWindowSizeClass'
 import { useMessages } from '../../i18n/provider'
 import { Overlay } from '../../overlay'
 import { hitSlop, usePressFeedback } from '../../press'
-import { useTheme } from '../../theme/scope'
+import { scopeFor, useScope, useTheme } from '../../theme/scope'
 import { composeStyles, themedStyles } from '../../theme/styles'
 import { useTypeRole } from '../../typography/roles'
 
@@ -76,6 +78,18 @@ import { useTypeRole } from '../../typography/roles'
 // 48dp in a strip 48dp tall, so a ring outside it crossed the strip's edges
 // onto the screen, in a colour chosen to read on the strip rather than on
 // the screen around it.
+//
+// **A failure leads with a warning glyph**, which the page does not draw: a
+// message added with `tone: 'failure'` starts with a 20dp exclamation mark in
+// a filled circle, so it no longer looks like a confirmation. It is drawn in
+// the inverse error, the error role of the other scheme, as inverse primary
+// is the primary of the other scheme: the inverse surface is the other
+// scheme's surface, and the other scheme's error is the one made to read on
+// it. It is read here as the error the scope around the snackbar resolves to
+// in the other scheme, with the same overrides, so a theme that sets its own
+// error hands the glyph that same colour on the inverse surface. The glyph
+// sits beside the message's first line, and is decorative, since the
+// message's words say what failed.
 
 // How long a message is shown when the call site names no `timeout`, web's
 // durations from the snackbar's guidelines and accessibility pages. A message
@@ -100,6 +114,9 @@ const MESSAGE_BLOCK_PADDING = 14
 // inside.
 const RING_WIDTH = 2
 const RING_OFFSET = -4
+
+// The failure glyph's side, 20dp, which fills the message's 20dp line.
+const GLYPH_SIZE = 20
 
 // Outside a SafeAreaProvider the insets are unknown, and the window's own edge
 // is the best bound there is.
@@ -145,6 +162,15 @@ const stylesOf = themedStyles(({ colors, radii, shadows, sizing, spacing }) =>
     // Both controls are pills, which the state layer and the ripple clip to.
     control: {
       borderRadius: radii.pill,
+    },
+    // The failure glyph, 8dp in from the strip's own 8dp, where the message
+    // would otherwise start, which keeps its 8dp before the words. It sits
+    // at the top of the strip, 14dp down, beside the message's first line
+    // rather than between the lines of a longer one.
+    glyph: {
+      alignSelf: 'flex-start',
+      marginStart: spacing.sm,
+      marginTop: MESSAGE_BLOCK_PADDING,
     },
     // The message: its 8dp either side inside the strip's own 8dp, and the
     // 14dp above and below. The height is the message's rather than the
@@ -222,6 +248,7 @@ type ShownMessage = {
   readonly onClose: (() => void) | undefined
   readonly showCloseButton: boolean
   readonly timeout: number
+  readonly tone: SnackbarTone | undefined
 }
 
 type SnackbarAction = {
@@ -263,6 +290,15 @@ type SnackbarOptions = {
    * no way to be rid of it.
    */
   readonly timeout?: number
+  /**
+   * `failure` leads the message with a warning glyph in the inverse error,
+   * so a failure does not look like a confirmation. Left out, the message is
+   * drawn as a confirmation. The inverse error is the other scheme's error
+   * under the same theme, so a theme that sets `--kui-color-error` sets the
+   * glyph's colour on the inverse surface too. The glyph is not announced,
+   * so the message's words should say that something failed.
+   */
+  readonly tone?: SnackbarTone
 }
 
 type SnackbarProps = Omit<ViewProps, 'children' | 'style'> & {
@@ -278,6 +314,9 @@ type SnackbarProps = Omit<ViewProps, 'children' | 'style'> & {
   readonly ref?: Ref<ComponentRef<typeof View>>
   readonly style?: StyleProp<ViewStyle>
 }
+
+/** What a message reports: `failure`, where something did not happen. */
+type SnackbarTone = 'failure'
 
 /**
  * The queue a snackbar is shown from. Make one where the app can reach it, a
@@ -300,7 +339,7 @@ class SnackbarQueue {
    * it does not come back.
    */
   add(message: string, options: SnackbarOptions = {}): string {
-    const { action, onClose, showCloseButton = false, timeout } = options
+    const { action, onClose, showCloseButton = false, timeout, tone } = options
 
     this.clear()
     this.#added += 1
@@ -314,6 +353,7 @@ class SnackbarQueue {
       onClose,
       showCloseButton,
       timeout: timeout ?? (action === undefined ? MESSAGE_MS : UNTIL_CLOSED),
+      tone,
     }
     this.#changed()
 
@@ -386,6 +426,14 @@ function flagOf(set: (value: boolean) => void, value: boolean) {
   return () => {
     set(value)
   }
+}
+
+// The error role of the other scheme, under the same overrides as the scope
+// around the snackbar: the colour made to read on the inverse surface, which
+// is that scheme's surface.
+function inverseErrorOf({ overrides, scheme }: Scope): string {
+  return scopeFor(scheme === 'dark' ? 'light' : 'dark', overrides).theme.colors
+    .error
 }
 
 function measureInto(height: SharedValue<number>) {
@@ -533,14 +581,15 @@ function SnackbarStrip({
   readonly shown: ShownMessage
   readonly wide: boolean
 }) {
-  const theme = useTheme()
+  const scope = useScope()
+  const { theme } = scope
   const themed = stylesOf(theme)
   const body = useTypeRole('bodyMedium')
   const label = useTypeRole('labelLarge')
   const reduceMotion = useReducedMotion()
   const [focused, setFocused] = useState(false)
   const [hovered, setHovered] = useState(false)
-  const { action, key, message, showCloseButton } = shown
+  const { action, key, message, showCloseButton, tone } = shown
   const { colors, motion, sizing } = theme
 
   // It rises its own height from the bottom edge as it fades in, which is
@@ -594,6 +643,13 @@ function SnackbarStrip({
         rise,
       )}
     >
+      {tone === 'failure' ? (
+        <ErrorGlyph
+          color={inverseErrorOf(scope)}
+          size={GLYPH_SIZE}
+          style={themed.glyph}
+        />
+      ) : null}
       <View style={themed.message}>
         <NativeText style={composeStyles<TextStyle>(body, themed.messageText)}>
           {message}
@@ -702,4 +758,10 @@ Snackbar.Queue = SnackbarQueue
 // component, as on web: a module exporting something that is not a component
 // is one fast refresh reloads whole.
 export { Snackbar }
-export type { SnackbarAction, SnackbarOptions, SnackbarProps, SnackbarQueue }
+export type {
+  SnackbarAction,
+  SnackbarOptions,
+  SnackbarProps,
+  SnackbarQueue,
+  SnackbarTone,
+}
