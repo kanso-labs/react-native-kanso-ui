@@ -128,6 +128,13 @@ export { DisclosureGroup } from './components/disclosure-group'
 export type { DisclosureGroupProps } from './components/disclosure-group'
 export { DropZone, FileTrigger } from './components/drop-zone'
 export type { DropZoneProps, FileTriggerProps } from './components/drop-zone'
+export { EmptyState } from './components/empty-state'
+export type {
+  EmptyStateAction,
+  EmptyStateKind,
+  EmptyStateProps,
+  EmptyStateSize,
+} from './components/empty-state'
 export { Fab } from './components/fab'
 export type { FabProps, FabSize, FabTone, FabVariant } from './components/fab'
 export { FabMenu, FabMenuItem } from './components/fab-menu'
