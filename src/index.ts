@@ -293,6 +293,19 @@ export type {
   SheetProps,
   SheetTitleProps,
 } from './components/sheet'
+export {
+  Skeleton,
+  SkeletonBar,
+  SkeletonCircle,
+  SkeletonRow,
+} from './components/skeleton'
+export type {
+  SkeletonBarProps,
+  SkeletonBarSize,
+  SkeletonCircleProps,
+  SkeletonProps,
+  SkeletonRowProps,
+} from './components/skeleton'
 export { Slider } from './components/slider'
 export type { SliderProps, SliderSize } from './components/slider'
 export { Snackbar } from './components/snackbar'

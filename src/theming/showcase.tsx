@@ -78,6 +78,7 @@ import { SegmentedButton } from '../components/segmented-button'
 import { Select } from '../components/select'
 import { Separator } from '../components/separator'
 import { Sheet } from '../components/sheet'
+import { Skeleton } from '../components/skeleton'
 import { Slider } from '../components/slider'
 import { Snackbar } from '../components/snackbar'
 import { SplitButton } from '../components/split-button'
@@ -211,6 +212,9 @@ const BADGED_COUNT = (
 
 // The dialog's close button's icon, the library's own close glyph.
 const CLOSE = <CloseGlyph />
+
+// The mark a skeleton row holds, one stable element per render.
+const SKELETON_MARK = <Skeleton.Circle />
 
 // The icon the chips hold: web's circle half the slot across, drawn as a view
 // in the colour and at the size the slot hands it.
@@ -1550,6 +1554,18 @@ function Showcase({ name }: ShowcaseProps) {
             </Sheet.Content>
           </Sheet>
         </View>
+      </Section>
+
+      <Section
+        description="Bars and circles in surface-container-highest, the most emphasised container, in rows at the list's own heights, so the page's shape is drawn before what fills it."
+        title="Skeleton"
+      >
+        <Skeleton>
+          <Skeleton.Row leading={SKELETON_MARK} lines={2}>
+            <Skeleton.Bar size="md" width="60%" />
+            <Skeleton.Bar width="40%" />
+          </Skeleton.Row>
+        </Skeleton>
       </Section>
 
       <Section
