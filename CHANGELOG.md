@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.15.0](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.14.2...v0.15.0) (2026-11-21)
+
+
+### Features
+
+* **app-bar:** hold a kicker over the headline ([#798](https://github.com/kanso-labs/react-native-kanso-ui/issues/798)) ([9aede53](https://github.com/kanso-labs/react-native-kanso-ui/commit/9aede53538d889c1523434b35a8a9020efc3d690))
+* **empty-state:** add EmptyState, for first use, inline, done and status ([#805](https://github.com/kanso-labs/react-native-kanso-ui/issues/805)) ([dd1c3f9](https://github.com/kanso-labs/react-native-kanso-ui/commit/dd1c3f96c9c631a354e190f8d16061dc9d765bbd))
+* **fab-menu:** give each item a tone of its own ([#801](https://github.com/kanso-labs/react-native-kanso-ui/issues/801)) ([9cfb7ef](https://github.com/kanso-labs/react-native-kanso-ui/commit/9cfb7efe0f54d13a562ae3e35c8339886cef0c3f))
+* **navigation-rail:** hold a FAB at the top of the rail, extended in the expanded rail ([#806](https://github.com/kanso-labs/react-native-kanso-ui/issues/806)) ([da63f06](https://github.com/kanso-labs/react-native-kanso-ui/commit/da63f066a36d0f44806872da9a24461a782d97d3))
+* **skeleton:** add skeleton rows at the list's 56 and 72 heights ([#804](https://github.com/kanso-labs/react-native-kanso-ui/issues/804)) ([cd4a3ff](https://github.com/kanso-labs/react-native-kanso-ui/commit/cd4a3fffaf914045f131b9d17674cd7c773bfddf))
+* **snackbar:** lead a failure with a warning glyph ([#799](https://github.com/kanso-labs/react-native-kanso-ui/issues/799)) ([79b267b](https://github.com/kanso-labs/react-native-kanso-ui/commit/79b267b459dca02170266d3ddf55db6bba484170))
+
+
+### Dependencies
+
+* update dependency @kanso-labs/kanso-ui-core to v0.2.0 ([#810](https://github.com/kanso-labs/react-native-kanso-ui/issues/810)) ([8296d83](https://github.com/kanso-labs/react-native-kanso-ui/commit/8296d83528127c54817237bc51676453cf90ca82))
+* update dependency @kanso-labs/kanso-ui-core to v0.2.0 ([#811](https://github.com/kanso-labs/react-native-kanso-ui/issues/811)) ([b730add](https://github.com/kanso-labs/react-native-kanso-ui/commit/b730addb17785991722d4e81d1a6cd9278aae033))
+
 ## [0.14.2](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.14.1...v0.14.2) (2026-11-20)
 
 
