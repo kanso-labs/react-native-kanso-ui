@@ -9,7 +9,7 @@ import {
   jest,
 } from '@jest/globals'
 import { act, render, screen } from '@testing-library/react-native'
-import { StyleSheet } from 'react-native'
+import { StyleSheet, Text } from 'react-native'
 import { getAnimatedStyle } from 'react-native-reanimated'
 
 import type { SkeletonBarSize } from '.'
@@ -66,6 +66,15 @@ function root() {
   return screen.getByTestId('skeleton')
 }
 
+// The view the shapes are drawn in, hidden from a screen reader.
+function shapes() {
+  const [inner] = root().children
+  if (typeof inner === 'string') {
+    throw new TypeError('expected the view the shapes are drawn in')
+  }
+  return inner
+}
+
 function styleOf(element: {
   props: { style?: StyleProp<ViewStyle> }
 }): ViewStyle {
@@ -96,6 +105,20 @@ describe('Skeleton', () => {
         'aria-label': 'Loading',
       })
       expect(screen.getByRole('progressbar', { name: 'Loading' })).toBe(root())
+    })
+
+    it('hides what it holds, so nothing inside is read past it', async () => {
+      await render(
+        <Skeleton testID="skeleton">
+          <Text>Label</Text>
+        </Skeleton>,
+      )
+
+      expect(shapes().props).toMatchObject({
+        accessibilityElementsHidden: true,
+        importantForAccessibility: 'no-hide-descendants',
+      })
+      expect(screen.queryByText('Label')).toBeNull()
     })
 
     it("says the library's word for loading in the locale", async () => {
@@ -146,7 +169,7 @@ describe('Skeleton', () => {
     it("stand at the list's 72dp for two lines and 56dp for one", async () => {
       await renderRows()
 
-      const [two, one] = root().children.map((row) => {
+      const [two, one] = shapes().children.map((row) => {
         if (typeof row === 'string') {
           throw new TypeError('expected a row')
         }
@@ -177,7 +200,7 @@ describe('Skeleton', () => {
           </Skeleton>,
         )
 
-        const [bar] = root().children
+        const [bar] = shapes().children
 
         if (typeof bar === 'string') {
           throw new TypeError('expected a bar')
@@ -198,7 +221,7 @@ describe('Skeleton', () => {
         </Skeleton>,
       )
 
-      const [circle] = root().children
+      const [circle] = shapes().children
 
       if (typeof circle === 'string') {
         throw new TypeError('expected a circle')

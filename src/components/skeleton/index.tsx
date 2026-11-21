@@ -13,16 +13,20 @@ import Animated, {
   useReducedMotion,
 } from 'react-native-reanimated'
 
+import { HIDDEN } from '../../glyphs/hidden'
 import { useMessages } from '../../i18n/provider'
 import { useLoop } from '../../indicator/motion'
+import { rowStyles } from '../../row'
+import { rowStylesOf } from '../../row/styles'
 import { useTheme } from '../../theme/scope'
 import { composeStyles, themedStyles } from '../../theme/styles'
 
 // The shape of a page drawn at once, while what fills it is read: rows at the
 // lists page's 56dp and 72dp heights, holding bars in place of their lines
 // and 40dp circles in place of their marks. No Material Design page draws a
-// skeleton, so this is kanso's own, drawn from the lists page's row: its 16dp
-// inline and 12dp block padding and 16dp between a slot and the lines.
+// skeleton, so this is kanso's own, drawn on the lists page's row as
+// ListItem draws it, from src/row: its 16dp inline and 12dp block padding and
+// 16dp between a slot and the lines.
 //
 // Every shape is surface container highest, the bars at the 4dp corner and
 // the circles round. A bar is 12dp tall for an eyebrow or a supporting line,
@@ -39,8 +43,8 @@ import { composeStyles, themedStyles } from '../../theme/styles'
 //
 // **A screen reader hears one "Loading".** The skeleton is one element, a
 // busy progress bar named by `aria-label`, or by the library's own word for
-// loading in the locale, as LoadingIndicator is. What it holds is drawn
-// shapes with no words, which say nothing of their own.
+// loading in the locale, as LoadingIndicator is. What it holds is hidden from
+// screen readers on every platform, so nothing inside is read past it.
 
 // A cycle of the fade: 1.5 seconds down to 60%, and 1.5 back.
 const FADE_MS = 3000
@@ -124,21 +128,6 @@ const stylesOf = themedStyles(({ colors, radii, sizing, spacing }) =>
     gap: {
       gap: spacing.sm,
     },
-    // The lists page's row: 16dp inline, 12dp block, 16dp between the slots
-    // and the lines.
-    row: {
-      alignItems: 'center',
-      flexDirection: 'row',
-      gap: spacing.lg,
-      paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.md,
-    },
-    rowMd: {
-      minHeight: sizing.rowMd,
-    },
-    rowSm: {
-      minHeight: sizing.rowSm,
-    },
   }),
 )
 
@@ -188,7 +177,7 @@ function Skeleton({
       {...props}
       style={composeStyles<AnimatedStyle<ViewStyle>>(fade, style)}
     >
-      {children}
+      <View {...HIDDEN}>{children}</View>
     </Animated.View>
   )
 }
@@ -227,21 +216,28 @@ function SkeletonRow({
   style,
   trailing,
 }: SkeletonRowProps) {
-  const own = stylesOf(useTheme())
+  const theme = useTheme()
+  const own = stylesOf(theme)
+  const row = rowStylesOf(theme)
 
   return (
     <View
       style={composeStyles<ViewStyle>(
-        own.row,
-        lines === 2 ? own.rowMd : own.rowSm,
+        row.base,
+        row.list,
+        lines === 2 ? row.twoLine : undefined,
         style,
       )}
     >
-      {leading}
+      {leading === undefined ? null : (
+        <View style={rowStyles.slot}>{leading}</View>
+      )}
       <View style={composeStyles<ViewStyle>(styles.lines, own.gap)}>
         {children}
       </View>
-      {trailing}
+      {trailing === undefined ? null : (
+        <View style={rowStyles.slot}>{trailing}</View>
+      )}
     </View>
   )
 }

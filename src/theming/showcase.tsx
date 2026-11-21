@@ -1557,7 +1557,7 @@ function Showcase({ name }: ShowcaseProps) {
       </Section>
 
       <Section
-        description="Bars and circles in surface-container-highest, the role a page's emptiest part takes, in rows at the list's own heights."
+        description="Bars and circles in surface-container-highest, the most emphasised container, in rows at the list's own heights, so the page's shape is drawn before what fills it."
         title="Skeleton"
       >
         <Skeleton>
