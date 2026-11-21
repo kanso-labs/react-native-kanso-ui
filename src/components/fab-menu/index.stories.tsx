@@ -2,6 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react'
 
 import { StyleSheet, View } from 'react-native'
 
+import type { KuiTheme } from '../../tokens/defaults'
+
 import { FabMenu } from '.'
 import {
   KeyboardGlyph,
@@ -46,6 +48,31 @@ const ACTIONS = [
   </FabMenu.Item>,
 ]
 
+// A theme of one action's own, as a part of an app with a colour of its own
+// would hand it: the primary container pair, here pointed at the library's
+// error container pair so it reads in either scheme.
+const OWN_THEME: KuiTheme = {
+  '--kui-color-on-primary-container': 'var(--kui-color-on-error-container)',
+  '--kui-color-primary-container': 'var(--kui-color-error-container)',
+}
+
+// Four actions, each in a colour of its own: the three tones, and one in a
+// theme of its own.
+const OWN_TONES = [
+  <FabMenu.Item icon={PERSON} id="first" key="first" tone="primary">
+    First item
+  </FabMenu.Item>,
+  <FabMenu.Item icon={SEARCH} id="second" key="second" tone="secondary">
+    Second item
+  </FabMenu.Item>,
+  <FabMenu.Item icon={KEYBOARD} id="third" key="third" tone="tertiary">
+    Third item
+  </FabMenu.Item>,
+  <FabMenu.Item icon={PLUS} id="fourth" key="fourth" theme={OWN_THEME}>
+    Fourth item
+  </FabMenu.Item>,
+]
+
 const meta = {
   args: {
     'aria-label': 'Label',
@@ -73,6 +100,15 @@ const Open: Story = {
   parameters: FRAMED,
 }
 
-export { Default, Open }
+// Each action in a tone of its own, while the close button keeps the menu's.
+const ItemTones: Story = {
+  args: {
+    children: OWN_TONES,
+    defaultOpen: true,
+  },
+  parameters: FRAMED,
+}
+
+export { Default, ItemTones, Open }
 
 export default meta
