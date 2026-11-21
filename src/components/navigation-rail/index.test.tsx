@@ -399,9 +399,10 @@ describe('NavigationRail', () => {
     it('stands centred in the collapsed rail, 40dp clear of the first destination', async () => {
       await renderRail({ fab: FAB })
 
+      // 36dp here and the collapsed list's 4dp of padding make the page's 40.
       expect(styleOf(fabSlotOf())).toMatchObject({
         alignItems: 'center',
-        marginBottom: spacing.xxxl - spacing.xs,
+        marginBottom: 36,
       })
     })
 
@@ -411,7 +412,7 @@ describe('NavigationRail', () => {
       expect(styleOf(fabSlotOf())).toMatchObject({
         alignItems: 'flex-start',
         alignSelf: 'stretch',
-        marginBottom: spacing.xxxl,
+        marginBottom: 40,
       })
       expect(styleOf(fabSlotOf()).paddingStart).toBeUndefined()
     })
@@ -424,7 +425,29 @@ describe('NavigationRail', () => {
       async (_form, isExpanded) => {
         await renderRail({ fab: FAB, header: HEADER, isExpanded })
 
-        expect(styleOf(headerOf()).marginBottom).toBe(spacing.xs)
+        expect(styleOf(headerOf()).marginBottom).toBe(4)
+      },
+    )
+
+    it('takes a name of the call site in the collapsed rail', async () => {
+      await renderRail({
+        fab: (
+          <NavigationRail.Fab aria-label="Own label" label="Label" testID="fab">
+            <Icon />
+          </NavigationRail.Fab>
+        ),
+      })
+
+      expect(screen.getByRole('button', { name: 'Own label' })).toBe(fabOf())
+    })
+
+    it.each([false, null])(
+      'holds nothing when handed %s, leaving the header its 40dp',
+      async (empty) => {
+        await renderRail({ fab: empty, header: HEADER, isExpanded: true })
+
+        expect(columnOf().children).toHaveLength(2)
+        expect(styleOf(headerOf()).marginBottom).toBe(40)
       },
     )
 

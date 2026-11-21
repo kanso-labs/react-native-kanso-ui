@@ -24,6 +24,7 @@ import type { FabProps } from '../fab'
 
 import { scrollNameOf } from '../../group'
 import { NavigationContext, NavigationItem } from '../../navigation'
+import { hasContent } from '../../row'
 import { SafeArea } from '../../safe-area'
 import { useTheme } from '../../theme/scope'
 import { composeStyles, themedStyles } from '../../theme/styles'
@@ -298,6 +299,9 @@ function NavigationRail({
   const theme = useTheme()
   const own = stylesOf(theme)
   const reduceMotion = useReducedMotion()
+  // A slot handed `false` or `null`, as `fab={isWide && <Fab />}` hands it,
+  // holds nothing, and the header keeps its own 40dp.
+  const hasFab = hasContent(fab)
   // The surface's width, unset until the form being drawn is first measured,
   // which leaves the surface as wide as that form.
   const width = useSharedValue<number | undefined>(undefined)
@@ -336,13 +340,13 @@ function NavigationRail({
                 style={composeStyles<ViewStyle>(
                   own.header,
                   isExpanded ? own.headerExpanded : undefined,
-                  fab === undefined ? undefined : own.headerAboveFab,
+                  hasFab ? own.headerAboveFab : undefined,
                 )}
               >
                 {header}
               </View>
             )}
-            {fab === undefined ? null : (
+            {hasFab ? (
               <View
                 style={composeStyles<ViewStyle>(
                   own.fab,
@@ -351,7 +355,7 @@ function NavigationRail({
               >
                 <NavigationContext value={context}>{fab}</NavigationContext>
               </View>
-            )}
+            ) : null}
             <ScrollView
               {...scrollNameOf(ariaLabel)}
               contentContainerStyle={
