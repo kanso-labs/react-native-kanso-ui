@@ -1070,7 +1070,19 @@ function Showcase({ name }: ShowcaseProps) {
             icon={EMPTY_ICON}
             title="Headline"
           />
+          <EmptyState
+            description="Supporting line"
+            icon={EMPTY_ICON}
+            size="inline"
+          />
           <EmptyState description="Supporting line" kind="done" />
+          <EmptyState
+            action={EMPTY_ACTION}
+            description="Supporting line"
+            icon={EMPTY_ICON}
+            kind="status"
+            title="Headline"
+          />
         </Stack>
       </Section>
 

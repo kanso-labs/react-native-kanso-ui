@@ -178,12 +178,23 @@ describe('EmptyState', () => {
       async (kind) => {
         await renderState({ kind })
 
-        expect(mark().props.accessibilityElementsHidden).toBe(true)
-        expect(mark().props.importantForAccessibility).toBe(
-          'no-hide-descendants',
-        )
+        expect(mark().props['aria-hidden']).toBe(true)
       },
     )
+
+    it('hides the inline mark from a screen reader', async () => {
+      await render(
+        <EmptyState
+          description="Supporting line"
+          icon={ICON}
+          size="inline"
+          testID="state"
+        />,
+      )
+
+      expect(mark().props['aria-hidden']).toBe(true)
+      expect(screen.queryByTestId('icon')).toBeNull()
+    })
   })
 
   describe('inline', () => {

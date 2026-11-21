@@ -6,7 +6,6 @@ import { StyleSheet, View } from 'react-native'
 import type { IconStyle } from '../../glyphs/icon-style'
 
 import { CheckGlyph } from '../../glyphs'
-import { HIDDEN } from '../../glyphs/hidden'
 import { IconStyleContext } from '../../glyphs/icon-style'
 import { rowStylesOf } from '../../row/styles'
 import { useTheme } from '../../theme/scope'
@@ -33,14 +32,14 @@ import { Text } from '../text'
 // - **`done`**, a list some things were in and none are left: a 24dp check
 //   in the primary role and the line, in the lists page's 56dp row, lined up
 //   where the rows were. No title and no button: nothing is wrong.
-//
-// Each form's props are its own, so a part a layout does not draw, such as
-// a title on `done`, does not compile. A mark is decorative and hidden from
-// screen readers, the app's icon in it with it.
 // - **`status`**, a screen that cannot show what it was opened for: the first
 //   layout with a neutral mark, on surface container highest with its glyph
 //   in on-surface-variant, and an outlined button, since what it offers is a
 //   way round rather than the screen's main action.
+//
+// Each form's props are its own, so a part a layout does not draw, such as
+// a title on `done`, does not compile. A mark is decorative and hidden from
+// screen readers, the app's icon in it with it.
 //
 // **The title is a heading with no level.** Web sets it at `headingLevel`;
 // React Native's screen readers have no heading levels, so the prop is
@@ -267,7 +266,7 @@ function EmptyState(props: EmptyStateProps) {
         style={composeStyles<ViewStyle>(row.base, row.list, row.twoLine, style)}
       >
         {icon === undefined ? null : (
-          <View {...HIDDEN} style={own.inlineMark}>
+          <View aria-hidden style={own.inlineMark}>
             <IconStyleContext
               value={iconStyleOf(colors.onPrimaryContainer, INLINE_GLYPH)}
             >
@@ -286,7 +285,7 @@ function EmptyState(props: EmptyStateProps) {
     <View {...rest} style={composeStyles<ViewStyle>(own.block, style)}>
       {icon === undefined ? null : (
         <View
-          {...HIDDEN}
+          aria-hidden
           style={composeStyles<ViewStyle>(
             own.mark,
             status ? own.markStatus : own.markFirst,
