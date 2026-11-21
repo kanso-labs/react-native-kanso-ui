@@ -88,9 +88,10 @@ async function advance(milliseconds: number) {
   })
 }
 
-// How far round from the top a point on the flat ring is, clockwise.
-function angleOf([x, y]: readonly number[]) {
-  const angle = Math.atan2(x - CENTRE, CENTRE - y)
+// How far round from the top a point is, clockwise, about the flat ring's
+// centre or the one given.
+function angleOf([x, y]: readonly number[], centre = CENTRE) {
+  const angle = Math.atan2(x - centre, centre - y)
   return angle < 0 ? angle + TURN : angle
 }
 
@@ -799,16 +800,71 @@ describe('ProgressIndicator', () => {
       })
     })
 
-    it('leaves the page’s gap either side of the track', async () => {
+    // Both arcs end in round caps, half the 4 stroke past each end, so the
+    // ends stand 8 apart to leave the page's 4 between what is drawn.
+    it('leaves the page’s gap between the caps either side of the track', async () => {
       await render(
         <ProgressIndicator label="Label" value={25} variant="circular" />,
       )
       const [track] = arcs()
       const [start, end] = endsOf(track.d)
 
-      expect(angleOf(start)).toBeCloseTo((CIRCUMFERENCE / 4 + 4) / RADIUS, 2)
-      expect(angleOf(end)).toBeCloseTo(TURN - 4 / RADIUS, 2)
-      expect(track.stroke).toBe(colors.secondaryContainer)
+      expect(angleOf(start)).toBeCloseTo((CIRCUMFERENCE / 4 + 8) / RADIUS, 2)
+      expect(angleOf(end)).toBeCloseTo(TURN - 8 / RADIUS, 2)
+      expect(track).toMatchObject({
+        stroke: colors.secondaryContainer,
+        strokeLinecap: 'round',
+      })
+    })
+
+    // Empty, the ring is the whole track from the top, with no dot of an
+    // active arc and no gap for one, as web's ring draws it.
+    it.each(['flat', 'wavy'] as const)(
+      'draws an empty %s ring as the whole track',
+      async (shape) => {
+        await render(
+          <ProgressIndicator
+            label="Label"
+            shape={shape}
+            value={0}
+            variant="circular"
+          />,
+        )
+        const [track, ...active] = arcs()
+        const [start, end] = endsOf(track.d)
+        const centre = shape === 'wavy' ? 24 : CENTRE
+
+        expect(angleOf(start, centre)).toBeCloseTo(0, 2)
+        expect(angleOf(end, centre)).toBeCloseTo(TURN, 2)
+        for (const arc of active) {
+          expect(arc.d).toBe('')
+        }
+      },
+    )
+
+    // Near 0 the gap is no longer than the active arc, so the ring grows out
+    // of the whole track rather than out of a dot between its ends.
+    it('shrinks the gap with the active arc near 0', async () => {
+      await render(
+        <ProgressIndicator label="Label" value={2} variant="circular" />,
+      )
+      const [track] = arcs()
+      const [start, end] = endsOf(track.d)
+      const length = CIRCUMFERENCE * 0.02
+
+      expect(angleOf(start)).toBeCloseTo((length * 2) / RADIUS, 2)
+      expect(angleOf(end)).toBeCloseTo(TURN - length / RADIUS, 2)
+    })
+
+    // Full, the track has nothing to draw, and draws no dot at the top.
+    it('draws a full ring as the active arc alone', async () => {
+      await render(
+        <ProgressIndicator label="Label" value={100} variant="circular" />,
+      )
+      const [track, active] = arcs()
+
+      expect(track.d).toBe('')
+      expect(angleOf(endsOf(active.d)[1])).toBeCloseTo(TURN, 2)
     })
 
     it('eases to a new value over the long duration', async () => {
