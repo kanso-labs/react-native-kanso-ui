@@ -77,6 +77,23 @@ const Circular: Story = {
   },
 }
 
+// Empty, the ring is the whole track, with no dot and no gap at the top.
+const CircularEmpty: Story = {
+  args: {
+    value: 0,
+    variant: 'circular',
+  },
+}
+
+// Just started, the gap is no longer than the active arc, so the ring grows
+// out of the whole track.
+const CircularStarting: Story = {
+  args: {
+    value: 2,
+    variant: 'circular',
+  },
+}
+
 const CircularIndeterminate: Story = {
   args: {
     isIndeterminate: true,
@@ -117,7 +134,9 @@ const InheritedTone: Story = {
 
 export {
   Circular,
+  CircularEmpty,
   CircularIndeterminate,
+  CircularStarting,
   Default,
   Indeterminate,
   InheritedTone,

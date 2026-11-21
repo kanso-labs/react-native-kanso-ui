@@ -64,8 +64,9 @@ import { composeStyles, themedStyles } from '../../theme/styles'
 // indicator takes the value's share of what the gaps and the stop leave, and
 // the track takes the rest. The determinate ring is two arcs of one circle:
 // the active arc runs clockwise from the top for its share of the
-// circumference, and the track picks up 4dp past it and stops 4dp before it
-// comes back round, which is the same gap measured along the curve.
+// circumference, and the track picks up past it and stops short of coming
+// back round, leaving the line's 4dp between the arcs' round ends, as web's
+// `arcsFor` does — see `CircularTrack`.
 //
 // The animations are Material's own, with web's numbers: the line's two bars
 // and their four keyframe sets, the buffer's scrolling dots, the ring's 1333ms
@@ -553,23 +554,33 @@ function CircularTrack({
         opacity,
       }
     }
+    const sweep = (TURN * shown.get()) / 100
     return {
-      d: arcPath(centre, radius, 0, (TURN * shown.get()) / 100),
+      d: sweep > 0 ? arcPath(centre, radius, 0, sweep) : '',
       opacity,
     }
   })
-  // The track picks up a gap past the active arc and stops a gap before the
-  // top.
+  // The track picks up past the active arc and stops before the top. Every
+  // arc ends in a round cap, half the stroke past its end, so arcs 4dp apart
+  // touch: the room between them is the page's gap and a cap either side,
+  // which leaves the gap between what is drawn, as the line's is between its
+  // parts. Compose's ring adds the stroke to its gap for a round cap alike.
+  //
+  // That room is never longer than the active arc, Compose's rule and web's,
+  // so the ring grows out of a whole track rather than out of a dot wedged
+  // between the track's ends. arcPath draws a sweep of nothing as a dot, so
+  // an arc with nothing to draw is no path at all: an empty ring is the
+  // track alone, and a full one the active arc alone.
   const track = useAnimatedProps(() => {
     'worklet'
-    const length = (circumference * shown.get()) / 100
+    const length = Math.max(0, (circumference * shown.get()) / 100)
+    const room = Math.min(length, GAP + THICKNESS)
+    const rest = circumference - length - 2 * room
     return {
-      d: arcPath(
-        centre,
-        radius,
-        (length + GAP) / radius,
-        Math.max(0, circumference - length - 2 * GAP) / radius,
-      ),
+      d:
+        rest > 0
+          ? arcPath(centre, radius, (length + room) / radius, rest / radius)
+          : '',
     }
   })
 
@@ -967,8 +978,10 @@ function RingWavePath({
         opacity: fade.get(),
       }
     }
+    // Nothing at 0, as the flat active arc draws nothing there.
+    const sweep = (TURN * shown.get()) / 100
     return {
-      d: wavyArcPath(RING_WAVE, 0, 0, (TURN * shown.get()) / 100),
+      d: sweep > 0 ? wavyArcPath(RING_WAVE, 0, 0, sweep) : '',
       opacity: fade.get(),
     }
   })
