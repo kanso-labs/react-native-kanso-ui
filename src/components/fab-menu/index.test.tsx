@@ -33,6 +33,7 @@ import { getAnimatedStyle } from 'react-native-reanimated'
 
 import type { FabMenuProps } from '.'
 import type { FabSize, FabTone } from '../../fab'
+import type { KuiTheme } from '../../tokens/defaults'
 
 import { FabMenu } from '.'
 import { useIconStyle } from '../../glyphs/icon-style'
@@ -92,6 +93,19 @@ const SIZES: readonly (readonly [FabSize, number, number, number])[] = [
   ['lg', 80, 20, 28],
   ['xl', sizing.controlXl, radii.xl, 36],
 ]
+
+// A theme of one action's own, as a module's colours would be.
+const OWN_ACTION: KuiTheme = {
+  '--kui-color-on-primary-container': '#31111d',
+  '--kui-color-primary-container': '#ffd8e4',
+}
+
+// A theme pointing the secondary container pair at the error container pair,
+// which differs in each scheme.
+const OWN_SECONDARY: KuiTheme = {
+  '--kui-color-on-secondary-container': 'var(--kui-color-on-error-container)',
+  '--kui-color-secondary-container': 'var(--kui-color-error-container)',
+}
 
 // Each tone: its container pair, which the FAB and the actions draw closed,
 // and the tone itself, which the close button draws.
@@ -647,6 +661,138 @@ describe('FabMenu', () => {
         expect(styleOf(screen.getByText('First item')).color).toBe(content)
       },
     )
+
+    it.each(TONES)(
+      'draws an action given %s on that container pair, whatever the menu draws',
+      async (tone, [container, content]) => {
+        await render(
+          withScope(
+            <FabMenu
+              aria-label="Label"
+              defaultOpen
+              icon={ICON}
+              testID="fab"
+              tone={tone === 'primary' ? 'tertiary' : 'primary'}
+            >
+              <FabMenu.Item icon={FIRST_ICON} testID="first" tone={tone}>
+                First item
+              </FabMenu.Item>
+              <FabMenu.Item testID="second">Second item</FabMenu.Item>
+            </FabMenu>,
+          ),
+        )
+
+        expect(styleOf(first()).backgroundColor).toBe(container)
+        expect(styleOf(screen.getByText('First item')).color).toBe(content)
+        expect(screen.getByTestId('first-icon')).toHaveTextContent(
+          `${content} 24`,
+        )
+        expect(styleOf(screen.getByTestId('second')).backgroundColor).toBe(
+          tone === 'primary'
+            ? colors.tertiaryContainer
+            : colors.primaryContainer,
+        )
+      },
+    )
+
+    it("keeps the menu's tone on the close button, whatever an action takes", async () => {
+      await render(
+        withScope(
+          <FabMenu aria-label="Label" icon={ICON} testID="fab">
+            <FabMenu.Item tone="tertiary">First item</FabMenu.Item>
+            <FabMenu.Item tone="secondary">Second item</FabMenu.Item>
+          </FabMenu>,
+        ),
+      )
+
+      await fireEvent.press(fab())
+      await advance(motion.durationMedium1)
+
+      expect(fabMorph().backgroundColor).toBe(same(colors.primary))
+      expect(closeMark()?.props.color).toBe(colors.onPrimary)
+    })
+
+    it('draws an action given a theme of its own in that theme', async () => {
+      await render(
+        withScope(
+          <FabMenu aria-label="Label" defaultOpen icon={ICON} testID="fab">
+            <FabMenu.Item icon={FIRST_ICON} testID="first" theme={OWN_ACTION}>
+              First item
+            </FabMenu.Item>
+            <FabMenu.Item testID="second">Second item</FabMenu.Item>
+          </FabMenu>,
+        ),
+      )
+
+      const own = scopeFor('light', OWN_ACTION).theme.colors
+
+      expect(styleOf(first()).backgroundColor).toBe(own.primaryContainer)
+      expect(styleOf(screen.getByText('First item')).color).toBe(
+        own.onPrimaryContainer,
+      )
+      expect(screen.getByTestId('first-icon')).toHaveTextContent(
+        `${own.onPrimaryContainer} 24`,
+      )
+      expect(styleOf(screen.getByTestId('second')).backgroundColor).toBe(
+        colors.primaryContainer,
+      )
+      expect(own.primaryContainer).not.toBe(colors.primaryContainer)
+    })
+
+    it.each(['light', 'dark'] as const)(
+      "reads a tone's pair from the action's own theme, in %s",
+      async (scheme) => {
+        await render(
+          <ThemeScope scheme={scheme}>
+            <FabMenu aria-label="Label" defaultOpen icon={ICON} testID="fab">
+              <FabMenu.Item
+                testID="first"
+                theme={OWN_SECONDARY}
+                tone="secondary"
+              >
+                First item
+              </FabMenu.Item>
+              <FabMenu.Item testID="second">Second item</FabMenu.Item>
+            </FabMenu>
+          </ThemeScope>,
+        )
+
+        const own = scopeFor(scheme, OWN_SECONDARY).theme.colors
+
+        expect(styleOf(first()).backgroundColor).toBe(own.secondaryContainer)
+        expect(styleOf(screen.getByText('First item')).color).toBe(
+          own.onSecondaryContainer,
+        )
+        expect(own.secondaryContainer).toBe(
+          scopeFor(scheme, {}).theme.colors.errorContainer,
+        )
+      },
+    )
+
+    it('draws a disabled action disabled, whatever tone or theme it takes', async () => {
+      await render(
+        withScope(
+          <FabMenu aria-label="Label" defaultOpen icon={ICON} testID="fab">
+            <FabMenu.Item
+              isDisabled
+              testID="first"
+              theme={OWN_ACTION}
+              tone="tertiary"
+            >
+              First item
+            </FabMenu.Item>
+            <FabMenu.Item testID="second">Second item</FabMenu.Item>
+          </FabMenu>,
+        ),
+      )
+
+      const { backgroundColor, boxShadow } = styleOf(first())
+
+      expect(backgroundColor).toBe(
+        withOpacity(colors.onSurface, stateLayerOpacity.disabledContainer),
+      )
+      expect(boxShadow).toBeUndefined()
+    })
 
     it('lifts an action to level 4 under a hovering pointer, and back while pressed', async () => {
       await renderMenu({ defaultOpen: true })

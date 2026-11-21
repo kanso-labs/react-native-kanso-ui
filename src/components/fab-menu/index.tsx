@@ -31,6 +31,7 @@ import { useTreeState } from 'react-stately/useTreeState'
 
 import type { FabSize, FabTone } from '../../fab'
 import type { IconStyle } from '../../glyphs/icon-style'
+import type { KuiTheme } from '../../tokens/defaults'
 
 import { AnimatedPressable, buttonStyles } from '../../button'
 import {
@@ -52,7 +53,13 @@ import {
 } from '../../overlay/panel'
 import { usePressFeedback } from '../../press'
 import { refsOf } from '../../ref'
-import { useTheme } from '../../theme/scope'
+import {
+  merged,
+  ScopeContext,
+  scopeFor,
+  useScope,
+  useTheme,
+} from '../../theme/scope'
 import { composeStyles, themedStyles } from '../../theme/styles'
 import { useTypeRole } from '../../typography/roles'
 
@@ -66,6 +73,13 @@ import { useTypeRole } from '../../typography/roles'
 // hovering pointer as Fab is. The three tones are the page's three colour
 // sets: the close button takes the tone and the actions its container, so
 // the two contrast as the page draws them.
+//
+// An action can take a tone of its own, or a theme of its own, which the page
+// does not draw: a menu whose actions each open a different part of the app
+// can draw each in that part's colour. Either changes that action's pill
+// alone, its container pair read from its own tone under its own theme, and
+// the close button keeps the menu's. An action with neither draws in the
+// menu's tone, as the page does.
 //
 // The FAB is the menu's own rather than a child the call site places, as on
 // web, because what it draws depends on whether the menu is open. Closed, it
@@ -148,6 +162,20 @@ type FabMenuItemProps = Omit<
    * an action whose label is an element passes it.
    */
   readonly textValue?: string
+  /**
+   * `--kui-*` overrides for this action's pill alone, over those of the
+   * scope around the menu, as `ThemeScope`'s `theme` takes them. The pill
+   * reads its tone's container pair from them, and its icon and label follow.
+   * Keep the map a constant, as for `ThemeScope`.
+   */
+  readonly theme?: KuiTheme
+  /**
+   * The colour set this action's pill draws in, the container pair of the
+   * page's three tones, in place of the menu's. The close button keeps the
+   * menu's.
+   * @default the menu's `tone`
+   */
+  readonly tone?: FabTone
 }
 
 type FabMenuProps = {
@@ -365,6 +393,34 @@ FabMenuItem.getCollectionNode = function* getCollectionNode(
   }
 }
 
+/**
+ * The scope an action's pill draws in: the one around the menu, with the
+ * action's own `theme` over it where it has one.
+ */
+function ActionScope({
+  children,
+  node,
+}: {
+  readonly children: ReactNode
+  readonly node: Node<object>
+}) {
+  const around = useScope()
+  // oxlint-disable-next-line typescript/no-unsafe-assignment -- a node carries the props its action was written with, which React Stately types as `any`
+  const { theme }: Pick<FabMenuItemProps, 'theme'> = node.props
+
+  return (
+    <ScopeContext
+      value={
+        theme === undefined
+          ? around
+          : scopeFor(around.scheme, merged(around.overrides, theme))
+      }
+    >
+      {children}
+    </ScopeContext>
+  )
+}
+
 /** An action's pill, drawn from its entry in the collection. */
 function FabMenuAction({
   activate,
@@ -400,10 +456,14 @@ function FabMenuAction({
     ref,
     style,
     textValue: _textValue,
+    theme: _theme,
+    tone: ownTone,
     ...props
   }: FabMenuItemProps = node.props
   const palettes = fabPalettesOf(theme)
-  const colors = isDisabled ? palettes.disabled : palettes.tonal[tone]
+  const colors = isDisabled
+    ? palettes.disabled
+    : palettes.tonal[ownTone ?? tone]
   const feedback = usePressFeedback({
     color: colors.content,
     corners: own.corner,
@@ -523,14 +583,17 @@ function FabMenuPanel({
         )}
       >
         {[...state.collection].map((node) => (
-          <FabMenuAction
-            activate={activate}
-            isDisabled={state.selectionManager.isDisabled(node.key)}
-            key={node.key}
-            node={node}
-            setFocusTarget={node.key === focusKey ? setFocusTarget : undefined}
-            tone={tone}
-          />
+          <ActionScope key={node.key} node={node}>
+            <FabMenuAction
+              activate={activate}
+              isDisabled={state.selectionManager.isDisabled(node.key)}
+              node={node}
+              setFocusTarget={
+                node.key === focusKey ? setFocusTarget : undefined
+              }
+              tone={tone}
+            />
+          </ActionScope>
         ))}
       </Animated.View>
     </>
