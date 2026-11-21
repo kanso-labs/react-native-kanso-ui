@@ -638,6 +638,10 @@ describe('Snackbar', () => {
 
         expect(pathsIn(glyph)).toEqual([errorPath])
         expect(glyph.props.color).toBe(inverseError)
+        expect(styleOf(glyph)).toMatchObject({
+          alignSelf: 'flex-start',
+          marginTop: 14,
+        })
         expect([glyph.props.width, glyph.props.height]).toEqual([20, 20])
         expect(inverseError).not.toBe(scopeFor(scheme, {}).theme.colors.error)
         expect(message.children.map(child)[0]?.props.children).toBe('Label')

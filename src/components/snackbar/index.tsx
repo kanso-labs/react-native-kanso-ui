@@ -85,10 +85,11 @@ import { useTypeRole } from '../../typography/roles'
 // the inverse error, the error role of the other scheme, as inverse primary
 // is the primary of the other scheme: the inverse surface is the other
 // scheme's surface, and the other scheme's error is the one made to read on
-// it. No property declares an inverse error, so it is read here as the error
-// the scope around the snackbar resolves to in the other scheme, with the
-// same overrides. The glyph is decorative, since the message's words say
-// what failed.
+// it. It is read here as the error the scope around the snackbar resolves to
+// in the other scheme, with the same overrides, so a theme that sets its own
+// error hands the glyph that same colour on the inverse surface. The glyph
+// sits beside the message's first line, and is decorative, since the
+// message's words say what failed.
 
 // How long a message is shown when the call site names no `timeout`, web's
 // durations from the snackbar's guidelines and accessibility pages. A message
@@ -114,7 +115,7 @@ const MESSAGE_BLOCK_PADDING = 14
 const RING_WIDTH = 2
 const RING_OFFSET = -4
 
-// The failure glyph's side, 20dp, which sits inside the message's 20dp line.
+// The failure glyph's side, 20dp, which fills the message's 20dp line.
 const GLYPH_SIZE = 20
 
 // Outside a SafeAreaProvider the insets are unknown, and the window's own edge
@@ -163,9 +164,13 @@ const stylesOf = themedStyles(({ colors, radii, shadows, sizing, spacing }) =>
       borderRadius: radii.pill,
     },
     // The failure glyph, 8dp in from the strip's own 8dp, where the message
-    // would otherwise start, which keeps its 8dp before the words.
+    // would otherwise start, which keeps its 8dp before the words. It sits
+    // at the top of the strip, 14dp down, beside the message's first line
+    // rather than between the lines of a longer one.
     glyph: {
+      alignSelf: 'flex-start',
       marginStart: spacing.sm,
+      marginTop: MESSAGE_BLOCK_PADDING,
     },
     // The message: its 8dp either side inside the strip's own 8dp, and the
     // 14dp above and below. The height is the message's rather than the
@@ -288,7 +293,10 @@ type SnackbarOptions = {
   /**
    * `failure` leads the message with a warning glyph in the inverse error,
    * so a failure does not look like a confirmation. Left out, the message is
-   * drawn as a confirmation.
+   * drawn as a confirmation. The inverse error is the other scheme's error
+   * under the same theme, so a theme that sets `--kui-color-error` sets the
+   * glyph's colour on the inverse surface too. The glyph is not announced,
+   * so the message's words should say that something failed.
    */
   readonly tone?: SnackbarTone
 }
