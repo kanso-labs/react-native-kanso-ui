@@ -301,6 +301,7 @@ export type {
   SnackbarOptions,
   SnackbarProps,
   SnackbarQueue,
+  SnackbarTone,
 } from './components/snackbar'
 export {
   SplitButton,

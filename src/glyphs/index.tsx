@@ -12,6 +12,7 @@ import {
   chevronEndPath,
   clockPath,
   closePath,
+  errorPath,
   gridSize,
   keyboardPath,
   minusPath,
@@ -143,6 +144,17 @@ function CloseGlyph(props: GlyphProps) {
   )
 }
 
+// What a snackbar reporting a failure leads with: an exclamation mark in a
+// filled circle, so the failure differs from a confirmation by a mark as well
+// as by its colour.
+function ErrorGlyph(props: GlyphProps) {
+  return (
+    <Glyph {...props}>
+      <Path d={errorPath} />
+    </Glyph>
+  )
+}
+
 /**
  * The svg every glyph draws: the 24-unit grid its path is on, a square of the
  * slot's size filled in the slot's colour, and nothing a screen reader
@@ -238,6 +250,7 @@ export {
   ChevronEndGlyph,
   ClockGlyph,
   CloseGlyph,
+  ErrorGlyph,
   IndeterminateGlyph,
   KeyboardGlyph,
   MinusGlyph,

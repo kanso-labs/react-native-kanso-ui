@@ -21,6 +21,7 @@ const messages = new Snackbar.Queue()
 const noop = () => {}
 const UNDO = { label: 'Undo', onPress: noop }
 const RETRY = { label: 'Retry', onPress: noop }
+const TRY_AGAIN = { label: 'Try again', onPress: noop }
 
 messages.add('First item saved', { action: UNDO, timeout: 0 })
 
@@ -104,6 +105,15 @@ function Triggers(props: SnackbarProps) {
       >
         Show a close button
       </Button>
+      <Button
+        onPress={show('First item could not be saved', {
+          action: TRY_AGAIN,
+          tone: 'failure',
+        })}
+        variant="tonal"
+      >
+        Show a failure
+      </Button>
       <Button onPress={clear} variant="text">
         Clear
       </Button>
@@ -119,6 +129,18 @@ const Default: Story = {
 
 const WithAction: Story = {
   args: { queue: seeded({ action: UNDO }) },
+  parameters: FRAMED,
+}
+
+// A failure, led by the warning glyph in the inverse error, which sets it
+// apart from a confirmation such as WithAction's.
+const Failure: Story = {
+  args: {
+    queue: seeded(
+      { action: TRY_AGAIN, tone: 'failure' },
+      'First item could not be saved',
+    ),
+  },
   parameters: FRAMED,
 }
 
@@ -165,6 +187,14 @@ const OnDemand: Story = {
   render: (args) => <Triggers {...args} />,
 }
 
-export { Default, LongAction, LongWord, OnDemand, WithAction, WithCloseButton }
+export {
+  Default,
+  Failure,
+  LongAction,
+  LongWord,
+  OnDemand,
+  WithAction,
+  WithCloseButton,
+}
 
 export default meta

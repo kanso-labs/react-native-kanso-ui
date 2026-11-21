@@ -11,6 +11,7 @@ import {
   it,
   jest,
 } from '@jest/globals'
+import { errorPath } from '@kanso-labs/kanso-ui-core/glyphs'
 import { act, fireEvent, render, screen } from '@testing-library/react-native'
 import { createRef } from 'react'
 import {
@@ -24,6 +25,7 @@ import { getAnimatedStyle } from 'react-native-reanimated'
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context'
 
 import type { SnackbarOptions, SnackbarProps, SnackbarQueue } from '.'
+import type { KuiTheme } from '../../tokens/defaults'
 
 import { Snackbar } from '.'
 import { ThemeScope } from '../../theme-scope'
@@ -45,6 +47,9 @@ const INITIAL = {
   screen: Dimensions.get('screen'),
   window: Dimensions.get('window'),
 }
+
+// A scope's own error, which the other scheme's resolves to as well.
+const ERROR_OVERRIDE: KuiTheme = { '--kui-color-error': '#8c1d18' }
 
 const INSETS: EdgeInsets = { bottom: 34, left: 12, right: 8, top: 47 }
 
@@ -88,6 +93,16 @@ async function layOutStrip() {
     nativeEvent: { layout: { height: STRIP_HEIGHT, width: 320, x: 0, y: 0 } },
   })
   await advance(0)
+}
+
+// The paths drawn anywhere under a view, which is how a glyph is told apart.
+function pathsIn(node: TestInstance): unknown[] {
+  return [
+    ...(node.type === 'RNSVGPath' ? [node.props.d as unknown] : []),
+    ...node.children.flatMap((item) =>
+      typeof item === 'string' ? [] : pathsIn(item),
+    ),
+  ]
 }
 
 // The region the snackbar draws its messages in.
@@ -597,6 +612,78 @@ describe('Snackbar', () => {
         boxShadow: theme.shadows.elevation3,
       })
       expect(colorOf(screen.getByText('Label'))).toBe(colors.inverseOnSurface)
+    })
+
+    // The inverse error is the error role of the other scheme, made to read
+    // on the inverse surface, which is that scheme's surface.
+    it.each<['dark' | 'light', 'dark' | 'light']>([
+      ['light', 'dark'],
+      ['dark', 'light'],
+    ])(
+      'leads a failure in %s with a 20dp warning glyph in the %s error',
+      async (scheme, other) => {
+        const queue = new Snackbar.Queue()
+        await render(
+          <ThemeScope scheme={scheme}>
+            <Snackbar queue={queue} testID="region" />
+          </ThemeScope>,
+        )
+
+        await announce(queue, 'Label', {
+          action: { label: 'Try again', onPress() {} },
+          tone: 'failure',
+        })
+        const [glyph, message] = strip().children.map(child)
+        const inverseError = scopeFor(other, {}).theme.colors.error
+
+        expect(pathsIn(glyph)).toEqual([errorPath])
+        expect(glyph.props.color).toBe(inverseError)
+        expect([glyph.props.width, glyph.props.height]).toEqual([20, 20])
+        expect(inverseError).not.toBe(scopeFor(scheme, {}).theme.colors.error)
+        expect(message.children.map(child)[0]?.props.children).toBe('Label')
+      },
+    )
+
+    it('reads the inverse error under the overrides around it', async () => {
+      const queue = new Snackbar.Queue()
+      await render(
+        <ThemeScope scheme="light" theme={ERROR_OVERRIDE}>
+          <Snackbar queue={queue} testID="region" />
+        </ThemeScope>,
+      )
+
+      await announce(queue, 'Label', { tone: 'failure' })
+
+      expect(child(strip().children[0]).props.color).toBe(
+        scopeFor('dark', ERROR_OVERRIDE).theme.colors.error,
+      )
+    })
+
+    it('leads a message without a tone with its words, as before', async () => {
+      const queue = new Snackbar.Queue()
+      await renderSnackbar(queue)
+
+      await announce(queue, 'Label', {
+        action: { label: 'Undo', onPress() {} },
+      })
+
+      expect(pathsIn(strip())).toEqual([])
+      expect(styleOf(child(strip().children[0])).flexBasis).toBe('50%')
+    })
+
+    it('keeps the glyph from a screen reader, which hears the words alone', async () => {
+      const queue = new Snackbar.Queue()
+      const spy = spyOnAnnouncements()
+      await renderSnackbar(queue)
+
+      await announce(queue, 'Label', { tone: 'failure' })
+
+      const glyph = child(strip().children[0])
+
+      expect(pathsIn(glyph)).toEqual([errorPath])
+      expect(glyph.props.accessibilityElementsHidden).toBe(true)
+      expect(glyph.props.importantForAccessibility).toBe('no-hide-descendants')
+      expect(spy.mock.calls.map(([words]) => words)).toEqual(['Label'])
     })
 
     it('draws the action label in inverse primary', async () => {
