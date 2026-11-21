@@ -100,6 +100,13 @@ const OWN_ACTION: KuiTheme = {
   '--kui-color-primary-container': '#ffd8e4',
 }
 
+// A theme pointing the secondary container pair at the error container pair,
+// which differs in each scheme.
+const OWN_SECONDARY: KuiTheme = {
+  '--kui-color-on-secondary-container': 'var(--kui-color-on-error-container)',
+  '--kui-color-secondary-container': 'var(--kui-color-error-container)',
+}
+
 // Each tone: its container pair, which the FAB and the actions draw closed,
 // and the tone itself, which the close button draws.
 const TONES: readonly (readonly [
@@ -730,6 +737,61 @@ describe('FabMenu', () => {
         colors.primaryContainer,
       )
       expect(own.primaryContainer).not.toBe(colors.primaryContainer)
+    })
+
+    it.each(['light', 'dark'] as const)(
+      "reads a tone's pair from the action's own theme, in %s",
+      async (scheme) => {
+        await render(
+          <ThemeScope scheme={scheme}>
+            <FabMenu aria-label="Label" defaultOpen icon={ICON} testID="fab">
+              <FabMenu.Item
+                testID="first"
+                theme={OWN_SECONDARY}
+                tone="secondary"
+              >
+                First item
+              </FabMenu.Item>
+              <FabMenu.Item testID="second">Second item</FabMenu.Item>
+            </FabMenu>
+          </ThemeScope>,
+        )
+
+        const own = scopeFor(scheme, OWN_SECONDARY).theme.colors
+
+        expect(styleOf(first()).backgroundColor).toBe(own.secondaryContainer)
+        expect(styleOf(screen.getByText('First item')).color).toBe(
+          own.onSecondaryContainer,
+        )
+        expect(own.secondaryContainer).toBe(
+          scopeFor(scheme, {}).theme.colors.errorContainer,
+        )
+      },
+    )
+
+    it('draws a disabled action disabled, whatever tone or theme it takes', async () => {
+      await render(
+        withScope(
+          <FabMenu aria-label="Label" defaultOpen icon={ICON} testID="fab">
+            <FabMenu.Item
+              isDisabled
+              testID="first"
+              theme={OWN_ACTION}
+              tone="tertiary"
+            >
+              First item
+            </FabMenu.Item>
+            <FabMenu.Item testID="second">Second item</FabMenu.Item>
+          </FabMenu>,
+        ),
+      )
+
+      const { backgroundColor, boxShadow } = styleOf(first())
+
+      expect(backgroundColor).toBe(
+        withOpacity(colors.onSurface, stateLayerOpacity.disabledContainer),
+      )
+      expect(boxShadow).toBeUndefined()
     })
 
     it('lifts an action to level 4 under a hovering pointer, and back while pressed', async () => {
