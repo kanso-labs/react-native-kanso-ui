@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react'
+import type { ReactNode } from 'react'
 import type { ColorValue, ViewStyle } from 'react-native'
 
 import { useState } from 'react'
@@ -7,6 +8,7 @@ import { StyleSheet, View } from 'react-native'
 import type { NavigationRailProps } from '.'
 
 import { NavigationRail } from '.'
+import { PlusGlyph } from '../../glyphs'
 import { useIconStyle } from '../../glyphs/icon-style'
 import { RouterProvider } from '../../router'
 import { IconButton } from '../icon-button'
@@ -24,6 +26,11 @@ const styles = StyleSheet.create({
   foot: {
     alignSelf: 'stretch',
     marginTop: 'auto',
+  },
+  // Two rails side by side, each in a frame of its own.
+  forms: {
+    flexDirection: 'row',
+    gap: 24,
   },
   // The rail runs the height of the row that holds it, as it would the
   // screen's.
@@ -117,6 +124,14 @@ const TEN_DESTINATIONS = ORDINALS.map((ordinal, index) => (
 
 const MENU_BUTTON = <IconButton aria-label="Menu">{MENU}</IconButton>
 
+// The screen's FAB, at the top of the rail. Its press does nothing, since
+// what the story shows is the rail rather than what the FAB would do.
+const FAB = (
+  <NavigationRail.Fab label="Label" onPress={() => {}}>
+    <PlusGlyph />
+  </NavigationRail.Fab>
+)
+
 function barOf(color: ColorValue | undefined, size: number): ViewStyle {
   return {
     backgroundColor: color,
@@ -140,7 +155,7 @@ function boxOf(size: number): ViewStyle {
 
 // A rail whose header holds the menu button that expands and collapses it,
 // which is how the page has a reader move between the two forms.
-function Expandable() {
+function Expandable({ fab }: { readonly fab?: ReactNode }) {
   const [isExpanded, setExpanded] = useState(false)
   const [route, setRoute] = useState('/first')
   const button = {
@@ -152,6 +167,7 @@ function Expandable() {
   }
   const rail = {
     'aria-label': 'Label',
+    fab,
     header: <IconButton {...button}>{MENU}</IconButton>,
     isExpanded,
     selectedRoute: route,
@@ -268,6 +284,34 @@ const DestinationAtFoot: Story = {
   },
 }
 
-export { Default, DestinationAtFoot, Expanded, ManyDestinations, WithHeader }
+// The screen's FAB under the menu button: the icon alone while the rail is
+// collapsed, and the extended FAB once the menu button expands it, revealed
+// as the surface widens.
+const WithFab: Story = {
+  render: () => <Expandable fab={FAB} />,
+}
+
+// The FAB in each form at once, collapsed and expanded, with no header.
+const FabForms: Story = {
+  args: {
+    fab: FAB,
+  },
+  render: (args) => (
+    <View style={styles.forms}>
+      <Navigated {...args} />
+      <Navigated {...args} isExpanded />
+    </View>
+  ),
+}
+
+export {
+  Default,
+  DestinationAtFoot,
+  Expanded,
+  FabForms,
+  ManyDestinations,
+  WithFab,
+  WithHeader,
+}
 
 export default meta
