@@ -40,7 +40,10 @@ function child(node: TestInstance['children'][number] | undefined) {
 
 // The mark around the icon probe.
 function mark() {
-  return child(screen.getByTestId('icon').parent ?? undefined)
+  return child(
+    screen.getByTestId('icon', { includeHiddenElements: true }).parent ??
+      undefined,
+  )
 }
 
 function paths(node: TestInstance): unknown[] {
@@ -53,10 +56,15 @@ function paths(node: TestInstance): unknown[] {
 }
 
 function probe() {
-  return styleOf(screen.getByTestId('icon'))
+  return styleOf(screen.getByTestId('icon', { includeHiddenElements: true }))
 }
 
-async function renderState(props: Partial<EmptyStateProps> = {}) {
+// Renders a screen layout, `first` unless told otherwise, with every part.
+async function renderState(
+  props: Partial<Pick<EmptyStateProps, 'action'>> & {
+    readonly kind?: 'first' | 'status'
+  } = {},
+) {
   return render(
     <EmptyState
       action={ACTION}
@@ -164,9 +172,30 @@ describe('EmptyState', () => {
     })
   })
 
+  describe('the mark', () => {
+    it.each(['first', 'status'] as const)(
+      'hides the mark of %s and the icon in it from a screen reader',
+      async (kind) => {
+        await renderState({ kind })
+
+        expect(mark().props.accessibilityElementsHidden).toBe(true)
+        expect(mark().props.importantForAccessibility).toBe(
+          'no-hide-descendants',
+        )
+      },
+    )
+  })
+
   describe('inline', () => {
     it("draws a 40dp mark with a 20dp glyph and the line alone, in the list's 72dp row", async () => {
-      await renderState({ size: 'inline' })
+      await render(
+        <EmptyState
+          description="Supporting line"
+          icon={ICON}
+          size="inline"
+          testID="state"
+        />,
+      )
 
       expect(styleOf(root())).toMatchObject({
         alignItems: 'center',
@@ -193,7 +222,9 @@ describe('EmptyState', () => {
 
   describe('done', () => {
     it("draws a 24dp check in primary and the line, in the list's 56dp row", async () => {
-      await renderState({ kind: 'done' })
+      await render(
+        <EmptyState description="Supporting line" kind="done" testID="state" />,
+      )
 
       const [check, line] = root().children.map(child)
 
@@ -209,11 +240,15 @@ describe('EmptyState', () => {
     })
 
     it('draws no title, no button and no mark of the app', async () => {
-      await renderState({ kind: 'done' })
+      await render(
+        <EmptyState description="Supporting line" kind="done" testID="state" />,
+      )
 
       expect(screen.queryByRole('heading')).toBeNull()
       expect(screen.queryByRole('button')).toBeNull()
-      expect(screen.queryByTestId('icon')).toBeNull()
+      expect(
+        screen.queryByTestId('icon', { includeHiddenElements: true }),
+      ).toBeNull()
     })
   })
 
@@ -235,9 +270,8 @@ describe('EmptyState', () => {
       const button = screen.getByRole('button', { name: 'Label' })
 
       expect(styleOf(button).backgroundColor).not.toBe(colors.primary)
-      expect(styleOf(button).borderColor ?? styleOf(button).outlineColor).toBe(
-        colors.outlineVariant,
-      )
+      expect(styleOf(button).borderColor).toBe(colors.outlineVariant)
+      expect(styleOf(button).borderWidth).toBeGreaterThan(0)
     })
   })
 })

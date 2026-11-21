@@ -6,7 +6,9 @@ import { StyleSheet, View } from 'react-native'
 import type { IconStyle } from '../../glyphs/icon-style'
 
 import { CheckGlyph } from '../../glyphs'
+import { HIDDEN } from '../../glyphs/hidden'
 import { IconStyleContext } from '../../glyphs/icon-style'
+import { rowStylesOf } from '../../row/styles'
 import { useTheme } from '../../theme/scope'
 import { composeStyles, themedStyles } from '../../theme/styles'
 import { Button } from '../button'
@@ -26,10 +28,15 @@ import { Text } from '../text'
 //   across, never down the screen's height, so it reads as the top of the
 //   screen rather than floating in its middle.
 // - **`first` at `size="inline"`**, a section with nothing in it yet: a 40dp
-//   mark with a 20dp glyph and the line alone, in the lists page's 72dp row.
+//   mark with a 20dp glyph and the line alone, in the lists page's 72dp row,
+//   drawn on src/row's styles as ListItem's row is.
 // - **`done`**, a list some things were in and none are left: a 24dp check
 //   in the primary role and the line, in the lists page's 56dp row, lined up
 //   where the rows were. No title and no button: nothing is wrong.
+//
+// Each form's props are its own, so a part a layout does not draw, such as
+// a title on `done`, does not compile. A mark is decorative and hidden from
+// screen readers, the app's icon in it with it.
 // - **`status`**, a screen that cannot show what it was opened for: the first
 //   layout with a neutral mark, on surface container highest with its glyph
 //   in on-surface-variant, and an outlined button, since what it offers is a
@@ -60,37 +67,73 @@ type EmptyStateAction = {
   readonly onPress?: () => void
 }
 
+type EmptyStateBaseProps = Omit<ViewProps, 'children' | 'style'> & {
+  readonly ref?: Ref<ComponentRef<typeof View>>
+  readonly style?: StyleProp<ViewStyle>
+}
+
+// Every prop any form takes, which the component reads once the form is
+// known.
+type EmptyStateFields = EmptyStateBaseProps &
+  EmptyStateScreenParts & {
+    readonly kind?: EmptyStateKind
+    readonly size?: EmptyStateSize
+  }
+
 type EmptyStateKind = 'done' | 'first' | 'status'
 
-type EmptyStateProps = Omit<ViewProps, 'children' | 'style'> & {
+type EmptyStateProps = (
+  | (EmptyStateScreenParts & {
+      /**
+       * `first`, nothing there yet; `done`, nothing left; `status`, what
+       * was opened cannot be shown.
+       * @default 'first'
+       */
+      readonly kind?: 'first' | 'status'
+      /**
+       * `inline` draws `first` as a 72dp row for a section, with a 40dp
+       * mark and the line alone.
+       * @default 'default'
+       */
+      readonly size?: 'default'
+    })
+  | {
+      readonly action?: never
+      /** The line saying the list is done. */
+      readonly description: ReactNode
+      /** `done` draws a check of its own. */
+      readonly icon?: never
+      readonly kind: 'done'
+      readonly size?: never
+      readonly title?: never
+    }
+  | {
+      readonly action?: never
+      /** The line saying what is empty. */
+      readonly description: ReactNode
+      /** The glyph in the 40dp mark. */
+      readonly icon?: ReactNode
+      readonly kind?: 'first'
+      readonly size: 'inline'
+      readonly title?: never
+    }
+) &
+  EmptyStateBaseProps
+
+// The screen layouts' parts, which `first` and `status` share.
+type EmptyStateScreenParts = {
   /**
-   * The one button of `first` and `status`: filled for `first`, outlined
-   * for `status`. `done` and an inline state draw none.
+   * The one button: filled for `first`, outlined for `status`.
    */
   readonly action?: EmptyStateAction
   /** The line saying what is empty, or what can be done about it. */
   readonly description?: ReactNode
   /**
-   * The glyph in the mark of `first` and `status`, which takes the mark's
-   * colour and size through `useIconStyle()`. `done` draws a check of its
-   * own.
+   * The glyph in the mark, which takes the mark's colour and size through
+   * `useIconStyle()`.
    */
   readonly icon?: ReactNode
-  /**
-   * `first`, nothing there yet; `done`, nothing left; `status`, what was
-   * opened cannot be shown.
-   * @default 'first'
-   */
-  readonly kind?: EmptyStateKind
-  readonly ref?: Ref<ComponentRef<typeof View>>
-  /**
-   * `inline` draws `first` as a 72dp row for a section, with a 40dp mark
-   * and the line alone. The other kinds keep their own layouts.
-   * @default 'default'
-   */
-  readonly size?: EmptyStateSize
-  readonly style?: StyleProp<ViewStyle>
-  /** The title of `first` and `status`, a heading for a screen reader. */
+  /** The title, a heading for a screen reader. */
   readonly title?: ReactNode
 }
 
@@ -147,21 +190,6 @@ const stylesOf = themedStyles(({ colors, radii, sizing, spacing }) =>
     markStatus: {
       backgroundColor: colors.surfaceContainerHighest,
     },
-    // The lists page's row: 16dp inline and 12dp block padding, 16dp
-    // between the mark and the line.
-    row: {
-      alignItems: 'center',
-      flexDirection: 'row',
-      gap: spacing.lg,
-      paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.md,
-    },
-    rowMd: {
-      minHeight: sizing.rowMd,
-    },
-    rowSm: {
-      minHeight: sizing.rowSm,
-    },
   }),
 )
 
@@ -203,25 +231,28 @@ function ActionButton({
  * would be, under the screen's bar. `style`, `ref` and `testID` land on its
  * own view.
  */
-function EmptyState({
-  action,
-  description,
-  icon,
-  kind = 'first',
-  size = 'default',
-  style,
-  title,
-  ...props
-}: EmptyStateProps) {
+function EmptyState(props: EmptyStateProps) {
+  const fields: EmptyStateFields = props
+  const {
+    action,
+    description,
+    icon,
+    kind = 'first',
+    size = 'default',
+    style,
+    title,
+    ...rest
+  } = fields
   const theme = useTheme()
   const own = stylesOf(theme)
+  const row = rowStylesOf(theme)
   const { colors } = theme
 
   if (kind === 'done') {
     return (
       <View
-        {...props}
-        style={composeStyles<ViewStyle>(own.row, own.rowSm, style)}
+        {...rest}
+        style={composeStyles<ViewStyle>(row.base, row.list, style)}
       >
         <CheckGlyph color={colors.primary} size={CHECK} />
         <Line style={styles.rowLine}>{description}</Line>
@@ -232,11 +263,11 @@ function EmptyState({
   if (kind === 'first' && size === 'inline') {
     return (
       <View
-        {...props}
-        style={composeStyles<ViewStyle>(own.row, own.rowMd, style)}
+        {...rest}
+        style={composeStyles<ViewStyle>(row.base, row.list, row.twoLine, style)}
       >
         {icon === undefined ? null : (
-          <View style={own.inlineMark}>
+          <View {...HIDDEN} style={own.inlineMark}>
             <IconStyleContext
               value={iconStyleOf(colors.onPrimaryContainer, INLINE_GLYPH)}
             >
@@ -252,9 +283,10 @@ function EmptyState({
   const status = kind === 'status'
 
   return (
-    <View {...props} style={composeStyles<ViewStyle>(own.block, style)}>
+    <View {...rest} style={composeStyles<ViewStyle>(own.block, style)}>
       {icon === undefined ? null : (
         <View
+          {...HIDDEN}
           style={composeStyles<ViewStyle>(
             own.mark,
             status ? own.markStatus : own.markFirst,

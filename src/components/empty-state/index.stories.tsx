@@ -23,7 +23,6 @@ const styles = StyleSheet.create({
 // the empty state rather than what its button would do.
 const noop = () => {}
 const ADD = { label: 'Label', onPress: noop }
-const TRY_AGAIN = { label: 'Try again', onPress: noop }
 const PERSON = <PersonGlyph />
 const PLUS = <PlusGlyph />
 const SEARCH = <SearchGlyph />
@@ -74,7 +73,7 @@ const Done: Story = {
 // A screen that cannot show what it was opened for.
 const Status: Story = {
   args: {
-    action: TRY_AGAIN,
+    action: ADD,
     icon: SEARCH,
     kind: 'status',
   },
@@ -94,7 +93,7 @@ const InAScope: Story = {
         <EmptyState description="Supporting line" icon={PERSON} size="inline" />
         <EmptyState description="Supporting line" kind="done" />
         <EmptyState
-          action={TRY_AGAIN}
+          action={ADD}
           description="Supporting line"
           icon={SEARCH}
           kind="status"
