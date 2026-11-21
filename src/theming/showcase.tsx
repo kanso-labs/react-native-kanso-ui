@@ -49,6 +49,7 @@ import { Dialog } from '../components/dialog'
 import { Disclosure } from '../components/disclosure'
 import { DisclosureGroup } from '../components/disclosure-group'
 import { DropZone, FileTrigger } from '../components/drop-zone'
+import { EmptyState } from '../components/empty-state'
 import { Fab } from '../components/fab'
 import { FabMenu } from '../components/fab-menu'
 import { Feed } from '../components/feed'
@@ -209,6 +210,10 @@ const BADGED_COUNT = (
     <PersonGlyph />
   </Badge>
 )
+
+// The empty state's mark and its one button, one stable value per render.
+const EMPTY_ICON = <PlusGlyph />
+const EMPTY_ACTION = { label: 'Label', onPress: () => {} }
 
 // The dialog's close button's icon, the library's own close glyph.
 const CLOSE = <CloseGlyph />
@@ -1056,6 +1061,33 @@ function Showcase({ name }: ShowcaseProps) {
             <Button variant="outlined">Label</Button>
           </FileTrigger>
         </DropZone>
+      </Section>
+
+      <Section
+        description="A mark on the primary container pair for a first use, on surface-container-highest for a status, and a check in the primary role for a list done."
+        title="EmptyState"
+      >
+        <Stack gap="lg">
+          <EmptyState
+            action={EMPTY_ACTION}
+            description="Supporting line"
+            icon={EMPTY_ICON}
+            title="Headline"
+          />
+          <EmptyState
+            description="Supporting line"
+            icon={EMPTY_ICON}
+            size="inline"
+          />
+          <EmptyState description="Supporting line" kind="done" />
+          <EmptyState
+            action={EMPTY_ACTION}
+            description="Supporting line"
+            icon={EMPTY_ICON}
+            kind="status"
+            title="Headline"
+          />
+        </Stack>
       </Section>
 
       <Section
