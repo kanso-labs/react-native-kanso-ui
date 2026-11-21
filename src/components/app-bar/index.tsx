@@ -121,6 +121,7 @@ const styles = StyleSheet.create({
   // Between a flexible bar's slots, holding them at either end.
   gap: {
     flexGrow: 1,
+    pointerEvents: 'none',
   },
   // The kicker's line, as wide as its words rather than the bar, so a link
   // in it takes a press on its words alone.
@@ -159,13 +160,16 @@ const stylesOf = themedStyles(({ sizing, spacing }) =>
       flexShrink: 0,
       gap: TARGET_SIZE - sizing.controlSm,
       paddingHorizontal: (TARGET_SIZE - sizing.controlSm) / 2,
+      pointerEvents: 'box-none',
     },
     // A flexible bar's top row: the small bar's 64dp strip, holding the
     // slots alone. It is drawn over the text under it, so a link in a kicker,
     // whose press reaches 16dp above its line, leaves the icon buttons'
-    // targets to them where the two meet.
+    // targets to them where the two meet. The strip and its slots take no
+    // press of their own, so the rest of that reach is the link's.
     strip: {
       height: COLLAPSED_BLOCK_SIZE,
+      pointerEvents: 'box-none',
       zIndex: 1,
     },
     // The text takes the room the slots leave, and wraps inside it.
@@ -233,9 +237,10 @@ type AppBarProps = Omit<ViewProps, 'children'> & {
   /**
    * A line over the headline in `md` and `lg`, in label medium on
    * on-surface-variant, naming where the screen sits, such as the parent a
-   * detail screen opened from. It may be a `Link` to that parent, which
-   * reaches 48dp tall when it is the whole kicker, as a lone link does, and
-   * takes a press on its words rather than across the bar. Makes the bar taller by its line,
+   * detail screen opened from. It may be a `Link` to that parent, which,
+   * when it is the whole kicker, takes a press 16dp above and below its
+   * line, as a lone link does, except where an icon button's target is, and
+   * on its words rather than across the bar. Makes the bar taller by its line,
    * and goes as the bar collapses, as the subtitle does. `sm` draws none.
    */
   readonly kicker?: ReactNode

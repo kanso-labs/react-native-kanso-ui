@@ -376,7 +376,7 @@ describe('AppBar', () => {
 
     // A link's press reaches 16dp above its line, into the strip the icon
     // buttons sit in, and the later sibling takes a press where two meet.
-    it('draws the strip over the text, so the icon buttons keep their targets', async () => {
+    it('draws only the icon buttons over the text, so each keeps its target', async () => {
       await renderBar({ kicker: 'Kicker', leading: BACK, size: 'md' })
 
       let strip: null | TestInstance = screen.getByRole('button', {
@@ -386,7 +386,15 @@ describe('AppBar', () => {
         strip = strip.parent
       }
 
-      expect(styleOf(strip ?? { props: {} }).zIndex).toBe(1)
+      expect(styleOf(strip ?? { props: {} })).toMatchObject({
+        pointerEvents: 'box-none',
+        zIndex: 1,
+      })
+      // The slot and the gap beside it leave the press to the link, so only
+      // the button itself stands over the link's reach.
+      const [slot, gap] = (strip?.children ?? []).map(child)
+      expect(styleOf(slot).pointerEvents).toBe('box-none')
+      expect(styleOf(gap).pointerEvents).toBe('none')
     })
 
     it('holds a link, which a screen reader finds by its name', async () => {
