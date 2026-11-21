@@ -28,10 +28,11 @@ const PLACES = 3
 /** A full turn, in radians. */
 const TURN = 2 * Math.PI
 
-// The least an arc runs. Web's zero-length dash still draws, as a dot the
-// size of the stroke, since a round cap is drawn at either end of a dash of
-// any length; an svg path of no length draws nothing at all, so the arc is
-// given this much instead, which is the same dot.
+// The least an arc runs. An arc however short draws its round caps, as a dot
+// the size of the stroke, the way a short round-capped dash does on web; an
+// svg path of no length draws nothing at all, so the arc is given this much
+// instead, which keeps the dot. A caller that wants nothing drawn passes no
+// path rather than an arc of nothing.
 const DOT = 0.001
 
 // The wave along the line: its amplitude either side of the middle, and the
@@ -63,7 +64,7 @@ type RingWave = {
 /**
  * An arc of the circle about (`centre`, `centre`), clockwise from `from` for
  * `sweep` radians, both measured from the top. A sweep of nothing draws a dot,
- * as web's zero-length dash does, and a full turn stops short of closing by
+ * the stroke's round caps alone, and a full turn stops short of closing by
  * a hair the round caps cover, since an arc that ends where it starts is no
  * arc at all.
  */

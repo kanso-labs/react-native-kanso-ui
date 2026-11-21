@@ -88,9 +88,8 @@ async function advance(milliseconds: number) {
   })
 }
 
-// How far round from the top a point on the flat ring is, clockwise.
-// How far round from the top a point is, about the flat ring's centre or
-// the one given.
+// How far round from the top a point is, clockwise, about the flat ring's
+// centre or the one given.
 function angleOf([x, y]: readonly number[], centre = CENTRE) {
   const angle = Math.atan2(x - centre, centre - y)
   return angle < 0 ? angle + TURN : angle
