@@ -778,6 +778,17 @@ describe('Tabs', () => {
   })
 
   describe('icons', () => {
+    it('gives an enlarged label under a stacked icon a line for each of its words', async () => {
+      atFontScale(2)
+      await renderTabs({ tabs: { first: { icon: ICON } } })
+
+      expect(screen.getByText('First item').props).toMatchObject({
+        adjustsFontSizeToFit: true,
+        android_hyphenationFrequency: 'none',
+        numberOfLines: 2,
+      })
+    })
+
     it('stacks a primary tab’s icon over its label, and the tab grows to 64dp', async () => {
       atFontScale(1)
       await renderTabs({ tabs: { first: { icon: ICON } } })

@@ -97,7 +97,7 @@ import { Badge } from '../badge'
 //
 // **A label keeps to two lines, or one under a stacked icon, until the
 // device's text is enlarged.** Then a tab in a bar of equal sections takes
-// a line for each of its words, and the tab and the bar grow to hold it, as
+// a line for each word of a label that is a string, and the tab and the bar grow to hold it, as
 // web's do once its text is enlarged: a label cut short there is the name a
 // reader asked to see larger. It breaks between its words, without
 // hyphenation, and shrinks as far as it takes to keep a word wider than the
