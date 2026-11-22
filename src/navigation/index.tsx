@@ -279,6 +279,18 @@ function iconStyleOf(color: ColorValue): IconStyle {
  * and the destination grows to hold it, as web's does once its text is
  * enlarged: an ellipsis there would cut the name a reader asked to see
  * larger. A pill is as wide as its label, and keeps its one line.
+ *
+ * A wrapped label breaks between its words and never inside one, so it takes
+ * at most a line a word. A word wider than the destination would need a line
+ * more than that, and the platform shrinks the label instead, as far as it
+ * takes to fit, so the word stays whole. That departs from web, which breaks
+ * such a word with a hyphen: Android's hyphenation broke short words that fit
+ * whole on a line of their own as well, and a broken word is harder to read
+ * than a smaller one. Letting the word
+ * widen its destination was the other way to keep it whole, and is not
+ * taken: a bar's destinations share its width equally, and a rail's width is
+ * the spec's. A label that is not a string has no words to count, and wraps
+ * as it needs.
  */
 function Label({
   children,
@@ -295,11 +307,13 @@ function Label({
   const role = useTypeRole(form === 'expanded' ? 'labelLarge' : 'labelMedium')
   const { fontScale } = useWindowDimensions()
   const wraps = fontScale > 1 && (form === 'vertical' || form === 'collapsed')
+  const words = wraps ? wordsIn(children) : undefined
 
   return (
     <NativeText
-      android_hyphenationFrequency={wraps ? 'normal' : undefined}
-      numberOfLines={wraps ? undefined : 1}
+      adjustsFontSizeToFit={words === undefined ? undefined : true}
+      android_hyphenationFrequency={wraps ? 'none' : undefined}
+      numberOfLines={wraps ? words : 1}
       style={composeStyles<TextStyle>(
         role,
         styles.label,
@@ -444,6 +458,18 @@ function NavigationItem({ href, onPress, ...props }: NavigationItemProps) {
       selected={selectedRoute !== undefined && href === selectedRoute}
     />
   )
+}
+
+/**
+ * How many words a label that is a string holds: the most lines a wrapped
+ * label takes, one a word.
+ */
+function wordsIn(children: ReactNode): number | undefined {
+  if (typeof children !== 'string') {
+    return undefined
+  }
+  const count = children.split(/\s+/u).filter(Boolean).length
+  return count === 0 ? undefined : count
 }
 
 export type {

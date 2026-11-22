@@ -720,7 +720,7 @@ describe('NavigationBar', () => {
       atFontScale(1.3)
       await renderBar()
 
-      expect(labelOf('First item').props.numberOfLines).toBeUndefined()
+      expect(labelOf('First item').props.numberOfLines).not.toBe(1)
       expect(textStyleOf(labelOf('First item')).textAlign).toBe('center')
       // From the top, the end of the reversed column, so the indicators stay
       // on one line when one label wraps onto more lines than another.
@@ -728,6 +728,31 @@ describe('NavigationBar', () => {
         flexDirection: 'column-reverse',
         justifyContent: 'flex-end',
       })
+    })
+
+    // Android's hyphenation broke words that fit whole, so a label breaks
+    // between its words alone, a line a word at most. A word wider than the
+    // destination would take a line more, and the label shrinks to fit
+    // instead.
+    it('wraps an enlarged label between its words, shrinking it to keep a word whole', async () => {
+      atFontScale(1.3)
+      await renderBar()
+
+      expect(labelOf('First item').props).toMatchObject({
+        adjustsFontSizeToFit: true,
+        android_hyphenationFrequency: 'none',
+        numberOfLines: 2,
+      })
+    })
+
+    it('neither shrinks nor hyphenates a label at the device’s own text size', async () => {
+      atFontScale(1)
+      await renderBar()
+
+      expect(labelOf('First item').props.adjustsFontSizeToFit).toBeUndefined()
+      expect(
+        labelOf('First item').props.android_hyphenationFrequency,
+      ).toBeUndefined()
     })
 
     it('keeps a pill’s label on one line however large the text', async () => {
