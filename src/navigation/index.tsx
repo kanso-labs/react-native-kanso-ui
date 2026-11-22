@@ -35,6 +35,7 @@ import { withOpacity } from '../theme/color'
 import { useTheme } from '../theme/scope'
 import { composeStyles } from '../theme/styles'
 import { useTypeRole } from '../typography/roles'
+import { wordsIn } from '../words'
 import { INDICATOR, PILL_HEIGHT, styles, stylesOf } from './styles'
 
 // The destination NavigationBar and NavigationRail both draw, in the four
@@ -146,10 +147,6 @@ const GROWN_FROM = 0.4
 const FADE_SHARE = 0.2
 
 const ICON_SIZE = 24
-
-// Where a label can break: a run of spaces other than the no-break ones, a
-// hyphen, which the platform breaks after, or a zero-width space.
-const BREAKS = /[^\S\u00A0\u2007\u202F\uFEFF]+|[-\u2010\u200B]/u
 
 // Whether a form sets the label beside the icon rather than under it.
 const BESIDE: Readonly<Record<NavigationForm, boolean>> = {
@@ -473,18 +470,6 @@ function NavigationItem({ href, onPress, ...props }: NavigationItemProps) {
       selected={selectedRoute !== undefined && href === selectedRoute}
     />
   )
-}
-
-/**
- * How many words a label that is a string holds: the most lines a wrapped
- * label takes, one a word.
- */
-function wordsIn(children: ReactNode): number | undefined {
-  if (typeof children !== 'string') {
-    return undefined
-  }
-  const count = children.split(BREAKS).filter(Boolean).length
-  return count === 0 ? undefined : count
 }
 
 export type {

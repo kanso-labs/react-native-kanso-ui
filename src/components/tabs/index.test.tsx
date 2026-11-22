@@ -570,11 +570,15 @@ describe('Tabs', () => {
 
     // A label cut short is the name a reader asked to see larger, so a bar
     // of equal sections lets it take the lines it needs, as web's does.
-    it('lets a fixed tab’s label take the lines it needs once the text is enlarged', async () => {
+    it('wraps a fixed tab’s enlarged label between its words, shrinking it to keep a word whole', async () => {
       atFontScale(2)
       await renderTabs()
 
-      expect(screen.getByText('First item').props.numberOfLines).toBeUndefined()
+      expect(screen.getByText('First item').props).toMatchObject({
+        adjustsFontSizeToFit: true,
+        android_hyphenationFrequency: 'none',
+        numberOfLines: 2,
+      })
     })
 
     it('keeps a scrollable tab’s label to two lines however large the text', async () => {
