@@ -147,9 +147,9 @@ const FADE_SHARE = 0.2
 
 const ICON_SIZE = 24
 
-// Where a label can break: a run of spaces other than the no-break ones, or
-// a hyphen, which the platform breaks after.
-const BREAKS = /[^\S\u00A0\u2007\u202F]+|-/u
+// Where a label can break: a run of spaces other than the no-break ones, a
+// hyphen, which the platform breaks after, or a zero-width space.
+const BREAKS = /[^\S\u00A0\u2007\u202F\uFEFF]+|[-\u2010\u200B]/u
 
 // Whether a form sets the label beside the icon rather than under it.
 const BESIDE: Readonly<Record<NavigationForm, boolean>> = {
@@ -287,10 +287,12 @@ function iconStyleOf(color: ColorValue): IconStyle {
  * A wrapped label breaks between its words, without hyphenation, and takes
  * at most a line for each of them. A word wider than the destination would
  * take a line more than that, so the platform shrinks the label instead, as
- * far as it takes to fit the word on its line. The shrink has no floor of
- * its own: React Native reads none, so a word too wide for the destination
- * at the device's own size ends smaller than that size. A word is what lies
- * between spaces or after a hyphen; a no-break space joins its neighbours,
+ * far as it takes to fit the word on its line. The library sets no floor,
+ * and React Native's own is 4, far below the type role: `minimumFontScale`,
+ * its prop for one, is read by neither platform's text layout, so a word too
+ * wide for the destination at the device's own size ends smaller than that
+ * size. A word is what lies between spaces or after a hyphen or a zero-width
+ * space; a no-break space joins its neighbours, a soft hyphen is not counted,
  * and a script written without spaces counts as one word, so a long label in
  * it shrinks onto one line rather than wrapping. Where short words share a
  * line, the lines they leave over let a wide word break across them, with

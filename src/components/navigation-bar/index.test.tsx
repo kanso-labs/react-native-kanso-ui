@@ -744,8 +744,9 @@ describe('NavigationBar', () => {
       })
     })
 
-    // A word is what lies between spaces or after a hyphen, which is where
-    // the platform breaks a line; a no-break space joins its neighbours.
+    // A word is what lies between spaces or after a hyphen or a zero-width
+    // space, which is where the platform breaks a line; a no-break space
+    // joins its neighbours.
     it('gives an enlarged label a line for each word it can break between', async () => {
       atFontScale(1.3)
       resize(COMPACT)
@@ -757,11 +758,15 @@ describe('NavigationBar', () => {
           <NavigationBar.Item href="/second" icon={ICON}>
             {'Joined\u00A0label'}
           </NavigationBar.Item>
+          <NavigationBar.Item href="/third" icon={ICON}>
+            {'Zero\u200Bwidth'}
+          </NavigationBar.Item>
         </NavigationBar>,
       )
 
       expect(labelOf('Long-form label text').props.numberOfLines).toBe(4)
       expect(labelOf('Joined\u00A0label').props.numberOfLines).toBe(1)
+      expect(labelOf('Zero\u200Bwidth').props.numberOfLines).toBe(2)
     })
 
     it('lets an enlarged label that is not a string wrap as it needs', async () => {
