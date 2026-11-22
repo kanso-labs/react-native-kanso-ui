@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.15.2](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.15.1...v0.15.2) (2026-11-22)
+
+
+### Bug Fixes
+
+* **navigation:** keep a destination's label from breaking inside a word at large text ([#818](https://github.com/kanso-labs/react-native-kanso-ui/issues/818)) ([c79633e](https://github.com/kanso-labs/react-native-kanso-ui/commit/c79633e21475aaf222179303800b5da378aba9c1))
+
 ## [0.15.1](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.15.0...v0.15.1) (2026-11-21)
 
 
