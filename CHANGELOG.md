@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.15.3](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.15.2...v0.15.3) (2026-11-22)
+
+
+### Bug Fixes
+
+* **tabs:** keep a tab's label from breaking inside a word at large text ([#822](https://github.com/kanso-labs/react-native-kanso-ui/issues/822)) ([9b1c39f](https://github.com/kanso-labs/react-native-kanso-ui/commit/9b1c39ffe498e8c2a91372cdebcd2f5f041db724))
+
 ## [0.15.2](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.15.1...v0.15.2) (2026-11-22)
 
 
