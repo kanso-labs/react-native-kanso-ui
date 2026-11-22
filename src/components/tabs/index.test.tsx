@@ -566,10 +566,14 @@ describe('Tabs', () => {
         textAlign: 'center',
       })
       expect(text.props.numberOfLines).toBe(2)
+      expect(text.props.adjustsFontSizeToFit).toBeUndefined()
+      expect(text.props.android_hyphenationFrequency).toBeUndefined()
     })
 
     // A label cut short is the name a reader asked to see larger, so a bar
-    // of equal sections lets it take the lines it needs, as web's does.
+    // of equal sections lets it wrap, as web's does, between its words
+    // alone, a line a word at most, shrinking where a word is wider than the
+    // tab (#821).
     it('wraps a fixed tab’s enlarged label between its words, shrinking it to keep a word whole', async () => {
       atFontScale(2)
       await renderTabs()
@@ -585,7 +589,44 @@ describe('Tabs', () => {
       atFontScale(2)
       await renderTabs({ layout: 'scrollable' })
 
-      expect(screen.getByText('First item').props.numberOfLines).toBe(2)
+      const text = screen.getByText('First item')
+      expect(text.props.numberOfLines).toBe(2)
+      expect(text.props.adjustsFontSizeToFit).toBeUndefined()
+      expect(text.props.android_hyphenationFrequency).toBeUndefined()
+    })
+
+    it('gives an enlarged label a line for each of its words', async () => {
+      atFontScale(1.3)
+      await render(
+        <Tabs>
+          <Tabs.List aria-label="Sections">
+            <Tabs.Tab id="first">Long-form label text</Tabs.Tab>
+          </Tabs.List>
+        </Tabs>,
+      )
+
+      expect(screen.getByText('Long-form label text').props).toMatchObject({
+        adjustsFontSizeToFit: true,
+        numberOfLines: 4,
+      })
+    })
+
+    it('lets an enlarged label that is not a string wrap as it needs', async () => {
+      atFontScale(2)
+      await render(
+        <Tabs>
+          <Tabs.List aria-label="Sections">
+            <Tabs.Tab id="first" textValue="Label">
+              <Text>Label</Text>
+            </Tabs.Tab>
+          </Tabs.List>
+        </Tabs>,
+      )
+
+      const label = screen.getByText('Label').parent
+      expect(label?.props.numberOfLines).toBeUndefined()
+      expect(label?.props.adjustsFontSizeToFit).toBeUndefined()
+      expect(label?.props.android_hyphenationFrequency).toBe('none')
     })
 
     it('puts its focus ring inside the tab', async () => {

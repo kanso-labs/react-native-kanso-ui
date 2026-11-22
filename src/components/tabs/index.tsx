@@ -96,14 +96,15 @@ import { Badge } from '../badge'
 // it.
 //
 // **A label keeps to two lines, or one under a stacked icon, until the
-// device's text is enlarged.** Then a tab in a bar of equal sections lets
-// its label take the lines it needs, and the tab and the bar grow to hold
-// it, as web's do once its text is enlarged: a label cut short there is the
-// name a reader asked to see larger. It breaks between its words, without
-// hyphenation, a line a word at most, and shrinks as far as it takes to keep
-// a word wider than the tab whole, as a navigation destination's label does
-// (#817). A scrollable bar's tab keeps its limit,
-// since it can grow along the bar to 264dp before it needs another line.
+// device's text is enlarged.** Then a tab in a bar of equal sections takes
+// a line for each of its words, and the tab and the bar grow to hold it, as
+// web's do once its text is enlarged: a label cut short there is the name a
+// reader asked to see larger. It breaks between its words, without
+// hyphenation, and shrinks as far as it takes to keep a word wider than the
+// tab whole, as a navigation destination's label does (#817), so a shrunk
+// label is smaller than its neighbours. A scrollable bar's tab keeps its
+// limit, since it can grow along the bar to 264dp before it needs another
+// line.
 //
 // **The bar is equal sections unless `layout` says otherwise.**
 // `layout="scrollable"` gives each tab its label's width, between 72dp and
