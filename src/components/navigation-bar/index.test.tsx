@@ -720,7 +720,6 @@ describe('NavigationBar', () => {
       atFontScale(1.3)
       await renderBar()
 
-      expect(labelOf('First item').props.numberOfLines).toBeUndefined()
       expect(textStyleOf(labelOf('First item')).textAlign).toBe('center')
       // From the top, the end of the reversed column, so the indicators stay
       // on one line when one label wraps onto more lines than another.
@@ -730,11 +729,74 @@ describe('NavigationBar', () => {
       })
     })
 
+    // Android's hyphenation broke words that fit whole, so a label breaks
+    // between its words alone, a line a word at most. A word wider than the
+    // destination would take a line more, and the label shrinks to fit
+    // instead.
+    it('wraps an enlarged label between its words, shrinking it to keep a word whole', async () => {
+      atFontScale(1.3)
+      await renderBar()
+
+      expect(labelOf('First item').props).toMatchObject({
+        adjustsFontSizeToFit: true,
+        android_hyphenationFrequency: 'none',
+        numberOfLines: 2,
+      })
+    })
+
+    // A word is what lies between spaces or after a hyphen or a zero-width
+    // space, which is where the platform breaks a line; a no-break space
+    // joins its neighbours.
+    it('gives an enlarged label a line for each word it can break between', async () => {
+      atFontScale(1.3)
+      resize(COMPACT)
+      await render(
+        <NavigationBar selectedRoute="/first">
+          <NavigationBar.Item href="/first" icon={ICON}>
+            Long-form label text
+          </NavigationBar.Item>
+          <NavigationBar.Item href="/second" icon={ICON}>
+            {'Joined\u00A0label'}
+          </NavigationBar.Item>
+          <NavigationBar.Item href="/third" icon={ICON}>
+            {'Zero\u200Bwidth'}
+          </NavigationBar.Item>
+        </NavigationBar>,
+      )
+
+      expect(labelOf('Long-form label text').props.numberOfLines).toBe(4)
+      expect(labelOf('Joined\u00A0label').props.numberOfLines).toBe(1)
+      expect(labelOf('Zero\u200Bwidth').props.numberOfLines).toBe(2)
+    })
+
+    it('lets an enlarged label that is not a string wrap as it needs', async () => {
+      atFontScale(1.3)
+      resize(COMPACT)
+      await render(
+        <NavigationBar selectedRoute="/first">
+          <NavigationBar.Item aria-label="Label" href="/first" icon={ICON}>
+            <Text>Label</Text>
+          </NavigationBar.Item>
+        </NavigationBar>,
+      )
+
+      expect(labelOf('Label').props.numberOfLines).toBeUndefined()
+      expect(labelOf('Label').props.adjustsFontSizeToFit).toBeUndefined()
+    })
+
+    it('does not shrink a label at the device’s own text size', async () => {
+      atFontScale(1)
+      await renderBar()
+
+      expect(labelOf('First item').props.adjustsFontSizeToFit).toBeUndefined()
+    })
+
     it('keeps a pill’s label on one line however large the text', async () => {
       atFontScale(2)
       await renderBar({ width: MEDIUM })
 
       expect(labelOf('First item').props.numberOfLines).toBe(1)
+      expect(labelOf('First item').props.adjustsFontSizeToFit).toBeUndefined()
     })
   })
 

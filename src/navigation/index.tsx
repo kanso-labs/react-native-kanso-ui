@@ -147,6 +147,10 @@ const FADE_SHARE = 0.2
 
 const ICON_SIZE = 24
 
+// Where a label can break: a run of spaces other than the no-break ones, a
+// hyphen, which the platform breaks after, or a zero-width space.
+const BREAKS = /[^\S\u00A0\u2007\u202F\uFEFF]+|[-\u2010\u200B]/u
+
 // Whether a form sets the label beside the icon rather than under it.
 const BESIDE: Readonly<Record<NavigationForm, boolean>> = {
   collapsed: false,
@@ -279,6 +283,29 @@ function iconStyleOf(color: ColorValue): IconStyle {
  * and the destination grows to hold it, as web's does once its text is
  * enlarged: an ellipsis there would cut the name a reader asked to see
  * larger. A pill is as wide as its label, and keeps its one line.
+ *
+ * A wrapped label breaks between its words, without hyphenation, and takes
+ * at most a line for each of them. A word wider than the destination would
+ * take a line more than that, so the platform shrinks the label instead, as
+ * far as it takes to fit the word on its line. The library sets no floor,
+ * and React Native's own is 4, far below the type role: `minimumFontScale`,
+ * its prop for one, is read by neither platform's text layout, so a word too
+ * wide for the destination at the device's own size ends smaller than that
+ * size. A word is what lies between spaces or after a hyphen or a zero-width
+ * space; a no-break space joins its neighbours, a soft hyphen is not counted,
+ * and a script written without spaces counts as one word, so a long label in
+ * it shrinks onto one line rather than wrapping. Where short words share a
+ * line, the lines they leave over let a wide word break across them, with
+ * no hyphen and no shrink.
+ *
+ * Two departures follow. Web hyphenates, through `hyphens: auto`, and breaks
+ * a word too wide for its share anywhere; on Android the same hyphenation
+ * broke short words that fit whole on a line of their own, and a broken word
+ * is harder to read than a smaller one. And a shrunk label is smaller than
+ * its neighbours, where the spec sets every destination's label in one type
+ * role: a destination's width is the bar's share or the rail's, so the word
+ * cannot widen it instead. A label that is not a string has no words to
+ * count, and wraps as it needs.
  */
 function Label({
   children,
@@ -295,11 +322,13 @@ function Label({
   const role = useTypeRole(form === 'expanded' ? 'labelLarge' : 'labelMedium')
   const { fontScale } = useWindowDimensions()
   const wraps = fontScale > 1 && (form === 'vertical' || form === 'collapsed')
+  const words = wraps ? wordsIn(children) : undefined
 
   return (
     <NativeText
-      android_hyphenationFrequency={wraps ? 'normal' : undefined}
-      numberOfLines={wraps ? undefined : 1}
+      adjustsFontSizeToFit={words === undefined ? undefined : true}
+      android_hyphenationFrequency={wraps ? 'none' : undefined}
+      numberOfLines={wraps ? words : 1}
       style={composeStyles<TextStyle>(
         role,
         styles.label,
@@ -444,6 +473,18 @@ function NavigationItem({ href, onPress, ...props }: NavigationItemProps) {
       selected={selectedRoute !== undefined && href === selectedRoute}
     />
   )
+}
+
+/**
+ * How many words a label that is a string holds: the most lines a wrapped
+ * label takes, one a word.
+ */
+function wordsIn(children: ReactNode): number | undefined {
+  if (typeof children !== 'string') {
+    return undefined
+  }
+  const count = children.split(BREAKS).filter(Boolean).length
+  return count === 0 ? undefined : count
 }
 
 export type {

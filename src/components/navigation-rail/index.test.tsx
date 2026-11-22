@@ -654,8 +654,20 @@ describe('NavigationRail', () => {
       atFontScale(2)
       await renderRail()
 
-      expect(labelOf('First item').props.numberOfLines).toBeUndefined()
       expect(textStyleOf(labelOf('First item')).textAlign).toBe('center')
+    })
+
+    // As in the bar: between words alone, a line a word at most, and smaller
+    // where a word is wider than the rail's destination.
+    it('wraps a collapsed destination’s label between its words, shrinking it to keep a word whole', async () => {
+      atFontScale(2)
+      await renderRail()
+
+      expect(labelOf('First item').props).toMatchObject({
+        adjustsFontSizeToFit: true,
+        android_hyphenationFrequency: 'none',
+        numberOfLines: 2,
+      })
     })
 
     it('keeps an expanded destination’s label on one line', async () => {
@@ -663,6 +675,7 @@ describe('NavigationRail', () => {
       await renderRail({ isExpanded: true })
 
       expect(labelOf('First item').props.numberOfLines).toBe(1)
+      expect(labelOf('First item').props.adjustsFontSizeToFit).toBeUndefined()
     })
   })
 
