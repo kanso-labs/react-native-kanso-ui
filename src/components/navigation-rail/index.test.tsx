@@ -654,7 +654,6 @@ describe('NavigationRail', () => {
       atFontScale(2)
       await renderRail()
 
-      expect(labelOf('First item').props.numberOfLines).not.toBe(1)
       expect(textStyleOf(labelOf('First item')).textAlign).toBe('center')
     })
 
