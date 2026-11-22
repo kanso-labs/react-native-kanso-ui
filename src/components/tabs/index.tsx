@@ -67,6 +67,7 @@ import { withOpacity } from '../../theme/color'
 import { useTheme } from '../../theme/scope'
 import { composeStyles, themedStyles } from '../../theme/styles'
 import { useTypeRole } from '../../typography/roles'
+import { wordsIn } from '../../words'
 import { Badge } from '../badge'
 
 // kanso-ui's Tabs: the tabs page's primary and secondary tabs, with the
@@ -95,11 +96,15 @@ import { Badge } from '../badge'
 // it.
 //
 // **A label keeps to two lines, or one under a stacked icon, until the
-// device's text is enlarged.** Then a tab in a bar of equal sections lets
-// its label take the lines it needs, and the tab and the bar grow to hold
-// it, as web's do once its text is enlarged: a label cut short there is the
-// name a reader asked to see larger. A scrollable bar's tab keeps its limit,
-// since it can grow along the bar to 264dp before it needs another line.
+// device's text is enlarged.** Then a tab in a bar of equal sections takes
+// a line for each word of a label that is a string, and the tab and the bar grow to hold it, as
+// web's do once its text is enlarged: a label cut short there is the name a
+// reader asked to see larger. It breaks between its words, without
+// hyphenation, and shrinks as far as it takes to keep a word wider than the
+// tab whole, as a navigation destination's label does (#817), so a shrunk
+// label is smaller than its neighbours. A scrollable bar's tab keeps its
+// limit, since it can grow along the bar to 264dp before it needs another
+// line.
 //
 // **The bar is equal sections unless `layout` says otherwise.**
 // `layout="scrollable"` gives each tab its label's width, between 72dp and
@@ -1239,10 +1244,17 @@ function ListTab({
   const after = stacked ? null : badgeFor(badge)
   const { fontScale } = useWindowDimensions()
   const wraps = fontScale > 1 && bar.layout === 'fixed'
+  // Enlarged, a fixed tab's label breaks between its words alone, as a
+  // destination's does: Android's hyphenation broke words that fit whole on
+  // a line of their own. It takes a line a word at most, and shrinks where a
+  // word is wider than the tab. A label that is not a string wraps as it
+  // needs.
+  const words = wraps ? wordsIn(children) : undefined
   const text = (
     <NativeText
-      android_hyphenationFrequency={wraps ? 'normal' : undefined}
-      numberOfLines={wraps ? undefined : stacked ? 1 : 2}
+      adjustsFontSizeToFit={words === undefined ? undefined : true}
+      android_hyphenationFrequency={wraps ? 'none' : undefined}
+      numberOfLines={wraps ? words : stacked ? 1 : 2}
       style={composeStyles<TextStyle>(
         role,
         styles.text,
