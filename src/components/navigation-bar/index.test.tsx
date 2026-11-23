@@ -520,6 +520,18 @@ describe('NavigationBar', () => {
       })
     })
 
+    // What the bar's documentation promises a label with five destinations:
+    // its share of the phone's width, less the 4dp either side.
+    it.each([
+      [360, 64],
+      [411, 74.2],
+    ])('leaves a label of five on a %idp phone %fdp', async (phone, room) => {
+      await renderBar()
+      const { paddingHorizontal } = styleOf(tab('First item'))
+
+      expect(phone / 5 - 2 * Number(paddingHorizontal)).toBeCloseTo(room, 5)
+    })
+
     it('puts the label under a 56dp by 32dp indicator', async () => {
       await renderBar()
 

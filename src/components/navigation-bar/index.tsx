@@ -322,6 +322,16 @@ function longPressThen(actions: TabActions, route: TabRoute) {
  * indicator itself. From the medium window size class each destination puts
  * its label beside its icon, where the bar is wide enough for every label.
  *
+ * **What a label holds.** In a compact window the destinations share the
+ * bar's width, and each label has its share less 4dp either side. With five
+ * destinations that is 64dp on a 360dp phone and 74dp on a 411dp one: about
+ * 9 and 11 characters of the label-medium role in Roboto Flex, whose letters
+ * average some 6.6dp at the default text size. A longer label is cut short
+ * with an ellipsis there, so "Medicamentos", 87dp, reads "Medicame…" at
+ * 411dp; keep a five-destination label to a short word. Once the text is
+ * enlarged a label wraps between its words instead, with no hyphen, and a
+ * word too wide for its line is drawn smaller rather than broken.
+ *
  * `style`, `ref` and `testID` land on the bar's own view, which is announced
  * as a tab list.
  */
