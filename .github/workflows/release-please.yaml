@@ -22,15 +22,36 @@ on:
   # the other for the clock. That matters when a release pull request has to be
   # discarded, because release-please rewrites one only when the release it
   # computes changes. This is that lever.
+  #
+  # Dispatched on a tag instead of main, it publishes that tag, which is how a
+  # version that did not publish is recovered: Run workflow, then the tag under
+  # "Use workflow from". The publish skips a registry that already has it.
   workflow_dispatch:
+  # Publishing starts from the release, not from the run that cut it. The run
+  # that cuts a release need not be the release commit's own: a push landing
+  # while that run waits replaces it in the concurrency group, and the later
+  # run's checkout is a later commit, which left releases elsewhere tagged and
+  # unpublished (kanso-labs/actions#123). release-please tags the release
+  # commit whichever run cuts it, and the release event runs on that tag. It
+  # fires because the application token, not GITHUB_TOKEN, creates the release.
+  release:
+    types:
+      - published
 
 # Every release merge pushes main, and every push starts a run. Overlapping runs
 # try to cut the same tags and strip the same labels, and one dies on the
 # other's half-finished work. Do not add cancel-in-progress: the last push must
 # still get a run, or the release it carries is never proposed.
+#
+# A run on a tag takes a group of its own. In the shared one it would be one
+# more pending run a push could replace, which is the bug above one step later;
+# keyed on the tag, two runs for one version queue, and the second finds it
+# published.
 concurrency:
   cancel-in-progress: false
-  group: release-please
+  group:
+    ${{ github.ref_type == 'tag' && format('publish-{0}', github.ref_name) ||
+    'release-please' }}
 
 # The application token below does the writing, so GITHUB_TOKEN stays on read.
 permissions:
@@ -39,7 +60,8 @@ permissions:
 jobs:
   release-please:
     name: Propose releases
-    uses: kanso-labs/actions/.github/workflows/_release-please.yaml@v4.5.5
+    if: github.ref_type != 'tag'
+    uses: kanso-labs/actions/.github/workflows/_release-please.yaml@v4.6.0
     with:
       # True only on the scheduled run, which is what batches a day of merges
       # into one release. A push proposes without merging, and so does
@@ -59,18 +81,11 @@ jobs:
   # GitHub Packages, the second only if the first succeeded.
   publish:
     name: Publish to npm
-    needs: release-please
-    # !cancelled() is what publishes a release cut by a run that then failed.
-    # release-please cuts releases and then updates pull requests in one step,
-    # so a failure in the second half fails Propose releases with the tag
-    # already pushed, and a failed call still hands its outputs on.
-    #
-    # Compared against the string rather than used bare: the output carries
-    # the string "false" when release-please runs and cuts nothing, and a bare
-    # truthiness test passes on that.
-    if:
-      ${{ !cancelled() && needs.release-please.outputs.release_created == 'true'
-      }}
+    # Only on a tag: the release event, or a dispatch on the tag. The shared
+    # workflow checks out the tag, refuses a commit that is not on main, and
+    # publishes nothing to a registry that already has the version, so
+    # running it twice is safe.
+    if: github.ref_type == 'tag'
     # id-token is what npm exchanges for a short-lived credential and what
     # mints the provenance attestation. GitHub Packages has no trusted
     # publishing and takes GITHUB_TOKEN with packages: write instead. The
@@ -80,9 +95,4 @@ jobs:
       contents: read
       id-token: write
       packages: write
-    uses: kanso-labs/actions/.github/workflows/_publish-npm.yaml@v4.5.5
-    # Refuses to publish unless this run checked out the commit the release
-    # was tagged at, so a later run cutting the release cannot ship a later
-    # commit's code under the tagged version.
-    with:
-      tag-name: ${{ needs.release-please.outputs.tag_name }}
+    uses: kanso-labs/actions/.github/workflows/_publish-npm.yaml@v4.6.0
