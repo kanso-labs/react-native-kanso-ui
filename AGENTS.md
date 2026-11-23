@@ -354,8 +354,8 @@ app's `postinstall`. Metro reads the package's `src`, through its `react-native`
 field, so the patch changes that as well as `dist`. After a bump of
 `@storybook/react-native-ui` the patch still applies, with a warning, while its
 hunks fit. Once one does not, patch-package reports it and the install still
-finishes, since only CI fails on it and CI never installs the app, so read the
-`postinstall` output. Either way the patch is redone with
+finishes, since only CI or `NODE_ENV=test` fails on it and CI never installs the
+app, so read the `postinstall` output. Either way the patch is redone with
 `npx patch-package @storybook/react-native-ui` in the app, or dropped. Turning
 the device UI off is no way round it: Storybook's own safe-area wrapper is then
 `accessible`, so the whole story is one element. The emulator's TalkBack takes
