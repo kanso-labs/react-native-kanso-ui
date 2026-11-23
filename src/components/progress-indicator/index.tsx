@@ -61,12 +61,12 @@ import { composeStyles, themedStyles } from '../../theme/styles'
 // 48dp its wave needs room for.
 //
 // The determinate line is src/indicator's, which Meter draws too: the active
-// indicator takes the value's share of what the gaps and the stop leave, and
-// the track takes the rest. The determinate ring is two arcs of one circle:
-// the active arc runs clockwise from the top for its share of the
-// circumference, and the track picks up past it and stops short of coming
-// back round, leaving the line's 4dp between the arcs' round ends, as web's
-// `arcsFor` does — see `CircularTrack`.
+// indicator takes the value's share of what the stop and the gap before it
+// leave, and the track takes the rest. The determinate ring is two arcs of
+// one circle: the active arc runs clockwise from the top for its share of
+// the circumference, and the track picks up past it and stops short of
+// coming back round, leaving the line's 4dp between the arcs' round ends, as
+// web's `arcsFor` does — see `CircularTrack`.
 //
 // The animations are Material's own, with web's numbers: the line's two bars
 // and their four keyframe sets, the buffer's scrolling dots, the ring's 1333ms
