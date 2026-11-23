@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.16.0](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.15.3...v0.16.0) (2026-11-23)
+
+
+### Features
+
+* **app-bar:** hand the headline's text to a ref, and lay a kicker of controls out in a row ([#825](https://github.com/kanso-labs/react-native-kanso-ui/issues/825)) ([f6ee31f](https://github.com/kanso-labs/react-native-kanso-ui/commit/f6ee31f097e8ede3d2218767da4ca2e2cb805b9c))
+
 ## [0.15.3](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.15.2...v0.15.3) (2026-11-22)
 
 
