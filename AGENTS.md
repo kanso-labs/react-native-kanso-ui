@@ -396,7 +396,9 @@ published release, and by hand through `workflow_dispatch` run from the
 release's tag, since a dispatch builds the ref it is given. It posts no pull
 request check, so no ruleset names it. It starts on a release only because
 release-please publishes with an application token: a release published by
-`GITHUB_TOKEN` starts no workflow at all.
+`GITHUB_TOKEN` starts no workflow at all. Publishing to npm and GitHub Packages
+starts on the same event now, so that would stop it too, and
+`check-published.yaml` is what would notice.
 
 **It needs two settings no file here holds.** Settings → Pages → Source has to
 be "GitHub Actions". And the `github-pages` environment, under Settings →
@@ -450,12 +452,12 @@ release-please's application token fires, never from the run that cut the
 release: that run's checkout can be a later commit, which left releases
 elsewhere tagged and unpublished (kanso-labs/actions#123). The shared
 `_publish-npm.yaml` refuses a tag not on `main`, skips a registry that already
-has the version, and publishes a version older than `latest` under `backport`.
-A version that did not publish is recovered by dispatching Release Please on
-its tag: Run workflow, then the tag under "Use workflow from", or
+has the version, and publishes a version older than `latest` under `backport`. A
+version that did not publish is recovered by dispatching Release Please on its
+tag: Run workflow, then the tag under "Use workflow from", or
 `gh workflow run release-please.yaml --ref v1.2.3`. `check-published.yaml`
-compares the latest releases with both registries every night and keeps an
-issue open, with that command in it, while one is missing.
+compares the latest releases with both registries every night and keeps an issue
+open, with that command in it, while one is missing.
 
 **The first release is 0.1.0, and `initial-version` is what makes it so.** With
 no release tagged yet, release-please has no version to bump, and starts at
