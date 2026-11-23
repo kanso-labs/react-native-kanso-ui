@@ -1,3 +1,12 @@
+Two changes to @storybook/react-native-ui, each in dist and in src (AGENTS.md says why):
+
+1. SelectedNodeProvider memoises its context value, so a story switch no longer
+   re-renders every node of the sidebar. Reported upstream as
+   https://github.com/storybookjs/react-native/issues/980; drop its hunks once a
+   release carries the fix.
+2. The bottom sheet's backdrop leaves the accessibility tree, so TalkBack lands
+   on the story rather than on it.
+
 diff --git a/node_modules/@storybook/react-native-ui/dist/index.js b/node_modules/@storybook/react-native-ui/dist/index.js
 index 65d5105..02de8dc 100644
 --- a/node_modules/@storybook/react-native-ui/dist/index.js
