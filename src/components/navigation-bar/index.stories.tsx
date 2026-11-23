@@ -310,20 +310,11 @@ type Story = StoryObj<typeof meta>
 // medium window size class.
 const Default: Story = {}
 
-// The five destinations the page allows at most. Each label then has 64dp of
-// a 360dp phone and 74dp of a 411dp one, about 9 and 11 characters at the
-// default text size, and a longer one is cut short with an ellipsis.
+// The five destinations the page allows at most, which leave each label
+// about 9 characters of a 360dp phone and 11 of a 411dp one.
 const FiveDestinations: Story = {
   args: {
     children: FIVE,
-  },
-  parameters: {
-    docs: {
-      description: {
-        story:
-          'Each label has 64dp of a 360dp phone and 74dp of a 411dp one, about 9 and 11 characters at the default text size. A longer label is cut short with an ellipsis; with the text enlarged it wraps between its words.',
-      },
-    },
   },
 }
 
