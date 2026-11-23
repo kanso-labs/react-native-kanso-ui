@@ -18,7 +18,7 @@ import { useIconStyle } from '../glyphs/icon-style'
 import { withOpacity } from '../theme/color'
 import { useTheme } from '../theme/scope'
 import { composeStyles } from '../theme/styles'
-import { RESERVED, styles, stylesOf } from './styles'
+import { GAP, RESERVED, styles, stylesOf } from './styles'
 
 // The pieces a linear indicator is drawn from, shared by ProgressIndicator and
 // Meter as web's src/indicator is. The styles they use are in ./styles.ts.
@@ -52,10 +52,10 @@ type IndicatorTiming = {
 type IndicatorTone = 'inherit' | 'negative' | 'positive' | 'primary'
 
 /**
- * The active indicator's length at a value: the value's share of what the two
- * gaps and the stop leave of the row, as web's `activeAt` gives it. A share of
- * the whole row would run the row 12dp long at the maximum, with the stop
- * drawn past its end.
+ * The active indicator's length at a value: the value's share of the row less
+ * the stop and the gap before it, as web's `activeAt` gives it. A share of the
+ * whole row would run the row 8dp long at the maximum, with the stop drawn
+ * past its end.
  */
 function activeLength(width: number, percentage: number) {
   'worklet'
@@ -66,6 +66,19 @@ function activeLength(width: number, percentage: number) {
 // which is what react-perf's no-new-object-as-prop is after.
 function fillOf(color: string) {
   return { backgroundColor: color }
+}
+
+/**
+ * The gap between the active indicator and the track at a value: the page's
+ * 4dp, cut to what the active indicator has taken and to what it has left, so
+ * it is never wider than the part either side of it, as web's `activeAt` gives
+ * its margin.
+ */
+function gapAfterActive(width: number, percentage: number) {
+  'worklet'
+  const room = Math.max(0, width - RESERVED)
+  const taken = activeLength(width, percentage)
+  return Math.max(0, Math.min(GAP, taken, room - taken))
 }
 
 /**
@@ -135,6 +148,7 @@ function IndicatorLine({
   const active = useAnimatedStyle(() => {
     'worklet'
     return {
+      marginEnd: gapAfterActive(width, percentage.get()),
       opacity: activeOpacity === undefined ? 1 : activeOpacity.get(),
       width: activeLength(width, percentage.get()),
     }
@@ -261,6 +275,7 @@ function useMeasuredWidth() {
 export {
   activeLength,
   fillOf,
+  gapAfterActive,
   IndicatorLabels,
   IndicatorLine,
   readingOf,

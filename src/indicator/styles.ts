@@ -9,16 +9,25 @@ import { themedStyles } from '../theme/styles'
 //
 // The page's anatomy names three parts, the active indicator, the track and
 // the stop indicator at the end, at 4dp thick with 4dp between them. The row
-// is a flex row and the two gaps are its `gap`. The active indicator takes the
-// value's share of what the two gaps and the stop leave, and the track takes
-// the rest, so the stop ends the row at every value.
+// is a flex row. The active indicator takes the value's share of the row less
+// the stop and the gap before it, and the track takes the rest, so the stop
+// ends the row at every value.
+//
+// The gap between the active indicator and the track is never wider than
+// either of them, which is Compose's rule and web's: it grows from nothing at
+// 0, so an empty line is the whole track from the row's start, and it closes
+// again over the last 4dp, where the track has no room left, so a full line
+// ends 4dp before the stop. A gap kept beside a part with no width is a space
+// with nothing on one side of it. So the gaps are margins rather than the
+// row's `gap`: the stop's is fixed, and the active indicator's is set where it
+// renders — see `gapAfterActive` in ./index.tsx.
 
 /** The thickness of every part, and the room the page leaves between them. */
 const THICKNESS = 4
 const GAP = 4
 
-/** What the two gaps and the stop indicator take from the row. */
-const RESERVED = GAP * 2 + THICKNESS
+/** What the stop indicator and the gap before it take from the row. */
+const RESERVED = GAP + THICKNESS
 
 /**
  * The curve a determinate value moves along, Material's own, over the motion
@@ -27,8 +36,8 @@ const RESERVED = GAP * 2 + THICKNESS
 const DETERMINATE_EASING = [0.4, 0, 0.6, 1] as const
 
 const styles = StyleSheet.create({
-  // The active indicator. Its width is the value's, and is set where it
-  // renders.
+  // The active indicator. Its width is the value's, and the gap after it the
+  // value's too, both set where it renders.
   active: {
     flexShrink: 0,
     height: THICKNESS,
@@ -41,20 +50,23 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     minWidth: 0,
   },
-  // The three parts, with the page's 4dp between them.
+  // The three parts. The page's 4dp between them is a margin after the
+  // active indicator and another before the stop rather than the row's
+  // `gap`, since the first narrows at either end of the range.
   line: {
     alignItems: 'center',
     alignSelf: 'stretch',
     flexDirection: 'row',
-    gap: GAP,
     height: THICKNESS,
   },
+  // The stop indicator, with the page's 4dp before it at every value.
   stop: {
     flexShrink: 0,
     height: THICKNESS,
+    marginStart: GAP,
     width: THICKNESS,
   },
-  // The track: whatever the active indicator and the gaps leave. Given
+  // The track: whatever the active indicator and the gaps either side leave. Given
   // something to hold it becomes a row of its own, clipped to its corners.
   track: {
     flexDirection: 'row',

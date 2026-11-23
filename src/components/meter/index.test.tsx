@@ -30,9 +30,9 @@ jest.mock('react-native-reanimated', () => ({
 const { theme } = scopeFor('light', {})
 const { colors, motion } = theme
 
-// The row a line is laid out in. What the two gaps and the stop take from it
-// leaves 300 for the active indicator and the track.
-const WIDTH = 312
+// The row a line is laid out in. What the stop and the gap before it take
+// from it leaves 300 for the active indicator, the gap after it and the track.
+const WIDTH = 308
 const ROOM = 300
 
 const BYTES = {
@@ -233,11 +233,25 @@ describe('Meter', () => {
   })
 
   describe('geometry', () => {
-    it('gives the active indicator its share of what the gaps and the stop leave', async () => {
+    it('gives the active indicator its share of what the stop and the gap before it leave', async () => {
       await render(<Meter label="Label" value={40} />)
       await layOut()
 
       expect(getAnimatedStyle(lineParts().active).width).toBe(ROOM * 0.4)
+    })
+
+    // Full, the active indicator ends the page's 4 before the stop, with no
+    // gap kept for a track that has no room left.
+    it('ends a full line 4 before the stop', async () => {
+      await render(<Meter label="Label" value={100} />)
+      await layOut()
+      const { active, stop } = lineParts()
+
+      expect(styleOf(stop).marginStart).toBe(4)
+      expect(getAnimatedStyle(active)).toMatchObject({
+        marginEnd: 0,
+        width: ROOM,
+      })
     })
 
     it('stretches the line across the meter', async () => {

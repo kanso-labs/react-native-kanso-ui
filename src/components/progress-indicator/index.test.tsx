@@ -56,9 +56,9 @@ jest.mock('react-native-svg', () => {
 const { theme } = scopeFor('light', {})
 const { colors, motion } = theme
 
-// The row a line is laid out in. What the two gaps and the stop take from it
-// leaves 300 for the active indicator and the track.
-const WIDTH = 312
+// The row a line is laid out in. What the stop and the gap before it take
+// from it leaves 300 for the active indicator, the gap after it and the track.
+const WIDTH = 308
 const ROOM = 300
 
 // A slot's colour, as a button hands its content colour to what it holds.
@@ -384,11 +384,55 @@ describe('ProgressIndicator', () => {
   })
 
   describe('as a line', () => {
-    it('gives the active indicator its share of what the gaps and the stop leave', async () => {
+    it('gives the active indicator its share of what the stop and the gap before it leave', async () => {
       await render(<ProgressIndicator label="Label" value={40} />)
       await layOut()
 
       expect(getAnimatedStyle(lineParts().active).width).toBe(ROOM * 0.4)
+    })
+
+    // The page's 4dp is a margin after the active indicator and one before
+    // the stop, not the row's gap, so it can close beside a part of no width.
+    it('keeps the page’s 4 before the stop at every value', async () => {
+      await render(<ProgressIndicator label="Label" value={100} />)
+      await layOut()
+      const { active, stop } = lineParts()
+
+      expect(styleOf(child(line().children.at(0))).gap).toBeUndefined()
+      expect(styleOf(stop)).toMatchObject({ marginStart: 4, width: 4 })
+      expect(getAnimatedStyle(active)).toMatchObject({
+        marginEnd: 0,
+        width: ROOM,
+      })
+    })
+
+    // An empty line is the whole track from the row's start, with no gap
+    // before it for an active indicator that is not there.
+    it('starts the track at the start of the row at 0', async () => {
+      await render(<ProgressIndicator label="Label" value={0} />)
+      await layOut()
+
+      expect(getAnimatedStyle(lineParts().active)).toMatchObject({
+        marginEnd: 0,
+        width: 0,
+      })
+    })
+
+    // Between the ends the gap is never wider than the part either side of
+    // it: it grows over the first 4 of the line and closes over the last 4.
+    it.each([
+      [0.5, 1.5],
+      [1, 3],
+      [50, 4],
+      [99, 3],
+      [99.5, 1.5],
+    ])('keeps a gap at %f of %f', async (value, gap) => {
+      await render(<ProgressIndicator label="Label" value={value} />)
+      await layOut()
+      const active = getAnimatedStyle(lineParts().active)
+
+      expect(active.marginEnd).toBeCloseTo(gap, 5)
+      expect(active.width).toBeCloseTo((ROOM * value) / 100, 5)
     })
 
     it('eases to a new value over the medium duration', async () => {
