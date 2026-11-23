@@ -1,5 +1,10 @@
 import type { ComponentRef, ReactNode, Ref } from 'react'
-import type { ColorValue, ViewProps, ViewStyle } from 'react-native'
+import type {
+  ColorValue,
+  Text as NativeText,
+  ViewProps,
+  ViewStyle,
+} from 'react-native'
 import type { AnimatedStyle } from 'react-native-reanimated'
 import type { Edge } from 'react-native-safe-area-context'
 
@@ -131,6 +136,15 @@ const styles = StyleSheet.create({
   kickerCenter: {
     alignItems: 'center',
   },
+  // A kicker of controls: a row of views, as wide as the bar, that wraps.
+  kickerRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  kickerRowCenter: {
+    justifyContent: 'center',
+  },
   // Drawn over what follows it, so whatever strays past the scroll view's
   // top edge, an overscroll or a shadow, passes beneath the bar.
   pinned: {
@@ -149,6 +163,9 @@ const styles = StyleSheet.create({
 
 const stylesOf = themedStyles(({ sizing, spacing }) =>
   StyleSheet.create({
+    kickerRow: {
+      gap: spacing.xs,
+    },
     row: {
       gap: spacing.xs,
     },
@@ -164,9 +181,10 @@ const stylesOf = themedStyles(({ sizing, spacing }) =>
     },
     // A flexible bar's top row: the small bar's 64dp strip, holding the
     // slots alone. It is drawn over the text under it, so a link in a kicker,
-    // whose press reaches 16dp above its line, leaves the icon buttons'
-    // targets to them where the two meet. The strip and its slots take no
-    // press of their own, so the rest of that reach is the link's.
+    // whose press reaches 16dp above its line, or a control in a kicker laid
+    // out as a row, whose target reaches past its glyph, leaves the icon
+    // buttons' targets to them where the two meet. The strip and its slots
+    // take no press of their own, so the rest of that reach is the kicker's.
     strip: {
       height: COLLAPSED_BLOCK_SIZE,
       pointerEvents: 'box-none',
@@ -235,6 +253,15 @@ type AppBarProps = Omit<ViewProps, 'children'> & {
    */
   readonly headline?: ReactNode
   /**
+   * A ref to the headline's text, the heading a screen reader focuses. An app
+   * that sends the focus to a screen's headline as the screen arrives, or
+   * after a change takes away what had it, points it here, since `ref` lands
+   * on the bar's root, which a screen reader cannot focus. Empty while the bar
+   * draws no headline. A headline that is a lone `Link` is focused as that
+   * link, around its text, so the ref reaches a text that only draws.
+   */
+  readonly headlineRef?: Ref<ComponentRef<typeof NativeText>>
+  /**
    * A line over the headline in `md` and `lg`, in label medium on
    * on-surface-variant, naming where the screen sits, such as the parent a
    * detail screen opened from. It may be a `Link` to that parent, which,
@@ -244,6 +271,16 @@ type AppBarProps = Omit<ViewProps, 'children'> & {
    * and goes as the bar collapses, as the subtitle does. `sm` draws none.
    */
   readonly kicker?: ReactNode
+  /**
+   * How the kicker is laid out. `words` sets it in a line of text, which a
+   * string, a `Link` or words with a link among them read as. `row` lays it
+   * out as views in a row, each centred on the row's line, wrapping where it
+   * runs out of room and centred across the bar in a centred bar, for a kicker that holds controls of its own, such as
+   * the steps either side of a day; the call site then sets its words in a
+   * `Text` of its own, since the bar's label medium reaches only `words`.
+   * @default 'words'
+   */
+  readonly kickerLayout?: 'row' | 'words'
   /**
    * Usually a back or menu icon button. Sits before the text, and hands an
    * icon the on-surface colour and a 24dp size through `useIconStyle()`.
@@ -320,7 +357,9 @@ function AppBar({
   contentInset,
   contentMaxInlineSize,
   headline,
+  headlineRef,
   kicker,
+  kickerLayout = 'words',
   leading,
   pinned = false,
   scrolled = false,
@@ -355,7 +394,18 @@ function AppBar({
   ) : null
   const words = (
     <>
-      {showsKicker ? (
+      {showsKicker && kickerLayout === 'row' ? (
+        <View
+          style={composeStyles<ViewStyle>(
+            styles.kickerRow,
+            own.kickerRow,
+            align === 'center' ? styles.kickerRowCenter : null,
+          )}
+        >
+          {kicker}
+        </View>
+      ) : null}
+      {showsKicker && kickerLayout === 'words' ? (
         <View style={align === 'center' ? styles.kickerCenter : styles.kicker}>
           <Text
             style={align === 'center' ? styles.center : undefined}
@@ -368,6 +418,7 @@ function AppBar({
       ) : null}
       {hasContent(headline) ? (
         <Text
+          ref={headlineRef}
           role="heading"
           style={align === 'center' ? styles.center : undefined}
           variant={HEADLINE_ROLES[drawn]}
