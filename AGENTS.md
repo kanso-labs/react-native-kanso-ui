@@ -348,24 +348,34 @@ be running first, and Expo finds `adb` through `ANDROID_HOME`.
 **A TalkBack pass runs in the gallery as it is, with the device UI on.** Its
 collapsed sheet's backdrop, from `@gorhom/bottom-sheet`, filled the screen as
 "Bottom sheet backdrop, Button", and TalkBack landed on it rather than on the
-story. `patches/@storybook+react-native-ui+10.7.1.patch` in the app takes it out
+story. `patches/@storybook+react-native-ui+10.7.2.patch` in the app takes it out
 of the accessibility tree, and `patch-package` applies it on install through the
 app's `postinstall`. Metro reads the package's `src`, through its `react-native`
-field, so the patch changes that as well as `dist`; a bump of
-`@storybook/react-native-ui` fails the install until the patch is redone or
-dropped. Turning the device UI off is no way round it: Storybook's own safe-area
-wrapper is then `accessible`, so the whole story is one element. The emulator's
-TalkBack takes none of the swipes adb sends, so the pass is a person's: pick the
-story through the sheet or the Storybook channel, then swipe through it.
+field, so the patch changes that as well as `dist`. After a bump of
+`@storybook/react-native-ui` the patch still applies, with a warning, while its
+hunks fit. Once one does not, patch-package reports it and the install still
+finishes, since only CI or `NODE_ENV=test` fails on it and CI never installs the
+app, so read the `postinstall` output. Either way the patch is redone with
+`npx patch-package @storybook/react-native-ui` in the app, or dropped. Turning
+the device UI off is no way round it: Storybook's own safe-area wrapper is then
+`accessible`, so the whole story is one element. The emulator's TalkBack takes
+none of the swipes adb sends, so the pass is a person's: pick the story through
+the sheet or the Storybook channel, then swipe through it.
 
-**A long pass on a device restarts Expo Go every hundred stories or so**, with
-`adb shell am force-stop host.exp.exponent` and then opening the app again. Each
-switch of story through the Storybook channel, `select-story-sync`, renders the
-whole sidebar again, some 600 components in four commits, and that is Storybook
-React Native's, not the library's. The cost grows as the session goes on: after
-about 200 switches each one took 15 to 25 seconds on the emulator, with Expo Go
-holding 1.1GB and the system swapping, which is what cut the review of
-2026-11-18 to 209 of the 450 stories. A restart starts that count again.
+**The same patch keeps a story switch from rendering the whole sidebar.**
+Storybook React Native's `SelectedNodeProvider` handed its context a new object
+on every render, and its `Layout` renders again on each switch of story, so
+every node of the sidebar's tree, which reads that context, rendered again past
+its `memo`. Each story visited also leaves its component expanded, so the count
+grew through a session: in a Jest measurement of the real tree with this
+repository's 464 stories, a switch rendered 124 nodes at first and 546 after 200
+switches. With the context's value memoised a switch renders about 7 early in a
+session, the story left, the story opened, and the component it expands with
+that component's stories, and 2 once those components are open. On the emulator,
+before the patch, a switch took 15 to 25 seconds after about 200, with Expo Go
+holding 1.1GB, which cut the review of 2026-11-18 to 209 of the 450 stories;
+restart Expo Go, with `adb shell am force-stop host.exp.exponent`, if a long
+pass slows down again.
 
 ## Workflows and checks
 

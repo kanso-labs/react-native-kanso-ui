@@ -1,0 +1,85 @@
+diff --git a/node_modules/@storybook/react-native-ui/dist/index.js b/node_modules/@storybook/react-native-ui/dist/index.js
+index 65d5105..02de8dc 100644
+--- a/node_modules/@storybook/react-native-ui/dist/index.js
++++ b/node_modules/@storybook/react-native-ui/dist/index.js
+@@ -298,13 +298,14 @@ const SelectedNodeProvider = ({ children }) => {
+ 			} catch (_error) {}
+ 		}, 100);
+ 	}, []);
++	const value = (0, react.useMemo)(() => ({
++		nodeRef,
++		setNodeRef,
++		scrollToSelectedNode,
++		scrollRef
++	}), [setNodeRef, scrollToSelectedNode]);
+ 	return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(SelectedNodeContext.Provider, {
+-		value: {
+-			nodeRef,
+-			setNodeRef,
+-			scrollToSelectedNode,
+-			scrollRef
+-		},
++		value,
+ 		children
+ 	});
+ };
+@@ -1320,6 +1321,9 @@ const BottomSheetBackdropComponent = (backdropComponentProps) => {
+ 	});
+ 	return /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_gorhom_bottom_sheet.BottomSheetBackdrop, {
+ 		...backdropComponentProps,
++		accessibilityLabel: null,
++		accessibilityRole: null,
++		accessible: false,
+ 		appearsOnIndex: 0,
+ 		disappearsOnIndex: -1,
+ 		pressBehavior: "close",
+diff --git a/node_modules/@storybook/react-native-ui/src/MobileMenuDrawer.tsx b/node_modules/@storybook/react-native-ui/src/MobileMenuDrawer.tsx
+index d1be9db..4119e3b 100644
+--- a/node_modules/@storybook/react-native-ui/src/MobileMenuDrawer.tsx
++++ b/node_modules/@storybook/react-native-ui/src/MobileMenuDrawer.tsx
+@@ -46,6 +46,9 @@ export const BottomSheetBackdropComponent = (backdropComponentProps: BottomSheet
+   return (
+     <BottomSheetBackdrop
+       {...backdropComponentProps}
++      accessibilityLabel={null}
++      accessibilityRole={null}
++      accessible={false}
+       appearsOnIndex={0}
+       disappearsOnIndex={-1}
+       pressBehavior={'close'}
+diff --git a/node_modules/@storybook/react-native-ui/src/SelectedNodeProvider.tsx b/node_modules/@storybook/react-native-ui/src/SelectedNodeProvider.tsx
+index 43aed98..7804cea 100644
+--- a/node_modules/@storybook/react-native-ui/src/SelectedNodeProvider.tsx
++++ b/node_modules/@storybook/react-native-ui/src/SelectedNodeProvider.tsx
+@@ -1,6 +1,6 @@
+ import { BottomSheetScrollViewMethods } from '@gorhom/bottom-sheet/lib/typescript/components/bottomSheetScrollable/types';
+ import type { FC, PropsWithChildren } from 'react';
+-import { createContext, useCallback, useContext, useRef } from 'react';
++import { createContext, useCallback, useContext, useMemo, useRef } from 'react';
+ import type { View } from 'react-native';
+ 
+ type SelectedNodeContextType = {
+@@ -42,15 +42,15 @@ export const SelectedNodeProvider: FC<PropsWithChildren> = ({ children }) => {
+     }, 100);
+   }, []);
+ 
++  // One value for the provider's life: a new object each render re-rendered
++  // every node of the tree, memoised or not, on every story switch.
++  const value = useMemo(
++    () => ({ nodeRef, setNodeRef, scrollToSelectedNode, scrollRef }),
++    [setNodeRef, scrollToSelectedNode]
++  );
++
+   return (
+-    <SelectedNodeContext.Provider
+-      value={{
+-        nodeRef,
+-        setNodeRef,
+-        scrollToSelectedNode,
+-        scrollRef,
+-      }}
+-    >
++    <SelectedNodeContext.Provider value={value}>
+       {children}
+     </SelectedNodeContext.Provider>
+   );
