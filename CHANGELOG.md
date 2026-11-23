@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.16.1](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.16.0...v0.16.1) (2026-11-23)
+
+
+### Bug Fixes
+
+* **progress-indicator:** keep the spec's gap in the linear line at every value, as the web does ([#827](https://github.com/kanso-labs/react-native-kanso-ui/issues/827)) ([e2505b0](https://github.com/kanso-labs/react-native-kanso-ui/commit/e2505b029a2114f7b26300b60c62b6ee2f5a077d))
+
 ## [0.16.0](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.15.3...v0.16.0) (2026-11-23)
 
 
