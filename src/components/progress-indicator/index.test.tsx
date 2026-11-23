@@ -421,12 +421,12 @@ describe('ProgressIndicator', () => {
     // Between the ends the gap is never wider than the part either side of
     // it: it grows over the first 4 of the line and closes over the last 4.
     it.each([
-      [0.5, 1.5],
-      [1, 3],
-      [50, 4],
-      [99, 3],
-      [99.5, 1.5],
-    ])('keeps a gap at %f of %f', async (value, gap) => {
+      [1.5, 0.5],
+      [3, 1],
+      [4, 50],
+      [3, 99],
+      [1.5, 99.5],
+    ])('keeps a gap of %f at %f', async (gap, value) => {
       await render(<ProgressIndicator label="Label" value={value} />)
       await layOut()
       const active = getAnimatedStyle(lineParts().active)

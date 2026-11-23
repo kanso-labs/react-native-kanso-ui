@@ -66,8 +66,9 @@ const styles = StyleSheet.create({
     marginStart: GAP,
     width: THICKNESS,
   },
-  // The track: whatever the active indicator and the gaps either side leave. Given
-  // something to hold it becomes a row of its own, clipped to its corners.
+  // The track: whatever the active indicator and the gaps either side of it
+  // leave. Given something to hold it becomes a row of its own, clipped to
+  // its corners.
   track: {
     flexDirection: 'row',
     flexGrow: 1,
