@@ -510,14 +510,24 @@ describe('NavigationBar', () => {
       expect(styleOf(rowOf()).alignItems).toBe('stretch')
     })
 
-    // Without it, labels cut short on a phone ran into each other.
+    // Without it, labels cut short on a phone ran into each other. With the
+    // equal shares and nothing else across the row, it is what the bar's
+    // documentation promises a label of five, which the last two lines pin
+    // against the token: 64dp of a 360dp phone, 74dp of a 411dp one.
     it('keeps each destination 4dp in from either end of its share', async () => {
       await renderBar()
+      const style = styleOf(tab('First item'))
 
-      expect(styleOf(tab('First item'))).toMatchObject({
+      expect(style).toMatchObject({
+        flexBasis: 0,
+        flexGrow: 1,
         minWidth: 0,
         paddingHorizontal: spacing.xs,
       })
+      expect(styleOf(rowOf()).gap).toBeUndefined()
+      expect(styleOf(rowOf()).paddingHorizontal).toBeUndefined()
+      expect(360 / 5 - 2 * Number(style.paddingHorizontal)).toBe(64)
+      expect(411 / 5 - 2 * Number(style.paddingHorizontal)).toBeCloseTo(74, 0)
     })
 
     it('puts the label under a 56dp by 32dp indicator', async () => {

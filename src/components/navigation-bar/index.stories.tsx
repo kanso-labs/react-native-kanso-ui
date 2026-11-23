@@ -310,7 +310,8 @@ type Story = StoryObj<typeof meta>
 // medium window size class.
 const Default: Story = {}
 
-// The five destinations the page allows at most.
+// The five destinations the page allows at most, which leave each label
+// about 9 characters of a 360dp phone and 11 of a 411dp one.
 const FiveDestinations: Story = {
   args: {
     children: FIVE,
