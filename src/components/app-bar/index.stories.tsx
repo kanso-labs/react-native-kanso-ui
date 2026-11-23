@@ -6,7 +6,7 @@ import { ScrollView, StyleSheet, View } from 'react-native'
 import type { AppBarProps } from '.'
 
 import { AppBar } from '.'
-import { ArrowBackGlyph, SearchGlyph } from '../../glyphs'
+import { ArrowBackGlyph, ChevronEndGlyph, SearchGlyph } from '../../glyphs'
 import { useAppBarScroll } from '../../hooks/useAppBarScroll'
 import { useTheme } from '../../theme/scope'
 import { composeStyles, themedStyles } from '../../theme/styles'
@@ -36,6 +36,21 @@ const TRAILING = (
 // A kicker naming the parent a detail screen opened from, as a link back to
 // it.
 const PARENT = <Link href="/parent">Parent</Link>
+
+// A kicker of controls, stepping between days either side of the day itself.
+const DAY_STEPS = (
+  <>
+    <IconButton aria-label="Day before" size="xs">
+      <ArrowBackGlyph />
+    </IconButton>
+    <Text tone="muted" variant="labelMedium">
+      Thu, Nov 19
+    </Text>
+    <IconButton aria-label="Day after" size="xs">
+      <ChevronEndGlyph />
+    </IconButton>
+  </>
+)
 
 // One German word, as wide as a headline gets without a space to break at.
 const LONG_WORD = 'Unterstützungszeilenüberschrift'
@@ -244,6 +259,15 @@ const Kicker: Story = {
         headline="Headline"
         kicker={PARENT}
         label="md, a kicker holding a link"
+        leading={LEADING}
+        size="md"
+        trailing={TRAILING}
+      />
+      <Sample
+        headline="Headline"
+        kicker={DAY_STEPS}
+        kickerLayout="row"
+        label="md, a kicker of controls in a row"
         leading={LEADING}
         size="md"
         trailing={TRAILING}

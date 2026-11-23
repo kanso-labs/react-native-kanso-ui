@@ -115,6 +115,16 @@ function fill() {
   return withOpacity(color, 1)
 }
 
+// Whether a ref holds a component instance, which carries its props.
+function hasProps(value: unknown): value is { props: object } {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'props' in value &&
+    typeof value.props === 'object'
+  )
+}
+
 function headline() {
   return screen.getByRole('heading')
 }
@@ -397,6 +407,74 @@ describe('AppBar', () => {
       expect(styleOf(gap).pointerEvents).toBe('none')
     })
 
+    describe('laid out as a row', () => {
+      it('lays the controls it holds out as views beside one another, not inside a text', async () => {
+        await renderBar({
+          kicker: (
+            <>
+              <IconButton aria-label="Day before">
+                <NativeText>‹</NativeText>
+              </IconButton>
+              <NativeText>Thu, Nov 19</NativeText>
+              <IconButton aria-label="Day after">
+                <NativeText>›</NativeText>
+              </IconButton>
+            </>
+          ),
+          kickerLayout: 'row',
+          size: 'md',
+        })
+
+        const before = screen.getByRole('button', { name: 'Day before' })
+        let line: null | TestInstance = before
+        while (line !== null && line.parent !== headline().parent) {
+          line = line.parent
+        }
+
+        expect(line?.type).toBe('View')
+        expect(styleOf(line ?? { props: {} })).toMatchObject({
+          alignItems: 'center',
+          flexDirection: 'row',
+          flexWrap: 'wrap',
+        })
+        expect(screen.getByRole('button', { name: 'Day after' })).toBeTruthy()
+        expect(screen.getByText('Thu, Nov 19')).toBeTruthy()
+        expect(headline().parent?.children.indexOf(line ?? before)).toBe(0)
+      })
+
+      it('centres the row in a centred bar', async () => {
+        await renderBar({
+          align: 'center',
+          kicker: <NativeText>Thu, Nov 19</NativeText>,
+          kickerLayout: 'row',
+          size: 'md',
+        })
+
+        const line = screen.getByText('Thu, Nov 19').parent
+        expect(styleOf(line ?? { props: {} }).justifyContent).toBe('center')
+      })
+
+      it('is not drawn by the small bar', async () => {
+        await renderBar({
+          kicker: <NativeText>Thu, Nov 19</NativeText>,
+          kickerLayout: 'row',
+        })
+
+        expect(screen.queryByText('Thu, Nov 19')).toBeNull()
+      })
+
+      it('goes as the bar collapses', async () => {
+        await renderBar({
+          collapsed: true,
+          kicker: <NativeText>Thu, Nov 19</NativeText>,
+          kickerLayout: 'row',
+          size: 'md',
+        })
+
+        expect(screen.queryByText('Thu, Nov 19')).toBeNull()
+      })
+    })
+
     it('holds a link, which a screen reader finds by its name', async () => {
       await renderBar({
         kicker: <Link href="/parent">Parent</Link>,
@@ -601,6 +679,28 @@ describe('AppBar', () => {
         buttonIn(child(row().children[0])),
       )
       expect(styleOf(row()).paddingStart).toBe(spacing.lg - 12)
+    })
+  })
+
+  describe('the headline', () => {
+    it('hands its text to a ref of the call site, the heading a screen reader focuses', async () => {
+      const ref = createRef<ComponentRef<typeof NativeText>>()
+      await renderBar({ headlineRef: ref, kicker: 'Kicker', size: 'md' })
+
+      // Under Jest the ref is React Native's mock Text, whose props are the
+      // ones the bar drew the heading with.
+      const drawn: unknown = ref.current
+      expect(hasProps(drawn) ? drawn.props : null).toMatchObject({
+        children: 'Headline',
+        role: 'heading',
+      })
+    })
+
+    it('leaves the ref empty while the bar draws no headline', async () => {
+      const ref = createRef<ComponentRef<typeof NativeText>>()
+      await renderBar({ headline: undefined, headlineRef: ref })
+
+      expect(ref.current).toBeNull()
     })
   })
 
