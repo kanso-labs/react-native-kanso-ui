@@ -281,8 +281,9 @@ function iconStyleOf(color: ColorValue): IconStyle {
  * enlarged: an ellipsis there would cut the name a reader asked to see
  * larger. A pill is as wide as its label, and keeps its one line.
  *
- * A wrapped label breaks between its words, without hyphenation, and takes
- * at most a line for each of them. A word wider than the destination would
+ * A wrapped label spans its destination, each line centred, and breaks
+ * between its words, without hyphenation, taking at most a line for each of
+ * them. A word wider than the destination would
  * take a line more than that, so the platform shrinks the label instead, as
  * far as it takes to fit the word on its line. The library sets no floor,
  * and React Native's own is 4, far below the type role: `minimumFontScale`,

@@ -670,6 +670,21 @@ describe('NavigationRail', () => {
       })
     })
 
+    // Android measures a label at the destination's width and lays it out
+    // again at its own, rounded to the pixel: a word that fit by a fraction
+    // then lost its last letter to a hidden second line, "Toda" for "Today"
+    // (#851). As wide as the destination, it is laid out at the width it was
+    // measured at.
+    it('lays a wrapped label out across the whole destination, so a word that fits keeps its last letter', async () => {
+      atFontScale(2)
+      await renderRail()
+
+      expect(textStyleOf(labelOf('First item'))).toMatchObject({
+        alignSelf: 'stretch',
+        textAlign: 'center',
+      })
+    })
+
     it('keeps an expanded destination’s label on one line', async () => {
       atFontScale(2)
       await renderRail({ isExpanded: true })
