@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.16.6](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.16.5...v0.16.6) (2026-11-25)
+
+
+### Bug Fixes
+
+* **button:** keep a label's last word on Android when the button is as wide as its label ([#855](https://github.com/kanso-labs/react-native-kanso-ui/issues/855)) ([e76d63c](https://github.com/kanso-labs/react-native-kanso-ui/commit/e76d63ceeb11c59e4cfdd1c867e8ebe9f0aded27))
+* **navigation:** keep a destination's label whole when one word is wider than the destination ([#852](https://github.com/kanso-labs/react-native-kanso-ui/issues/852)) ([029033f](https://github.com/kanso-labs/react-native-kanso-ui/commit/029033f6133df3f524e0099c09986f68abc6c3b6))
+
+
+### Dependencies
+
+* update chromaui/action action to v18.15.3 ([#856](https://github.com/kanso-labs/react-native-kanso-ui/issues/856)) ([46bb21d](https://github.com/kanso-labs/react-native-kanso-ui/commit/46bb21d52de46a7067b271d247e4b5270e449ff0))
+* update dependency @kanso-labs/kanso-ui-core to v0.3.1 ([#857](https://github.com/kanso-labs/react-native-kanso-ui/issues/857)) ([9e73100](https://github.com/kanso-labs/react-native-kanso-ui/commit/9e731000025312b33cb1432c31a0c9113d52945e))
+* update dependency @kanso-labs/kanso-ui-core to v0.3.1 ([#858](https://github.com/kanso-labs/react-native-kanso-ui/issues/858)) ([9fe6abe](https://github.com/kanso-labs/react-native-kanso-ui/commit/9fe6abe668dec3f1175bcd27f041fd4e408160c9))
+
 ## [0.16.5](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.16.4...v0.16.5) (2026-11-24)
 
 
