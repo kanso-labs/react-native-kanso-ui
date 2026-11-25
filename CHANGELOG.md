@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.16.7](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.16.6...v0.16.7) (2026-11-25)
+
+
+### Dependencies
+
+* update dependency @kanso-labs/kanso-ui-core to v0.3.2 ([#866](https://github.com/kanso-labs/react-native-kanso-ui/issues/866)) ([539bc66](https://github.com/kanso-labs/react-native-kanso-ui/commit/539bc669ff71aa732c76f3d7b239211f19ef504d))
+* update dependency @kanso-labs/kanso-ui-core to v0.3.2 ([#867](https://github.com/kanso-labs/react-native-kanso-ui/issues/867)) ([fb9f5e4](https://github.com/kanso-labs/react-native-kanso-ui/commit/fb9f5e457d08bc0cc7b966e88e74986d6021bfdb))
+* update dependency @types/node to v26.6.10 ([#862](https://github.com/kanso-labs/react-native-kanso-ui/issues/862)) ([a6758c6](https://github.com/kanso-labs/react-native-kanso-ui/commit/a6758c62ac093bd414bdf04fac118e369d759524))
+* update dependency @types/react to v19.3.2 ([#864](https://github.com/kanso-labs/react-native-kanso-ui/issues/864)) ([bcd5e75](https://github.com/kanso-labs/react-native-kanso-ui/commit/bcd5e75f7d6f66f2124b95a2e18cb0be862bc714))
+* update storybook to v10.6.9 ([#865](https://github.com/kanso-labs/react-native-kanso-ui/issues/865)) ([5a06ebd](https://github.com/kanso-labs/react-native-kanso-ui/commit/5a06ebdca51a2a0e1f9e466c37aa4bc5e9553eae))
+
 ## [0.16.6](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.16.5...v0.16.6) (2026-11-25)
 
 
