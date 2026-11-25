@@ -40,8 +40,13 @@ const styles = StyleSheet.create({
     maxWidth: '100%',
   },
   // A vertical destination's label once the text is enlarged, on as many
-  // lines as it takes, each centred under the indicator.
+  // lines as it takes, each centred under the indicator. It spans the
+  // destination rather than its own width, so Android lays it out at the
+  // width it measured it at: laid out again at its own width, rounded to the
+  // pixel, a word that fit by a fraction lost its last letter to a line the
+  // label had no room for, "Toda" for "Today" (#851).
   labelWrapped: {
+    alignSelf: 'stretch',
     textAlign: 'center',
   },
   // A destination without a browser's own ring. The destination is what
