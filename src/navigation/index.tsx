@@ -283,9 +283,10 @@ function iconStyleOf(color: ColorValue): IconStyle {
  *
  * A wrapped label spans its destination, each line centred, and breaks
  * between its words, without hyphenation, taking at most a line for each of
- * them. A word wider than the destination would
- * take a line more than that, so the platform shrinks the label instead, as
- * far as it takes to fit the word on its line. The library sets no floor,
+ * them. Laid out at its own width instead, a word that fit by a fraction
+ * lost its last letter on Android (#851). A word wider than the destination
+ * would take a line more than that, so the platform shrinks the label
+ * instead, as far as it takes to fit the word on its line. The library sets no floor,
  * and React Native's own is 4, far below the type role: `minimumFontScale`,
  * its prop for one, is read by neither platform's text layout, so a word too
  * wide for the destination at the device's own size ends smaller than that

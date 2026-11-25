@@ -691,6 +691,8 @@ describe('NavigationRail', () => {
 
       expect(labelOf('First item').props.numberOfLines).toBe(1)
       expect(labelOf('First item').props.adjustsFontSizeToFit).toBeUndefined()
+      // A pill is as wide as its label, which stretching would undo.
+      expect(textStyleOf(labelOf('First item')).alignSelf).toBeUndefined()
     })
   })
 

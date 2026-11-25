@@ -730,7 +730,12 @@ describe('NavigationBar', () => {
       atFontScale(1.3)
       await renderBar()
 
-      expect(textStyleOf(labelOf('First item')).textAlign).toBe('center')
+      // Across the whole destination, so Android lays it out at the width
+      // it measured it at (#851).
+      expect(textStyleOf(labelOf('First item'))).toMatchObject({
+        alignSelf: 'stretch',
+        textAlign: 'center',
+      })
       // From the top, the end of the reversed column, so the indicators stay
       // on one line when one label wraps onto more lines than another.
       expect(styleOf(tab('First item'))).toMatchObject({
