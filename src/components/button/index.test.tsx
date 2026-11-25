@@ -512,18 +512,6 @@ describe('the sizes', () => {
     },
   )
 
-  // React Native sizes a label by its width on one line, and Android's
-  // default high-quality line breaking can push its last word onto a line of
-  // its own at that width: "Acertar" for "Acertar contas" (#853). Greedy
-  // breaking keeps a line that fits.
-  it('breaks its label greedily on Android, so it keeps its last word', async () => {
-    await render(<Button testID="button">Acertar contas</Button>)
-
-    expect(screen.getByText('Acertar contas').props.textBreakStrategy).toBe(
-      'simple',
-    )
-  })
-
   it('draws md by default', async () => {
     await render(<Button testID="button">Label</Button>)
 
@@ -1120,5 +1108,19 @@ describe('the pending state', () => {
 
     expect(screen.getByRole('link', { name: 'Label' })).toBeTruthy()
     expect(screen.queryByRole('progressbar')).toBeNull()
+  })
+})
+
+describe('its label', () => {
+  // React Native sizes a label by its width on one line, and Android's
+  // default high-quality line breaking can push its last word onto a line of
+  // its own at that width: "Acertar" for "Acertar contas" (#853). Greedy
+  // breaking keeps a line that fits.
+  it('breaks its label greedily on Android, so it keeps its last word', async () => {
+    await render(<Button testID="button">Acertar contas</Button>)
+
+    expect(screen.getByText('Acertar contas').props.textBreakStrategy).toBe(
+      'simple',
+    )
   })
 })

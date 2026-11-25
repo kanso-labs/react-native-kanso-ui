@@ -575,9 +575,9 @@ function Button({
         <NativeText
           {...(pending ? CONCEALED : undefined)}
           // React Native sizes the label by its width on one line, and
-          // Android's default high-quality line breaking, which balances
-          // the lines, can push its last word onto a line of its own at
-          // that width: a label as wide as its button lost it to a line it
+          // Android's default high-quality line breaking, which weighs the
+          // whole paragraph, can push its last word onto a line of its own
+          // at that width: a label as wide as its button lost it to a line it
           // had no room for (#853). Greedy breaking keeps a line that fits
           // the width, and a label too long for the row still wraps.
           style={composeStyles<TextStyle>(
