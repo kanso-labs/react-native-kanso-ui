@@ -512,17 +512,16 @@ describe('the sizes', () => {
     },
   )
 
-  // React Native sizes a label by its width on one line, which Android's
-  // high-quality line breaking may not fit at that width: a label as wide as
-  // its button lost its last word to a hidden line, "Acertar" for "Acertar
-  // contas" (#853). Broken the simple way, it fits the width it was sized at.
-  it('breaks its label on Android as it measured it, so it keeps its last word', async () => {
+  // React Native sizes a label by its width on one line, and Android's
+  // default high-quality line breaking can push its last word onto a line of
+  // its own at that width: "Acertar" for "Acertar contas" (#853). Greedy
+  // breaking keeps a line that fits.
+  it('breaks its label greedily on Android, so it keeps its last word', async () => {
     await render(<Button testID="button">Acertar contas</Button>)
 
-    expect(screen.getByText('Acertar contas').props).toMatchObject({
-      android_hyphenationFrequency: 'none',
-      textBreakStrategy: 'simple',
-    })
+    expect(screen.getByText('Acertar contas').props.textBreakStrategy).toBe(
+      'simple',
+    )
   })
 
   it('draws md by default', async () => {
