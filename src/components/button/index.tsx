@@ -574,12 +574,20 @@ function Button({
       {children === undefined ? null : (
         <NativeText
           {...(pending ? CONCEALED : undefined)}
+          // React Native sizes the label by its width on one line, which
+          // Android's default high-quality line breaking, with hyphenation,
+          // may not fit at that width: a label as wide as its button lost
+          // its last word to a line it had no room for (#853). Broken the
+          // simple way, between words, it fits the width it was sized at,
+          // and a label too long for the row still wraps.
+          android_hyphenationFrequency="none"
           style={composeStyles<TextStyle>(
             role,
             styles.label,
             colors.label,
             pending ? pendingStyles.hidden : undefined,
           )}
+          textBreakStrategy="simple"
         >
           {children}
         </NativeText>
