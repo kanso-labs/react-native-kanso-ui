@@ -155,6 +155,20 @@ describe('Fab', () => {
       expect(screen.getByRole('button', { name: 'Label' })).toBeTruthy()
     })
 
+    // Greedy line breaking on Android, so a label as wide as the FAB keeps
+    // its last word (#853).
+    it('breaks its label greedily on Android', async () => {
+      await render(
+        <Fab label="Add expense">
+          <PlusGlyph />
+        </Fab>,
+      )
+
+      expect(screen.getByText('Add expense').props.textBreakStrategy).toBe(
+        'simple',
+      )
+    })
+
     it('requires an aria-label without a label', async () => {
       // @ts-expect-error An icon alone gives the FAB no name.
       await render(<Fab testID="fab">{ICON}</Fab>)

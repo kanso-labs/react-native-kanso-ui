@@ -415,6 +415,20 @@ describe('Snackbar', () => {
       expect(screen.queryByText('Label')).toBeNull()
     })
 
+    // Greedy line breaking on Android, so an action as wide as its words
+    // keeps its last (#853).
+    it('breaks its action greedily on Android', async () => {
+      const queue = new Snackbar.Queue()
+      await renderSnackbar(queue)
+      await announce(queue, 'Label', {
+        action: { label: 'Tentar novamente', onPress() {} },
+      })
+
+      expect(screen.getByText('Tentar novamente').props.textBreakStrategy).toBe(
+        'simple',
+      )
+    })
+
     it('holds the timer while a pointer is over the strip', async () => {
       const queue = new Snackbar.Queue()
       await renderSnackbar(queue)

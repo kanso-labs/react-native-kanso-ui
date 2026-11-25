@@ -653,6 +653,9 @@ function SnackbarStrip({
             >
               <NativeText
                 style={composeStyles<TextStyle>(label, themed.actionLabel)}
+                // Greedy line breaking on Android, as a button's label has,
+                // so an action as wide as its words keeps its last (#853).
+                textBreakStrategy="simple"
               >
                 {action.label}
               </NativeText>

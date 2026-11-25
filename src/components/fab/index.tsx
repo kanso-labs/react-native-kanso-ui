@@ -274,6 +274,9 @@ function Fab({
       {isExtended ? (
         <NativeText
           style={composeStyles<TextStyle>(role, styles.label, colors.label)}
+          // Greedy line breaking on Android, as a button's label has, so a
+          // label as wide as the FAB keeps its last word (#853).
+          textBreakStrategy="simple"
         >
           {label}
         </NativeText>
