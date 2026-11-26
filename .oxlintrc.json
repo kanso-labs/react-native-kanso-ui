@@ -63,5 +63,11 @@
   "env": {
     "builtin": true
   },
-  "ignorePatterns": [".claude/worktrees", "coverage", "dist", "example"]
+  "ignorePatterns": [
+    ".claude/worktrees",
+    ".storybook/public/analytics.js",
+    "coverage",
+    "dist",
+    "example"
+  ]
 }
