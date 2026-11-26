@@ -391,6 +391,23 @@ change. The `pull_request` trigger is deliberately unscoped: adding
 `branches: [main]` would leave a pull request against any other base without the
 checks a ruleset waits on, which reads as a hang rather than a failure.
 
+**The published Storybook counts visits with Google Analytics, from the web
+manager only.** `.storybook/manager-head.html` loads
+`.storybook/public/analytics.js`, which `staticDirs` copies into the build, with
+the property's measurement ID, `G-0GR4GNHHLM`, public by nature and shared with
+kanso-ui's Storybook. The preview iframe loads nothing, so no story is counted
+twice, and the on-device Storybook loads none of it. The script is the same file
+in every Kanso Labs site that loads gtag.js itself (kansolabs.org, the Home
+Assistant applications site and kanso-ui's Storybook are the others), so change
+one copy and carry the change to the rest; it is why oxlint and ESLint skip it.
+It runs Google Consent Mode v2: ads signals denied for everyone, analytics
+storage denied in the EEA, the UK and Switzerland, where its banner asks before
+gtag.js loads, and granted elsewhere, where a notice offers to opt out. It sends
+nothing from a host outside kansolabs.org, so a local Storybook and Chromatic's
+count nothing. `.storybook/privacy.mdx` is the note the banner links to, and the
+switch that stays within reach in the sidebar. It sits outside `src` because the
+on-device Storybook bundles every story there.
+
 **`Deploy Storybook` publishes the web Storybook to GitHub Pages**, on each
 published release, and by hand through `workflow_dispatch` run from the
 release's tag, since a dispatch builds the ref it is given. It posts no pull

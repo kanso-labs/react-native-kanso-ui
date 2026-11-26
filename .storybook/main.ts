@@ -61,7 +61,11 @@ const config: StorybookConfig = {
       },
     },
   },
-  stories: ['../src/**/*.stories.tsx'],
+  // analytics.js, which manager-head.html loads. Relative to this directory.
+  staticDirs: ['./public'],
+  // The Privacy page sits here rather than under src, whose stories the
+  // on-device Storybook bundles too.
+  stories: ['../src/**/*.stories.tsx', './privacy.mdx'],
   viteFinal: (vite) =>
     mergeConfig(vite, {
       optimizeDeps: { rolldownOptions: { plugins: [svgSoundModule] } },
