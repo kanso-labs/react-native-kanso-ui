@@ -406,7 +406,11 @@ gtag.js loads, and granted elsewhere, where a notice offers to opt out. It sends
 nothing from a host outside kansolabs.org, so a local Storybook and Chromatic's
 count nothing. `.storybook/privacy.mdx` is the note the banner links to, and the
 switch that stays within reach in the sidebar. It sits outside `src` because the
-on-device Storybook bundles every story there.
+on-device Storybook bundles every story there. Its `<Meta>` names the page
+`Privacy`, so its id is `privacy--privacy`, which the banner links to; left to
+`docs.defaultName` it would be `privacy--overview`. It holds no `{/* */}`
+comment, because oxfmt formats `.mdx` as Markdown and rewrites one into
+JavaScript that fails to compile.
 
 **`Deploy Storybook` publishes the web Storybook to GitHub Pages**, on each
 published release, and by hand through `workflow_dispatch` run from the

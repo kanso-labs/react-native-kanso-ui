@@ -2,12 +2,7 @@ import { Meta } from '@storybook/addon-docs/blocks'
 
 import { AnalyticsChoice } from './components/AnalyticsChoice'
 
-{/_ The published Storybook's privacy note, which its analytics banner links to.
-It lives here rather than beside the stories, since every src/\*\*/_.stories.tsx
-is bundled for the on-device Storybook too, and the counting is the web
-manager's alone. \*/}
-
-<Meta title="Privacy" />
+<Meta name="Privacy" title="Privacy" />
 
 # Privacy
 
@@ -21,8 +16,9 @@ browser from another by a random ID, not by who is using it.
 The pages you open and the page that led you here; reaching the end of a page;
 clicks on links that leave the site; and files you download. With each, Google
 Analytics records your browser, device, language and approximate location, which
-it derives from your IP address without storing the address. No user ID is set,
-and nothing you type is sent.
+it derives from your IP address without storing the address. No user ID is set.
+The address of a page records the values you give a story's controls, so those
+are recorded with it; nothing else you type is sent.
 
 Google signals and every advertising feature are off, and the site tells Google
 that consent for ads is denied, for every visitor.
