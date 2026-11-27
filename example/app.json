@@ -1,9 +1,16 @@
 {
   "expo": {
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff",
+        "foregroundImage": "./assets/icon.png"
+      }
+    },
     "experiments": {
       "reactCompiler": true,
       "tsconfigPaths": false
     },
+    "icon": "./assets/icon.png",
     "name": "Kanso UI",
     "platforms": ["android", "ios"],
     "slug": "react-native-kanso-ui-example",
