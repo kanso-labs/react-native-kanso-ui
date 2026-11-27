@@ -12,12 +12,8 @@ export default defineConfig([
   // Flat config does not read .gitignore the way oxlint and oxfmt do, so it
   // has to be named here, and so does what the token build, Storybook and the
   // example app's Metro write.
-  // `.storybook/public/analytics.js` is a plain script shared byte for byte
-  // with the other Kanso Labs sites, so it follows none of this repository's
-  // TypeScript rules.
   globalIgnores([
     '.claude',
-    '.storybook/public/analytics.js',
     'coverage',
     'dist',
     'example/.expo',
