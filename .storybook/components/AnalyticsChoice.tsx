@@ -4,9 +4,9 @@ import { StyleSheet, View } from 'react-native'
 import { Button, Text, ThemeScope } from '../../src'
 
 // The switch on the Privacy page. The counting is the manager's:
-// manager-head.html loads public/analytics.js there, and this page renders in
-// the preview iframe, so it reads and changes the setting through its parent
-// frame, which is the same origin.
+// manager-head.html loads https://kansolabs.org/analytics.js there, and this
+// page renders in the preview iframe, so it reads and changes the setting
+// through its parent frame, which is the same origin.
 
 const EVENT = 'kanso-analytics'
 
@@ -70,8 +70,8 @@ export function AnalyticsChoice() {
       <View style={styles.column}>
         <Text accessibilityLiveRegion="polite" variant="bodyLarge">
           {on
-            ? 'Analytics is on for this Storybook in this browser.'
-            : 'Analytics is off for this Storybook in this browser.'}
+            ? 'Analytics is on for Kanso Labs sites in this browser.'
+            : 'Analytics is off for Kanso Labs sites in this browser.'}
         </Text>
         <Button
           onPress={on ? analytics.deny : analytics.grant}

@@ -393,21 +393,22 @@ checks a ruleset waits on, which reads as a hang rather than a failure.
 
 **The published Storybook counts visits with Google Analytics, from the web
 manager only.** `.storybook/manager-head.html` loads
-`.storybook/public/analytics.js`, which `staticDirs` copies into the build, with
-the property's measurement ID, `G-0GR4GNHHLM`, public by nature and shared with
-kanso-ui's Storybook. The preview iframe loads nothing, so no story is counted
-twice, and the on-device Storybook loads none of it. The script is the same file
-in every Kanso Labs site that loads gtag.js itself (kansolabs.org, the Home
-Assistant applications site and kanso-ui's Storybook are the others), so change
-one copy and carry the change to the rest; it is why oxlint and ESLint skip it.
-It runs Google Consent Mode v2: ads signals denied for everyone, analytics
-storage denied in the EEA, the UK and Switzerland, where its banner asks before
-gtag.js loads, and granted elsewhere, where a notice offers to opt out. It sends
-nothing from a host outside kansolabs.org, so a local Storybook and Chromatic's
-count nothing. `.storybook/privacy.mdx` is the note the banner links to, and the
-switch that stays within reach in the sidebar. It sits outside `src` because the
-on-device Storybook bundles every story there. Its `<Meta>` names the page
-`Privacy`, so its id is `privacy--privacy`, which the banner links to; left to
+`https://kansolabs.org/analytics.js` with the property's measurement ID,
+`G-0GR4GNHHLM`, public by nature and shared with kanso-ui's Storybook. The
+preview iframe loads nothing, so no story is counted twice, and the on-device
+Storybook loads none of it. The script is the one copy every Kanso Labs site
+that loads gtag.js itself loads, kept in kanso-labs/kanso-labs.github.io, so
+change it there; if it fails to load, the Storybook has no analytics and no
+banner, and nothing else breaks. The visitor answers once for every Kanso Labs
+site: the choice is the `kl_consent` cookie on `.kansolabs.org`. It runs Google
+Consent Mode v2: ads signals denied for everyone, analytics storage denied in
+the EEA, the UK and Switzerland, where its banner asks before gtag.js loads, and
+granted elsewhere, where a notice offers to opt out. It sends nothing from a
+host outside kansolabs.org, so a local Storybook and Chromatic's count nothing.
+`.storybook/privacy.mdx` is the note the banner links to, and the switch that
+stays within reach in the sidebar. It sits outside `src` because the on-device
+Storybook bundles every story there. Its `<Meta>` names the page `Privacy`, so
+its id is `privacy--privacy`, which the banner links to; left to
 `docs.defaultName` it would be `privacy--overview`. It holds no `{/* */}`
 comment, because oxfmt formats `.mdx` as Markdown and rewrites one into
 JavaScript that fails to compile.
