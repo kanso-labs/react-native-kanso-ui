@@ -61,7 +61,8 @@ const config: StorybookConfig = {
       },
     },
   },
-  // The logo and favicons manager.ts and Storybook itself use. Relative to this directory.
+  // The logo and favicons manager.ts and Storybook itself use. Relative to
+  // this directory.
   staticDirs: ['./public'],
   // The Privacy page sits here rather than under src, whose stories the
   // on-device Storybook bundles too.

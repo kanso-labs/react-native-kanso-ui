@@ -4,9 +4,9 @@ import { StyleSheet, View } from 'react-native'
 import { Button, Text, ThemeScope } from '../../src'
 
 // The switch on the Privacy page. The counting is the manager's:
-// manager-head.html loads https://kansolabs.org/analytics.js there, and this page renders in
-// the preview iframe, so it reads and changes the setting through its parent
-// frame, which is the same origin.
+// manager-head.html loads https://kansolabs.org/analytics.js there, and this
+// page renders in the preview iframe, so it reads and changes the setting
+// through its parent frame, which is the same origin.
 
 const EVENT = 'kanso-analytics'
 
