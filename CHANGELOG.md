@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.16.13](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.16.12...v0.16.13) (2026-11-28)
+
+
+### Dependencies
+
+* update dependency @babel/core to v7.29.16 ([#888](https://github.com/kanso-labs/react-native-kanso-ui/issues/888)) ([4a4922a](https://github.com/kanso-labs/react-native-kanso-ui/commit/4a4922ac3f5ee9284ad918a2da3efc53654dc638))
+* update dependency @kanso-labs/kanso-ui-core to v0.4.0 ([#892](https://github.com/kanso-labs/react-native-kanso-ui/issues/892)) ([16c5440](https://github.com/kanso-labs/react-native-kanso-ui/commit/16c544049cfe59b33065b5e1649b1f823c9f4420))
+* update dependency @kanso-labs/kanso-ui-core to v0.4.0 ([#893](https://github.com/kanso-labs/react-native-kanso-ui/issues/893)) ([bbc8e96](https://github.com/kanso-labs/react-native-kanso-ui/commit/bbc8e964a81cbcc22c56d0d5517fc3417afd151d))
+* update dependency @rolldown/plugin-babel to v0.3.2 ([#889](https://github.com/kanso-labs/react-native-kanso-ui/issues/889)) ([a4fe91c](https://github.com/kanso-labs/react-native-kanso-ui/commit/a4fe91cf0e2219b41757be9f790f2cf8d600a840))
+
 ## [0.16.12](https://github.com/kanso-labs/react-native-kanso-ui/compare/v0.16.11...v0.16.12) (2026-11-26)
 
 
